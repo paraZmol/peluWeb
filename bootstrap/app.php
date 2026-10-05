@@ -1,6 +1,6 @@
 <?php
 
-use App\Exceptions\TeamException;
+use App\Exceptions\BusinessRuleException;
 use App\Http\Middleware\EnsureSalonMember;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -53,7 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Business rule violations go back to the form as a toast, not a 500.
-        $exceptions->render(function (TeamException $exception, Request $request) {
+        $exceptions->render(function (BusinessRuleException $exception, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $exception->getMessage()], 422);
             }

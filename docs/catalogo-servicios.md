@@ -1,4 +1,4 @@
-# Catálogo de servicios — semilla (106 servicios, investigado 2026-10-04)
+# Catálogo de servicios — semilla (116 servicios, investigado 2026-10-04)
 
 Sirve para dos cosas:
 1. Los **salones parten de una plantilla** según su tipo (barbería, salón de belleza, unisex, uñas,

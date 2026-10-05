@@ -30,6 +30,18 @@
             }
         </style>
 
+        @isset($meta)
+            <meta name="description" content="{{ $meta['description'] }}">
+            <meta property="og:type" content="website">
+            <meta property="og:title" content="{{ $meta['title'] }}">
+            <meta property="og:description" content="{{ $meta['description'] }}">
+            <meta property="og:url" content="{{ $meta['url'] }}">
+            @if ($meta['image'])
+                <meta property="og:image" content="{{ $meta['image'] }}">
+            @endif
+            <link rel="canonical" href="{{ $meta['url'] }}">
+        @endisset
+
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">

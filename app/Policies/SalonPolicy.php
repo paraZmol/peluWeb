@@ -13,6 +13,11 @@ class SalonPolicy
         return $user->membershipIn($salon)?->isOwner() ?? false;
     }
 
+    public function manageServices(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageServices) ?? false;
+    }
+
     public function update(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageSalonProfile) ?? false;

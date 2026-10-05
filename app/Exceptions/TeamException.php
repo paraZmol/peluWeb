@@ -2,12 +2,10 @@
 
 namespace App\Exceptions;
 
-use DomainException;
-
 /**
  * Business rule violations in team management. Messages are user facing.
  */
-class TeamException extends DomainException
+class TeamException extends BusinessRuleException
 {
     public static function invitationNotValid(): self
     {

@@ -177,3 +177,22 @@
         transition-duration: 1ms !important;
     }
 }
+
+/* Salon brand color (see components/salon/brand-theme.tsx). */
+.brand-scope {
+    --primary: var(--brand-light);
+    --primary-foreground: var(--brand-light-foreground);
+    --ring: var(--brand-light);
+}
+
+.dark .brand-scope {
+    --primary: var(--brand-dark);
+    --primary-foreground: var(--brand-dark-foreground);
+    --ring: var(--brand-dark);
+}
+
+/* Leaflet sits below dialogs and sheets. */
+.leaflet-container {
+    z-index: 0;
+    font-family: inherit;
+}

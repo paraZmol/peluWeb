@@ -104,6 +104,7 @@ class HandleInertiaRequests extends Middleware
                 'name' => $salon->name,
                 'slug' => $salon->slug,
                 'role' => $membership->role->value,
+                'brand' => $salon->brandTokens(),
                 'permissions' => collect(SalonPermission::cases())
                     ->filter(fn (SalonPermission $permission) => $membership->hasPermission($permission))
                     ->map(fn (SalonPermission $permission) => $permission->value)

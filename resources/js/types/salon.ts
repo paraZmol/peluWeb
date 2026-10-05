@@ -14,6 +14,7 @@ export type CurrentSalon = {
     slug: string;
     role: SalonRole;
     permissions: SalonPermission[];
+    brand: BrandTokens | null;
 };
 
 export type SalonSummary = {
@@ -25,4 +26,10 @@ export type SalonSummary = {
 export type Option<T extends string = string> = {
     value: T;
     label: string;
+};
+
+export type BrandTokens = {
+    light: { primary: string; foreground: string };
+    dark: { primary: string; foreground: string };
+    adjusted: boolean;
 };

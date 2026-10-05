@@ -244,7 +244,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 2.2 Logo y color de marca con vista previa clara/oscura y ajuste automático de contraste.
 - [ ] 2.3 Subida de imágenes segura (WebP, tamaños, sin EXIF, sin SVG) y galería ordenable.
 - [ ] 2.4 Ubicación: pin con Leaflet, guardar lat/lng, Maps Embed y "Cómo llegar" en el perfil.
-- [ ] 2.5 Sembrar `service_templates` con las 106 entradas del catálogo, sinónimos en inglés y atributos.
+- [ ] 2.5 Sembrar `service_templates` con las 116 entradas del catálogo, sinónimos en inglés y atributos.
 - [ ] 2.6 Gestión de servicios: plantilla según tipo, categorías, variantes, tramos, adicionales, combos.
 - [ ] 2.7 Página pública del salón + QR, con SEO básico (título, descripción, Open Graph).
 - *Cierre:* **ux-reviewer** (perfil público en móvil, claro y oscuro) + **security-auditor** (subidas).
@@ -347,12 +347,12 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 ## 10. Decisiones abiertas (responder antes de la fase indicada)
 | # | Pregunta | Antes de | Supuesto actual |
 |---|---|---|---|
-| D1 | Nombre comercial y dominio de la plataforma | Fase 2 | "peluWeb" provisional |
-| D2 | País y moneda iniciales | Fase 2 | Perú, PEN, America/Lima |
+| D1 | Nombre comercial y dominio de la plataforma | Fase 9 | **Respondido 2026-10-04:** aún no hay; se usa "peluWeb" provisional (se cambia con `APP_NAME`). Decidir antes del lanzamiento |
+| D2 | País y moneda iniciales | — | **Cerrado 2026-10-04:** Perú, PEN, America/Lima por defecto (cada salón guarda su zona y moneda) |
 | D3 | Precios finales de los planes | Fase 7 | Ver [mercado.md](mercado.md): S/ 39 / 89 / 169 |
 | D4 | ¿Hay un salón amigo para el piloto? | Fase 8 | Sí (el del proyecto anterior) |
 | D5 | ¿Se reutiliza algo del proyecto Flutter anterior (`StudioProjects/peluqueria`)? | Fase 10 | Solo las reglas de dominio, ya pasadas a `booking-domain` |
-| D6 | ¿Subir el código a un repositorio privado de GitHub? (activa el CI) | Fase 1 | Pendiente de respuesta |
+| D6 | ¿Subir el código a un repositorio privado de GitHub? (activa el CI) | Fase 9 | Pendiente; el CI ya está listo para cuando exista |
 
 ## 11. Registro de cambios del plan
 | Fecha | Cambio | Motivo |

@@ -6,6 +6,7 @@ use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonRole;
 use App\Enums\SalonStatus;
+use App\Support\BrandColor;
 use Carbon\CarbonImmutable;
 use Database\Factories\SalonFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -21,6 +22,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property BusinessType $business_type
  * @property Clientele $clientele
  * @property string|null $phone
+ * @property string|null $description
+ * @property string|null $logo_path
+ * @property string|null $cover_path
+ * @property string|null $brand_color
+ * @property string|null $instagram
+ * @property string|null $address
+ * @property string|null $district
+ * @property string|null $city
+ * @property string|null $latitude
+ * @property string|null $longitude
  * @property string $timezone
  * @property string $currency
  * @property SalonStatus $status
@@ -29,13 +40,35 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
  */
-#[Fillable(['name', 'business_type', 'clientele', 'phone', 'timezone'])]
+#[Fillable([
+    'name', 'business_type', 'clientele', 'phone', 'timezone', 'description', 'instagram',
+    'address', 'district', 'city', 'latitude', 'longitude',
+])]
 class Salon extends Model
 {
     /** @use HasFactory<SalonFactory> */
     use HasFactory, SoftDeletes;
 
     public const int TRIAL_DAYS = 30;
+
+    /**
+     * Mirrors the column defaults so fresh instances never miss them
+     * (strict mode throws on missing attributes).
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'description' => null,
+        'logo_path' => null,
+        'cover_path' => null,
+        'brand_color' => null,
+        'instagram' => null,
+        'address' => null,
+        'district' => null,
+        'city' => null,
+        'latitude' => null,
+        'longitude' => null,
+    ];
 
     /**
      * @return array<string, string>
@@ -47,7 +80,40 @@ class Salon extends Model
             'clientele' => Clientele::class,
             'status' => SalonStatus::class,
             'trial_ends_at' => 'datetime',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
         ];
+    }
+
+    /**
+     * @return HasMany<SalonPhoto, $this>
+     */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(SalonPhoto::class)->orderBy('position');
+    }
+
+    /**
+     * @return HasMany<Service, $this>
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    public function hasLocation(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
+    /**
+     * Theme tokens for the salon brand, or null to use the platform's.
+     *
+     * @return array{light: array{primary: string, foreground: string}, dark: array{primary: string, foreground: string}, adjusted: bool}|null
+     */
+    public function brandTokens(): ?array
+    {
+        return $this->brand_color === null ? null : BrandColor::tokens($this->brand_color);
     }
 
     /**

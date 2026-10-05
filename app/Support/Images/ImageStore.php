@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Intervention\Image\Interfaces\ImageInterface;
 
 /**
  * Single entry point for every user-uploaded image (avatars, logos, gallery).
@@ -28,15 +29,47 @@ class ImageStore
     public function __construct(private readonly string $disk = 'public') {}
 
     /**
-     * Store the image scaled down to fit a square of $maxSize pixels and
-     * return its path on the disk.
+     * Store the image cropped to a square of at most $maxSize pixels
+     * (avatars, logos) and return its path on the disk.
      */
     public function storeSquare(UploadedFile $file, string $directory, int $maxSize): string
     {
-        $image = (new ImageManager(new Driver))
-            ->read($file->getRealPath())
-            ->coverDown($maxSize, $maxSize);
+        return $this->storeCropped($file, $directory, $maxSize, $maxSize);
+    }
 
+    /**
+     * Store the image cropped to the given box, never upscaled (covers),
+     * and return its path on the disk.
+     */
+    public function storeCropped(UploadedFile $file, string $directory, int $width, int $height): string
+    {
+        $image = $this->read($file)->coverDown($width, $height);
+
+        return $this->save($image, $directory);
+    }
+
+    /**
+     * Store the image scaled to fit inside the box keeping its proportions
+     * (gallery photos, where cropping would cut the haircut).
+     */
+    public function storeFitted(UploadedFile $file, string $directory, int $maxWidth, int $maxHeight): string
+    {
+        $image = $this->read($file)->scaleDown($maxWidth, $maxHeight);
+
+        return $this->save($image, $directory);
+    }
+
+    private function read(UploadedFile $file): ImageInterface
+    {
+        return (new ImageManager(new Driver))->read($file->getRealPath());
+    }
+
+    /**
+     * Re-encode to WebP (drops EXIF/GPS and any trailing payload) under a
+     * random name.
+     */
+    private function save(ImageInterface $image, string $directory): string
+    {
         $path = trim($directory, '/').'/'.Str::random(40).'.webp';
 
         Storage::disk($this->disk)->put($path, (string) $image->toWebp(quality: self::WEBP_QUALITY));
