@@ -1,0 +1,6 @@
+@echo off
+REM Arranca peluWeb con PHP 8.4 (C:\php84) sin tocar el PHP de XAMPP.
+REM Uso: doble clic, o en la terminal:  .\dev.cmd
+set "PATH=C:\php84;%PATH%"
+cd /d "%~dp0"
+php C:\ProgramData\ComposerSetup\bin\composer.phar dev

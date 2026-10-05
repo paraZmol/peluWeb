@@ -1,0 +1,179 @@
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans:
+        'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Fraunces', ui-serif, Georgia, serif;
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * Design tokens — see .claude/skills/ui-system. Never hard-code colors in
+ * components; each salon overrides --primary / --primary-foreground / --ring
+ * at runtime with its brand color (contrast-checked server side).
+ */
+:root {
+    --background: #faf8f5;
+    --foreground: #1f1b18;
+    --card: #ffffff;
+    --card-foreground: #1f1b18;
+    --popover: #ffffff;
+    --popover-foreground: #1f1b18;
+    --primary: #8f5e45;
+    --primary-foreground: #ffffff;
+    --secondary: #f1ece6;
+    --secondary-foreground: #1f1b18;
+    --muted: #f1ece6;
+    --muted-foreground: #6b635c;
+    --accent: #f1ece6;
+    --accent-foreground: #1f1b18;
+    --destructive: #b42318;
+    --destructive-foreground: #b42318;
+    --success: #15803d;
+    --success-foreground: #ffffff;
+    --warning: #b45309;
+    --warning-foreground: #ffffff;
+    --border: #e8e2db;
+    --input: #e8e2db;
+    --ring: #8f5e45;
+    --chart-1: #8f5e45;
+    --chart-2: #2f7d7a;
+    --chart-3: #7a4e7e;
+    --chart-4: #8a8a3c;
+    --chart-5: #4f6178;
+    --radius: 0.875rem;
+    --sidebar: #f4f0eb;
+    --sidebar-foreground: #1f1b18;
+    --sidebar-primary: #8f5e45;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #ebe4dc;
+    --sidebar-accent-foreground: #1f1b18;
+    --sidebar-border: #e8e2db;
+    --sidebar-ring: #8f5e45;
+}
+
+.dark {
+    --background: #121110;
+    --foreground: #f2eee9;
+    --card: #1c1a18;
+    --card-foreground: #f2eee9;
+    --popover: #1c1a18;
+    --popover-foreground: #f2eee9;
+    --primary: #d4a58a;
+    --primary-foreground: #1f1b18;
+    --secondary: #26231f;
+    --secondary-foreground: #f2eee9;
+    --muted: #26231f;
+    --muted-foreground: #a39a91;
+    --accent: #26231f;
+    --accent-foreground: #f2eee9;
+    --destructive: #7a271a;
+    --destructive-foreground: #f97066;
+    --success: #4ade80;
+    --success-foreground: #121110;
+    --warning: #fbbf24;
+    --warning-foreground: #121110;
+    --border: #2e2a26;
+    --input: #2e2a26;
+    --ring: #d4a58a;
+    --chart-1: #d4a58a;
+    --chart-2: #5fb3ae;
+    --chart-3: #b98abd;
+    --chart-4: #c2c26a;
+    --chart-5: #8fa3bd;
+    --sidebar: #181614;
+    --sidebar-foreground: #f2eee9;
+    --sidebar-primary: #d4a58a;
+    --sidebar-primary-foreground: #1f1b18;
+    --sidebar-accent: #26231f;
+    --sidebar-accent-foreground: #f2eee9;
+    --sidebar-border: #2e2a26;
+    --sidebar-ring: #d4a58a;
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        transition:
+            background-color 200ms ease,
+            color 200ms ease;
+    }
+
+    h1,
+    h2,
+    .font-display {
+        font-family: var(--font-display);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+    }
+}
