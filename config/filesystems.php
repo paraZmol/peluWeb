@@ -41,7 +41,9 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Root-relative on purpose: images then load on any host or port
+            // (localhost, LAN IP from a phone, production domain).
+            'url' => '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

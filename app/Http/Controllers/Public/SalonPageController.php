@@ -50,12 +50,14 @@ class SalonPageController extends Controller
     private function meta(Salon $salon): array
     {
         $images = app(ImageStore::class);
+        $image = $images->url($salon->cover_path ?? $salon->logo_path);
         $place = collect([$salon->district, $salon->city])->filter()->join(', ');
 
         return [
             'title' => "{$salon->name} · {$salon->business_type->label()}".($place !== '' ? " en {$place}" : ''),
             'description' => Str::limit($salon->description ?? "Reserva en {$salon->name} desde tu celular.", 155),
-            'image' => $images->url($salon->cover_path ?? $salon->logo_path),
+            // Link-preview bots need an absolute URL.
+            'image' => $image === null ? null : url($image),
             'url' => route('salons.show', $salon->slug),
         ];
     }
