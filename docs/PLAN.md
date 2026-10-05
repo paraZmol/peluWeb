@@ -240,28 +240,29 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] *Cierre (2026-10-04):* 181 tests Pest + 15 E2E (móvil y escritorio, claro y oscuro) en verde. **security-auditor**: 1 ALTO (toma de cuenta previa vía Google) + 5 MEDIOS + 6 BAJOS → todos corregidos con test de regresión (`tests/Feature/Security/Phase1HardeningTest.php`). **qa-tester**: 3 hallazgos → 2 bugs corregidos (único dueño que borra su cuenta; invitación que degradaba a un dueño), 1 era decisión de plan (§11). **ux-reviewer**: 15 puntos → corregidos los 3 BLOQUEA y 5 MOLESTA; el resto pasó a la Fase 8 (paso 8.7).
 
 ### Fase 2 — Salón, marca, servicios
-- [ ] 2.1 Asistente de alta del salón (nombre, tipo, público, enlace, teléfono, horario general) en ≤ 5 pantallas.
-- [ ] 2.2 Logo y color de marca con vista previa clara/oscura y ajuste automático de contraste.
-- [ ] 2.3 Subida de imágenes segura (WebP, tamaños, sin EXIF, sin SVG) y galería ordenable.
-- [ ] 2.4 Ubicación: pin con Leaflet, guardar lat/lng, Maps Embed y "Cómo llegar" en el perfil.
-- [ ] 2.5 Sembrar `service_templates` con las 116 entradas del catálogo, sinónimos en inglés y atributos.
-- [ ] 2.6 Gestión de servicios: plantilla según tipo, categorías, variantes, tramos, adicionales, combos.
-- [ ] 2.7 Página pública del salón + QR, con SEO básico (título, descripción, Open Graph).
-- *Cierre:* **ux-reviewer** (perfil público en móvil, claro y oscuro) + **security-auditor** (subidas).
+- [x] 2.1 Alta del salón: pantalla única (nombre, tipo, público, WhatsApp) que precarga los servicios de su tipo + pantalla "Mi salón" por secciones + lista "Completa tu salón" con progreso en el panel. **Cambio:** el "horario general" pasa a la Fase 3 (sale de los horarios del personal). *(2026-10-04)*
+- [x] 2.2 Logo, portada y color de marca con vista previa; `BrandColor` garantiza contraste AA en claro y oscuro (ajusta y avisa). El panel del dueño también usa su color. *(2026-10-04)*
+- [x] 2.3 Imágenes: WebP, logo 512², portada 1600×900, galería ajustada a 1600 px sin recortar, sin EXIF ni SVG, máximo 30, ordenable. *(2026-10-04)*
+- [x] 2.4 Ubicación: mapa OpenStreetMap (Leaflet) con "usar mi ubicación", pegar enlace de Google Maps o tocar el mapa; botón "Cómo llegar" con Google Maps (gratis, sin clave). **Cambio:** no se usa el iframe de Maps Embed (pediría clave); si el tráfico crece se cambia el proveedor de mosaicos del mapa. *(2026-10-04)*
+- [x] 2.5 Catálogo de plataforma: **116** servicios (no 106) con sinónimos en inglés, tramos, rangos de precio y etiquetas; migración de datos + `php artisan catalog:sync`. *(2026-10-04)*
+- [x] 2.6 Servicios: del catálogo (buscador sin tildes) o propios; precio, tramos trabajo/espera/final, variantes, adicionales, evaluación y prueba de alergia; pausar y quitar. **Cambio:** los combos pasan a la Fase 4 (el cliente podrá elegir varios servicios en una reserva). *(2026-10-04)*
+- [x] 2.7 Página pública `/s/{slug}` con servicios, galería, mapa, WhatsApp, compartir; Open Graph renderizado en servidor; QR descargable en "Mi salón". *(2026-10-04)*
+- [~] *Cierre:* 253 tests + 19 E2E en verde. **security-auditor**: 0 críticos/altos, 7 bajos → 5 corregidos (variantes como lista y sin duración ≤ 0, texto plano en campos libres, límite en la página pública, foto procesada fuera del bloqueo); imágenes de salón suspendido siguen accesibles por URL directa (aceptado: nombres aleatorios) y CSP completa en 8.8. **ux-reviewer**: 15 puntos → corregidos los 3 BLOQUEA (mapa estático que no atrapa el dedo, portada compacta sin foto, acción cuando no hay servicios o WhatsApp) y 7 MOLESTA, incluido un **bug real**: el color de marca no pintaba los botones (Tailwind resuelve `--color-primary` en `:root`). **qa-tester** en curso.
 
 ### Fase 3 — Personal y horarios
 - [ ] 3.1 Componente `TimeWheel` (selector tipo alarma) con teclado y lectores de pantalla.
-- [ ] 3.2 Horario semanal por profesional, varias franjas, nivel público / VIP / solo personal, copiar día.
+- [ ] 3.2 Horario semanal por profesional, varias franjas, nivel público / VIP / solo personal, copiar día. Incluye el **horario general del salón** (movido desde 2.1).
 - [ ] 3.3 Excepciones, bloqueo rápido y feriados del salón.
 - [ ] 3.4 Duración y precio por profesional y servicio.
 - [ ] 3.5 Aviso de reservas afectadas al cambiar un horario.
+- [ ] 3.6 Mostrar en la página pública el horario de atención y "Abierto ahora / Abre a las…" (pedido por ux-reviewer en la Fase 2).
 - *Cierre:* **qa-tester** + **ux-reviewer** (editar horario en 360 px).
 
 ### Fase 4 — Motor de reservas y agenda (núcleo; no recortar tests)
 - [ ] 4.1 `AvailabilityCalculator` puro con tests primero (todas las invariantes de `booking-domain`).
 - [ ] 4.2 Transacción de reserva con `lockForUpdate` + test concurrente real.
 - [ ] 4.3 Máquina de estados con `booking_events`; expiración de pendientes sin depender del cron.
-- [ ] 4.4 Flujo del cliente en 4 pasos con animaciones (paso a paso, chip → resumen, check al confirmar).
+- [ ] 4.4 Flujo del cliente en 4 pasos (permite elegir **varios servicios** en una reserva, que reemplaza a los combos de 2.6) con animaciones (paso a paso, chip → resumen, check al confirmar).
 - [ ] 4.5 Reservas VIP: filtro en servidor, seña distinta, marca VIP en la ficha.
 - [ ] 4.6 Señas: mensaje `wa.me` armado en servidor y botón "Seña recibida".
 - [ ] 4.7 Vista **Hoy** del profesional y agenda día/semana con arrastrar para mover.
@@ -303,6 +304,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 8.5 **Piloto** con 1–3 salones reales durante 1 semana; recoger fallos y ajustar.
 - [ ] 8.6 Prueba manual en un iPhone y un Android reales (instalación, push, reserva).
 - [ ] 8.7 Pendientes de UX de la Fase 1: navegación inferior por rol en móvil; diálogos como hoja inferior (Drawer) en móvil con spinner en confirmaciones; página 404/500 con marca y modo oscuro; aviso "sin conexión" con reintento; error de login como `Alert` sobre el botón; registro sin "confirmar contraseña" y con la regla visible; panel con acciones útiles para el personal y chevron en tarjetas enlace; textos de ayuda a 14 px; tema claro/oscuro guardado por cuenta (no solo por navegador).
+- [ ] 8.9 Pendientes de UX de la Fase 2: "Mi salón" con cambios sin guardar visibles (o un solo "Guardar" fijo abajo) y barra de secciones fija; formularios de servicio como hoja inferior en móvil con el botón fijo; contraste del botón deshabilitado en oscuro.
 - [ ] 8.8 Seguridad pendiente de la Fase 1: CSP completa (hoy solo `frame-ancestors`) y `Inertia::encryptHistory()` + limpiar historial al cerrar sesión (tablets compartidas del salón).
 
 ### Fase 9 — Lanzamiento

@@ -8,11 +8,15 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
 /**
- * Rules shared by every form that edits a salon. The name and description
- * end up in emails and public pages, so no markup or link syntax.
+ * Rules shared by every form that edits a salon. Salon texts end up in
+ * public pages, link previews and (later) emails, so no markup or link
+ * syntax: names allow everyday punctuation, free texts exclude <>[]{}.
  */
 trait SalonValidationRules
 {
+    /** Free text without HTML tags or Markdown link brackets. */
+    public const string PLAIN_TEXT = 'regex:/^[^<>\[\]{}]*$/u';
+
     /**
      * @return array<string, array<int, ValidationRule|string|object>>
      */

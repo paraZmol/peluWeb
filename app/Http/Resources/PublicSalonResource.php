@@ -80,6 +80,7 @@ class PublicSalonResource extends JsonResource
                     'priceFrom' => Money::toAmount($service->variants->min('price_cents') ?? $service->price_cents),
                     'hasVariants' => $service->variants->isNotEmpty(),
                     'requiresEvaluation' => $service->requires_evaluation,
+                    'whatsappUrl' => WhatsApp::link($this->phone, "Hola, quisiera reservar \"{$service->name}\" en {$this->name}."),
                     'variants' => $service->variants->map(fn (ServiceVariant $variant) => [
                         'label' => $variant->label,
                         'price' => Money::toAmount($variant->price_cents),

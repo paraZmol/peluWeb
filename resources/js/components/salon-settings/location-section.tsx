@@ -113,7 +113,7 @@ export function LocationSection({ salon }: { salon: SalonSettings }) {
                             </div>
                             <Input
                                 aria-label="Pegar enlace de Google Maps"
-                                placeholder="O pega aquí el enlace de Google Maps de tu local"
+                                placeholder="O pega el enlace de Google Maps"
                                 onChange={(event) =>
                                     event.target.value &&
                                     fromLink(event.target.value)

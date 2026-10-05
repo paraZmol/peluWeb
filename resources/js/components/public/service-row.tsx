@@ -31,7 +31,7 @@ export function ServiceRow({ service }: Props) {
                 </div>
                 <p className="shrink-0 text-right font-medium tabular-nums">
                     {service.hasVariants && (
-                        <span className="block text-xs font-normal text-muted-foreground">
+                        <span className="block text-sm font-normal text-muted-foreground">
                             desde
                         </span>
                     )}
@@ -40,9 +40,27 @@ export function ServiceRow({ service }: Props) {
             </div>
 
             {service.requiresEvaluation && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                     Precio final tras evaluación
                 </p>
+            )}
+
+            {service.whatsappUrl && (
+                <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-11 self-start rounded-full md:h-9"
+                >
+                    <a
+                        href={service.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Reservar ${service.name} por WhatsApp`}
+                    >
+                        Reservar
+                    </a>
+                </Button>
             )}
 
             {hasVariantList && (

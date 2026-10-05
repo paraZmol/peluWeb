@@ -16,9 +16,9 @@ class UpdateSalonLocationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'address' => ['nullable', 'string', 'max:160'],
-            'district' => ['nullable', 'string', 'max:80'],
-            'city' => ['nullable', 'string', 'max:80'],
+            'address' => ['nullable', 'string', 'max:160', self::PLAIN_TEXT],
+            'district' => ['nullable', 'string', 'max:80', self::PLAIN_TEXT],
+            'city' => ['nullable', 'string', 'max:80', self::PLAIN_TEXT],
             'latitude' => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180'],
         ];

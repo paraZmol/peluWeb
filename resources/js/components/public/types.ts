@@ -13,6 +13,7 @@ export type PublicService = {
     priceFrom: string;
     hasVariants: boolean;
     requiresEvaluation: boolean;
+    whatsappUrl: string | null;
     variants: PublicServiceVariant[];
 };
 

@@ -26,7 +26,11 @@ export function SalonLocation({ address, location }: Props) {
             {location && (
                 <>
                     {/* isolate keeps Leaflet's high z-index panes under the sticky bar */}
-                    <div className="isolate">
+                    <div
+                        className="isolate"
+                        role="img"
+                        aria-label="Mapa con la ubicación del salón"
+                    >
                         <SalonMap
                             position={{
                                 latitude: location.latitude,
@@ -47,6 +51,7 @@ export function SalonLocation({ address, location }: Props) {
                         >
                             <Navigation aria-hidden />
                             Cómo llegar
+                            <span className="sr-only"> (abre Google Maps)</span>
                         </a>
                     </Button>
                 </>

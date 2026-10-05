@@ -1,12 +1,14 @@
-import { Scissors } from 'lucide-react';
+import { MessageCircle, Scissors } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ServiceRow } from './service-row';
 import type { PublicServiceGroup } from './types';
 
 type Props = {
     groups: PublicServiceGroup[];
+    whatsappUrl: string | null;
 };
 
-export function ServiceList({ groups }: Props) {
+export function ServiceList({ groups, whatsappUrl }: Props) {
     const visibleGroups = groups.filter((group) => group.services.length > 0);
 
     return (
@@ -22,6 +24,18 @@ export function ServiceList({ groups }: Props) {
                     <p className="text-sm text-muted-foreground">
                         Mientras tanto, escríbenos y te contamos qué ofrecemos.
                     </p>
+                    {whatsappUrl && (
+                        <Button asChild className="mt-2 rounded-full">
+                            <a
+                                href={whatsappUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <MessageCircle aria-hidden /> Escribir por
+                                WhatsApp
+                            </a>
+                        </Button>
+                    )}
                 </div>
             ) : (
                 visibleGroups.map((group) => (

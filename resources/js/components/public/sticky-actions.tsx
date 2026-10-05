@@ -1,4 +1,4 @@
-import { Instagram, MessageCircle, Share2 } from 'lucide-react';
+import { Instagram, MessageCircle, Navigation, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
@@ -6,6 +6,7 @@ type Props = {
     salonName: string;
     whatsappUrl: string | null;
     instagramUrl: string | null;
+    directionsUrl: string | null;
 };
 
 async function share(salonName: string): Promise<void> {
@@ -30,9 +31,14 @@ async function share(salonName: string): Promise<void> {
 }
 
 /** Fixed to the bottom (thumb zone) on mobile, inline on desktop. */
-export function StickyActions({ salonName, whatsappUrl, instagramUrl }: Props) {
+export function StickyActions({
+    salonName,
+    whatsappUrl,
+    instagramUrl,
+    directionsUrl,
+}: Props) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:static md:border-0 md:bg-transparent md:pb-0 md:backdrop-blur-none">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background pb-[env(safe-area-inset-bottom)] backdrop-blur md:static md:border-0 md:bg-transparent md:pb-0 md:backdrop-blur-none">
             <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-4 py-3 md:py-0">
                 {whatsappUrl && (
                     <Button
@@ -49,6 +55,23 @@ export function StickyActions({ salonName, whatsappUrl, instagramUrl }: Props) {
                             <span className="truncate">
                                 Reservar por WhatsApp
                             </span>
+                        </a>
+                    </Button>
+                )}
+                {/* Without WhatsApp the page still needs a clear next step. */}
+                {!whatsappUrl && directionsUrl && (
+                    <Button
+                        asChild
+                        size="lg"
+                        className="h-12 min-w-0 flex-1 rounded-full md:h-11 md:flex-none"
+                    >
+                        <a
+                            href={directionsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <Navigation aria-hidden />
+                            <span className="truncate">Cómo llegar</span>
                         </a>
                     </Button>
                 )}

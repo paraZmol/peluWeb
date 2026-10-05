@@ -1,13 +1,20 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'motion/react';
-import { CalendarDays, Store, Users } from 'lucide-react';
+import { CalendarDays, ExternalLink, Store, Users } from 'lucide-react';
+import { SetupChecklist } from '@/components/salon/setup-checklist';
+import type { SetupStep } from '@/components/salon/setup-checklist';
 import { Button } from '@/components/ui/button';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { dashboard } from '@/routes';
 import { create as createSalon } from '@/routes/salons';
 import { index as team } from '@/routes/team';
 
-export default function Dashboard() {
+type Props = {
+    setup: SetupStep[] | null;
+    publicUrl: string | null;
+};
+
+export default function Dashboard({ setup, publicUrl }: Props) {
     const { auth } = usePage().props;
     const { currentSalon, isOwner } = useCurrentSalon();
     const reduceMotion = useReducedMotion();
@@ -23,6 +30,21 @@ export default function Dashboard() {
                 className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6"
             >
                 <h1 className="text-3xl font-semibold">Hola, {firstName}</h1>
+
+                {currentSalon && publicUrl && (
+                    <Button
+                        asChild
+                        variant="outline"
+                        className="self-start rounded-full"
+                    >
+                        <a href={publicUrl} target="_blank" rel="noopener">
+                            <ExternalLink /> Ver la página de{' '}
+                            {currentSalon.name}
+                        </a>
+                    </Button>
+                )}
+
+                {setup && <SetupChecklist steps={setup} />}
 
                 {currentSalon ? (
                     <div className="grid gap-4 sm:grid-cols-2">

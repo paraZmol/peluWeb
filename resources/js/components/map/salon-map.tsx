@@ -48,8 +48,15 @@ export function SalonMap({ position, onChange, className, zoom = 16 }: Props) {
         <MapContainer
             center={latLng}
             zoom={position ? zoom : 12}
+            // Read-only maps are static: on a phone a draggable map traps the
+            // thumb that is scrolling the page.
             scrollWheelZoom={false}
-            dragging={editable || undefined}
+            dragging={editable}
+            touchZoom={editable}
+            doubleClickZoom={editable}
+            boxZoom={editable}
+            keyboard={editable}
+            zoomControl={editable}
             className={className}
             attributionControl
         >

@@ -17,7 +17,13 @@ type Props = {
 export function SalonHero({ salon }: Props) {
     return (
         <header>
-            <div className="relative aspect-video w-full overflow-hidden md:aspect-auto md:h-90">
+            <div
+                className={
+                    salon.coverUrl
+                        ? 'relative aspect-video w-full overflow-hidden md:aspect-auto md:h-90'
+                        : 'relative h-24 w-full overflow-hidden'
+                }
+            >
                 {salon.coverUrl ? (
                     <>
                         <img
@@ -28,7 +34,7 @@ export function SalonHero({ salon }: Props) {
                         <div className="absolute inset-0 bg-linear-to-t from-background via-background/20 to-transparent" />
                     </>
                 ) : (
-                    <div className="size-full bg-primary/10" />
+                    <div className="size-full bg-primary/15" />
                 )}
             </div>
 

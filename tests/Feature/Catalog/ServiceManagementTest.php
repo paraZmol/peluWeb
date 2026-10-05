@@ -126,3 +126,18 @@ it('pauses and deletes a service', function () {
     $this->actingAs($this->owner)->delete(route('services.destroy', $service));
     expect(Service::withoutGlobalScope('salon')->find($service->id))->toBeNull();
 });
+
+it('rejects variants sent with arbitrary keys instead of a list', function () {
+    $this->actingAs($this->owner)
+        ->post(route('services.store'), servicePayload(['variants' => [300 => ['label' => 'X', 'price' => '10']]]))
+        ->assertSessionHasErrors('variants');
+});
+
+it('never lets an option end up without duration', function () {
+    $this->actingAs($this->owner)
+        ->post(route('services.store'), servicePayload([
+            'active_minutes' => 10,
+            'variants' => [['label' => 'Express', 'price' => '10', 'extra_minutes' => -60]],
+        ]))
+        ->assertSessionHasErrors('variants.0.extra_minutes');
+});

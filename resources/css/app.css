@@ -178,11 +178,21 @@
     }
 }
 
-/* Salon brand color (see components/salon/brand-theme.tsx). */
+/*
+ * Salon brand color (see components/salon/brand-theme.tsx).
+ * Tailwind's --color-* tokens are resolved once at :root, so they must be
+ * re-declared here or utilities like bg-primary keep the platform color.
+ */
 .brand-scope {
     --primary: var(--brand-light);
     --primary-foreground: var(--brand-light-foreground);
     --ring: var(--brand-light);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-ring: var(--ring);
+    --color-sidebar-primary: var(--primary);
+    --color-sidebar-primary-foreground: var(--primary-foreground);
+    --color-sidebar-ring: var(--ring);
 }
 
 .dark .brand-scope {

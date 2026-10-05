@@ -18,7 +18,11 @@ import { store } from '@/routes/services/catalog';
 import type { Option } from '@/types';
 import type { CatalogEntry } from './types';
 
-type Props = { catalog: CatalogEntry[]; categories: Option[] };
+type Props = {
+    catalog: CatalogEntry[];
+    categories: Option[];
+    primary?: boolean;
+};
 
 /** Accent-insensitive search, so "peluqueria" finds "Peluquería". */
 const normalize = (text: string) =>
@@ -27,7 +31,7 @@ const normalize = (text: string) =>
         .replace(/\p{Diacritic}/gu, '')
         .toLowerCase();
 
-export function CatalogSheet({ catalog, categories }: Props) {
+export function CatalogSheet({ catalog, categories, primary = false }: Props) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [selected, setSelected] = useState<number[]>([]);
@@ -78,7 +82,7 @@ export function CatalogSheet({ catalog, categories }: Props) {
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button variant="outline">
+                <Button variant={primary ? 'default' : 'outline'}>
                     <BookOpen /> Agregar del catálogo
                 </Button>
             </SheetTrigger>
@@ -126,14 +130,6 @@ export function CatalogSheet({ catalog, categories }: Props) {
                                             <span className="flex flex-col gap-0.5">
                                                 <span className="text-sm font-medium">
                                                     {entry.name}
-                                                    {entry.nameEn &&
-                                                        entry.nameEn !==
-                                                            entry.name && (
-                                                            <span className="font-normal text-muted-foreground">
-                                                                {' '}
-                                                                · {entry.nameEn}
-                                                            </span>
-                                                        )}
                                                 </span>
                                                 <span className="text-sm text-muted-foreground">
                                                     {entry.description}

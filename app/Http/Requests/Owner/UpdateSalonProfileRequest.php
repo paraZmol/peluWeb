@@ -31,7 +31,7 @@ class UpdateSalonProfileRequest extends FormRequest
     {
         return [
             ...$this->salonIdentityRules(),
-            'description' => ['nullable', 'string', 'max:600'],
+            'description' => ['nullable', 'string', 'max:600', self::PLAIN_TEXT],
             'instagram' => ['nullable', 'string', 'regex:/^[A-Za-z0-9._]{1,30}$/'],
         ];
     }

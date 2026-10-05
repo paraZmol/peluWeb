@@ -35,10 +35,14 @@ export default function Salon({ salon }: Props) {
                     salonName={salon.name}
                     whatsappUrl={salon.whatsappUrl}
                     instagramUrl={salon.instagramUrl}
+                    directionsUrl={salon.location?.directionsUrl ?? null}
                 />
 
                 <Reveal order={2} className={SECTION_CLASS}>
-                    <ServiceList groups={salon.serviceGroups} />
+                    <ServiceList
+                        groups={salon.serviceGroups}
+                        whatsappUrl={salon.whatsappUrl}
+                    />
                 </Reveal>
 
                 {hasPhotos && (
@@ -61,7 +65,7 @@ export default function Salon({ salon }: Props) {
             </main>
 
             {/* Bottom padding on mobile leaves room for the fixed action bar */}
-            <footer className="pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] text-center text-xs text-muted-foreground md:pb-8">
+            <footer className="pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground md:pb-8">
                 Hecho con peluWeb
             </footer>
         </BrandTheme>

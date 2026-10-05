@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\CurrentSalonController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
 use App\Http\Controllers\Owner\InvitationController;
 use App\Http\Controllers\Owner\MemberController;
@@ -18,7 +19,10 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 
 // Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
-Route::get('s/{salon:slug}', [SalonPageController::class, 'show'])->name('salons.show');
+// Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
+Route::get('s/{salon:slug}', [SalonPageController::class, 'show'])
+    ->middleware('throttle:120,1')
+    ->name('salons.show');
 
 Route::middleware(['guest', 'throttle:10,1'])->group(function () {
     Route::get('auth/google/redirect', [GoogleLoginController::class, 'redirect'])->name('google.redirect');
@@ -31,7 +35,7 @@ Route::get('invitaciones/{token}', [InvitationAcceptanceController::class, 'show
     ->name('invitations.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('salones/nuevo', [SalonController::class, 'create'])->name('salons.create');
     Route::post('salones', [SalonController::class, 'store'])

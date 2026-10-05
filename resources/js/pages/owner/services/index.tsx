@@ -55,10 +55,17 @@ export default function Services({
                         <CatalogSheet
                             catalog={catalog}
                             categories={categories}
+                            primary={services.length === 0}
                         />
                         <Dialog open={creating} onOpenChange={setCreating}>
                             <DialogTrigger asChild>
-                                <Button>
+                                <Button
+                                    variant={
+                                        services.length === 0
+                                            ? 'outline'
+                                            : 'default'
+                                    }
+                                >
                                     <Plus /> Crear servicio
                                 </Button>
                             </DialogTrigger>

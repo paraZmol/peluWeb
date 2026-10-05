@@ -26,6 +26,19 @@ export function ShareSection({ salon }: { salon: SalonSettings }) {
             title="Tu página"
             description="Compártela en tu bio de Instagram, en tus estados de WhatsApp o imprime el QR para el local."
         >
+            {!salon.phone && (
+                <p
+                    role="status"
+                    className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm"
+                >
+                    Agrega el WhatsApp del salón en{' '}
+                    <a href="#datos" className="font-medium underline">
+                        Datos
+                    </a>
+                    : sin él, tus clientes no tienen cómo escribirte para
+                    reservar.
+                </p>
+            )}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 {qr && (
                     <img

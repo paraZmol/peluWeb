@@ -8,6 +8,7 @@ use App\Support\Money;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class ServiceRequest extends FormRequest
 {
@@ -32,7 +33,7 @@ class ServiceRequest extends FormRequest
             'is_addon' => ['boolean'],
             'requires_evaluation' => ['boolean'],
             'requires_patch_test' => ['boolean'],
-            'variants' => ['array', 'max:'.self::MAX_VARIANTS],
+            'variants' => ['array', 'list', 'max:'.self::MAX_VARIANTS],
             'variants.*.id' => ['nullable', 'integer'],
             'variants.*.label' => ['required', 'string', 'max:40', 'regex:/^[^<>\[\]{}]+$/u'],
             'variants.*.price' => ['required', 'string', self::PRICE_RULE],
@@ -76,6 +77,27 @@ class ServiceRequest extends FormRequest
             'price_cents' => Money::toCents($variant['price']),
             'extra_minutes' => (int) ($variant['extra_minutes'] ?? 0),
         ], $variants);
+    }
+
+    /**
+     * No service or option may end up shorter than 5 minutes (a negative
+     * "extra" would otherwise make agenda blocks of zero or less).
+     *
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $base = (int) $this->input('active_minutes') + (int) $this->input('idle_minutes') + (int) $this->input('finish_minutes');
+
+                foreach ((array) $this->input('variants', []) as $index => $variant) {
+                    if (is_array($variant) && $base + (int) ($variant['extra_minutes'] ?? 0) < 5) {
+                        $validator->errors()->add("variants.{$index}.extra_minutes", 'Con esos minutos la opción quedaría sin duración.');
+                    }
+                }
+            },
+        ];
     }
 
     /**

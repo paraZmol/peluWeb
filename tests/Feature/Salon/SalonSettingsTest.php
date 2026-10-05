@@ -118,3 +118,29 @@ it('cannot delete a photo of another salon', function () {
 
     $this->actingAs($this->owner)->delete(route('salon.photos.destroy', $foreign))->assertNotFound();
 });
+
+it('guides the owner with a setup checklist on the dashboard', function () {
+    $this->actingAs($this->owner)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->has('setup', 6)
+            ->where('setup.0.key', 'logo')
+            ->where('setup.0.done', false)
+            ->where('publicUrl', route('salons.show', 'barberia-lucho')));
+});
+
+it('hides the checklist from staff without the profile permission', function () {
+    $staff = User::factory()->create();
+    SalonMember::factory()->for($this->salon)->for($staff)->create();
+
+    $this->actingAs($staff)->get(route('dashboard'))->assertInertia(fn ($page) => $page->where('setup', null));
+});
+
+it('rejects markup and link syntax in free texts', function (string $field, string $route) {
+    $payload = $route === 'salon.profile.update' ? profilePayload([$field => 'Paga [aquí](https://evil.tld)']) : [$field => '<b>Lima</b>'];
+
+    $this->actingAs($this->owner)->put(route($route), $payload)->assertSessionHasErrors($field);
+})->with([
+    'description' => ['description', 'salon.profile.update'],
+    'district' => ['district', 'salon.location.update'],
+]);

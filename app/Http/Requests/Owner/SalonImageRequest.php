@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Owner;
 
+use App\Concerns\SalonValidationRules;
 use App\Support\Images\ImageStore;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,6 +12,8 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class SalonImageRequest extends FormRequest
 {
+    use SalonValidationRules;
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -18,7 +21,7 @@ class SalonImageRequest extends FormRequest
     {
         return [
             'image' => ['required', ...ImageStore::RULES],
-            'caption' => ['nullable', 'string', 'max:120'],
+            'caption' => ['nullable', 'string', 'max:120', self::PLAIN_TEXT],
         ];
     }
 

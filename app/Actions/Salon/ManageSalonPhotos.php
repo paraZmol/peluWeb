@@ -8,6 +8,7 @@ use App\Models\SalonPhoto;
 use App\Support\Images\ImageStore;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class ManageSalonPhotos
 {
@@ -19,24 +20,46 @@ class ManageSalonPhotos
 
     public function add(Salon $salon, UploadedFile $file, ?string $caption): SalonPhoto
     {
-        return DB::transaction(function () use ($salon, $file, $caption): SalonPhoto {
-            // Lock the salon so two uploads cannot both pass the limit.
-            Salon::query()->lockForUpdate()->findOrFail($salon->id);
-            $count = $salon->photos()->count();
+        // Cheap early answer before any image work; re-checked under lock.
+        $this->ensureRoom($this->photoCount($salon));
 
-            if ($count >= SalonPhoto::MAX_PER_SALON) {
-                throw SalonException::galleryFull(SalonPhoto::MAX_PER_SALON);
-            }
+        // Decode and store outside the lock: image processing is slow and
+        // must not hold the salon row.
+        $path = $this->images->storeFitted($file, "salons/{$salon->id}/gallery", self::MAX_WIDTH, self::MAX_HEIGHT);
 
-            $photo = new SalonPhoto;
-            $photo->salon_id = $salon->id;
-            $photo->path = $this->images->storeFitted($file, "salons/{$salon->id}/gallery", self::MAX_WIDTH, self::MAX_HEIGHT);
-            $photo->caption = $caption;
-            $photo->position = $count;
-            $photo->save();
+        try {
+            return DB::transaction(function () use ($salon, $path, $caption): SalonPhoto {
+                // Lock the salon so two uploads cannot both pass the limit.
+                Salon::query()->lockForUpdate()->findOrFail($salon->id);
+                $count = $this->photoCount($salon);
+                $this->ensureRoom($count);
 
-            return $photo;
-        });
+                $photo = new SalonPhoto;
+                $photo->salon_id = $salon->id;
+                $photo->path = $path;
+                $photo->caption = $caption;
+                $photo->position = $count;
+                $photo->save();
+
+                return $photo;
+            });
+        } catch (Throwable $exception) {
+            $this->images->delete($path);
+
+            throw $exception;
+        }
+    }
+
+    private function photoCount(Salon $salon): int
+    {
+        return $salon->photos()->count();
+    }
+
+    private function ensureRoom(int $count): void
+    {
+        if ($count >= SalonPhoto::MAX_PER_SALON) {
+            throw SalonException::galleryFull(SalonPhoto::MAX_PER_SALON);
+        }
     }
 
     public function remove(SalonPhoto $photo): void
