@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\CurrentSalon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -16,7 +17,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Scoped: reset for every request and queued job, never leaks between them.
+        $this->app->scoped(CurrentSalon::class);
     }
 
     /**

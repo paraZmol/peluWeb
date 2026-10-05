@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Actions\Salon;
+
+use App\Enums\BusinessType;
+use App\Enums\Clientele;
+use App\Enums\SalonRole;
+use App\Enums\SalonStatus;
+use App\Models\Salon;
+use App\Models\SalonMember;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class CreateSalon
+{
+    /**
+     * Create a salon in trial and make the given user its owner.
+     */
+    public function handle(
+        User $owner,
+        string $name,
+        BusinessType $businessType,
+        Clientele $clientele,
+        ?string $phone = null,
+    ): Salon {
+        return DB::transaction(function () use ($owner, $name, $businessType, $clientele, $phone): Salon {
+            $salon = new Salon([
+                'name' => $name,
+                'business_type' => $businessType,
+                'clientele' => $clientele,
+                'phone' => $phone,
+            ]);
+            $salon->slug = $this->uniqueSlug($name);
+            $salon->status = SalonStatus::Trial;
+            $salon->trial_ends_at = now()->addDays(Salon::TRIAL_DAYS);
+            $salon->save();
+
+            $membership = new SalonMember;
+            $membership->salon()->associate($salon);
+            $membership->user()->associate($owner);
+            $membership->role = SalonRole::Owner;
+            $membership->save();
+
+            return $salon;
+        });
+    }
+
+    private function uniqueSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: 'salon';
+        $slug = $base;
+
+        while (Salon::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.Str::lower(Str::random(4));
+        }
+
+        return $slug;
+    }
+}

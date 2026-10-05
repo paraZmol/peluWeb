@@ -10,7 +10,7 @@ export function useClipboard(): UseClipboardReturn {
 
     const copy: CopyFn = async (text) => {
         if (!navigator?.clipboard) {
-            console.warn('Clipboard not supported');
+            console.warn('Portapapeles no compatible');
 
             return false;
         }
@@ -21,7 +21,7 @@ export function useClipboard(): UseClipboardReturn {
 
             return true;
         } catch (error) {
-            console.warn('Copy failed', error);
+            console.warn('Error al copiar', error);
             setCopiedText(null);
 
             return false;

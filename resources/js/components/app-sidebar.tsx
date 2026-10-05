@@ -1,9 +1,9 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { SalonSwitcher } from '@/components/salon/salon-switcher';
 import {
     Sidebar,
     SidebarContent,
@@ -13,43 +13,35 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { dashboard } from '@/routes';
+import { index as team } from '@/routes/team';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
-
 export function AppSidebar() {
+    const { currentSalon, isOwner } = useCurrentSalon();
+
+    const mainNavItems: NavItem[] = [
+        { title: 'Panel', href: dashboard(), icon: LayoutGrid },
+        ...(isOwner ? [{ title: 'Equipo', href: team(), icon: Users }] : []),
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+                {currentSalon ? (
+                    <SalonSwitcher />
+                ) : (
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" asChild>
+                                <Link href={dashboard()} prefetch>
+                                    <AppLogo />
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                )}
             </SidebarHeader>
 
             <SidebarContent>
@@ -57,7 +49,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

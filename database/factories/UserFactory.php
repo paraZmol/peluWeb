@@ -57,4 +57,14 @@ class UserFactory extends Factory
             'two_factor_confirmed_at' => now(),
         ]);
     }
+
+    /**
+     * Indicate that the user is a platform (super) admin.
+     */
+    public function platformAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_platform_admin' => true,
+        ]);
+    }
 }

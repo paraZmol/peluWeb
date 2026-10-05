@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\SalonPermission;
+use App\Models\SalonMember;
+use App\Support\CurrentSalon;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +45,49 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            ...$this->salonProps($request),
+        ];
+    }
+
+    /**
+     * The current salon, the user's role and permissions in it, and the list
+     * of salons they can switch to. Permissions here only drive the UI;
+     * every action is authorized again on the server.
+     *
+     * @return array{currentSalon: array<string, mixed>|null, salons: array<int, array<string, mixed>>}
+     */
+    private function salonProps(Request $request): array
+    {
+        $user = $request->user();
+        $salon = app(CurrentSalon::class)->get();
+
+        if ($user === null) {
+            return ['currentSalon' => null, 'salons' => []];
+        }
+
+        $membership = $salon !== null ? $user->membershipIn($salon) : null;
+
+        return [
+            'currentSalon' => $salon === null || $membership === null ? null : [
+                'id' => $salon->id,
+                'name' => $salon->name,
+                'slug' => $salon->slug,
+                'role' => $membership->role->value,
+                'permissions' => collect(SalonPermission::cases())
+                    ->filter(fn (SalonPermission $permission) => $membership->hasPermission($permission))
+                    ->map(fn (SalonPermission $permission) => $permission->value)
+                    ->values()
+                    ->all(),
+            ],
+            'salons' => $user->memberships
+                ->filter(fn (SalonMember $member) => $member->salon !== null)
+                ->map(fn (SalonMember $member) => [
+                    'id' => $member->salon_id,
+                    'name' => $member->salon->name,
+                    'role' => $member->role->value,
+                ])
+                ->values()
+                ->all(),
         ];
     }
 }

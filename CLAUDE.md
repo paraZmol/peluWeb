@@ -34,7 +34,11 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
 
 ## Reglas de arquitectura
 1. **Aislamiento entre salones**: todo modelo de negocio usa `BelongsToSalon`. Cada controlador
-   autoriza con Policy. Un test por recurso demuestra que el salón A no ve/edita lo del salón B.
+   autoriza con Policy. Un test por recurso demuestra que el salón A no ve/edita lo del salón B
+   **atacando la URL con el id ajeno** (`/equipo/invitaciones/{id-de-otro-salón}` → 404).
+   `ResolveCurrentSalon` corre antes de `SubstituteBindings` (bootstrap/app.php); sin eso el
+   binding encuentra registros de otros salones (bug real atrapado el 2026-10-04).
+   Modelos sin `BelongsToSalon` (ej. `SalonMember`) se comprueban a mano contra `CurrentSalon`.
 2. **Agenda**: disponibilidad en una sola clase pura `AvailabilityCalculator`; guardado en
    transacción con `lockForUpdate()` sobre el profesional. Cargar skill `booking-domain` antes de tocarla.
 3. **La autoridad es el servidor**: ocultar un botón no es seguridad. Lo VIP, los precios y los
