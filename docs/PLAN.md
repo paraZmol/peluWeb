@@ -247,6 +247,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] 2.5 Catálogo de plataforma: **116** servicios (no 106) con sinónimos en inglés, tramos, rangos de precio y etiquetas; migración de datos + `php artisan catalog:sync`. *(2026-10-04)*
 - [x] 2.6 Servicios: del catálogo (buscador sin tildes) o propios; precio, tramos trabajo/espera/final, variantes, adicionales, evaluación y prueba de alergia; pausar y quitar. **Cambio:** los combos pasan a la Fase 4 (el cliente podrá elegir varios servicios en una reserva). *(2026-10-04)*
 - [x] 2.7 Página pública `/s/{slug}` con servicios, galería, mapa, WhatsApp, compartir; Open Graph renderizado en servidor; QR descargable en "Mi salón". *(2026-10-04)*
+- [x] 2.8 **Portada de la plataforma** (adelantada de 7.5): menú, qué es, antes/después, funciones, cómo funciona, para quién, precios, preguntas, quiénes somos y pie; contenido editable en `components/landing/content.ts`. Ícono propio (tijeras) en la pestaña y en iPhone.
 - [x] *Cierre (2026-10-04):* 354 tests + 31 E2E en verde; **qa-tester** sin bugs (106 tests nuevos). **security-auditor**: 0 críticos/altos, 7 bajos → 5 corregidos (variantes como lista y sin duración ≤ 0, texto plano en campos libres, límite en la página pública, foto procesada fuera del bloqueo); imágenes de salón suspendido siguen accesibles por URL directa (aceptado: nombres aleatorios) y CSP completa en 8.8. **ux-reviewer**: 15 puntos → corregidos los 3 BLOQUEA (mapa estático que no atrapa el dedo, portada compacta sin foto, acción cuando no hay servicios o WhatsApp) y 7 MOLESTA, incluido un **bug real**: el color de marca no pintaba los botones (Tailwind resuelve `--color-primary` en `:root`).
 
 ### Fase 3 — Personal y horarios
@@ -299,7 +300,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 7.2 Suscripciones, prueba de 30 días, registro manual de pagos, avisos de vencimiento.
 - [ ] 7.3 Gracia y modo solo lectura para salones vencidos o suspendidos.
 - [ ] 7.4 Métricas del super admin y "entrar como salón" con auditoría.
-- [ ] 7.5 Landing de ventas de la plataforma (qué es, precios, "Prueba gratis").
+- [x] 7.5 Landing de ventas → adelantada al paso 2.8.
 - *Cierre:* **security-auditor** (escalada a super admin, eludir límites del plan).
 
 ### Fase 8 — PWA, pulido y piloto
@@ -369,6 +370,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-04 | Entorno: **sin Laragon**. PHP 8.4 aparte en `C:\php84` + el MySQL 9.6 que ya estaba instalado (CI y producción en MySQL 8.4). Tests contra MySQL en vez de SQLite. Color de marca por defecto `#8F5E45` (el `#B4846C` no pasaba contraste AA) | Pedido del usuario: usar XAMPP/MySQL o instalar aparte, nada desconocido |
 | 2026-10-04 | Herramientas de orden y limpieza: **Laravel Boost** (guías y skills oficiales de Laravel 13, Inertia, React, Pest, Tailwind, Wayfinder, solo para Claude Code y sin Laravel Cloud) + skill propia `clean-code` (estructura de carpetas, tamaños máximos, nombres, checklist) + `Model::shouldBeStrict()` en desarrollo. `.claude/` y `CLAUDE.md` ahora sí van a git. Lanzador `dev.cmd` | Pedido del usuario: código ordenado y limpio; `composer dev` fallaba con el PHP de XAMPP |
 | 2026-10-04 | Roles por salón con **tabla propia** en vez de spatie/laravel-permission. Pruebas de navegador con **Playwright Test** en vez de pest-plugin-browser. Los salones se crean por autoservicio (el panel no los da de alta) | spatie con "teams" depende de un id global por petición, fácil de olvidar en colas (fuga entre salones); el plugin de Pest se cuelga en Windows; el modelo SaaS es autoservicio con prueba gratis |
+| 2026-10-04 | Portada de ventas adelantada de la Fase 7 a la 2.8 | Pedido del usuario: al entrar solo se veía "crear cuenta", sin menú ni explicación del producto |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

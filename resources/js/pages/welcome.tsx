@@ -1,50 +1,66 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { dashboard, login, register } from '@/routes';
+import { Head, usePage } from '@inertiajs/react';
+import { useReducedMotion } from 'motion/react';
+import { useEffect } from 'react';
+import { About } from '@/components/landing/about';
+import { Audiences } from '@/components/landing/audiences';
+import { BeforeAfter } from '@/components/landing/before-after';
+import { META_DESCRIPTION, PAGE_TITLE } from '@/components/landing/content';
+import { Faq } from '@/components/landing/faq';
+import { Features } from '@/components/landing/features';
+import { FinalCta } from '@/components/landing/final-cta';
+import { Hero } from '@/components/landing/hero';
+import { HowItWorks } from '@/components/landing/how-it-works';
+import { Pricing } from '@/components/landing/pricing';
+import { SiteFooter } from '@/components/landing/site-footer';
+import { SiteHeader } from '@/components/landing/site-header';
+
+/** Smooth anchor scrolling only while this page is mounted and motion is allowed. */
+function useSmoothScroll(): void {
+    const reduceMotion = useReducedMotion();
+
+    useEffect(() => {
+        if (reduceMotion) {
+            return;
+        }
+
+        const root = document.documentElement;
+        root.style.scrollBehavior = 'smooth';
+
+        return () => {
+            root.style.scrollBehavior = '';
+        };
+    }, [reduceMotion]);
+}
 
 export default function Welcome() {
     const { auth } = usePage().props;
+    useSmoothScroll();
 
     return (
         <>
-            <Head title="Inicio" />
-            <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-6 text-center text-foreground">
-                <h1 className="max-w-2xl font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-                    Reservas y gestión para tu peluquería, barbería o salón
-                </h1>
-                <p className="max-w-xl text-muted-foreground">
-                    Organiza tu agenda, a tu equipo y a tus clientes en un solo
-                    lugar.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                    {auth.user ? (
-                        <Link
-                            href={dashboard()}
-                            className={cn(buttonVariants())}
-                        >
-                            Ir al panel
-                        </Link>
-                    ) : (
-                        <>
-                            <Link
-                                href={login()}
-                                className={cn(buttonVariants())}
-                            >
-                                Iniciar sesión
-                            </Link>
-                            <Link
-                                href={register()}
-                                className={cn(
-                                    buttonVariants({ variant: 'outline' }),
-                                )}
-                            >
-                                Crear cuenta
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </main>
+            <Head title={PAGE_TITLE}>
+                <meta
+                    head-key="description"
+                    name="description"
+                    content={META_DESCRIPTION}
+                />
+            </Head>
+
+            <div className="min-h-svh overflow-x-clip bg-background text-foreground">
+                <SiteHeader isAuthenticated={Boolean(auth.user)} />
+                <main>
+                    <Hero />
+                    <BeforeAfter />
+                    <Features />
+                    <HowItWorks />
+                    <Audiences />
+                    <Pricing />
+                    <Faq />
+                    <About />
+                    <FinalCta />
+                </main>
+                <SiteFooter />
+            </div>
         </>
     );
 }
