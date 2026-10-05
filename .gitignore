@@ -39,3 +39,6 @@ yarn-error.log
 /AGENTS.md
 /opencode.json
 /opencode.jsonc
+/public/css/filament
+/public/js/filament
+/public/fonts/filament

@@ -72,6 +72,7 @@ export default defineConfig({
             'docs/**',
             'CLAUDE.md',
             'composer.json',
+            'public/**',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
         ],

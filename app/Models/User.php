@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -36,10 +38,20 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  */
 #[Fillable(['name', 'email', 'phone', 'password'])]
 #[Hidden(['password', 'google_id', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * Mirrors the column default so a freshly created instance is never
+     * missing the attribute (strict mode would throw on access).
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_platform_admin' => false,
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -69,6 +81,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         $salonId = $salon instanceof Salon ? $salon->id : $salon;
 
         return $this->memberships->firstWhere('salon_id', $salonId);
+    }
+
+    /**
+     * Only the platform owner reaches /plataforma; 2FA is enforced by the
+     * RequireTwoFactor middleware so the admin gets a helpful redirect.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_platform_admin && $this->hasVerifiedEmail();
     }
 
     public function hasTwoFactorEnabled(): bool
