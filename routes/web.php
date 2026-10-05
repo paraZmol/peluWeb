@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\CurrentSalonController;
 use App\Http\Controllers\InvitationAcceptanceController;
 use App\Http\Controllers\Owner\InvitationController;
@@ -9,6 +10,11 @@ use App\Http\Controllers\Owner\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+Route::middleware(['guest', 'throttle:10,1'])->group(function () {
+    Route::get('auth/google/redirect', [GoogleLoginController::class, 'redirect'])->name('google.redirect');
+    Route::get('auth/google/callback', [GoogleLoginController::class, 'callback'])->name('google.callback');
+});
 
 // Invitation links arrive by email, so the page itself is public.
 Route::get('invitaciones/{token}', [InvitationAcceptanceController::class, 'show'])

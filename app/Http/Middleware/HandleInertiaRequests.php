@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Enums\SalonPermission;
+use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Models\SalonMember;
 use App\Support\CurrentSalon;
 use Illuminate\Http\Request;
@@ -45,6 +46,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'features' => [
+                'googleLogin' => GoogleLoginController::isEnabled(),
+            ],
             ...$this->salonProps($request),
         ];
     }

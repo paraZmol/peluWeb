@@ -13,6 +13,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            features: { googleLogin: boolean };
             currentSalon: CurrentSalon | null;
             salons: SalonSummary[];
             [key: string]: unknown;

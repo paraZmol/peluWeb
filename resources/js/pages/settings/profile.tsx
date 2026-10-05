@@ -2,6 +2,7 @@ import { Form, Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
+import { AvatarUploader } from '@/components/profile/avatar-uploader';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -34,8 +35,10 @@ export default function Profile({
                 <Heading
                     variant="small"
                     title="Perfil"
-                    description="Actualiza tu nombre y correo electrónico"
+                    description="Tu foto, nombre, correo y WhatsApp"
                 />
+
+                <AvatarUploader />
 
                 <Form
                     {...ProfileController.update.form()}
