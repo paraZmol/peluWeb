@@ -59,6 +59,14 @@ jobs:
       - name: Run CI Checks
         run: composer ci:check
 
+      - name: End-to-end tests (Playwright)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run build
+          npm run e2e
+        env:
+          PHP: php
+
       - name: Audit dependencies
         run: |
           composer audit
