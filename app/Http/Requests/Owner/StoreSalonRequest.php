@@ -19,10 +19,22 @@ class StoreSalonRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'min:2', 'max:120'],
+            // Letters, digits and everyday punctuation only: the name goes into
+            // emails and pages, so no markup or link syntax.
+            'name' => ['required', 'string', 'min:2', 'max:120', "regex:/^[\\pL\\pN\\s'&.,·:\\-]+$/u"],
             'business_type' => ['required', Rule::enum(BusinessType::class)],
             'clientele' => ['required', Rule::enum(Clientele::class)],
             'phone' => ['nullable', 'string', 'regex:/^\+?[0-9]{7,15}$/'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.regex' => 'El nombre solo puede tener letras, números, espacios y signos como . , & \' -',
         ];
     }
 

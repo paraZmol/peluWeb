@@ -41,12 +41,12 @@ class GoogleLoginController extends Controller
 
         // Google proves the email, not the second factor: 2FA still applies.
         if ($user->hasTwoFactorEnabled()) {
-            $request->session()->put(['login.id' => $user->id, 'login.remember' => true]);
+            $request->session()->put(['login.id' => $user->id, 'login.remember' => false]);
 
             return to_route('two-factor.login');
         }
 
-        Auth::login($user, remember: true);
+        Auth::login($user);
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));

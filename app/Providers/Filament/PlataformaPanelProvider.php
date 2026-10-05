@@ -2,7 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\BypassSalonScope;
 use App\Http\Middleware\RequireTwoFactor;
+use App\Http\Middleware\SecurityHeaders;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -56,10 +58,12 @@ class PlataformaPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                SecurityHeaders::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
                 RequireTwoFactor::class,
-            ]);
+                BypassSalonScope::class,
+            ], isPersistent: true);
     }
 }

@@ -29,7 +29,7 @@ class AcceptInvitation
         return DB::transaction(function () use ($user, $plainToken): SalonMember {
             $invitation = $this->find($plainToken);
 
-            if ($invitation === null || ! $invitation->isPending()) {
+            if ($invitation === null || ! $invitation->isPending() || ! $invitation->salon->isWritable()) {
                 throw TeamException::invitationNotValid();
             }
 
@@ -42,11 +42,15 @@ class AcceptInvitation
                 ->where('user_id', $user->id)
                 ->first() ?? new SalonMember;
 
-            $membership->salon_id = $invitation->salon_id;
-            $membership->user_id = $user->id;
-            $membership->role = $invitation->role;
-            $membership->permissions = $invitation->permissions;
-            $membership->save();
+            // An invitation never downgrades an existing owner: that would
+            // bypass the "a salon always has an owner" rule.
+            if (! $membership->exists || ! $membership->isOwner()) {
+                $membership->salon_id = $invitation->salon_id;
+                $membership->user_id = $user->id;
+                $membership->role = $invitation->role;
+                $membership->permissions = $invitation->permissions;
+                $membership->save();
+            }
 
             $invitation->accepted_at = now();
             $invitation->save();

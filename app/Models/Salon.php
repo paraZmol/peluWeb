@@ -66,6 +66,20 @@ class Salon extends Model
         return $this->hasMany(SalonInvitation::class);
     }
 
+    /**
+     * Whether the salon may change data. Past-due is the 7-day grace period
+     * (PLAN §4.10) and still writable; suspended salons and expired trials
+     * are read only until the subscription is renewed.
+     */
+    public function isWritable(): bool
+    {
+        return match ($this->status) {
+            SalonStatus::Active, SalonStatus::PastDue => true,
+            SalonStatus::Trial => $this->trial_ends_at === null || $this->trial_ends_at->isFuture(),
+            SalonStatus::Suspended => false,
+        };
+    }
+
     public function ownersCount(): int
     {
         return $this->members()->where('role', SalonRole::Owner)->count();

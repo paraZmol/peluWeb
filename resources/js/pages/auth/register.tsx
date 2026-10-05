@@ -14,6 +14,17 @@ type Props = {
     passwordRules: string;
 };
 
+/** Prefill when arriving from a team invitation (?email=...). */
+function invitedEmail(): string | undefined {
+    if (typeof window === 'undefined') {
+        return undefined;
+    }
+
+    return (
+        new URLSearchParams(window.location.search).get('email') ?? undefined
+    );
+}
+
 export default function Register({ passwordRules }: Props) {
     return (
         <>
@@ -57,6 +68,7 @@ export default function Register({ passwordRules }: Props) {
                                     tabIndex={2}
                                     autoComplete="email"
                                     name="email"
+                                    defaultValue={invitedEmail()}
                                     placeholder="correo@ejemplo.com"
                                 />
                                 <InputError message={errors.email} />

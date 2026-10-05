@@ -43,13 +43,40 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $this->userProps($request),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'features' => [
                 'googleLogin' => GoogleLoginController::isEnabled(),
             ],
             ...$this->salonProps($request),
+        ];
+    }
+
+    /**
+     * An explicit allow-list: the whole User model (with loaded relations,
+     * flags and 2FA timestamps) must never reach the page or browser history.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function userProps(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return null;
+        }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar' => $user->avatar,
+            'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+            'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+            'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
         ];
     }
 

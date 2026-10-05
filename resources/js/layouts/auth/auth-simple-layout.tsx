@@ -21,8 +21,8 @@ export default function AuthSimpleLayout({
     useEffect(() => {
         if (errorCount > 0 && !reduceMotion) {
             void shake.start({
-                x: [0, -8, 8, -6, 6, -3, 0],
-                transition: { duration: 0.35 },
+                x: [0, -6, 6, -4, 4, 0],
+                transition: { duration: 0.22 },
             });
         }
     }, [errors, errorCount, reduceMotion, shake]);
@@ -42,7 +42,7 @@ export default function AuthSimpleLayout({
                             className="flex flex-col items-center gap-2 font-medium"
                         >
                             <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                                <AppLogoIcon className="size-9 fill-current text-foreground" />
+                                <AppLogoIcon className="size-9 text-primary" />
                             </div>
                             <span className="sr-only">{title}</span>
                         </Link>
@@ -56,11 +56,7 @@ export default function AuthSimpleLayout({
                             )}
                         </div>
                     </div>
-                    <motion.div
-                        animate={shake}
-                        className="flex flex-col gap-6"
-                        aria-live="polite"
-                    >
+                    <motion.div animate={shake} className="flex flex-col gap-6">
                         {children}
                     </motion.div>
                 </div>

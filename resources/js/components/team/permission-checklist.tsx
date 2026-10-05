@@ -1,5 +1,4 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import type { Option, SalonPermission } from '@/types';
 
 type Props = {
@@ -14,7 +13,7 @@ export function PermissionChecklist({
     idPrefix,
 }: Props) {
     return (
-        <fieldset className="grid gap-3">
+        <fieldset className="grid gap-2">
             <legend className="mb-1 text-sm font-medium">
                 Además de su agenda, puede…
             </legend>
@@ -22,7 +21,11 @@ export function PermissionChecklist({
                 const id = `${idPrefix}-${option.value}`;
 
                 return (
-                    <div key={option.value} className="flex items-center gap-3">
+                    <label
+                        key={option.value}
+                        htmlFor={id}
+                        className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border bg-card p-3 hover:bg-accent"
+                    >
                         <Checkbox
                             id={id}
                             name="permissions[]"
@@ -31,10 +34,8 @@ export function PermissionChecklist({
                                 option.value,
                             )}
                         />
-                        <Label htmlFor={id} className="font-normal">
-                            {option.label}
-                        </Label>
-                    </div>
+                        <span className="text-sm">{option.label}</span>
+                    </label>
                 );
             })}
         </fieldset>

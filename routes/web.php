@@ -37,7 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('salon')->group(function () {
         Route::get('equipo', [TeamController::class, 'index'])->name('team.index');
         Route::post('equipo/invitaciones', [InvitationController::class, 'store'])
-            ->middleware('throttle:20,1')
+            ->middleware('throttle:invitations')
             ->name('team.invitations.store');
         Route::delete('equipo/invitaciones/{invitation}', [InvitationController::class, 'destroy'])
             ->name('team.invitations.destroy');

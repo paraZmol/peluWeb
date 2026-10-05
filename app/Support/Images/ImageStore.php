@@ -17,8 +17,11 @@ use Intervention\Image\ImageManager;
  */
 class ImageStore
 {
-    /** Validation rules every image upload must use. */
-    public const array RULES = ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=8000,max_height=8000'];
+    /**
+     * Validation rules every image upload must use. The pixel cap matters:
+     * a tiny PNG of 8000x8000 decodes to ~256 MB and kills the worker.
+     */
+    public const array RULES = ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=4000,max_height=4000'];
 
     private const int WEBP_QUALITY = 82;
 

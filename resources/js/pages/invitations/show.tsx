@@ -51,7 +51,13 @@ export default function ShowInvitation({ token, invitation }: Props) {
                         Usa el correo {invitation.email} para continuar.
                     </p>
                     <Button asChild className="w-full rounded-full">
-                        <Link href={register()}>Crear cuenta</Link>
+                        <Link
+                            href={register({
+                                query: { email: invitation.email },
+                            })}
+                        >
+                            Crear cuenta
+                        </Link>
                     </Button>
                     <Button
                         asChild

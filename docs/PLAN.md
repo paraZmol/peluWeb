@@ -230,14 +230,14 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] 0.7 Calidad de código: Boost + skill `clean-code` + modelos estrictos + `dev.cmd`. *(2026-10-04)*
 
 ### Fase 1 — Cuentas, roles y multi-salón
-- [ ] 1.1 Migraciones `users`, `salons`, `salon_user`; trait `BelongsToSalon` con global scope y salón activo en la sesión.
-- [ ] 1.2 Roles y permisos (spatie) por salón; middleware `role` y Policies base.
-- [ ] 1.3 Registro, login (email + Google), verificación de email, recuperación, 2FA. **Animaciones de login** (ver `ui-system`).
-- [ ] 1.4 Perfil de usuario: datos, foto, teléfono, tema, cambiar contraseña, borrar cuenta.
-- [ ] 1.5 Invitaciones al personal por enlace o email con expiración.
-- [ ] 1.6 Panel Filament del super admin: listado y alta de salones, 2FA obligatorio.
-- [ ] 1.7 Selector de salón para quien pertenece a varios.
-- *Cierre:* test de aislamiento (dueño A no ve nada del salón B) + **security-auditor** + **qa-tester**.
+- [x] 1.1 Tablas `salons`, `salon_user`, `salon_invitations` + `CurrentSalon`, trait `BelongsToSalon` y salón activo en la sesión, resuelto **antes** del route model binding. *(2026-10-04)*
+- [x] 1.2 Roles por salón con **tabla propia** (`salon_user.role` + `permissions`, ver §11), `SalonPolicy`, `SalonMemberPolicy` y middleware `salon`. *(2026-10-04)*
+- [x] 1.3 Registro, login con email y con **Google** (se activa con `GOOGLE_CLIENT_ID`), verificación de email, recuperación, 2FA y passkeys. Animaciones de entrada y sacudida en error. Interfaz en español. *(2026-10-04)*
+- [~] 1.4 Perfil: datos, **foto** (WebP 512 px, sin EXIF), WhatsApp, cambiar contraseña y borrar cuenta. **Falta:** el tema claro/oscuro se recuerda por navegador (cookie del kit), no por cuenta → se mueve a la Fase 8 (pulido).
+- [x] 1.5 Invitaciones por correo: token hasheado, 7 días, mismo correo verificado, la nueva reemplaza a la anterior. *(2026-10-04)*
+- [x] 1.6 Panel `/plataforma` (Filament 5): salones (ver, editar, suspender, prueba, eliminar/restaurar) y usuarios (solo lectura); solo super admin con 2FA; rol por consola `platform:grant-admin`. Los salones los crean sus dueños (autoservicio). *(2026-10-04)*
+- [x] 1.7 Selector de salón en la barra lateral. *(2026-10-04)*
+- [x] *Cierre (2026-10-04):* 181 tests Pest + 15 E2E (móvil y escritorio, claro y oscuro) en verde. **security-auditor**: 1 ALTO (toma de cuenta previa vía Google) + 5 MEDIOS + 6 BAJOS → todos corregidos con test de regresión (`tests/Feature/Security/Phase1HardeningTest.php`). **qa-tester**: 3 hallazgos → 2 bugs corregidos (único dueño que borra su cuenta; invitación que degradaba a un dueño), 1 era decisión de plan (§11). **ux-reviewer**: 15 puntos → corregidos los 3 BLOQUEA y 5 MOLESTA; el resto pasó a la Fase 8 (paso 8.7).
 
 ### Fase 2 — Salón, marca, servicios
 - [ ] 2.1 Asistente de alta del salón (nombre, tipo, público, enlace, teléfono, horario general) en ≤ 5 pantallas.
@@ -302,6 +302,8 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 8.4 Auditoría completa: los 4 agentes en paralelo + OWASP ZAP baseline; corregir todo lo CRÍTICO y ALTO.
 - [ ] 8.5 **Piloto** con 1–3 salones reales durante 1 semana; recoger fallos y ajustar.
 - [ ] 8.6 Prueba manual en un iPhone y un Android reales (instalación, push, reserva).
+- [ ] 8.7 Pendientes de UX de la Fase 1: navegación inferior por rol en móvil; diálogos como hoja inferior (Drawer) en móvil con spinner en confirmaciones; página 404/500 con marca y modo oscuro; aviso "sin conexión" con reintento; error de login como `Alert` sobre el botón; registro sin "confirmar contraseña" y con la regla visible; panel con acciones útiles para el personal y chevron en tarjetas enlace; textos de ayuda a 14 px; tema claro/oscuro guardado por cuenta (no solo por navegador).
+- [ ] 8.8 Seguridad pendiente de la Fase 1: CSP completa (hoy solo `frame-ancestors`) y `Inertia::encryptHistory()` + limpiar historial al cerrar sesión (tablets compartidas del salón).
 
 ### Fase 9 — Lanzamiento
 - [ ] 9.1 Dominio y hosting (cPanel con PHP 8.3 o VPS), HTTPS, cron, colas.
@@ -358,6 +360,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-04 | Versión inicial | Investigación de mercado, stack y catálogo |
 | 2026-10-04 | Entorno: **sin Laragon**. PHP 8.4 aparte en `C:\php84` + el MySQL 9.6 que ya estaba instalado (CI y producción en MySQL 8.4). Tests contra MySQL en vez de SQLite. Color de marca por defecto `#8F5E45` (el `#B4846C` no pasaba contraste AA) | Pedido del usuario: usar XAMPP/MySQL o instalar aparte, nada desconocido |
 | 2026-10-04 | Herramientas de orden y limpieza: **Laravel Boost** (guías y skills oficiales de Laravel 13, Inertia, React, Pest, Tailwind, Wayfinder, solo para Claude Code y sin Laravel Cloud) + skill propia `clean-code` (estructura de carpetas, tamaños máximos, nombres, checklist) + `Model::shouldBeStrict()` en desarrollo. `.claude/` y `CLAUDE.md` ahora sí van a git. Lanzador `dev.cmd` | Pedido del usuario: código ordenado y limpio; `composer dev` fallaba con el PHP de XAMPP |
+| 2026-10-04 | Roles por salón con **tabla propia** en vez de spatie/laravel-permission. Pruebas de navegador con **Playwright Test** en vez de pest-plugin-browser. Los salones se crean por autoservicio (el panel no los da de alta) | spatie con "teams" depende de un id global por petición, fácil de olvidar en colas (fuga entre salones); el plugin de Pest se cuelga en Windows; el modelo SaaS es autoservicio con prueba gratis |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

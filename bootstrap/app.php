@@ -5,6 +5,8 @@ use App\Http\Middleware\EnsureSalonMember;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveCurrentSalon;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\ThrottleAccountEndpoints;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -33,7 +35,16 @@ return Application::configure(basePath: dirname(__DIR__))
             prepend: ResolveCurrentSalon::class,
         );
 
+        // Only the configured domain is trusted (Host header poisoning).
+        // Laravel skips this check in local and in tests.
+        $middleware->trustHosts(
+            at: fn () => [(string) parse_url((string) config('app.url'), PHP_URL_HOST)],
+            subdomains: false,
+        );
+
         $middleware->web(append: [
+            SecurityHeaders::class,
+            ThrottleAccountEndpoints::class,
             HandleAppearance::class,
             ResolveCurrentSalon::class,
             HandleInertiaRequests::class,

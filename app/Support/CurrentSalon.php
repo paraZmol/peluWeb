@@ -7,10 +7,16 @@ use App\Models\Salon;
 /**
  * The salon the current request is acting on. Registered as a scoped
  * singleton, so it is reset between requests and queued jobs.
+ *
+ * Fail closed: with no salon set, salon-scoped models return nothing unless
+ * the caller explicitly opted out with bypass() (platform panel, console
+ * maintenance). Every bypass is a deliberate, greppable decision.
  */
 class CurrentSalon
 {
     private ?Salon $salon = null;
+
+    private bool $bypassed = false;
 
     public function set(?Salon $salon): void
     {
@@ -30,5 +36,18 @@ class CurrentSalon
     public function has(): bool
     {
         return $this->salon !== null;
+    }
+
+    /**
+     * See every salon's data. Only for the platform admin and console tasks.
+     */
+    public function bypass(): void
+    {
+        $this->bypassed = true;
+    }
+
+    public function isBypassed(): bool
+    {
+        return $this->bypassed;
     }
 }

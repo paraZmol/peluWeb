@@ -28,43 +28,47 @@ export function MemberList({ members, roles, permissionOptions }: Props) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="flex flex-wrap items-center gap-3 p-4"
+                        className="flex flex-col gap-3 p-4 md:flex-row md:items-center"
                     >
                         <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium">
+                            <p className="font-medium break-words">
                                 {member.name}
                                 {member.isYou && (
-                                    <span className="ml-2 text-xs text-muted-foreground">
+                                    <span className="ml-2 text-sm text-muted-foreground">
                                         (tú)
                                     </span>
                                 )}
                             </p>
-                            <p className="truncate text-sm text-muted-foreground">
+                            <p className="text-sm break-all text-muted-foreground">
                                 {member.email}
                             </p>
                         </div>
-                        <Badge
-                            variant={
-                                member.role === 'owner'
-                                    ? 'default'
-                                    : 'secondary'
-                            }
-                        >
-                            {roleLabel(member.role)}
-                        </Badge>
-                        <div className="flex gap-1">
-                            <MemberEditDialog
-                                member={member}
-                                roles={roles}
-                                permissionOptions={permissionOptions}
-                            />
-                            <ConfirmRemoveDialog
-                                triggerLabel="Quitar"
-                                title={`¿Quitar a ${member.name} del equipo?`}
-                                description="Ya no podrá entrar a este salón. Sus datos personales no se borran."
-                                confirmLabel="Sí, quitar"
-                                form={destroy.form(member.id)}
-                            />
+                        <div className="flex items-center gap-3">
+                            <Badge
+                                variant={
+                                    member.role === 'owner'
+                                        ? 'default'
+                                        : 'secondary'
+                                }
+                            >
+                                {roleLabel(member.role)}
+                            </Badge>
+                            <div className="ml-auto flex gap-3 md:gap-1">
+                                <MemberEditDialog
+                                    member={member}
+                                    roles={roles}
+                                    permissionOptions={permissionOptions}
+                                />
+                                {!member.isYou && (
+                                    <ConfirmRemoveDialog
+                                        triggerLabel="Quitar"
+                                        title={`¿Quitar a ${member.name} del equipo?`}
+                                        description="Ya no podrá entrar a este salón. Sus datos personales no se borran."
+                                        confirmLabel="Sí, quitar"
+                                        form={destroy.form(member.id)}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </motion.li>
                 ))}

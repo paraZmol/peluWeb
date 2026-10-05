@@ -25,7 +25,11 @@ export default function CreateSalon({ businessTypes, clienteles }: Props) {
                     después. Tienes 30 días de prueba gratis.
                 </p>
 
-                <Form {...store.form()} className="mt-8 flex flex-col gap-8">
+                <Form
+                    {...store.form()}
+                    noValidate
+                    className="mt-8 flex flex-col gap-8"
+                >
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-2">

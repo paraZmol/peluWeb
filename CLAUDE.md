@@ -16,8 +16,9 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
 - **MySQL**: 9.6 local (servicio `MySQL96`), 8.4 en CI y producción → no usar nada exclusivo de 9.x.
   No usar la MariaDB de XAMPP. Montos en céntimos `INT`, fechas en UTC.
 - **Filament 5** solo para el panel del super admin. Los paneles de dueño/personal son React.
-- `spatie/laravel-permission` (roles), `spatie/laravel-medialibrary` + `intervention/image`
-  (imágenes WebP), Sanctum (API para la futura app Flutter).
+- Roles **por salón con tabla propia** (`salon_user`: rol + permisos; ver `SalonMember`), sin spatie.
+  Imágenes con `App\Support\Images\ImageStore` (Intervention, WebP). Sanctum para la futura app Flutter.
+- E2E: **Playwright Test** (`npm run e2e`, `tests/e2e`), no pest-plugin-browser (se cuelga en Windows).
 - Multi-tenant en **una sola base** con columna `salon_id` + trait `BelongsToSalon` (global scope).
 - PWA primero (Android e iOS instalables). Flutter en una fase posterior consumiendo `/api/v1`.
 - Mapas: pin con Leaflet + OSM para fijar, iframe Maps Embed (gratis) + enlace "Abrir en Google Maps".
