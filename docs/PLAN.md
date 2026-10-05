@@ -247,9 +247,15 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] 2.5 Catálogo de plataforma: **116** servicios (no 106) con sinónimos en inglés, tramos, rangos de precio y etiquetas; migración de datos + `php artisan catalog:sync`. *(2026-10-04)*
 - [x] 2.6 Servicios: del catálogo (buscador sin tildes) o propios; precio, tramos trabajo/espera/final, variantes, adicionales, evaluación y prueba de alergia; pausar y quitar. **Cambio:** los combos pasan a la Fase 4 (el cliente podrá elegir varios servicios en una reserva). *(2026-10-04)*
 - [x] 2.7 Página pública `/s/{slug}` con servicios, galería, mapa, WhatsApp, compartir; Open Graph renderizado en servidor; QR descargable en "Mi salón". *(2026-10-04)*
-- [~] *Cierre:* 253 tests + 19 E2E en verde. **security-auditor**: 0 críticos/altos, 7 bajos → 5 corregidos (variantes como lista y sin duración ≤ 0, texto plano en campos libres, límite en la página pública, foto procesada fuera del bloqueo); imágenes de salón suspendido siguen accesibles por URL directa (aceptado: nombres aleatorios) y CSP completa en 8.8. **ux-reviewer**: 15 puntos → corregidos los 3 BLOQUEA (mapa estático que no atrapa el dedo, portada compacta sin foto, acción cuando no hay servicios o WhatsApp) y 7 MOLESTA, incluido un **bug real**: el color de marca no pintaba los botones (Tailwind resuelve `--color-primary` en `:root`). **qa-tester** en curso.
+- [x] *Cierre (2026-10-04):* 354 tests + 31 E2E en verde; **qa-tester** sin bugs (106 tests nuevos). **security-auditor**: 0 críticos/altos, 7 bajos → 5 corregidos (variantes como lista y sin duración ≤ 0, texto plano en campos libres, límite en la página pública, foto procesada fuera del bloqueo); imágenes de salón suspendido siguen accesibles por URL directa (aceptado: nombres aleatorios) y CSP completa en 8.8. **ux-reviewer**: 15 puntos → corregidos los 3 BLOQUEA (mapa estático que no atrapa el dedo, portada compacta sin foto, acción cuando no hay servicios o WhatsApp) y 7 MOLESTA, incluido un **bug real**: el color de marca no pintaba los botones (Tailwind resuelve `--color-primary` en `:root`).
 
 ### Fase 3 — Personal y horarios
+> **Diseño (2026-10-04):** un *profesional* (`staff`) es quien atiende y puede **no tener cuenta**
+> (muchos salones pequeños tienen personal que no usa el celular): `staff.user_id` es opcional y se
+> vincula si esa persona acepta una invitación. Tablas: `staff`, `staff_service` (duración y precio
+> propios por servicio), `staff_schedules` (día, inicio, fin, nivel público/VIP/solo personal; varias
+> franjas por día), `staff_time_off` (vacaciones, permisos, bloqueos en UTC) y `salon_holidays`. El
+> horario del salón = unión de los horarios de su personal. Componente `TimeWheel` ya hecho.
 - [ ] 3.1 Componente `TimeWheel` (selector tipo alarma) con teclado y lectores de pantalla.
 - [ ] 3.2 Horario semanal por profesional, varias franjas, nivel público / VIP / solo personal, copiar día. Incluye el **horario general del salón** (movido desde 2.1).
 - [ ] 3.3 Excepciones, bloqueo rápido y feriados del salón.
