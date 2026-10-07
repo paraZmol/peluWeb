@@ -20,6 +20,7 @@ class InviteMemberRequest extends FormRequest
             'role' => ['required', Rule::enum(SalonRole::class)],
             'permissions' => ['array'],
             'permissions.*' => ['distinct', Rule::enum(SalonPermission::class)],
+            'staff_id' => ['nullable', 'integer'],
         ];
     }
 

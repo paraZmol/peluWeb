@@ -24,6 +24,7 @@ class InvitationController extends Controller
             email: $request->validated('email'),
             role: $request->enum('role', SalonRole::class),
             permissions: $request->permissions(),
+            staffId: $request->integer('staff_id') ?: null,
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => "Invitación enviada a {$invitation->email}."]);

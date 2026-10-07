@@ -9,6 +9,12 @@ export type TeamMember = {
     isYou: boolean;
 };
 
+/** A professional without an account, who an invitation can hand over. */
+export type UnlinkedStaff = {
+    id: number;
+    name: string;
+};
+
 export type PendingInvitation = {
     id: number;
     email: string;

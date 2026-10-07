@@ -2,7 +2,11 @@ import { Head } from '@inertiajs/react';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { InviteMemberForm } from '@/components/team/invite-member-form';
 import { MemberList } from '@/components/team/member-list';
-import type { PendingInvitation, TeamMember } from '@/components/team/types';
+import type {
+    PendingInvitation,
+    TeamMember,
+    UnlinkedStaff,
+} from '@/components/team/types';
 import { index as team } from '@/routes/team';
 import { destroy as cancelInvitation } from '@/routes/team/invitations';
 import type { Option, SalonPermission, SalonRole } from '@/types';
@@ -10,6 +14,7 @@ import type { Option, SalonPermission, SalonRole } from '@/types';
 type Props = {
     members: TeamMember[];
     invitations: PendingInvitation[];
+    unlinkedStaff: UnlinkedStaff[];
     roles: Option<SalonRole>[];
     permissionOptions: Option<SalonPermission>[];
 };
@@ -22,6 +27,7 @@ const dateFormat = new Intl.DateTimeFormat('es-PE', {
 export default function Team({
     members,
     invitations,
+    unlinkedStaff,
     roles,
     permissionOptions,
 }: Props) {
@@ -94,6 +100,7 @@ export default function Team({
                     <InviteMemberForm
                         roles={roles}
                         permissionOptions={permissionOptions}
+                        unlinkedStaff={unlinkedStaff}
                     />
                 </section>
             </div>

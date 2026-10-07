@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\CurrentSalonController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
+use App\Http\Controllers\Owner\HolidayController;
 use App\Http\Controllers\Owner\InvitationController;
 use App\Http\Controllers\Owner\MemberController;
 use App\Http\Controllers\Owner\SalonBrandingController;
@@ -12,8 +13,13 @@ use App\Http\Controllers\Owner\SalonPhotoController;
 use App\Http\Controllers\Owner\SalonSettingsController;
 use App\Http\Controllers\Owner\ServiceCatalogController;
 use App\Http\Controllers\Owner\ServiceController;
+use App\Http\Controllers\Owner\StaffController;
 use App\Http\Controllers\Owner\TeamController;
 use App\Http\Controllers\Public\SalonPageController;
+use App\Http\Controllers\Staff\ScheduleController;
+use App\Http\Controllers\Staff\StaffPhotoController;
+use App\Http\Controllers\Staff\StaffServiceController;
+use App\Http\Controllers\Staff\TimeOffController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -78,6 +84,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('servicios/{service}', [ServiceController::class, 'update'])->name('services.update');
         Route::patch('servicios/{service}/estado', [ServiceController::class, 'toggle'])->name('services.toggle');
         Route::delete('servicios/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+
+        // Professionals: the owner manages the list; each one edits their own hours.
+        Route::get('profesionales', [StaffController::class, 'index'])->name('staff.index');
+        Route::post('profesionales', [StaffController::class, 'store'])->name('staff.store');
+        Route::put('profesionales/{staff}', [StaffController::class, 'update'])->name('staff.update');
+        Route::delete('profesionales/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
+        Route::post('profesionales/{staff}/foto', [StaffPhotoController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('staff.photo.store');
+        Route::delete('profesionales/{staff}/foto', [StaffPhotoController::class, 'destroy'])->name('staff.photo.destroy');
+
+        Route::get('mi-horario', [ScheduleController::class, 'mine'])->name('staff.schedule.mine');
+        Route::get('profesionales/{staff}/horario', [ScheduleController::class, 'show'])->name('staff.schedule.show');
+        Route::put('profesionales/{staff}/horario', [ScheduleController::class, 'update'])->name('staff.schedule.update');
+        Route::post('profesionales/{staff}/ausencias', [TimeOffController::class, 'store'])->name('staff.timeoff.store');
+        Route::delete('profesionales/{staff}/ausencias/{timeOff}', [TimeOffController::class, 'destroy'])->name('staff.timeoff.destroy');
+        Route::put('profesionales/{staff}/servicios', [StaffServiceController::class, 'update'])->name('staff.services.update');
+
+        Route::post('feriados', [HolidayController::class, 'store'])->name('holidays.store');
+        Route::delete('feriados/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
     });
 });
 

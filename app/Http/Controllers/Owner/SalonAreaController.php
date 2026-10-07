@@ -18,10 +18,21 @@ abstract class SalonAreaController extends Controller
      */
     protected function salon(string $ability): Salon
     {
-        $salon = app(CurrentSalon::class)->get();
-        abort_if($salon === null, 403);
+        $salon = $this->currentSalon();
 
         $this->authorize($ability, $salon);
+
+        return $salon;
+    }
+
+    /**
+     * The current salon without a salon-level check, for actions that are
+     * authorized against a record instead (e.g. StaffPolicy).
+     */
+    protected function currentSalon(): Salon
+    {
+        $salon = app(CurrentSalon::class)->get();
+        abort_if($salon === null, 403);
 
         return $salon;
     }

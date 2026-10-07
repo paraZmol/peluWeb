@@ -7,6 +7,7 @@ use App\Enums\SalonRole;
 use App\Http\Controllers\Controller;
 use App\Models\SalonInvitation;
 use App\Models\SalonMember;
+use App\Models\Staff;
 use App\Support\CurrentSalon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,6 +37,9 @@ class TeamController extends Controller
                     'role' => $invitation->role->value,
                     'expiresAt' => $invitation->expires_at->toIso8601String(),
                 ]),
+            // Professionals without an account: an invitation can hand one over.
+            'unlinkedStaff' => $salon?->staff()->whereNull('user_id')->get()
+                ->map(fn (Staff $staff) => ['id' => $staff->id, 'name' => $staff->name]),
             'roles' => collect(SalonRole::cases())
                 ->map(fn (SalonRole $role) => ['value' => $role->value, 'label' => $role->label()]),
             'permissionOptions' => collect(SalonPermission::cases())

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Schedule\TimeRange;
+use App\Domain\Schedule\WeeklyHours;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonRole;
@@ -10,6 +12,7 @@ use App\Support\BrandColor;
 use Carbon\CarbonImmutable;
 use Database\Factories\SalonFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -99,6 +102,48 @@ class Salon extends Model
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
+    }
+
+    /**
+     * @return HasMany<Staff, $this>
+     */
+    public function staff(): HasMany
+    {
+        return $this->hasMany(Staff::class)->orderBy('position');
+    }
+
+    /**
+     * @return HasMany<SalonHoliday, $this>
+     */
+    public function holidays(): HasMany
+    {
+        return $this->hasMany(SalonHoliday::class)->orderBy('date');
+    }
+
+    /**
+     * When the salon attends: the union of the hours of its active
+     * professionals. Names the salon explicitly because visitors of the
+     * public page have no current salon.
+     */
+    public function openingHours(): WeeklyHours
+    {
+        $schedules = StaffSchedule::withoutGlobalScope('salon')
+            ->where('salon_id', $this->id)
+            ->whereHas('staff', fn (Builder $staff) => $staff->withoutGlobalScope('salon')->where('is_active', true))
+            ->get();
+
+        return WeeklyHours::fromRanges($schedules->map(fn (StaffSchedule $schedule): array => [
+            'weekday' => $schedule->weekday,
+            'range' => TimeRange::fromStrings($schedule->start_time, $schedule->end_time),
+        ]));
+    }
+
+    /**
+     * The current time on the salon's clock.
+     */
+    public function localNow(): CarbonImmutable
+    {
+        return CarbonImmutable::now($this->timezone);
     }
 
     public function hasLocation(): bool

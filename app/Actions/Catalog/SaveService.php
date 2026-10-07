@@ -2,12 +2,15 @@
 
 namespace App\Actions\Catalog;
 
+use App\Actions\Staff\AssignServicesToTeam;
 use App\Models\Salon;
 use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 
 class SaveService
 {
+    public function __construct(private readonly AssignServicesToTeam $assignToTeam) {}
+
     /**
      * Create (when $service is null) or update a salon service and sync its
      * variants: listed ids are updated, new ones created, missing ones removed.
@@ -18,6 +21,8 @@ class SaveService
     public function handle(Salon $salon, ?Service $service, array $attributes, array $variants): Service
     {
         return DB::transaction(function () use ($salon, $service, $attributes, $variants): Service {
+            $isNew = $service === null;
+
             if ($service === null) {
                 $service = new Service;
                 $service->salon_id = $salon->id;
@@ -26,6 +31,10 @@ class SaveService
 
             $service->fill($attributes)->save();
             $this->syncVariants($service, $variants);
+
+            if ($isNew) {
+                $this->assignToTeam->handle($salon, [$service->id]);
+            }
 
             return $service->load('variants');
         });

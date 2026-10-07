@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { OpeningHours } from '@/components/public/opening-hours';
 import { PhotoGallery } from '@/components/public/photo-gallery';
 import { Reveal } from '@/components/public/reveal';
 import { SalonHero } from '@/components/public/salon-hero';
@@ -54,8 +55,14 @@ export default function Salon({ salon }: Props) {
                     </Reveal>
                 )}
 
-                {hasLocation && (
+                {salon.openingHours && (
                     <Reveal order={4} className={SECTION_CLASS}>
+                        <OpeningHours hours={salon.openingHours} />
+                    </Reveal>
+                )}
+
+                {hasLocation && (
+                    <Reveal order={5} className={SECTION_CLASS}>
                         <SalonLocation
                             address={salon.address}
                             location={salon.location}

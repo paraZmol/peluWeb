@@ -123,7 +123,7 @@ it('guides the owner with a setup checklist on the dashboard', function () {
     $this->actingAs($this->owner)
         ->get(route('dashboard'))
         ->assertInertia(fn ($page) => $page
-            ->has('setup', 6)
+            ->has('setup', 7)
             ->where('setup.0.key', 'logo')
             ->where('setup.0.done', false)
             ->where('publicUrl', route('salons.show', 'barberia-lucho')));

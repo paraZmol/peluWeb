@@ -108,6 +108,7 @@ class DemoSeeder extends Seeder
 
         $salons = array_map(fn (array $demo) => $this->salon($demo), self::SALONS);
         $this->team($salons[0]);
+        $this->call(DemoScheduleSeeder::class);
 
         $this->currentSalon->set(null);
         $this->printAccounts();
@@ -223,7 +224,7 @@ class DemoSeeder extends Seeder
             ['Dueña · Studio Bella (y co-dueña de la barbería)', 'salon@peluweb.test', self::PASSWORD],
             ['Dueño · Corte & Color Surco', 'unisex@peluweb.test', self::PASSWORD],
             ['Dueña · Nails Spa Barranco', 'unas@peluweb.test', self::PASSWORD],
-            ['Personal con permiso de servicios', 'personal@peluweb.test', self::PASSWORD],
+            ['Barbero con permiso de servicios (ve "Mi horario")', 'personal@peluweb.test', self::PASSWORD],
             ['Personal sin permisos extra', 'aprendiz@peluweb.test', self::PASSWORD],
             ['Cliente sin salón', 'cliente@peluweb.test', self::PASSWORD],
         ]);

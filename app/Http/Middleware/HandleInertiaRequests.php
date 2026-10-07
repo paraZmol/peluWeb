@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\SalonPermission;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Models\SalonMember;
+use App\Models\Staff;
 use App\Support\CurrentSalon;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -105,6 +106,8 @@ class HandleInertiaRequests extends Middleware
                 'slug' => $salon->slug,
                 'role' => $membership->role->value,
                 'brand' => $salon->brandTokens(),
+                // Drives the "Mi horario" menu entry: the user attends clients here.
+                'hasStaffProfile' => Staff::query()->where('user_id', $user->id)->exists(),
                 'permissions' => collect(SalonPermission::cases())
                     ->filter(fn (SalonPermission $permission) => $membership->hasPermission($permission))
                     ->map(fn (SalonPermission $permission) => $permission->value)

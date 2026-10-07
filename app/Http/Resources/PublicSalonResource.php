@@ -27,9 +27,14 @@ class PublicSalonResource extends JsonResource
     /**
      * @param  Collection<int, Service>  $services  active services of this salon
      * @param  Collection<int, SalonPhoto>  $photos
+     * @param  array<string, mixed>|null  $openingHours  null while nobody has working hours
      */
-    public function __construct(Salon $salon, private readonly Collection $services, private readonly Collection $photos)
-    {
+    public function __construct(
+        Salon $salon,
+        private readonly Collection $services,
+        private readonly Collection $photos,
+        private readonly ?array $openingHours = null,
+    ) {
         parent::__construct($salon);
     }
 
@@ -58,6 +63,7 @@ class PublicSalonResource extends JsonResource
                 'directionsUrl' => 'https://www.google.com/maps/dir/?api=1&destination='.$this->latitude.','.$this->longitude,
             ] : null,
             'photos' => $this->photos->map(fn (SalonPhoto $photo) => ['url' => $photo->url, 'caption' => $photo->caption])->values(),
+            'openingHours' => $this->openingHours,
             'serviceGroups' => $this->serviceGroups(),
         ];
     }

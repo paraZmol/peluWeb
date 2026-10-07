@@ -18,6 +18,7 @@ use Illuminate\Support\Collection;
  * @property int $id
  * @property int $salon_id
  * @property int|null $invited_by
+ * @property int|null $staff_id
  * @property string $email
  * @property SalonRole $role
  * @property Collection<int, SalonPermission>|null $permissions
@@ -39,6 +40,11 @@ class SalonInvitation extends Model
     public const int VALID_DAYS = 7;
 
     protected $hidden = ['token_hash'];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['staff_id' => null];
 
     /**
      * @return array<string, mixed>

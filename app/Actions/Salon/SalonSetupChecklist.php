@@ -25,6 +25,7 @@ class SalonSetupChecklist
             ['key' => 'description', 'label' => 'Cuenta en dos líneas qué te hace especial', 'done' => filled($salon->description), 'href' => "{$edit}#datos"],
             ['key' => 'location', 'label' => 'Marca tu ubicación en el mapa', 'done' => $salon->hasLocation(), 'href' => "{$edit}#ubicacion"],
             ['key' => 'services', 'label' => 'Revisa tus servicios y precios', 'done' => $salon->services()->where('is_active', true)->whereColumn('created_at', '<', 'updated_at')->exists(), 'href' => route('services.index')],
+            ['key' => 'schedule', 'label' => 'Define los horarios de atención', 'done' => ! $salon->openingHours()->isEmpty(), 'href' => route('staff.index')],
             ['key' => 'photos', 'label' => 'Sube al menos '.self::MIN_PHOTOS.' fotos de tus trabajos', 'done' => $salon->photos()->count() >= self::MIN_PHOTOS, 'href' => "{$edit}#galeria"],
         ];
     }

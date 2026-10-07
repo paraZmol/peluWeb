@@ -2,6 +2,7 @@
 
 namespace App\Actions\Catalog;
 
+use App\Actions\Staff\AssignServicesToTeam;
 use App\Models\Salon;
 use App\Models\Service;
 use App\Models\ServiceTemplate;
@@ -16,6 +17,8 @@ class AddServicesFromTemplates
         ['label' => 'Cabello medio', 'factor' => 1.2, 'extra_minutes' => 15],
         ['label' => 'Cabello largo', 'factor' => 1.4, 'extra_minutes' => 30],
     ];
+
+    public function __construct(private readonly AssignServicesToTeam $assignToTeam) {}
 
     /**
      * Copy catalog entries into the salon's own services, with a suggested
@@ -34,7 +37,7 @@ class AddServicesFromTemplates
                 ->keyBy('service_template_id');
 
             $position = (int) Service::withoutGlobalScope('salon')->where('salon_id', $salon->id)->max('position');
-            $added = 0;
+            $addedIds = [];
 
             foreach ($templates as $template) {
                 $service = $existing->get($template->id);
@@ -42,21 +45,22 @@ class AddServicesFromTemplates
                 if ($service !== null) {
                     if ($service->trashed()) {
                         $service->restore();
-                        $added++;
+                        $addedIds[] = $service->id;
                     }
 
                     continue;
                 }
 
-                $this->createFrom($salon, $template, ++$position);
-                $added++;
+                $addedIds[] = $this->createFrom($salon, $template, ++$position)->id;
             }
 
-            return $added;
+            $this->assignToTeam->handle($salon, $addedIds);
+
+            return count($addedIds);
         });
     }
 
-    private function createFrom(Salon $salon, ServiceTemplate $template, int $position): void
+    private function createFrom(Salon $salon, ServiceTemplate $template, int $position): Service
     {
         $service = new Service([
             'category' => $template->category,
@@ -86,5 +90,7 @@ class AddServicesFromTemplates
                 ]);
             }
         }
+
+        return $service;
     }
 }

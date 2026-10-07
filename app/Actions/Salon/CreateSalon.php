@@ -3,6 +3,7 @@
 namespace App\Actions\Salon;
 
 use App\Actions\Catalog\AddServicesFromTemplates;
+use App\Actions\Staff\SaveStaff;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonRole;
@@ -16,7 +17,10 @@ use Illuminate\Support\Str;
 
 class CreateSalon
 {
-    public function __construct(private readonly AddServicesFromTemplates $addServices) {}
+    public function __construct(
+        private readonly AddServicesFromTemplates $addServices,
+        private readonly SaveStaff $saveStaff,
+    ) {}
 
     /**
      * Create a salon in trial and make the given user its owner.
@@ -47,6 +51,9 @@ class CreateSalon
             $membership->save();
 
             $this->addStarterServices($salon);
+
+            // Most owners of small salons also attend clients themselves.
+            $this->saveStaff->handle($salon, null, ['name' => Str::limit($owner->name, 80, '')], $owner->id);
 
             return $salon;
         });

@@ -15,6 +15,8 @@ export type CurrentSalon = {
     role: SalonRole;
     permissions: SalonPermission[];
     brand: BrandTokens | null;
+    /** The user attends clients in this salon (has a professional profile). */
+    hasStaffProfile: boolean;
 };
 
 export type SalonSummary = {

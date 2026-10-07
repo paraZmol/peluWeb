@@ -14,3 +14,24 @@ export function formatMinutes(minutes: number): string {
 
     return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
+
+/** "15:30" → "3:30 p. m." (24 h text from the server to how people read it). */
+export function formatTime(time: string): string {
+    const [hours, minutes] = time.split(':').map(Number);
+    const hours12 = hours % 12 === 0 ? 12 : hours % 12;
+
+    return `${hours12}:${String(minutes).padStart(2, '0')} ${hours < 12 ? 'a. m.' : 'p. m.'}`;
+}
+
+const dayFormat = new Intl.DateTimeFormat('es-PE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+});
+
+/** "2026-10-14" → "mié, 14 oct". Built from parts so no timezone shifts it. */
+export function formatDate(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+
+    return dayFormat.format(new Date(year, month - 1, day));
+}

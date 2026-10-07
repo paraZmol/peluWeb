@@ -33,6 +33,21 @@ export type PublicLocation = {
     directionsUrl: string;
 };
 
+export type PublicOpeningHours = {
+    days: { weekday: number; ranges: { start: string; end: string }[] }[];
+    /** ISO weekday on the salon's clock. */
+    today: number;
+    /** Name of today's holiday, if the salon is closed for one. */
+    closedToday: string | null;
+    status: {
+        isOpen: boolean;
+        /** "HH:MM": closing time when open, next opening when closed. */
+        time: string | null;
+        daysAhead: number | null;
+        weekday: number | null;
+    };
+};
+
 export type PublicSalon = {
     name: string;
     slug: string;
@@ -47,5 +62,6 @@ export type PublicSalon = {
     address: string | null;
     location: PublicLocation | null;
     photos: PublicPhoto[];
+    openingHours: PublicOpeningHours | null;
     serviceGroups: PublicServiceGroup[];
 };

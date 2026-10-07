@@ -1,5 +1,6 @@
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Badge } from '@/components/ui/badge';
+import { OpeningStatus } from './opening-hours';
 import type { PublicSalon } from './types';
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
         | 'description'
         | 'logoUrl'
         | 'coverUrl'
+        | 'openingHours'
     >;
 };
 
@@ -61,6 +63,10 @@ export function SalonHero({ salon }: Props) {
                     <Badge variant="secondary">{salon.businessType}</Badge>
                     <Badge variant="outline">{salon.clientele}</Badge>
                 </div>
+
+                {salon.openingHours && (
+                    <OpeningStatus hours={salon.openingHours} />
+                )}
 
                 {salon.description && (
                     <p className="text-base whitespace-pre-line text-muted-foreground">

@@ -19,6 +19,9 @@ export const testEnv = {
     DB_DATABASE: process.env.E2E_DB_DATABASE ?? 'peluweb_test',
     MAIL_MAILER: 'log',
     QUEUE_CONNECTION: 'sync',
+    // Rate limits live in the cache: with `array` they reset on every request,
+    // so the many logins of the suite are not throttled (5 per minute).
+    CACHE_STORE: 'array',
 };
 
 export default defineConfig({

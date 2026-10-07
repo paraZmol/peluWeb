@@ -184,7 +184,7 @@ para cubrir recepcionistas o encargados sin crear más roles.
 `users` · `salons` · `salon_user` (rol y permisos por salón) · `plans` · `subscriptions` ·
 `subscription_payments` · `staff` · `staff_schedules` · `staff_time_off` · `holidays` ·
 `service_templates` (catálogo global) · `service_categories` · `services` · `service_variants` ·
-`staff_service` (duración y precio por profesional) · `salon_clients` (VIP, notas, ausencias) ·
+`service_staff` (duración y precio por profesional) · `salon_clients` (VIP, notas, ausencias) ·
 `bookings` · `booking_services` · `booking_segments` (tramos que ocupan agenda) · `booking_events`
 (auditoría de estados) · `waitlist_entries` · `walk_in_queue` · `payments` · `expenses` ·
 `expense_categories` · `cash_sessions` · `commission_rules` · `commission_payouts` · `reviews` ·
@@ -251,17 +251,21 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] *Cierre (2026-10-04):* 354 tests + 31 E2E en verde; **qa-tester** sin bugs (106 tests nuevos). **security-auditor**: 0 críticos/altos, 7 bajos → 5 corregidos (variantes como lista y sin duración ≤ 0, texto plano en campos libres, límite en la página pública, foto procesada fuera del bloqueo); imágenes de salón suspendido siguen accesibles por URL directa (aceptado: nombres aleatorios) y CSP completa en 8.8. **ux-reviewer**: 15 puntos → corregidos los 3 BLOQUEA (mapa estático que no atrapa el dedo, portada compacta sin foto, acción cuando no hay servicios o WhatsApp) y 7 MOLESTA, incluido un **bug real**: el color de marca no pintaba los botones (Tailwind resuelve `--color-primary` en `:root`).
 
 ### Fase 3 — Personal y horarios
-> **Diseño (2026-10-04):** un *profesional* (`staff`) es quien atiende y puede **no tener cuenta**
-> (muchos salones pequeños tienen personal que no usa el celular): `staff.user_id` es opcional y se
-> vincula si esa persona acepta una invitación. Tablas: `staff`, `staff_service` (duración y precio
-> propios por servicio), `staff_schedules` (día, inicio, fin, nivel público/VIP/solo personal; varias
-> franjas por día), `staff_time_off` (vacaciones, permisos, bloqueos en UTC) y `salon_holidays`. El
-> horario del salón = unión de los horarios de su personal. Componente `TimeWheel` ya hecho.
-- [ ] 3.1 Componente `TimeWheel` (selector tipo alarma) con teclado y lectores de pantalla.
-- [ ] 3.2 Horario semanal por profesional, varias franjas, nivel público / VIP / solo personal, copiar día. Incluye el **horario general del salón** (movido desde 2.1).
-- [ ] 3.3 Excepciones, bloqueo rápido y feriados del salón.
-- [ ] 3.4 Duración y precio por profesional y servicio.
-- [ ] 3.5 Aviso de reservas afectadas al cambiar un horario.
+> **Diseño (2026-10-04, ajustado 2026-10-07):** un *profesional* (`staff`) es quien atiende y puede
+> **no tener cuenta** (muchos salones pequeños tienen personal que no usa el celular): `staff.user_id`
+> es opcional. Al crear el salón se crea el perfil del dueño; al aceptar una invitación de personal se
+> crea el perfil o se vincula al que el dueño eligió (`salon_invitations.staff_id`). Tablas: `staff`,
+> `service_staff` (qué servicios hace cada quien, con tiempo de trabajo y precio propios opcionales),
+> `staff_schedules` (día, inicio, fin, nivel público/VIP/solo personal; varias franjas por día, hora
+> local del salón), `staff_time_off` (vacaciones, permisos, bloqueos en UTC) y `salon_holidays`.
+> El horario del salón = unión de los horarios de su personal activo. Cada profesional edita su propio
+> horario, ausencias y tiempos; los precios propios solo quien gestiona servicios. Un servicio nuevo
+> se asigna a todo el equipo y luego se desmarca a quien no lo hace.
+- [x] 3.1 Componente `TimeWheel` (selector tipo alarma) con teclado y lectores de pantalla. *(2026-10-04)*
+- [ ] 3.2 Profesionales (alta, foto, vincular cuenta) y horario semanal por profesional, varias franjas, nivel público / VIP / solo personal, copiar día. Incluye el **horario general del salón** (movido desde 2.1).
+- [ ] 3.3 Ausencias (vacaciones, permisos), bloqueo rápido y feriados del salón.
+- [ ] 3.4 Servicios, duración y precio por profesional.
+- 3.5 → pasa a la Fase 4 (paso 4.11): sin reservas todavía no hay nada que avisar.
 - [ ] 3.6 Mostrar en la página pública el horario de atención y "Abierto ahora / Abre a las…" (pedido por ux-reviewer en la Fase 2).
 - *Cierre:* **qa-tester** + **ux-reviewer** (editar horario en 360 px).
 
@@ -276,6 +280,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 4.8 Reserva creada por el personal para un cliente sin cuenta; reprogramar y cancelar según política.
 - [ ] 4.9 Mis reservas del cliente, repetir última cita, foto de referencia de estilo.
 - [ ] 4.10 API `/api/v1` de disponibilidad y reservas (Sanctum), para la futura app.
+- [ ] 4.11 Aviso de reservas afectadas al cambiar un horario, crear una ausencia o un feriado (movido desde 3.5).
 - *Cierre:* **booking-breaker** (obligatorio) + **security-auditor** + **qa-tester** + **ux-reviewer**.
 
 ### Fase 5 — Caja, contabilidad y reportes
@@ -371,6 +376,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-04 | Herramientas de orden y limpieza: **Laravel Boost** (guías y skills oficiales de Laravel 13, Inertia, React, Pest, Tailwind, Wayfinder, solo para Claude Code y sin Laravel Cloud) + skill propia `clean-code` (estructura de carpetas, tamaños máximos, nombres, checklist) + `Model::shouldBeStrict()` en desarrollo. `.claude/` y `CLAUDE.md` ahora sí van a git. Lanzador `dev.cmd` | Pedido del usuario: código ordenado y limpio; `composer dev` fallaba con el PHP de XAMPP |
 | 2026-10-04 | Roles por salón con **tabla propia** en vez de spatie/laravel-permission. Pruebas de navegador con **Playwright Test** en vez de pest-plugin-browser. Los salones se crean por autoservicio (el panel no los da de alta) | spatie con "teams" depende de un id global por petición, fácil de olvidar en colas (fuga entre salones); el plugin de Pest se cuelga en Windows; el modelo SaaS es autoservicio con prueba gratis |
 | 2026-10-04 | Portada de ventas adelantada de la Fase 7 a la 2.8 | Pedido del usuario: al entrar solo se veía "crear cuenta", sin menú ni explicación del producto |
+| 2026-10-07 | Fase 3: la tabla pivote se llama `service_staff` (orden alfabético, convención de Laravel) y lo que cada profesional ajusta es el **tiempo de trabajo** del servicio; el perfil de profesional se crea solo para el dueño y para quien acepta una invitación de personal; el paso 3.5 (aviso de reservas afectadas) pasa a 4.11 | Coherencia con la skill `clean-code`; menos pasos manuales para el dueño; aún no existen reservas |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

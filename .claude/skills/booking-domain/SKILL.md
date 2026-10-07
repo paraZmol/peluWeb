@@ -12,7 +12,7 @@ description: Reglas del dominio de reservas de peluWeb — cálculo de disponibi
 - **Profesional** (`staff`): persona que atiende. La agenda es **por profesional**: dos
   profesionales distintos sí pueden atender a la misma hora.
 - **Servicio** (`services`): tiene duración base y precio base. Cada profesional puede
-  sobrescribirlos en `staff_service` (`duration_minutes`, `price_cents`) — "el peluquero decide
+  sobrescribirlos en `service_staff` (`active_minutes`, `price_cents`) — "el peluquero decide
   cuánto le toma".
 - **Tramos**: un servicio puede tener `active_minutes` → `idle_minutes` → `finish_minutes`
   (ej. tinte 20 → 35 → 25). Durante `idle` el profesional está libre para otro cliente.

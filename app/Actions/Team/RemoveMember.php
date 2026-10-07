@@ -2,6 +2,7 @@
 
 namespace App\Actions\Team;
 
+use App\Actions\Staff\LinkStaffProfile;
 use App\Exceptions\TeamException;
 use App\Models\Salon;
 use App\Models\SalonInvitation;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class RemoveMember
 {
+    public function __construct(private readonly LinkStaffProfile $linkStaffProfile) {}
+
     public function handle(SalonMember $member): void
     {
         DB::transaction(function () use ($member): void {
@@ -21,6 +24,7 @@ class RemoveMember
             }
 
             $member->delete();
+            $this->linkStaffProfile->unlink($member->salon_id, $member->user_id);
             $this->cancelInvitationsSentBy($member);
         });
     }

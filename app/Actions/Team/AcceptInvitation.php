@@ -2,6 +2,8 @@
 
 namespace App\Actions\Team;
 
+use App\Actions\Staff\LinkStaffProfile;
+use App\Enums\SalonRole;
 use App\Exceptions\TeamException;
 use App\Models\SalonInvitation;
 use App\Models\SalonMember;
@@ -11,6 +13,8 @@ use Illuminate\Support\Str;
 
 class AcceptInvitation
 {
+    public function __construct(private readonly LinkStaffProfile $linkStaffProfile) {}
+
     /**
      * Find a pending invitation by its plain token. The token itself is the
      * authorization, so the salon scope is bypassed on purpose: the invitee
@@ -50,6 +54,11 @@ class AcceptInvitation
                 $membership->role = $invitation->role;
                 $membership->permissions = $invitation->permissions;
                 $membership->save();
+
+                // Staff attend clients, so they get (or take over) a professional profile.
+                if ($invitation->role === SalonRole::Staff || $invitation->staff_id !== null) {
+                    $this->linkStaffProfile->handle($invitation->salon, $user, $invitation->staff_id);
+                }
             }
 
             $invitation->accepted_at = now();

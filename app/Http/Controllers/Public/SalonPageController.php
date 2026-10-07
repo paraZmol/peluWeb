@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\Schedule\TimeRange;
 use App\Enums\SalonStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PublicSalonResource;
 use App\Models\Salon;
+use App\Models\SalonHoliday;
 use App\Models\SalonPhoto;
 use App\Models\Service;
 use App\Support\Images\ImageStore;
@@ -37,8 +39,49 @@ class SalonPageController extends Controller
             ->get();
 
         return Inertia::render('public/salon', [
-            'salon' => new PublicSalonResource($salon, $services, $photos),
+            'salon' => new PublicSalonResource($salon, $services, $photos, $this->openingHours($salon)),
         ])->withViewData(['meta' => $this->meta($salon)]);
+    }
+
+    /**
+     * Weekly opening hours and whether the salon is open right now, on the
+     * salon's own clock. Null until some professional has working hours.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function openingHours(Salon $salon): ?array
+    {
+        $hours = $salon->openingHours();
+
+        if ($hours->isEmpty()) {
+            return null;
+        }
+
+        $now = $salon->localNow();
+        $holidays = SalonHoliday::withoutGlobalScope('salon')
+            ->where('salon_id', $salon->id)
+            ->whereDate('date', '>=', $now->toDateString())
+            ->get();
+
+        $status = $hours->statusAt(
+            $now,
+            $holidays->map(fn (SalonHoliday $holiday): string => $holiday->date->format('Y-m-d'))->values()->all(),
+        );
+
+        return [
+            'days' => collect($hours->days())->map(fn (array $ranges, int $weekday) => [
+                'weekday' => $weekday,
+                'ranges' => array_map(fn (TimeRange $range) => ['start' => $range->start(), 'end' => $range->end()], $ranges),
+            ])->values(),
+            'today' => $now->dayOfWeekIso,
+            'closedToday' => $holidays->first(fn (SalonHoliday $holiday) => $holiday->date->format('Y-m-d') === $now->toDateString())?->name,
+            'status' => [
+                'isOpen' => $status->isOpen,
+                'time' => $status->time,
+                'daysAhead' => $status->daysAhead,
+                'weekday' => $status->weekday,
+            ],
+        ];
     }
 
     /**
