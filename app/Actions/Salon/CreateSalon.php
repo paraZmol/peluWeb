@@ -11,6 +11,7 @@ use App\Enums\SalonStatus;
 use App\Models\Salon;
 use App\Models\SalonMember;
 use App\Models\ServiceTemplate;
+use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -53,7 +54,7 @@ class CreateSalon
             $this->addStarterServices($salon);
 
             // Most owners of small salons also attend clients themselves.
-            $this->saveStaff->handle($salon, null, ['name' => Str::limit($owner->name, 80, '')], $owner->id);
+            $this->saveStaff->handle($salon, null, ['name' => Staff::nameFrom($owner->name)], $owner->id);
 
             return $salon;
         });

@@ -69,8 +69,8 @@ export function RangeDialog({
                     }
                 />
                 <p
-                    role="alert"
-                    className="min-h-5 text-sm text-destructive-foreground"
+                    aria-live="polite"
+                    className="text-sm text-destructive-foreground empty:hidden"
                 >
                     {problem}
                 </p>
@@ -83,7 +83,8 @@ export function RangeDialog({
                     }
                 />
 
-                <DialogFooter className="gap-2">
+                {/* Sticky: the main action stays reachable on short screens. */}
+                <DialogFooter className="sticky bottom-0 gap-2 bg-background pt-2">
                     {!isNew && (
                         <Button
                             type="button"

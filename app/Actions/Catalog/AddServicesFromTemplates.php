@@ -37,26 +37,28 @@ class AddServicesFromTemplates
                 ->keyBy('service_template_id');
 
             $position = (int) Service::withoutGlobalScope('salon')->where('salon_id', $salon->id)->max('position');
-            $addedIds = [];
+            $createdIds = [];
+            $restored = 0;
 
             foreach ($templates as $template) {
                 $service = $existing->get($template->id);
 
                 if ($service !== null) {
                     if ($service->trashed()) {
+                        // Its assignments were kept: it comes back to whoever performed it.
                         $service->restore();
-                        $addedIds[] = $service->id;
+                        $restored++;
                     }
 
                     continue;
                 }
 
-                $addedIds[] = $this->createFrom($salon, $template, ++$position)->id;
+                $createdIds[] = $this->createFrom($salon, $template, ++$position)->id;
             }
 
-            $this->assignToTeam->handle($salon, $addedIds);
+            $this->assignToTeam->handle($salon, $createdIds);
 
-            return count($addedIds);
+            return count($createdIds) + $restored;
         });
     }
 

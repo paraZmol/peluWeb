@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -8,6 +8,7 @@ import {
     useWeeklySchedule,
 } from '@/hooks/use-weekly-schedule';
 import { WEEKDAYS } from '@/lib/schedule';
+import { cn } from '@/lib/utils';
 import { update } from '@/routes/staff/schedule';
 import { DayRow } from './day-row';
 import { RangeDialog } from './range-dialog';
@@ -27,6 +28,29 @@ export function WeeklyScheduleEditor({ staffId, saved, accessLevels }: Props) {
     const [editing, setEditing] = useState<Editing | null>(null);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string>();
+    const { isDirty } = week;
+
+    // Leaving with unsaved hours is the easiest way to lose work here.
+    useEffect(() => {
+        if (!isDirty) {
+            return;
+        }
+
+        const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+        window.addEventListener('beforeunload', warn);
+        const stopListening = router.on('before', (event) =>
+            event.detail.visit.method === 'get'
+                ? window.confirm(
+                      'Tienes cambios en el horario sin guardar. ¿Salir sin guardar?',
+                  )
+                : true,
+        );
+
+        return () => {
+            window.removeEventListener('beforeunload', warn);
+            stopListening();
+        };
+    }, [isDirty]);
 
     const save = () =>
         router.put(
@@ -85,11 +109,16 @@ export function WeeklyScheduleEditor({ staffId, saved, accessLevels }: Props) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                        className="sticky bottom-4 z-10 flex flex-col gap-2 rounded-2xl border bg-card p-3 shadow-lg sm:flex-row sm:items-center"
+                        className="sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-10 flex flex-col gap-2 rounded-2xl border bg-card p-3 shadow-lg sm:flex-row sm:items-center"
                     >
                         <p
-                            role="status"
-                            className="flex-1 px-1 text-sm text-muted-foreground"
+                            role={error ? 'alert' : 'status'}
+                            className={cn(
+                                'flex-1 px-1 text-sm',
+                                error
+                                    ? 'text-destructive-foreground'
+                                    : 'text-muted-foreground',
+                            )}
                         >
                             {error ?? 'Tienes cambios sin guardar.'}
                         </p>

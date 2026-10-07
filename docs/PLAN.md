@@ -262,12 +262,12 @@ Inicio previsto: **lunes 2026-10-05**.
 > horario, ausencias y tiempos; los precios propios solo quien gestiona servicios. Un servicio nuevo
 > se asigna a todo el equipo y luego se desmarca a quien no lo hace.
 - [x] 3.1 Componente `TimeWheel` (selector tipo alarma) con teclado y lectores de pantalla. *(2026-10-04)*
-- [ ] 3.2 Profesionales (alta, foto, vincular cuenta) y horario semanal por profesional, varias franjas, nivel público / VIP / solo personal, copiar día. Incluye el **horario general del salón** (movido desde 2.1).
-- [ ] 3.3 Ausencias (vacaciones, permisos), bloqueo rápido y feriados del salón.
-- [ ] 3.4 Servicios, duración y precio por profesional.
+- [x] 3.2 Profesionales (alta, foto, vincular cuenta) y horario semanal por profesional, varias franjas, nivel público / VIP / solo personal, copiar día. Incluye el **horario general del salón** (movido desde 2.1). *(2026-10-07)*
+- [x] 3.3 Ausencias (vacaciones, permisos), bloqueo rápido y feriados del salón. *(2026-10-07)*
+- [x] 3.4 Servicios, duración y precio por profesional: quien gestiona servicios decide cuáles hace cada quien y a qué precio; cada profesional solo ajusta su tiempo. *(2026-10-07)*
 - 3.5 → pasa a la Fase 4 (paso 4.11): sin reservas todavía no hay nada que avisar.
-- [ ] 3.6 Mostrar en la página pública el horario de atención y "Abierto ahora / Abre a las…" (pedido por ux-reviewer en la Fase 2).
-- *Cierre:* **qa-tester** + **ux-reviewer** (editar horario en 360 px).
+- [x] 3.6 Página pública con el horario de atención y "Abierto ahora / Abre a las…"; las franjas solo-VIP no cuentan como horario de atención, las de "solo el equipo" sí. *(2026-10-07)*
+- [x] *Cierre (2026-10-07):* 527 tests + 46 E2E en verde. **security-auditor**: 0 críticos/altos; 3 medios (horas VIP publicadas, bloqueo del profesional solo en el horario, migración de relleno no repetible) y 7 bajos → corregidos, salvo el límite de perfiles eliminados acumulados (aceptado: hay tope de peticiones). **qa-tester**: 76 tests nuevos, 5 bugs (1 medio: restaurar un servicio lo reasignaba a todo el equipo; 4 bajos) → corregidos. **ux-reviewer**: corregido aviso al salir con cambios sin guardar, accesibilidad y teclado de la rueda y las pestañas, botón "Listo" siempre visible, botones de 44 px y textos neutros; el resto pasó a 8.7. **booking-breaker** no aplica todavía (no hay motor de reservas): entra en el cierre de la Fase 4.
 
 ### Fase 4 — Motor de reservas y agenda (núcleo; no recortar tests)
 - [ ] 4.1 `AvailabilityCalculator` puro con tests primero (todas las invariantes de `booking-domain`).
@@ -315,7 +315,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 8.4 Auditoría completa: los 4 agentes en paralelo + OWASP ZAP baseline; corregir todo lo CRÍTICO y ALTO.
 - [ ] 8.5 **Piloto** con 1–3 salones reales durante 1 semana; recoger fallos y ajustar.
 - [ ] 8.6 Prueba manual en un iPhone y un Android reales (instalación, push, reserva).
-- [ ] 8.7 Pendientes de UX de la Fase 1: navegación inferior por rol en móvil; diálogos como hoja inferior (Drawer) en móvil con spinner en confirmaciones; página 404/500 con marca y modo oscuro; aviso "sin conexión" con reintento; error de login como `Alert` sobre el botón; registro sin "confirmar contraseña" y con la regla visible; panel con acciones útiles para el personal y chevron en tarjetas enlace; textos de ayuda a 14 px; tema claro/oscuro guardado por cuenta (no solo por navegador).
+- [ ] 8.7 Pendientes de UX de la Fase 1: navegación inferior por rol en móvil; diálogos como hoja inferior (Drawer) en móvil con spinner en confirmaciones; página 404/500 con marca y modo oscuro; aviso "sin conexión" con reintento; error de login como `Alert` sobre el botón; registro sin "confirmar contraseña" y con la regla visible; panel con acciones útiles para el personal y chevron en tarjetas enlace; textos de ayuda a 14 px; tema claro/oscuro guardado por cuenta (no solo por navegador). **De la Fase 3:** distinguir mejor "Profesionales" de "Equipo" en el menú, diálogos como hoja inferior en móvil, pasar sola de Entrada a Salida, "Deshacer" al copiar un día, permitir cerrar a medianoche (hoy el máximo es 11:55 p. m.), estado vacío de días de cierre.
 - [ ] 8.9 Pendientes de UX de la Fase 2: "Mi salón" con cambios sin guardar visibles (o un solo "Guardar" fijo abajo) y barra de secciones fija; formularios de servicio como hoja inferior en móvil con el botón fijo; contraste del botón deshabilitado en oscuro.
 - [ ] 8.8 Seguridad pendiente de la Fase 1: CSP completa (hoy solo `frame-ancestors`) y `Inertia::encryptHistory()` + limpiar historial al cerrar sesión (tablets compartidas del salón).
 
@@ -377,6 +377,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-04 | Roles por salón con **tabla propia** en vez de spatie/laravel-permission. Pruebas de navegador con **Playwright Test** en vez de pest-plugin-browser. Los salones se crean por autoservicio (el panel no los da de alta) | spatie con "teams" depende de un id global por petición, fácil de olvidar en colas (fuga entre salones); el plugin de Pest se cuelga en Windows; el modelo SaaS es autoservicio con prueba gratis |
 | 2026-10-04 | Portada de ventas adelantada de la Fase 7 a la 2.8 | Pedido del usuario: al entrar solo se veía "crear cuenta", sin menú ni explicación del producto |
 | 2026-10-07 | Fase 3: la tabla pivote se llama `service_staff` (orden alfabético, convención de Laravel) y lo que cada profesional ajusta es el **tiempo de trabajo** del servicio; el perfil de profesional se crea solo para el dueño y para quien acepta una invitación de personal; el paso 3.5 (aviso de reservas afectadas) pasa a 4.11 | Coherencia con la skill `clean-code`; menos pasos manuales para el dueño; aún no existen reservas |
+| 2026-10-07 | Cierre de la Fase 3: el horario público excluye las franjas solo-VIP; qué servicios hace cada profesional lo decide quien gestiona servicios (el profesional solo ajusta su tiempo); ausencias, baja y servicios toman el mismo bloqueo del profesional que usará la reserva | Hallazgos de security-auditor y qa-tester |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

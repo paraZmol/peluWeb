@@ -24,20 +24,26 @@ class StaffRequest extends FormRequest
     }
 
     /**
-     * @return array{name: string, title: string|null, is_active: bool}
+     * Fields that were not sent are left as they are: a partial update
+     * (e.g. only the name) must not reactivate a paused professional.
+     *
+     * @return array{name: string, title: string|null, is_active?: bool}
      */
     public function staffAttributes(): array
     {
         return [
             'name' => $this->string('name')->trim()->toString(),
             'title' => $this->string('title')->trim()->toString() ?: null,
-            'is_active' => $this->boolean('is_active', true),
+            ...($this->has('is_active') ? ['is_active' => $this->boolean('is_active')] : []),
         ];
     }
 
-    public function userId(): ?int
+    /**
+     * The account to link; $current when the field was not sent at all.
+     */
+    public function userId(?int $current = null): ?int
     {
-        return $this->integer('user_id') ?: null;
+        return $this->has('user_id') ? ($this->integer('user_id') ?: null) : $current;
     }
 
     /**

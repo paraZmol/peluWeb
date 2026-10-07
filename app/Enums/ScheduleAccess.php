@@ -4,7 +4,8 @@ namespace App\Enums;
 
 /**
  * Who may book inside a working-hours range. Enforced on the server: a
- * regular client never receives VIP or staff-only ranges.
+ * regular client is never offered VIP or staff-only ranges to book, and
+ * VIP ranges are left out of the public opening hours.
  */
 enum ScheduleAccess: string
 {

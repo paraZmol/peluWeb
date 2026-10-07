@@ -47,6 +47,8 @@ class Staff extends Model
 
     public const int PHOTO_SIZE = 512;
 
+    public const int NAME_MAX_LENGTH = 80;
+
     protected $table = 'staff';
 
     /**
@@ -66,6 +68,17 @@ class Staff extends Model
     protected function casts(): array
     {
         return ['is_active' => 'boolean'];
+    }
+
+    /**
+     * A professional's name taken from an account name: account names are
+     * longer and may carry characters that salon texts never allow.
+     */
+    public static function nameFrom(string $accountName): string
+    {
+        $plain = trim((string) preg_replace('/[<>\[\]{}]/u', '', $accountName));
+
+        return mb_substr($plain, 0, self::NAME_MAX_LENGTH) ?: 'Profesional';
     }
 
     /**

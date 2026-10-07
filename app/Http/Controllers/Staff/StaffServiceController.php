@@ -11,15 +11,16 @@ use Illuminate\Http\RedirectResponse;
 class StaffServiceController extends SalonAreaController
 {
     /**
-     * Professionals decide how long each service takes them; prices stay
-     * with whoever manages the salon's services.
+     * Professionals decide how long each service takes them; which
+     * services they perform and at what price stays with whoever manages
+     * the salon's services.
      */
     public function update(StaffServicesRequest $request, Staff $staff, SyncStaffServices $sync): RedirectResponse
     {
         $this->authorize('update', $staff);
-        $canSetPrices = $request->user()?->can('manageServices', $this->currentSalon()) ?? false;
+        $canManage = $request->user()?->can('manageServices', $this->currentSalon()) ?? false;
 
-        $sync->handle($staff, $request->entries(), $canSetPrices);
+        $sync->handle($staff, $request->entries(), $canManage);
         $this->toast('Servicios guardados.');
 
         return to_route('staff.schedule.show', $staff);

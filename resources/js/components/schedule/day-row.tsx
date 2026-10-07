@@ -53,8 +53,12 @@ export function DayRow({
                 ) : (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                                <Copy /> Copiar
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-11 md:h-8"
+                            >
+                                <Copy /> Copiar a…
                                 <span className="sr-only">
                                     {' '}
                                     el horario del {label.toLowerCase()}

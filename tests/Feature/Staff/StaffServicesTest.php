@@ -68,7 +68,7 @@ it('shows every salon service with what this professional overrides', function (
             ->where('staff.services.1.price', null));
 });
 
-it('lets professionals set their own time but never their own price', function () {
+it('lets professionals set their own time but never their price or which services they do', function () {
     $member = SalonMember::factory()->for($this->salon)->create();
     $own = Staff::factory()->for($this->salon)->linkedTo($member->user)->create();
     $own->services()->sync([$this->fade->id => ['price_cents' => 4000]]);
@@ -83,7 +83,11 @@ it('lets professionals set their own time but never their own price', function (
     $pivots = pivotsOf($own);
     expect($pivots[$this->fade->id]->active_minutes)->toBe(25)
         ->and($pivots[$this->fade->id]->price_cents)->toBe(4000)
-        ->and($pivots[$this->beard->id]->price_cents)->toBeNull();
+        ->and($pivots)->not->toHaveKey($this->beard->id);
+
+    // Leaving a service out does not remove it either.
+    $this->actingAs($member->user)->put(route('staff.services.update', $own), ['services' => []]);
+    expect(pivotsOf($own))->toHaveKey($this->fade->id);
 
     $this->actingAs($member->user)
         ->get(route('staff.schedule.show', $own))

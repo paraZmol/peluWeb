@@ -39,6 +39,20 @@ export default function StaffSchedule({
 }: Props) {
     const [tab, setTab] = useState<TabKey>('hours');
 
+    const onTabKeyDown = (event: React.KeyboardEvent) => {
+        const step =
+            event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+
+        if (step === 0) {
+            return;
+        }
+
+        const current = TABS.findIndex((item) => item.key === tab);
+        const next = TABS[(current + step + TABS.length) % TABS.length].key;
+        setTab(next);
+        document.getElementById(`tab-${next}`)?.focus();
+    };
+
     // Panels stay mounted so unsaved hours survive a tab change.
     const panel = (key: TabKey, children: ReactNode) => (
         <div
@@ -70,6 +84,7 @@ export default function StaffSchedule({
                 <div
                     role="tablist"
                     aria-label="Secciones"
+                    onKeyDown={onTabKeyDown}
                     className="grid grid-cols-3 gap-1 rounded-full border bg-card p-1"
                 >
                     {TABS.map((item) => (
@@ -79,6 +94,7 @@ export default function StaffSchedule({
                             role="tab"
                             id={`tab-${item.key}`}
                             aria-selected={tab === item.key}
+                            tabIndex={tab === item.key ? 0 : -1}
                             aria-controls={`panel-${item.key}`}
                             onClick={() => setTab(item.key)}
                             className={cn(

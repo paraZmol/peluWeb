@@ -38,9 +38,7 @@ test.describe('Profesionales y horarios', () => {
         await expect(dialog.getByText('10:00 a. m.')).toBeVisible();
         await dialog.getByRole('button', { name: 'Listo' }).click();
 
-        await page
-            .getByRole('button', { name: 'Copiar el horario del lunes' })
-            .click();
+        await page.getByRole('button', { name: /Copiar.*lunes/ }).click();
         await page
             .getByRole('menuitem', { name: 'De lunes a viernes' })
             .click();
@@ -96,7 +94,9 @@ test.describe('Profesionales y horarios', () => {
         await page.keyboard.press('ArrowUp');
         await dialog.getByRole('spinbutton', { name: 'Hora' }).focus();
         await page.keyboard.press('ArrowDown');
-        await expect(dialog.getByRole('alert')).not.toBeEmpty();
+        await expect(
+            dialog.getByText('Se cruza con otro horario de este día.'),
+        ).toBeVisible();
         await expect(
             dialog.getByRole('button', { name: 'Listo' }),
         ).toBeDisabled();

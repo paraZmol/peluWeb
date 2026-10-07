@@ -4,41 +4,53 @@ namespace App\Actions\Staff;
 
 use App\Models\Service;
 use App\Models\Staff;
+use Illuminate\Support\Facades\DB;
 
 class SyncStaffServices
 {
     /**
-     * Set which services a professional performs, with their own working
-     * time and price when they differ from the service's.
+     * Save the services of a professional, with their own working time and
+     * price when they differ from the service's.
      *
-     * Prices are only written when $canSetPrices: otherwise each service
-     * keeps the price it already had for this professional.
+     * Who manages the salon's services ($canManage) decides which services
+     * the professional performs and at what price. Without it, only the
+     * working time of the services already assigned changes: "each one
+     * decides how long it takes them", nothing else.
      *
      * @param  list<array{service_id: int, active_minutes: int|null, price_cents: int|null}>  $entries
      */
-    public function handle(Staff $staff, array $entries, bool $canSetPrices): void
+    public function handle(Staff $staff, array $entries, bool $canManage): void
     {
-        $ownServiceIds = Service::withoutGlobalScope('salon')
-            ->where('salon_id', $staff->salon_id)
-            ->whereIn('id', array_column($entries, 'service_id'))
-            ->pluck('id')
-            ->flip();
+        DB::transaction(function () use ($staff, $entries, $canManage): void {
+            // Same lock as booking: services never change mid-reservation,
+            // and the prices read below cannot go stale before the write.
+            Staff::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($staff->id);
 
-        $currentPrices = $staff->services()->pluck('service_staff.price_cents', 'services.id');
-        $pivots = [];
+            // Deleted services are left alone: restoring one brings back
+            // exactly who performed it and their own time and price.
+            $salonServiceIds = Service::withoutGlobalScope('salon')->where('salon_id', $staff->salon_id)->pluck('id');
+            $current = DB::table('service_staff')->where('staff_id', $staff->id)->get()->keyBy('service_id');
+            $pivots = [];
 
-        foreach ($entries as $entry) {
-            // A service of another salon is ignored, as if it did not exist.
-            if (! $ownServiceIds->has($entry['service_id'])) {
-                continue;
+            foreach ($entries as $entry) {
+                $id = $entry['service_id'];
+
+                // A service of another salon is ignored, as if it did not exist.
+                if (! $salonServiceIds->contains($id) || (! $canManage && ! $current->has($id))) {
+                    continue;
+                }
+
+                $pivots[$id] = [
+                    'active_minutes' => $entry['active_minutes'],
+                    'price_cents' => $canManage ? $entry['price_cents'] : $current->get($id)?->price_cents,
+                ];
             }
 
-            $pivots[$entry['service_id']] = [
-                'active_minutes' => $entry['active_minutes'],
-                'price_cents' => $canSetPrices ? $entry['price_cents'] : $currentPrices->get($entry['service_id']),
-            ];
-        }
+            $staff->services()->syncWithoutDetaching($pivots);
 
-        $staff->services()->sync($pivots);
+            if ($canManage) {
+                $staff->services()->detach($salonServiceIds->diff(array_keys($pivots))->all());
+            }
+        });
     }
 }

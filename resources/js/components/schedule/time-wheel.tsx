@@ -123,14 +123,20 @@ function Wheel<T extends string | number>({
     };
 
     const onKeyDown = (event: React.KeyboardEvent) => {
-        const delta =
-            event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+        const last = options.length - 1;
+        const target: Record<string, number> = {
+            ArrowDown: index + 1,
+            ArrowUp: index - 1,
+            PageDown: index + 3,
+            PageUp: index - 3,
+            Home: 0,
+            End: last,
+        };
 
-        if (delta !== 0) {
+        if (event.key in target) {
             event.preventDefault();
-            onChange(
-                options[(index + delta + options.length) % options.length],
-            );
+            // Clamped like the touch gesture: the wheel does not wrap around.
+            onChange(options[Math.min(last, Math.max(0, target[event.key]))]);
         }
     };
 
@@ -150,6 +156,14 @@ function Wheel<T extends string | number>({
                 aria-label={label}
                 aria-valuetext={format(value)}
                 aria-valuenow={typeof value === 'number' ? value : index}
+                aria-valuemin={
+                    typeof value === 'number' ? Number(options[0]) : 0
+                }
+                aria-valuemax={
+                    typeof value === 'number'
+                        ? Number(options[options.length - 1])
+                        : options.length - 1
+                }
                 onScroll={onScroll}
                 onKeyDown={onKeyDown}
                 className={cn(
@@ -166,6 +180,8 @@ function Wheel<T extends string | number>({
                         key={String(option)}
                         type="button"
                         tabIndex={-1}
+                        // The wheel itself is the control; options are a visual aid.
+                        aria-hidden
                         onClick={() => onChange(option)}
                         className={cn(
                             'flex w-full snap-center items-center justify-center text-lg tabular-nums transition-colors',

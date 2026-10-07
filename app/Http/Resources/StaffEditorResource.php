@@ -60,7 +60,8 @@ class StaffEditorResource extends JsonResource
     {
         $start = $timeOff->starts_at->setTimezone($this->timezone);
         $end = $timeOff->ends_at->setTimezone($this->timezone);
-        $isAllDay = $start->format('H:i') === '00:00' && $end->format('H:i') === '00:00';
+        // startOfDay(), not "00:00": with daylight saving some days start at 01:00.
+        $isAllDay = $start->equalTo($start->startOfDay()) && $end->equalTo($end->startOfDay());
 
         return [
             'id' => $timeOff->id,

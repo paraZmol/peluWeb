@@ -30,6 +30,10 @@ export function StaffServicesForm({ staffId, services, canSetPrices }: Props) {
         ),
     });
     const { drafts } = form.data;
+    // Who manages services chooses them; everyone else only adjusts their time.
+    const listed = canSetPrices
+        ? services
+        : services.filter((service) => service.assigned);
     const change = (id: number, patch: Partial<Draft>) =>
         form.setData('drafts', {
             ...drafts,
@@ -50,10 +54,12 @@ export function StaffServicesForm({ staffId, services, canSetPrices }: Props) {
         form.submit(update(staffId), { preserveScroll: true });
     };
 
-    if (services.length === 0) {
+    if (listed.length === 0) {
         return (
             <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                El salón aún no tiene servicios.
+                {canSetPrices
+                    ? 'El salón aún no tiene servicios.'
+                    : 'Aún no tienes servicios asignados. Pídeselo a quien administra el salón.'}
             </p>
         );
     }
@@ -61,12 +67,12 @@ export function StaffServicesForm({ staffId, services, canSetPrices }: Props) {
     return (
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-                Marca lo que hace esta persona. Deja el tiempo
-                {canSetPrices && ' y el precio'} en blanco para usar los del
-                salón.
+                {canSetPrices
+                    ? 'Marca lo que hace esta persona. Deja el tiempo y el precio en blanco para usar los del salón.'
+                    : 'Ajusta cuánto te toma cada servicio. Déjalo en blanco para usar el tiempo del salón.'}
             </p>
             <ul className="divide-y rounded-xl border bg-card">
-                {services.map((service) => {
+                {listed.map((service) => {
                     const draft = drafts[service.id];
 
                     return (
@@ -76,6 +82,9 @@ export function StaffServicesForm({ staffId, services, canSetPrices }: Props) {
                         >
                             <label className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center gap-3">
                                 <Checkbox
+                                    className={
+                                        canSetPrices ? undefined : 'hidden'
+                                    }
                                     checked={draft.assigned}
                                     onCheckedChange={(checked) =>
                                         change(service.id, {

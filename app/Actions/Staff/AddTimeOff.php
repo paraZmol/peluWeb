@@ -7,6 +7,7 @@ use App\Exceptions\StaffException;
 use App\Models\Staff;
 use App\Models\StaffTimeOff;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 
 class AddTimeOff
 {
@@ -19,19 +20,25 @@ class AddTimeOff
         TimeOffReason $reason,
         ?string $note = null,
     ): StaffTimeOff {
-        if ($staff->timeOff()->where('ends_at', '>', now())->count() >= self::MAX_UPCOMING) {
-            throw StaffException::tooManyTimeOff(self::MAX_UPCOMING);
-        }
+        return DB::transaction(function () use ($staff, $startsAtUtc, $endsAtUtc, $reason, $note): StaffTimeOff {
+            // Same lock as booking: nobody books this professional while
+            // the absence is being created (and the limit stays true).
+            Staff::query()->lockForUpdate()->findOrFail($staff->id);
 
-        $timeOff = new StaffTimeOff;
-        $timeOff->salon_id = $staff->salon_id;
-        $timeOff->staff_id = $staff->id;
-        $timeOff->starts_at = $startsAtUtc->utc();
-        $timeOff->ends_at = $endsAtUtc->utc();
-        $timeOff->reason = $reason;
-        $timeOff->note = $note;
-        $timeOff->save();
+            if ($staff->timeOff()->where('ends_at', '>', now())->count() >= self::MAX_UPCOMING) {
+                throw StaffException::tooManyTimeOff(self::MAX_UPCOMING);
+            }
 
-        return $timeOff;
+            $timeOff = new StaffTimeOff;
+            $timeOff->salon_id = $staff->salon_id;
+            $timeOff->staff_id = $staff->id;
+            $timeOff->starts_at = $startsAtUtc->utc();
+            $timeOff->ends_at = $endsAtUtc->utc();
+            $timeOff->reason = $reason;
+            $timeOff->note = $note;
+            $timeOff->save();
+
+            return $timeOff;
+        });
     }
 }

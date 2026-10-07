@@ -84,17 +84,24 @@ export function StaffCard({ staff, linkableMembers }: Props) {
                         </li>
                     ))}
                 </ul>
-                <span className="text-muted-foreground">
+                <span
+                    className={
+                        staff.servicesCount === 0 && workDays.length > 0
+                            ? 'font-medium text-warning'
+                            : 'text-muted-foreground'
+                    }
+                >
                     {workDays.length === 0
                         ? 'Aún sin horario'
-                        : `${staff.servicesCount} ${staff.servicesCount === 1 ? 'servicio' : 'servicios'}`}
+                        : staff.servicesCount === 0
+                          ? 'Sin servicios: nadie podrá reservar'
+                          : `${staff.servicesCount} ${staff.servicesCount === 1 ? 'servicio' : 'servicios'}`}
                 </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
                 <Button
                     asChild
-                    size="sm"
                     variant={workDays.length === 0 ? 'default' : 'outline'}
                 >
                     <Link href={schedule(staff.id)}>
@@ -103,7 +110,7 @@ export function StaffCard({ staff, linkableMembers }: Props) {
                 </Button>
                 <Dialog open={editing} onOpenChange={setEditing}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline">
                             <Pencil /> Editar
                         </Button>
                     </DialogTrigger>

@@ -111,7 +111,7 @@ export function StaffForm({ staff, linkableMembers, onSaved }: Props) {
                     </Select>
                     <p className="text-xs text-muted-foreground">
                         Con una cuenta, esta persona puede ver y editar su
-                        propio horario. Invítala desde Equipo.
+                        propio horario. Las invitaciones se envían desde Equipo.
                     </p>
                     <InputError message={errors.user_id} />
                 </div>

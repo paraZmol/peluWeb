@@ -51,7 +51,7 @@ class StaffController extends SalonAreaController
 
     public function update(StaffRequest $request, Staff $staff, SaveStaff $save): RedirectResponse
     {
-        $save->handle($this->salon('manageTeam'), $staff, $request->staffAttributes(), $request->userId());
+        $save->handle($this->salon('manageTeam'), $staff, $request->staffAttributes(), $request->userId($staff->user_id));
         $this->toast('Cambios guardados.');
 
         return to_route('staff.index');

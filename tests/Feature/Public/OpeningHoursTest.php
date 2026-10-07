@@ -63,8 +63,15 @@ it('is closed on a holiday and says why', function () {
         ->where('salon.openingHours.status.daysAhead', 1));
 });
 
-it('does not reveal which hours are VIP or staff only', function () {
+it('leaves VIP-only hours out of the public opening hours', function () {
     Staff::factory()->for($this->salon)->working([3], '09:00', '18:00', ScheduleAccess::Vip)->create();
+
+    $this->get('/s/barberia-lucho')->assertInertia(fn (Assert $page) => $page->where('salon.openingHours', null));
+});
+
+it('counts team-only hours as open without saying they are special', function () {
+    Staff::factory()->for($this->salon)->working([3], '09:00', '18:00', ScheduleAccess::StaffOnly)->create();
+    Staff::factory()->for($this->salon)->working([3], '18:00', '21:00', ScheduleAccess::Vip)->create();
 
     $this->get('/s/barberia-lucho')->assertInertia(fn (Assert $page) => $page
         ->where('salon.openingHours.days.2.ranges', [['start' => '09:00', 'end' => '18:00']])

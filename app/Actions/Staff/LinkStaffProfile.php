@@ -28,7 +28,7 @@ class LinkStaffProfile
             ? null
             : (clone $profiles)->whereNull('user_id')->find($preferredStaffId);
 
-        return $this->saveStaff->handle($salon, $preferred, ['name' => $preferred->name ?? $user->name], $user->id);
+        return $this->saveStaff->handle($salon, $preferred, ['name' => $preferred->name ?? Staff::nameFrom($user->name)], $user->id);
     }
 
     /**

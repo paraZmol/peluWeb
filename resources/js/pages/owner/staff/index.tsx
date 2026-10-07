@@ -48,8 +48,8 @@ export default function StaffIndex({
                         </h1>
                         <p className="text-sm text-muted-foreground">
                             Quienes atienden y en qué horario. No necesitan
-                            tener cuenta: para darles acceso a la app, invítalos
-                            desde{' '}
+                            tener cuenta: para dar acceso a la app, envía una
+                            invitación desde{' '}
                             <Link href={team()} className="underline">
                                 Equipo
                             </Link>

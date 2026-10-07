@@ -19,7 +19,7 @@ class SaveStaff
      * Create (when $staff is null) or update a professional. A new one
      * starts performing every service of the salon.
      *
-     * @param  array{name: string, title?: string|null, is_active?: bool}  $attributes
+     * @param  array{name: string, title?: string|null, is_active?: bool}  $attributes  only the fields to change
      * @param  int|null  $userId  account to link, or null for none
      */
     public function handle(Salon $salon, ?Staff $staff, array $attributes, ?int $userId = null): Staff

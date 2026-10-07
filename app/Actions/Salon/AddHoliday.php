@@ -6,6 +6,7 @@ use App\Exceptions\StaffException;
 use App\Models\Salon;
 use App\Models\SalonHoliday;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 
 class AddHoliday
 {
@@ -17,18 +18,31 @@ class AddHoliday
      */
     public function handle(Salon $salon, string $date, string $name): SalonHoliday
     {
-        $holiday = $salon->holidays()->whereDate('date', $date)->first();
+        return DB::transaction(function () use ($salon, $date, $name): SalonHoliday {
+            // Serializes two saves of the same day and keeps the limit true.
+            Salon::query()->lockForUpdate()->findOrFail($salon->id);
 
-        if ($holiday === null && $salon->holidays()->count() >= SalonHoliday::MAX_PER_SALON) {
-            throw StaffException::holidayLimitReached(SalonHoliday::MAX_PER_SALON);
-        }
+            $holiday = $salon->holidays()->whereDate('date', $date)->first();
 
-        $holiday ??= new SalonHoliday;
-        $holiday->salon_id = $salon->id;
-        $holiday->date = CarbonImmutable::createFromFormat('!Y-m-d', $date);
-        $holiday->name = $name;
-        $holiday->save();
+            if ($holiday === null && $this->upcomingCount($salon) >= SalonHoliday::MAX_PER_SALON) {
+                throw StaffException::holidayLimitReached(SalonHoliday::MAX_PER_SALON);
+            }
 
-        return $holiday;
+            $holiday ??= new SalonHoliday;
+            $holiday->salon_id = $salon->id;
+            $holiday->date = CarbonImmutable::createFromFormat('!Y-m-d', $date);
+            $holiday->name = $name;
+            $holiday->save();
+
+            return $holiday;
+        });
+    }
+
+    /**
+     * Past holidays do not count: the screen only lists upcoming ones.
+     */
+    private function upcomingCount(Salon $salon): int
+    {
+        return $salon->holidays()->whereDate('date', '>=', $salon->localNow()->toDateString())->count();
     }
 }

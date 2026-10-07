@@ -87,7 +87,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Professionals: the owner manages the list; each one edits their own hours.
         Route::get('profesionales', [StaffController::class, 'index'])->name('staff.index');
-        Route::post('profesionales', [StaffController::class, 'store'])->name('staff.store');
+        Route::post('profesionales', [StaffController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('staff.store');
         Route::put('profesionales/{staff}', [StaffController::class, 'update'])->name('staff.update');
         Route::delete('profesionales/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
         Route::post('profesionales/{staff}/foto', [StaffPhotoController::class, 'store'])
@@ -98,11 +100,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('mi-horario', [ScheduleController::class, 'mine'])->name('staff.schedule.mine');
         Route::get('profesionales/{staff}/horario', [ScheduleController::class, 'show'])->name('staff.schedule.show');
         Route::put('profesionales/{staff}/horario', [ScheduleController::class, 'update'])->name('staff.schedule.update');
-        Route::post('profesionales/{staff}/ausencias', [TimeOffController::class, 'store'])->name('staff.timeoff.store');
+        Route::post('profesionales/{staff}/ausencias', [TimeOffController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('staff.timeoff.store');
         Route::delete('profesionales/{staff}/ausencias/{timeOff}', [TimeOffController::class, 'destroy'])->name('staff.timeoff.destroy');
         Route::put('profesionales/{staff}/servicios', [StaffServiceController::class, 'update'])->name('staff.services.update');
 
-        Route::post('feriados', [HolidayController::class, 'store'])->name('holidays.store');
+        Route::post('feriados', [HolidayController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('holidays.store');
         Route::delete('feriados/{holiday}', [HolidayController::class, 'destroy'])->name('holidays.destroy');
     });
 });

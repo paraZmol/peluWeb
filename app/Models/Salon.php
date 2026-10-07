@@ -8,6 +8,7 @@ use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonRole;
 use App\Enums\SalonStatus;
+use App\Enums\ScheduleAccess;
 use App\Support\BrandColor;
 use Carbon\CarbonImmutable;
 use Database\Factories\SalonFactory;
@@ -121,14 +122,16 @@ class Salon extends Model
     }
 
     /**
-     * When the salon attends: the union of the hours of its active
-     * professionals. Names the salon explicitly because visitors of the
-     * public page have no current salon.
+     * When the salon attends the general public: the union of the hours of
+     * its active professionals, without the ranges reserved for VIP clients
+     * (a visitor could not book them). Names the salon explicitly because
+     * visitors of the public page have no current salon.
      */
     public function openingHours(): WeeklyHours
     {
         $schedules = StaffSchedule::withoutGlobalScope('salon')
             ->where('salon_id', $this->id)
+            ->where('access_level', '!=', ScheduleAccess::Vip)
             ->whereHas('staff', fn (Builder $staff) => $staff->withoutGlobalScope('salon')->where('is_active', true))
             ->get();
 

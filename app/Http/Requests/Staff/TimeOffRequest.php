@@ -45,6 +45,10 @@ class TimeOffRequest extends FormRequest
 
                 [$start, $end] = $this->period('UTC');
 
+                if ($end <= now()) {
+                    $validator->errors()->add('ends_on', 'Esa fecha ya pasó. Elige una ausencia que todavía no haya terminado.');
+                }
+
                 if ($end <= $start) {
                     $validator->errors()->add('end_time', 'La hora de regreso debe ser posterior a la de salida.');
                 }
