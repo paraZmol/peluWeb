@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { BrandTheme } from '@/components/salon/brand-theme';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -15,7 +16,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { SLOTS_FAILURE } from '@/hooks/use-availability';
 import { useFetched } from '@/hooks/use-fetched';
 import { flashFailed } from '@/lib/flash';
+import { SHEET_ON_PHONE } from '@/lib/sheet';
 import { formatTime } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import type { BrandTokens } from '@/types';
 import { DayStrip } from './day-strip';
 import { SlotGrid } from './slot-grid';
 import { StaffSelect } from './staff-select';
@@ -33,6 +37,8 @@ type Props = {
     /** Colleagues it can be handed to; only for whoever runs every agenda. */
     staffOptions?: { id: number; name: string }[];
     staffId?: number;
+    /** Dialogs render outside the page: the salon's color is handed over. */
+    brand?: BrandTokens | null;
 };
 
 /** Pick another day and time for an existing booking. */
@@ -46,6 +52,7 @@ export function MoveDialog({
     moveUrl,
     staffOptions = [],
     staffId: currentStaffId,
+    brand = null,
 }: Props) {
     const [open, setOpen] = useState(false);
     const [sending, setSending] = useState(false);
@@ -89,55 +96,68 @@ export function MoveDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogContent className="max-h-[90svh] grid-rows-[auto_1fr_auto] overflow-hidden">
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>{description}</DialogDescription>
-                </DialogHeader>
+            <DialogContent
+                className={cn(
+                    SHEET_ON_PHONE,
+                    'grid-rows-[auto_1fr_auto] overflow-hidden',
+                )}
+            >
+                <BrandTheme brand={brand} className="contents">
+                    <DialogHeader className="pr-8 text-left">
+                        <DialogTitle className="leading-tight">
+                            {title}
+                        </DialogTitle>
+                        <DialogDescription className="break-words">
+                            {description}
+                        </DialogDescription>
+                    </DialogHeader>
 
-                <div className="-mx-6 flex min-h-0 flex-col gap-4 overflow-x-hidden overflow-y-auto px-6 py-1">
-                    {staffOptions.length > 1 && staffId !== null && (
-                        <StaffSelect
-                            options={staffOptions}
-                            value={staffId}
-                            prefix="Con"
-                            onChange={(id) => {
-                                setStaffId(id);
+                    {/* Children must not shrink: the day strip would collapse. */}
+                    <div className="-mx-6 flex min-h-0 flex-col gap-4 overflow-x-hidden overflow-y-auto px-6 py-1 *:shrink-0">
+                        {staffOptions.length > 1 && staffId !== null && (
+                            <StaffSelect
+                                className="w-full data-[size=default]:h-11 sm:data-[size=default]:h-9"
+                                options={staffOptions}
+                                value={staffId}
+                                prefix="Con"
+                                onChange={(id) => {
+                                    setStaffId(id);
+                                    setSlot(null);
+                                }}
+                            />
+                        )}
+                        <DayStrip
+                            days={days}
+                            value={date}
+                            onChange={(day) => {
+                                setDate(day);
                                 setSlot(null);
                             }}
                         />
-                    )}
-                    <DayStrip
-                        days={days}
-                        value={date}
-                        onChange={(day) => {
-                            setDate(day);
-                            setSlot(null);
-                        }}
-                    />
-                    <SlotGrid
-                        slots={slots.data?.slots ?? null}
-                        error={slots.error}
-                        isLoading={slots.isLoading}
-                        retry={slots.retry}
-                        onPick={setSlot}
-                        selected={slot?.start ?? 0}
-                        empty="No quedan horarios este día. Prueba con otro."
-                    />
-                </div>
+                        <SlotGrid
+                            slots={slots.data?.slots ?? null}
+                            error={slots.error}
+                            isLoading={slots.isLoading}
+                            retry={slots.retry}
+                            onPick={setSlot}
+                            selected={slot?.start ?? 0}
+                            empty="No quedan horarios este día. Prueba con otro."
+                        />
+                    </div>
 
-                <DialogFooter>
-                    <Button
-                        className="h-11 rounded-full"
-                        disabled={slot === null || sending}
-                        onClick={move}
-                    >
-                        {sending && <Spinner />}
-                        {slot
-                            ? `Mover a las ${formatTime(slot.time)}`
-                            : 'Elige un horario'}
-                    </Button>
-                </DialogFooter>
+                    <DialogFooter className="-mx-6 border-t px-6 pt-4">
+                        <Button
+                            className="h-12 rounded-full px-6 tabular-nums sm:h-11"
+                            disabled={slot === null || sending}
+                            onClick={move}
+                        >
+                            {sending && <Spinner />}
+                            {slot
+                                ? `Mover a las ${formatTime(slot.time)}`
+                                : 'Elige un horario'}
+                        </Button>
+                    </DialogFooter>
+                </BrandTheme>
             </DialogContent>
         </Dialog>
     );

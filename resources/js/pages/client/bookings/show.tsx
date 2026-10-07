@@ -27,7 +27,7 @@ export default function BookingShow({ booking, days }: Props) {
             <div className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
                 <header className="flex flex-col items-center gap-3 text-center">
                     {booking.status === 'confirmed' && booking.isUpcoming && (
-                        <SuccessCheck />
+                        <SuccessCheck celebrateKey={booking.code} />
                     )}
                     <h1 className="font-display text-2xl font-semibold text-balance sm:text-3xl">
                         {salon.name}
@@ -58,7 +58,7 @@ export default function BookingShow({ booking, days }: Props) {
                     }
                 />
 
-                <div className="flex flex-wrap gap-2">
+                <div className="grid gap-2 sm:flex sm:flex-wrap">
                     {booking.canMove && (
                         <MoveDialog
                             trigger={
@@ -74,6 +74,7 @@ export default function BookingShow({ booking, days }: Props) {
                             description={`Con ${booking.staffName}. Los servicios y el precio no cambian.`}
                             days={days}
                             date={booking.date}
+                            brand={salon.brand}
                             slotsUrl={(date) =>
                                 slots.url(booking.code, { query: { date } })
                             }
@@ -120,7 +121,7 @@ export default function BookingShow({ booking, days }: Props) {
                 </div>
 
                 {booking.canCancel && (
-                    <div className="flex items-center justify-between gap-3 border-t pt-4">
+                    <div className="flex items-center justify-between gap-3 border-t pt-4 [&_button]:h-11 sm:[&_button]:h-9">
                         <p className="text-sm text-balance text-muted-foreground">
                             {booking.cancelForfeitsDeposit
                                 ? `Faltan menos de ${booking.cancelWindowHours} h: si cancelas, la seña no se devuelve.`

@@ -80,6 +80,7 @@ export function StepClient({ salon, wizard, quote }: Props) {
             <BookingSummary
                 date={date}
                 time={slot.time}
+                timeJustPicked
                 staffLabel="Atiende"
                 staffName={staff?.name ?? 'Quien esté disponible'}
                 duration={

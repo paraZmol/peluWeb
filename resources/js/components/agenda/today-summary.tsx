@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { AgendaBooking } from '@/components/booking/types';
 import { useNow } from '@/hooks/use-now';
 import { formatMinutes, formatTime } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 type Props = { bookings: AgendaBooking[]; showStaff: boolean };
 
@@ -43,25 +44,29 @@ export function TodaySummary({ bookings, showStaff }: Props) {
         <li key={key} className="flex items-center gap-3">
             <span
                 aria-hidden
-                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-background text-primary [&_svg]:size-5"
+                className={cn(
+                    'flex size-10 shrink-0 items-center justify-center rounded-full [&_svg]:size-5',
+                    booking.status === 'in_service'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background text-primary',
+                )}
             >
                 {icon}
             </span>
             <p className="min-w-0 flex-1">
-                <span className="block text-xs text-muted-foreground">
+                <span className="block text-xs text-muted-foreground tabular-nums">
                     {label}
                 </span>
-                <span className="block font-medium break-words">
+                <span className="block truncate font-medium">
                     {booking.client.name}
-                    {showStaff && (
-                        <span className="font-normal text-muted-foreground">
-                            {' '}
-                            · con {booking.staffName}
-                        </span>
-                    )}
                 </span>
+                {showStaff && (
+                    <span className="block truncate text-sm text-muted-foreground">
+                        Con {booking.staffName}
+                    </span>
+                )}
             </p>
-            <p className="shrink-0 text-right text-sm font-medium tabular-nums">
+            <p className="shrink-0 text-right text-sm font-medium whitespace-nowrap tabular-nums">
                 {detail}
             </p>
         </li>
@@ -81,7 +86,7 @@ export function TodaySummary({ bookings, showStaff }: Props) {
     return (
         <ul
             aria-label="Resumen de hoy"
-            className="flex flex-col gap-3 rounded-xl bg-muted/60 px-4 py-3"
+            className="flex flex-col gap-3 rounded-xl bg-muted/60 p-4"
         >
             {current.map((booking) =>
                 row(

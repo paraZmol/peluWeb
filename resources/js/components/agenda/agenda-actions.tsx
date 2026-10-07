@@ -8,6 +8,7 @@ import type {
 } from '@/components/booking/types';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
+import { useCurrentSalon } from '@/hooks/use-current-salon';
 import {
     cancel,
     complete,
@@ -26,27 +27,40 @@ type Props = {
     staffOptions: StaffOption[];
 };
 
+/** The next step of a visit takes the whole row on a phone. */
+const PRIMARY = 'col-span-2';
+
 /** What the viewer may do with a booking; the server decides the list. */
 export function AgendaActions({ booking, days, staffOptions }: Props) {
+    const { currentSalon } = useCurrentSalon();
     const can = (action: AgendaBooking['actions'][number]) =>
         booking.actions.includes(action);
     const post = (route: { url: string }) =>
         router.post(route.url, {}, { preserveScroll: true });
 
     return (
-        <div className="flex flex-wrap items-center gap-2 [&_a]:h-11 sm:[&_a]:h-9 [&_button]:h-11 sm:[&_button]:h-9">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center [&_a]:h-11 sm:[&_a]:h-9 [&_button]:h-11 sm:[&_button]:h-9">
             {can('confirm') && (
-                <Button onClick={() => post(confirm(booking.id))}>
+                <Button
+                    className={PRIMARY}
+                    onClick={() => post(confirm(booking.id))}
+                >
                     <Check /> Seña recibida
                 </Button>
             )}
             {can('start') && (
-                <Button onClick={() => post(start(booking.id))}>
+                <Button
+                    className={PRIMARY}
+                    onClick={() => post(start(booking.id))}
+                >
                     <Play /> Llegó
                 </Button>
             )}
             {can('complete') && (
-                <Button onClick={() => post(complete(booking.id))}>
+                <Button
+                    className={PRIMARY}
+                    onClick={() => post(complete(booking.id))}
+                >
                     <Check /> Terminé
                 </Button>
             )}
@@ -69,8 +83,9 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
                             <CalendarClock aria-hidden /> Mover
                         </Button>
                     }
-                    title={`Mover la cita de ${booking.client.name}`}
-                    description="Elige el nuevo día y la hora. Los servicios y el precio no cambian."
+                    title="Mover cita"
+                    description={`De ${booking.client.name}. Los servicios y el precio no cambian.`}
+                    brand={currentSalon?.brand ?? null}
                     days={days}
                     date={booking.date}
                     staffOptions={staffOptions}

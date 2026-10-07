@@ -5,17 +5,10 @@ import type {
     BookingDay,
     StaffOption,
 } from '@/components/booking/types';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import type { GridColumn } from '@/hooks/use-grid-drag';
 import { formatDate } from '@/lib/format';
 import { move } from '@/routes/agenda/bookings';
-import { AgendaItem } from './agenda-item';
+import { AgendaBookingDialog } from './agenda-booking-dialog';
 import { TimeGrid } from './time-grid';
 
 export type BoardView = 'tablero' | 'semana';
@@ -92,6 +85,11 @@ export function AgendaBoard({
 
     return (
         <>
+            <p className="text-sm text-muted-foreground">
+                {hasMouse
+                    ? 'Arrastra una cita para moverla, o tócala para ver sus opciones.'
+                    : 'Toca una cita para ver sus opciones. Desliza la tabla para ver más.'}
+            </p>
             <TimeGrid
                 columns={columns}
                 bookings={bookings}
@@ -105,34 +103,13 @@ export function AgendaBoard({
                 onMove={onMove}
                 onOpen={(booking) => setOpenedId(booking.id)}
             />
-            {hasMouse && (
-                <p className="text-sm text-muted-foreground">
-                    Arrastra una cita para moverla, o tócala para ver sus
-                    opciones.
-                </p>
-            )}
 
-            <Dialog
-                open={opened !== undefined}
-                onOpenChange={(open) => !open && setOpenedId(null)}
-            >
-                <DialogContent className="max-h-[90svh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Cita</DialogTitle>
-                        <DialogDescription className="capitalize">
-                            {opened && formatDate(opened.date)}
-                        </DialogDescription>
-                    </DialogHeader>
-                    {opened && (
-                        <AgendaItem
-                            booking={opened}
-                            showStaff
-                            days={days}
-                            staffOptions={staffOptions}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+            <AgendaBookingDialog
+                booking={opened}
+                days={days}
+                staffOptions={staffOptions}
+                onClose={() => setOpenedId(null)}
+            />
         </>
     );
 }

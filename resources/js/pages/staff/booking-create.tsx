@@ -77,7 +77,11 @@ export default function BookingCreate({ salon, days }: Props) {
                             />
                         )}
                         {wizard.step === 0 && (
-                            <StepServices salon={salon} wizard={wizard} />
+                            <StepServices
+                                salon={salon}
+                                wizard={wizard}
+                                empty="Todavía no hay servicios activos para agendar. Agrégalos en Servicios."
+                            />
                         )}
                         {wizard.step === 1 && <StepStaff wizard={wizard} />}
                         {wizard.step === 2 && (

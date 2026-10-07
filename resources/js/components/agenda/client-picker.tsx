@@ -70,6 +70,7 @@ export function ClientPicker({ value, onChange, errors }: Props) {
                 <Button
                     variant="ghost"
                     size="sm"
+                    className="h-11 sm:h-8"
                     onClick={() => onChange({ id: null, name: '', phone: '' })}
                 >
                     <X aria-hidden /> Cambiar
@@ -96,8 +97,14 @@ export function ClientPicker({ value, onChange, errors }: Props) {
                 {(suggestions.data?.clients.length ?? 0) > 0 && (
                     <ul
                         aria-label="Clientes que ya están en tu lista"
-                        className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card"
+                        className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card shadow-xs"
                     >
+                        <li
+                            aria-hidden
+                            className="bg-muted/40 px-4 py-2 text-xs text-muted-foreground"
+                        >
+                            Ya en tu lista · toca para elegir
+                        </li>
                         {suggestions.data?.clients.map((client) => (
                             <li key={client.id}>
                                 <button
@@ -109,7 +116,7 @@ export function ClientPicker({ value, onChange, errors }: Props) {
                                             phone: client.phone ?? '',
                                         })
                                     }
-                                    className="flex min-h-12 w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+                                    className="flex min-h-12 w-full items-center gap-3 px-4 py-2 text-left text-sm transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
                                 >
                                     <span className="min-w-0 flex-1 font-medium break-words">
                                         {client.name}

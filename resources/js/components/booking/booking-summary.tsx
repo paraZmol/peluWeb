@@ -2,6 +2,7 @@ import { Clock, MapPin, User } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { formatPrice, formatTime } from '@/lib/format';
 import { DateTile } from './date-tile';
+import { PickedTime } from './picked-time';
 
 const longDateFormat = new Intl.DateTimeFormat('es-PE', {
     weekday: 'long',
@@ -30,6 +31,8 @@ type Props = {
     /** e.g. "desde" when the price depends on who attends. */
     totalPrefix?: string;
     footer?: ReactNode;
+    /** The time was tapped a moment ago: let it land with a short motion. */
+    timeJustPicked?: boolean;
 };
 
 /** When, with whom, what and how much: shown before and after booking. */
@@ -45,6 +48,7 @@ export function BookingSummary({
     total,
     totalPrefix,
     footer,
+    timeJustPicked = false,
 }: Props) {
     const row = (icon: ReactNode, label: string, value: ReactNode) => (
         <div className="flex items-start gap-3">
@@ -72,7 +76,11 @@ export function BookingSummary({
                             {formatLongDate(date)}
                         </span>
                         <span className="block text-lg font-semibold tabular-nums">
-                            {formatTime(time)}
+                            {timeJustPicked ? (
+                                <PickedTime>{formatTime(time)}</PickedTime>
+                            ) : (
+                                formatTime(time)
+                            )}
                             {endTime && ` – ${formatTime(endTime)}`}
                         </span>
                     </dd>

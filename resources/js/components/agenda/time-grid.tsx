@@ -1,10 +1,9 @@
 import type { AgendaBooking } from '@/components/booking/types';
 import type { GridColumn } from '@/hooks/use-grid-drag';
 import { useGridDrag } from '@/hooks/use-grid-drag';
-import { formatTime } from '@/lib/format';
-import { endMinutes, placeInLanes, toMinutes, toTime } from '@/lib/time-grid';
 import { cn } from '@/lib/utils';
-import { GridBlock } from './grid-block';
+import { TimeGridColumn } from './time-grid-column';
+import { TimeGridHours } from './time-grid-hours';
 
 type Props = {
     columns: GridColumn[];
@@ -24,6 +23,10 @@ type Props = {
 const PIXELS_PER_MINUTE = 1.2;
 /** Visits that no longer take anyone's time are left out of the grid. */
 const HIDDEN = ['cancelled', 'no_show', 'expired'];
+/** Width of the hours gutter and the least a column needs to be read. */
+const GUTTER = 'w-14 shrink-0';
+const COLUMN_MIN_REM = 7.5;
+const GUTTER_REM = 3.5;
 
 /** Visits laid out on a clock: one column per day or per professional. */
 export function TimeGrid({
@@ -58,19 +61,31 @@ export function TimeGrid({
     const top = (minutes: number) => (minutes - range.from) * PIXELS_PER_MINUTE;
 
     return (
-        <div className="overflow-x-auto rounded-xl border bg-card">
-            <div className="min-w-[44rem]">
-                <div className="sticky top-0 z-10 flex border-b bg-card">
-                    <div className="w-16 shrink-0" />
+        // Scrolls both ways inside itself, so names and hours stay in view.
+        <div className="max-h-[75svh] overflow-auto overscroll-x-contain rounded-xl border bg-card">
+            <div
+                style={{
+                    minWidth: `${GUTTER_REM + columns.length * COLUMN_MIN_REM}rem`,
+                }}
+            >
+                <div className="sticky top-0 z-20 flex border-b bg-card">
+                    <div className={cn(GUTTER, 'sticky left-0 z-10 bg-card')} />
                     {columns.map((column) => (
                         <div
                             key={column.key}
                             className={cn(
-                                'min-w-0 flex-1 border-l px-2 py-2 text-center text-sm font-medium',
-                                column.isCurrent && 'text-primary',
+                                'min-w-0 flex-1 border-l px-2 py-2.5 text-center text-sm font-medium',
+                                column.isCurrent && 'bg-primary/5',
                             )}
                         >
-                            <span className="block truncate capitalize">
+                            <span
+                                className={cn(
+                                    'block truncate capitalize',
+                                    // Today wears the brand, readable in both themes.
+                                    column.isCurrent &&
+                                        'mx-auto w-fit max-w-full rounded-full bg-primary px-2.5 text-primary-foreground',
+                                )}
+                            >
                                 {column.label}
                             </span>
                             {column.hint && (
@@ -86,17 +101,12 @@ export function TimeGrid({
                     className="relative flex"
                     style={{ height: top(range.to) }}
                 >
-                    <div className="relative w-16 shrink-0" aria-hidden>
-                        {hourMarks.map((hour) => (
-                            <span
-                                key={hour}
-                                className="absolute right-2 -translate-y-1/2 text-[11px] text-muted-foreground tabular-nums first:translate-y-0"
-                                style={{ top: top(hour * 60) }}
-                            >
-                                {formatTime(toTime(hour * 60))}
-                            </span>
-                        ))}
-                    </div>
+                    <TimeGridHours
+                        className={cn(GUTTER, 'sticky left-0 z-10 bg-card')}
+                        hours={hourMarks}
+                        top={top}
+                        target={target}
+                    />
                     <div ref={area} className="relative flex flex-1">
                         {hourMarks.map((hour) => (
                             <span
@@ -107,67 +117,21 @@ export function TimeGrid({
                             />
                         ))}
                         {columns.map((column) => (
-                            <div
+                            <TimeGridColumn
                                 key={column.key}
-                                role="group"
-                                aria-label={column.label}
-                                className={cn(
-                                    'relative min-w-0 flex-1 border-l',
-                                    column.isCurrent && 'bg-primary/5',
+                                column={column}
+                                bookings={visible.filter(
+                                    (booking) =>
+                                        columnOf(booking) === column.key,
                                 )}
-                            >
-                                {target?.column === column.key && (
-                                    <span
-                                        aria-hidden
-                                        className={cn(
-                                            'absolute inset-x-0.5 rounded-md border-2 border-dashed',
-                                            target.conflict
-                                                ? 'border-destructive bg-destructive/10'
-                                                : 'border-primary bg-primary/10',
-                                        )}
-                                        style={{
-                                            top: top(target.start),
-                                            height:
-                                                (target.end - target.start) *
-                                                PIXELS_PER_MINUTE,
-                                        }}
-                                    />
-                                )}
-                                {placeInLanes(
-                                    visible
-                                        .filter(
-                                            (booking) =>
-                                                columnOf(booking) ===
-                                                column.key,
-                                        )
-                                        .map((booking) => ({
-                                            item: booking,
-                                            start: toMinutes(booking.time),
-                                            end: endMinutes(
-                                                booking.time,
-                                                booking.endTime,
-                                            ),
-                                        })),
-                                ).map((placed) => (
-                                    <GridBlock
-                                        key={placed.item.id}
-                                        placed={placed}
-                                        gridStart={range.from}
-                                        pixelsPerMinute={PIXELS_PER_MINUTE}
-                                        draggable={
-                                            canDrag &&
-                                            placed.item.actions.includes('move')
-                                        }
-                                        onOpen={() => onOpen(placed.item)}
-                                        onDrag={(offset) =>
-                                            drag(placed.item, offset)
-                                        }
-                                        onDrop={(offset) =>
-                                            drop(placed.item, offset)
-                                        }
-                                    />
-                                ))}
-                            </div>
+                                target={target}
+                                gridStart={range.from}
+                                pixelsPerMinute={PIXELS_PER_MINUTE}
+                                canDrag={canDrag}
+                                onOpen={onOpen}
+                                onDrag={drag}
+                                onDrop={drop}
+                            />
                         ))}
                     </div>
                 </div>

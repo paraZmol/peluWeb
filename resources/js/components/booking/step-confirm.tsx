@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
+import { markBookingCelebration } from '@/lib/celebration';
 import { flashFailed } from '@/lib/flash';
 import { formatMinutes, formatPrice } from '@/lib/format';
 import { resume, store } from '@/routes/salons/booking';
@@ -46,8 +47,15 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                 onStart: () => setSending(true),
                 onFinish: () => setSending(false),
                 // The slot was taken meanwhile: back to choosing a time.
-                onSuccess: (page) =>
-                    flashFailed(page) ? wizard.goTo(2) : wizard.clear(),
+                onSuccess: (page) => {
+                    if (flashFailed(page)) {
+                        return wizard.goTo(2);
+                    }
+
+                    // Its page greets it with confetti, once.
+                    markBookingCelebration(page.props.booking);
+                    wizard.clear();
+                },
                 onError: () => wizard.goTo(2),
             },
         );
@@ -57,6 +65,7 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
             <BookingSummary
                 date={date}
                 time={slot.time}
+                timeJustPicked
                 staffName={staff?.name ?? 'Quien esté disponible'}
                 duration={
                     quote

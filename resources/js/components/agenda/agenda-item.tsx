@@ -14,11 +14,18 @@ type Props = {
     showStaff: boolean;
     days: BookingDay[];
     staffOptions: StaffOption[];
+    className?: string;
 };
 
 const DIMMED = ['cancelled', 'no_show', 'completed'];
 
-export function AgendaItem({ booking, showStaff, days, staffOptions }: Props) {
+export function AgendaItem({
+    booking,
+    showStaff,
+    days,
+    staffOptions,
+    className,
+}: Props) {
     return (
         <article
             aria-label={`${booking.client.name}, ${formatTime(booking.time)}`}
@@ -26,6 +33,7 @@ export function AgendaItem({ booking, showStaff, days, staffOptions }: Props) {
                 'flex flex-col gap-3 rounded-xl border bg-card p-4',
                 booking.status === 'in_service' && 'border-primary',
                 DIMMED.includes(booking.status) && 'opacity-60',
+                className,
             )}
         >
             {/* Phone: time and status on top, details below. Wider: one row. */}

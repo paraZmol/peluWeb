@@ -5,15 +5,24 @@ import { formatMinutes, formatPrice } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { BookableSalon, BookableService } from './types';
 
-type Props = { salon: BookableSalon; wizard: BookingWizard };
+type Props = {
+    salon: BookableSalon;
+    wizard: BookingWizard;
+    /** What to say when there is nothing to choose from. */
+    empty?: string;
+};
 
-export function StepServices({ salon, wizard }: Props) {
+export function StepServices({
+    salon,
+    wizard,
+    empty = 'Este salón todavía no tiene servicios para reservar en línea.',
+}: Props) {
     const isFull = wizard.selections.length >= MAX_SERVICES;
 
     if (wizard.services.length === 0) {
         return (
             <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                Este salón todavía no tiene servicios para reservar en línea.
+                {empty}
             </p>
         );
     }
