@@ -270,18 +270,19 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] *Cierre (2026-10-07):* 527 tests + 46 E2E en verde. **security-auditor**: 0 críticos/altos; 3 medios (horas VIP publicadas, bloqueo del profesional solo en el horario, migración de relleno no repetible) y 7 bajos → corregidos, salvo el límite de perfiles eliminados acumulados (aceptado: hay tope de peticiones). **qa-tester**: 76 tests nuevos, 5 bugs (1 medio: restaurar un servicio lo reasignaba a todo el equipo; 4 bajos) → corregidos. **ux-reviewer**: corregido aviso al salir con cambios sin guardar, accesibilidad y teclado de la rueda y las pestañas, botón "Listo" siempre visible, botones de 44 px y textos neutros; el resto pasó a 8.7. **booking-breaker** no aplica todavía (no hay motor de reservas): entra en el cierre de la Fase 4.
 
 ### Fase 4 — Motor de reservas y agenda (núcleo; no recortar tests)
-- [ ] 4.1 `AvailabilityCalculator` puro con tests primero (todas las invariantes de `booking-domain`).
-- [ ] 4.2 Transacción de reserva con `lockForUpdate` + test concurrente real.
-- [ ] 4.3 Máquina de estados con `booking_events`; expiración de pendientes sin depender del cron.
-- [ ] 4.4 Flujo del cliente en 4 pasos (permite elegir **varios servicios** en una reserva, que reemplaza a los combos de 2.6) con animaciones (paso a paso, chip → resumen, check al confirmar).
-- [ ] 4.5 Reservas VIP: filtro en servidor, seña distinta, marca VIP en la ficha.
-- [ ] 4.6 Señas: mensaje `wa.me` armado en servidor y botón "Seña recibida".
-- [ ] 4.7 Vista **Hoy** del profesional y agenda día/semana con arrastrar para mover.
+- [x] 4.1 `AvailabilityCalculator` puro con tests primero (todas las invariantes de `booking-domain`), más un fuzz con semilla fija contra un oráculo minuto a minuto. *(2026-10-08)*
+- [x] 4.2 Transacción de reserva con `lockForUpdate` + tests concurrentes reales (procesos PHP y peticiones HTTP compitiendo). *(2026-10-08)*
+- [x] 4.3 Máquina de estados con `booking_events`; expiración de pendientes sin depender del cron (`bookings:expire-holds` solo lo anota). *(2026-10-08)*
+- [~] 4.4 *(hecho 2026-10-08; **falta:** chip que se expande al resumen y confeti al confirmar)* Flujo del cliente en 4 pasos (permite elegir **varios servicios** en una reserva, que reemplaza a los combos de 2.6) con animaciones (paso a paso, chip → resumen, check al confirmar).
+- [x] 4.5 Reservas VIP: filtro en servidor, seña distinta, pantalla Clientes para marcar VIP. *(2026-10-08)*
+- [x] 4.6 Señas: mensaje `wa.me` armado en servidor, cuenta regresiva y botón "Seña recibida" (permiso de caja). Reglas de reserva del salón en Mi salón (solo dueño). *(2026-10-08)*
+- [~] 4.7 Agenda por día con Llegó / Terminé / No vino / Cancelar *(2026-10-08)*. **Falta:** vista Hoy con cuenta regresiva, semana y arrastrar para mover.
 - [ ] 4.8 Reserva creada por el personal para un cliente sin cuenta; reprogramar y cancelar según política.
 - [ ] 4.9 Mis reservas del cliente, repetir última cita, foto de referencia de estilo.
 - [ ] 4.10 API `/api/v1` de disponibilidad y reservas (Sanctum), para la futura app.
-- [ ] 4.11 Aviso de reservas afectadas al cambiar un horario, crear una ausencia o un feriado (movido desde 3.5).
-- *Cierre:* **booking-breaker** (obligatorio) + **security-auditor** + **qa-tester** + **ux-reviewer**.
+- [x] 4.11 Reservas afectadas: cambiar un horario, crear una ausencia o un feriado, o quitar a un profesional se **rechaza** listando las citas que quedarían sin atender (primero se mueven o cancelan). *(2026-10-08)*
+- *Avance (2026-10-08):* 810 tests + 53 E2E en verde. **security-auditor**: 0 críticos/altos, 4 medios y 7 bajos → corregidos. **booking-breaker**: 147 tests nuevos; encontró 1 **CRÍTICO** (doble reserva por la ruta web: una transacción exterior añadida al corregir la auditoría fijaba una vista vieja de la agenda), 2 altos, 2 medios y 2 bajos → todos corregidos y sus tests activos. **visual-designer**: primera pasada sobre reserva, Mis reservas y agenda.
+- *Cierre:* **booking-breaker** (obligatorio) + **security-auditor** + **qa-tester** + **visual-designer** + **ux-reviewer**.
 
 ### Fase 5 — Caja, contabilidad y reportes
 - [ ] 5.1 `payments` desde el cobro de la cita (método, propina, descuento) y desde las señas.
@@ -380,6 +381,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-07 | Fase 3: la tabla pivote se llama `service_staff` (orden alfabético, convención de Laravel) y lo que cada profesional ajusta es el **tiempo de trabajo** del servicio; el perfil de profesional se crea solo para el dueño y para quien acepta una invitación de personal; el paso 3.5 (aviso de reservas afectadas) pasa a 4.11 | Coherencia con la skill `clean-code`; menos pasos manuales para el dueño; aún no existen reservas |
 | 2026-10-07 | Cierre de la Fase 3: el horario público excluye las franjas solo-VIP; qué servicios hace cada profesional lo decide quien gestiona servicios (el profesional solo ajusta su tiempo); ausencias, baja y servicios toman el mismo bloqueo del profesional que usará la reserva | Hallazgos de security-auditor y qa-tester |
 | 2026-10-08 | Nuevo agente `visual-designer`, exclusivo para la calidad visual del frontend (edita la presentación; el ux-reviewer sigue siendo de solo lectura) | Pedido del usuario: que la app se vea profesional y adecuada |
+| 2026-10-08 | Fase 4: la rejilla de horarios ofrece además el instante en que termina cada cita (si no, se desperdician huecos como el reposo de un tinte); los cambios que dejarían citas sin atender se rechazan en vez de solo avisar; tope de 5 reservas próximas y 8 por día por cliente y salón; seña y datos de pago solo los cambia el dueño | Hallazgos de las pruebas, security-auditor y booking-breaker |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

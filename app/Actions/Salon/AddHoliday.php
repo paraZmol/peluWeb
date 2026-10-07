@@ -2,6 +2,7 @@
 
 namespace App\Actions\Salon;
 
+use App\Actions\Booking\FindAffectedBookings;
 use App\Exceptions\StaffException;
 use App\Models\Salon;
 use App\Models\SalonHoliday;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class AddHoliday
 {
+    public function __construct(private readonly FindAffectedBookings $affected) {}
+
     /**
      * Close the salon on a calendar day. Adding the same day again only
      * renames it.
@@ -23,6 +26,10 @@ class AddHoliday
             Salon::query()->lockForUpdate()->findOrFail($salon->id);
 
             $holiday = $salon->holidays()->whereDate('date', $date)->first();
+
+            if ($holiday === null) {
+                $this->affected->ensureNoneOn($salon, $date);
+            }
 
             if ($holiday === null && $this->upcomingCount($salon) >= SalonHoliday::MAX_PER_SALON) {
                 throw StaffException::holidayLimitReached(SalonHoliday::MAX_PER_SALON);

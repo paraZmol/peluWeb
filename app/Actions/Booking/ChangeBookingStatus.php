@@ -54,7 +54,15 @@ class ChangeBookingStatus
 
     public function start(Booking $booking, ?User $by): Booking
     {
-        return $this->change($booking, BookingStatus::InService, $by);
+        return $this->change($booking, BookingStatus::InService, $by, function (Booking $locked, CarbonImmutable $now): void {
+            $timezone = Salon::withTrashed()->findOrFail($locked->salon_id)->timezone;
+
+            // A slip of the finger on next week's visit would leave it "in
+            // service", from where it can only be completed.
+            if (! $locked->starts_at->setTimezone($timezone)->isSameDay($now->setTimezone($timezone))) {
+                throw BookingException::notToday();
+            }
+        });
     }
 
     public function complete(Booking $booking, ?User $by): Booking

@@ -34,6 +34,7 @@ class StaffAvailability
      *
      * @param  CarbonImmutable  $localDate  any instant of the day, in the salon's timezone
      * @param  int|null  $ignoreBookingId  a booking being moved does not block itself
+     * @param  bool  $underLock  true inside the booking transaction, with the professional's row locked
      * @return list<int>
      */
     public function slots(
@@ -44,6 +45,7 @@ class StaffAvailability
         ClientLevel $level,
         CarbonImmutable $now,
         ?int $ignoreBookingId = null,
+        bool $underLock = false,
     ): array {
         // Days nobody could book anyway are answered without touching the agenda.
         if (! $this->isBookableDay($salon, $localDate, $level, $now)) {
@@ -61,7 +63,7 @@ class StaffAvailability
 
         return $this->calculator->slots(
             $windows,
-            $this->busy($staff, $day, $now, $ignoreBookingId),
+            $this->busy($staff, $day, $now, $ignoreBookingId, $underLock),
             $shape,
             $salon->slot_step_minutes,
             $earliest,
@@ -104,19 +106,33 @@ class StaffAvailability
      * What already takes the professional's time inside $range: the busy
      * stretches of bookings that hold their slot, and time off.
      *
+     * With $underLock the reads are locking reads: they always see the
+     * latest committed data, even if the surrounding transaction had
+     * already read something (a plain read would reuse that older view).
+     *
      * @return list<TimeSpan>
      */
-    public function busy(Staff $staff, TimeSpan $range, CarbonImmutable $now, ?int $ignoreBookingId = null): array
+    public function busy(Staff $staff, TimeSpan $range, CarbonImmutable $now, ?int $ignoreBookingId = null, bool $underLock = false): array
     {
         $from = CarbonImmutable::createFromTimestampUTC($range->start);
         $to = CarbonImmutable::createFromTimestampUTC($range->end);
 
-        $segments = BookingSegment::query()
+        // Two queries, not a subquery: MySQL does not apply a locking read
+        // to the tables of a nested subquery, which would read them stale.
+        $holding = Booking::withoutGlobalScope('salon')
             ->where('staff_id', $staff->id)
             ->where('starts_at', '<', $to)
             ->where('ends_at', '>', $from)
-            ->when($ignoreBookingId !== null, fn ($query) => $query->where('booking_id', '!=', $ignoreBookingId))
-            ->whereIn('booking_id', Booking::withoutGlobalScope('salon')->where('staff_id', $staff->id)->holdingSlot($now)->select('id'))
+            ->holdingSlot($now)
+            ->when($ignoreBookingId !== null, fn ($query) => $query->whereKeyNot($ignoreBookingId))
+            ->when($underLock, fn ($query) => $query->sharedLock())
+            ->pluck('id');
+
+        $segments = BookingSegment::query()
+            ->whereIn('booking_id', $holding)
+            ->where('starts_at', '<', $to)
+            ->where('ends_at', '>', $from)
+            ->when($underLock, fn ($query) => $query->sharedLock())
             ->get()
             ->map(fn (BookingSegment $segment) => new TimeSpan($segment->starts_at->getTimestamp(), $segment->ends_at->getTimestamp()));
 
@@ -124,6 +140,9 @@ class StaffAvailability
             ->where('staff_id', $staff->id)
             ->where('starts_at', '<', $to)
             ->where('ends_at', '>', $from)
+            // A period that ends before it starts blocks nothing (and is refused on entry).
+            ->whereColumn('starts_at', '<', 'ends_at')
+            ->when($underLock, fn ($query) => $query->sharedLock())
             ->get()
             ->map(fn (StaffTimeOff $off) => new TimeSpan($off->starts_at->getTimestamp(), $off->ends_at->getTimestamp()));
 

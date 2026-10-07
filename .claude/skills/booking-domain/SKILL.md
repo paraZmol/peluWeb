@@ -45,6 +45,16 @@ Al guardar, dentro de `DB::transaction()`:
 3. Insertar `bookings` + `booking_segments` (un registro por tramo activo, con `staff_id`,
    `starts_at`, `ends_at` en UTC).
 4. Si otro proceso ganó, responder 409 con un mensaje amable y horarios alternativos.
+**Nada lee antes del bloqueo dentro de la misma transacción.** MySQL usa REPEATABLE READ: la
+primera lectura fija la vista de toda la transacción, así que un `SELECT` hecho antes del
+`FOR UPDATE` deja la agenda "congelada" y dos personas reservan la misma hora (bug real,
+2026-10-08: una transacción exterior en el controlador). Por eso: `CreateBooking` nunca se
+envuelve en otra transacción; su primera sentencia es el bloqueo del profesional; y las lecturas
+bajo bloqueo son lecturas bloqueantes (`sharedLock()`), sin subconsultas (MySQL no aplica el
+bloqueo a las tablas de una subconsulta anidada).
+Orden de bloqueos, siempre: **profesional → cliente → reserva → salón**. Quien edita horarios,
+ausencias, servicios o al propio profesional toma primero el bloqueo del profesional.
+Test obligatorio también por HTTP (`tests/Concurrency`), no solo llamando a la acción.
 Índice obligatorio: `booking_segments (staff_id, starts_at, ends_at)`.
 Test obligatorio: dos procesos concurrentes, el mismo horario → exactamente una reserva.
 

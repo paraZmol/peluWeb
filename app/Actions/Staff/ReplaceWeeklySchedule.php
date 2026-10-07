@@ -2,15 +2,19 @@
 
 namespace App\Actions\Staff;
 
+use App\Actions\Booking\FindAffectedBookings;
 use App\Domain\Schedule\TimeRange;
 use App\Enums\ScheduleAccess;
 use App\Exceptions\StaffException;
+use App\Models\Salon;
 use App\Models\Staff;
 use App\Models\StaffSchedule;
 use Illuminate\Support\Facades\DB;
 
 class ReplaceWeeklySchedule
 {
+    public function __construct(private readonly FindAffectedBookings $affected) {}
+
     /**
      * Replace the whole week of a professional in one go.
      *
@@ -24,6 +28,9 @@ class ReplaceWeeklySchedule
             // Same lock the booking transaction takes: hours never change
             // halfway through someone booking this professional.
             Staff::query()->lockForUpdate()->findOrFail($staff->id);
+
+            $timezone = Salon::withTrashed()->findOrFail($staff->salon_id)->timezone;
+            $this->affected->ensureAllInside($staff, $ranges, $timezone);
 
             $staff->schedules()->delete();
 

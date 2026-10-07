@@ -24,6 +24,10 @@ use Illuminate\Support\Facades\DB;
  * professional's row (so bookings of one professional are serialized;
  * other professionals are not blocked) and then asks the very same
  * availability code that drew the time picker.
+ *
+ * Never call it inside another transaction that has already read: under
+ * MySQL's REPEATABLE READ that earlier read pins the view of the agenda.
+ * The reads under the lock are locking reads as a second line of defense.
  */
 class CreateBooking
 {
@@ -31,6 +35,8 @@ class CreateBooking
 
     /** Online bookings one client may create in a salon per day, whatever became of them. */
     public const int MAX_PER_CLIENT_PER_DAY = 8;
+
+    private const int DEADLOCK_ATTEMPTS = 3;
 
     /** Letters and digits that cannot be confused when read aloud or typed. */
     private const string CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -54,7 +60,8 @@ class CreateBooking
         }
 
         foreach ($this->leastBusyFirst($candidates->only(array_keys($quotes)), $data) as $staff) {
-            $booking = DB::transaction(fn () => $this->attempt($data, $staff, $now));
+            // Retried if MySQL picks it as the victim of a deadlock.
+            $booking = DB::transaction(fn () => $this->attempt($data, $staff, $now), self::DEADLOCK_ATTEMPTS);
 
             if ($booking !== null) {
                 return $booking;
@@ -97,6 +104,7 @@ class CreateBooking
             $data->startsAt->setTimezone($data->salon->timezone),
             $this->level($data),
             $now,
+            underLock: true,
         );
 
         if (! in_array($data->startsAt->getTimestamp(), $offered, true)) {
@@ -189,11 +197,11 @@ class CreateBooking
             ->where('salon_client_id', $data->client->id)
             ->where('source', BookingSource::Client);
 
-        if ($own()->where('starts_at', '>', $now)->holdingSlot($now)->count() >= self::MAX_UPCOMING_PER_CLIENT) {
+        if ($own()->where('starts_at', '>', $now)->holdingSlot($now)->sharedLock()->count() >= self::MAX_UPCOMING_PER_CLIENT) {
             throw BookingException::tooManyUpcoming(self::MAX_UPCOMING_PER_CLIENT);
         }
 
-        if ($own()->where('created_at', '>', $now->subDay())->count() >= self::MAX_PER_CLIENT_PER_DAY) {
+        if ($own()->where('created_at', '>', $now->subDay())->sharedLock()->count() >= self::MAX_PER_CLIENT_PER_DAY) {
             throw BookingException::tooManyToday();
         }
     }

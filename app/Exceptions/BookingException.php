@@ -57,6 +57,11 @@ class BookingException extends BusinessRuleException
         return new self('Solo puedes marcar que no vino cuando ya pasó la hora de la cita.');
     }
 
+    public static function notToday(): self
+    {
+        return new self('Solo puedes marcar que llegó el mismo día de la cita.');
+    }
+
     public static function alreadyStarted(): self
     {
         return new self('La hora de esta cita ya pasó. Escribe al salón para cualquier cambio.');

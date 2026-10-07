@@ -2,13 +2,17 @@
 
 namespace App\Actions\Staff;
 
+use App\Actions\Booking\FindAffectedBookings;
 use App\Models\Staff;
 use App\Support\Images\ImageStore;
 use Illuminate\Support\Facades\DB;
 
 class RemoveStaff
 {
-    public function __construct(private readonly ImageStore $images) {}
+    public function __construct(
+        private readonly ImageStore $images,
+        private readonly FindAffectedBookings $affected,
+    ) {}
 
     /**
      * Soft delete, so past appointments keep the name of who attended.
@@ -23,6 +27,7 @@ class RemoveStaff
         DB::transaction(function () use ($staff): void {
             // Same lock as booking: nobody books someone being removed.
             Staff::query()->lockForUpdate()->findOrFail($staff->id);
+            $this->affected->ensureNone($staff);
 
             $staff->user_id = null;
             $staff->photo_path = null;

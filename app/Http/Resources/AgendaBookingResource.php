@@ -74,7 +74,8 @@ class AgendaBookingResource extends JsonResource
 
         return array_keys(array_filter([
             'confirm' => $this->status === BookingStatus::Pending && ($request->user()?->can('confirmDeposit', $booking) ?? false),
-            'start' => $status === BookingStatus::Confirmed,
+            'start' => $status === BookingStatus::Confirmed
+                && $this->starts_at->setTimezone($this->timezone)->isSameDay($now->setTimezone($this->timezone)),
             'complete' => $status === BookingStatus::InService,
             'noShow' => $status === BookingStatus::Confirmed && $hasStarted,
             'cancel' => in_array($status, [BookingStatus::Pending, BookingStatus::Confirmed], true),

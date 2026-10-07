@@ -33,6 +33,19 @@ class StaffException extends BusinessRuleException
         return new self("Ya hay {$max} ausencias programadas. Elimina las que no necesites.");
     }
 
+    public static function bookingsAffected(int $count, string $listed): self
+    {
+        $more = $count > substr_count($listed, '(') ? ' y más' : '';
+        $noun = $count === 1 ? 'una cita que quedaría' : "{$count} citas que quedarían";
+
+        return new self("Hay {$noun} sin atender: {$listed}{$more}. Cancélalas o muévelas desde la Agenda y vuelve a intentar.");
+    }
+
+    public static function invalidPeriod(): self
+    {
+        return new self('Esa ausencia termina antes de empezar. Revisa las horas.');
+    }
+
     public static function holidayLimitReached(int $max): self
     {
         return new self("Ya tienes {$max} días de cierre programados. Elimina los que ya pasaron.");

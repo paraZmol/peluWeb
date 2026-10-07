@@ -25,6 +25,13 @@ class SaveStaff
     public function handle(Salon $salon, ?Staff $staff, array $attributes, ?int $userId = null): Staff
     {
         return DB::transaction(function () use ($salon, $staff, $attributes, $userId): Staff {
+            // The professional first, then the salon: the order a booking
+            // takes them in (its insert touches the salon row), so the two
+            // never wait on each other.
+            if ($staff !== null) {
+                Staff::withoutGlobalScope('salon')->lockForUpdate()->find($staff->id);
+            }
+
             // Serializes concurrent saves so the limit and the link stay true.
             Salon::query()->lockForUpdate()->findOrFail($salon->id);
 
@@ -42,7 +49,7 @@ class SaveStaff
             }
 
             return $staff;
-        });
+        }, attempts: 3);
     }
 
     private function newStaff(Salon $salon): Staff
