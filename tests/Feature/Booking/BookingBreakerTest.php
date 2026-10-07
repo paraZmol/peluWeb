@@ -3,10 +3,12 @@
 use App\Actions\Booking\ChangeBookingStatus;
 use App\Actions\Booking\CreateBooking;
 use App\Actions\Booking\FindAvailableSlots;
+use App\Actions\Booking\RescheduleBooking;
 use App\Actions\Staff\AddTimeOff;
 use App\Actions\Staff\RemoveStaff;
 use App\Actions\Staff\ReplaceWeeklySchedule;
 use App\Actions\Staff\SyncStaffServices;
+use App\Data\Booking\BookingMove;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
@@ -327,8 +329,23 @@ describe('changing durations after people booked', function () {
         expect($booking->ends_at->equalTo(brkLocal('10:05')))->toBeTrue()->and($booking->segments()->count())->toBe(1);
     });
 
-    it('warns about the next appointment when a visit already booked is made longer')
-        ->todo('GAP: there is no action to lengthen or move an existing booking, so the rule "never overlap in silence" cannot be exercised yet. When it exists it must re-run AvailabilityCalculator::fits() with $ignoreBookingId under the professional\'s lock.');
+    // Moving exists since step 4.8 (RescheduleBooking). Nothing lengthens a
+    // visit already booked; if that is ever added it must pass the same check.
+    it('refuses to move a visit onto the next appointment, and never overlaps in silence', function () {
+        $first = brkBook('10:00');
+        brkBook('11:00', ['client' => brkClient()]);
+        $move = fn (string $time) => app(RescheduleBooking::class)->handle(new BookingMove($first->refresh(), brkLocal($time), byClient: false));
+
+        expect(fn () => $move('10:45'))->toThrow(BookingException::class)
+            ->and(fn () => $move('11:00'))->toThrow(BookingException::class)
+            ->and($first->refresh()->starts_at->equalTo(brkLocal('10:00')))->toBeTrue();
+
+        $move('10:30');
+
+        expect($first->refresh()->ends_at->equalTo(brkLocal('11:00')))->toBeTrue()
+            ->and(brkOverlaps())->toBe(0)
+            ->and(brkOffered([$this->cut], $this->staff))->toContain('10:00')->not->toContain('10:30', '10:45');
+    });
 });
 
 describe('changes that leave future bookings stranded', function () {

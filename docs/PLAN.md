@@ -277,7 +277,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] 4.5 Reservas VIP: filtro en servidor, seña distinta, pantalla Clientes para marcar VIP. *(2026-10-08)*
 - [x] 4.6 Señas: mensaje `wa.me` armado en servidor, cuenta regresiva y botón "Seña recibida" (permiso de caja). Reglas de reserva del salón en Mi salón (solo dueño). *(2026-10-08)*
 - [~] 4.7 Agenda por día con Llegó / Terminé / No vino / Cancelar *(2026-10-08)*. **Falta:** vista Hoy con cuenta regresiva, semana y arrastrar para mover.
-- [ ] 4.8 Reserva creada por el personal para un cliente sin cuenta; reprogramar y cancelar según política.
+- [x] 4.8 Reserva creada por el personal para un cliente sin cuenta ("Nueva cita" en la agenda: cualquier horario del profesional, sin seña, busca o crea la ficha del cliente); **mover** una cita desde la agenda (otra hora o, quien ve toda la agenda, otro profesional que haga esos servicios) y desde "Mis reservas" (el cliente, con el mismo aviso que la cancelación, mismo profesional, hasta 3 veces). *(2026-10-08)*
 - [ ] 4.9 Mis reservas del cliente, repetir última cita, foto de referencia de estilo.
 - [ ] 4.10 API `/api/v1` de disponibilidad y reservas (Sanctum), para la futura app.
 - [x] 4.11 Reservas afectadas: cambiar un horario, crear una ausencia o un feriado, o quitar a un profesional se **rechaza** listando las citas que quedarían sin atender (primero se mueven o cancelan). *(2026-10-08)*
@@ -382,6 +382,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-07 | Cierre de la Fase 3: el horario público excluye las franjas solo-VIP; qué servicios hace cada profesional lo decide quien gestiona servicios (el profesional solo ajusta su tiempo); ausencias, baja y servicios toman el mismo bloqueo del profesional que usará la reserva | Hallazgos de security-auditor y qa-tester |
 | 2026-10-08 | Nuevo agente `visual-designer`, exclusivo para la calidad visual del frontend (edita la presentación; el ux-reviewer sigue siendo de solo lectura) | Pedido del usuario: que la app se vea profesional y adecuada |
 | 2026-10-08 | Fase 4: la rejilla de horarios ofrece además el instante en que termina cada cita (si no, se desperdician huecos como el reposo de un tinte); los cambios que dejarían citas sin atender se rechazan en vez de solo avisar; tope de 5 reservas próximas y 8 por día por cliente y salón; seña y datos de pago solo los cambia el dueño | Hallazgos de las pruebas, security-auditor y booking-breaker |
+| 2026-10-08 | Paso 4.8: mover una cita conserva servicios, duraciones, precio y seña tal como se reservaron; el cliente puede moverla solo con el aviso de cancelación del salón, con el mismo profesional y hasta 3 veces (después coordina con el salón); el personal la mueve a cualquier horario suyo, y solo quien ve toda la agenda la pasa a otro profesional; una cita agendada por el personal reutiliza la ficha del cliente con el mismo teléfono | Evitar que un cambio de hora altere el precio pactado o sirva para acaparar horarios; no duplicar clientes |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

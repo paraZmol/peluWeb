@@ -1,29 +1,24 @@
-import { router } from '@inertiajs/react';
-import { Check, MessageCircle, Play, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { StatusBadge } from '@/components/booking/status-badge';
-import type { AgendaBooking } from '@/components/booking/types';
-import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
-import { Button } from '@/components/ui/button';
+import type {
+    AgendaBooking,
+    BookingDay,
+    StaffOption,
+} from '@/components/booking/types';
 import { formatPrice, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import {
-    cancel,
-    complete,
-    confirm,
-    noShow,
-    start,
-} from '@/routes/agenda/bookings';
+import { AgendaActions } from './agenda-actions';
 
-type Props = { booking: AgendaBooking; showStaff: boolean };
+type Props = {
+    booking: AgendaBooking;
+    showStaff: boolean;
+    days: BookingDay[];
+    staffOptions: StaffOption[];
+};
 
 const DIMMED = ['cancelled', 'no_show', 'completed'];
 
-export function AgendaItem({ booking, showStaff }: Props) {
-    const can = (action: AgendaBooking['actions'][number]) =>
-        booking.actions.includes(action);
-    const post = (route: { url: string }) =>
-        router.post(route.url, {}, { preserveScroll: true });
-
+export function AgendaItem({ booking, showStaff, days, staffOptions }: Props) {
     return (
         <article
             aria-label={`${booking.client.name}, ${formatTime(booking.time)}`}
@@ -91,53 +86,11 @@ export function AgendaItem({ booking, showStaff }: Props) {
                 </p>
             )}
 
-            <div className="flex flex-wrap items-center gap-2 [&_a]:h-11 sm:[&_a]:h-9 [&_button]:h-11 sm:[&_button]:h-9">
-                {can('confirm') && (
-                    <Button onClick={() => post(confirm(booking.id))}>
-                        <Check /> Seña recibida
-                    </Button>
-                )}
-                {can('start') && (
-                    <Button onClick={() => post(start(booking.id))}>
-                        <Play /> Llegó
-                    </Button>
-                )}
-                {can('complete') && (
-                    <Button onClick={() => post(complete(booking.id))}>
-                        <Check /> Terminé
-                    </Button>
-                )}
-                {booking.client.whatsappUrl && (
-                    <Button asChild variant="outline">
-                        <a
-                            href={booking.client.whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Escribir a ${booking.client.name} por WhatsApp`}
-                        >
-                            <MessageCircle aria-hidden /> WhatsApp
-                        </a>
-                    </Button>
-                )}
-                {can('noShow') && (
-                    <ConfirmRemoveDialog
-                        triggerLabel="No vino"
-                        title={`¿${booking.client.name} no vino?`}
-                        description="Quedará anotado en su ficha y el horario se libera."
-                        confirmLabel="Sí, no vino"
-                        form={noShow.form(booking.id)}
-                    />
-                )}
-                {can('cancel') && (
-                    <ConfirmRemoveDialog
-                        triggerLabel="Cancelar"
-                        title="¿Cancelar esta cita?"
-                        description="El horario quedará libre. Avísale a tu cliente."
-                        confirmLabel="Sí, cancelar"
-                        form={cancel.form(booking.id)}
-                    />
-                )}
-            </div>
+            <AgendaActions
+                booking={booking}
+                days={days}
+                staffOptions={staffOptions}
+            />
         </article>
     );
 }

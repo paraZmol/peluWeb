@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\BelongsToSalon;
+use App\Domain\Booking\BookingShape;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use Carbon\CarbonImmutable;
@@ -154,6 +155,25 @@ class Booking extends Model
     public function effectiveStatus(?CarbonImmutable $now = null): BookingStatus
     {
         return $this->isHoldExpired($now) ? BookingStatus::Expired : $this->status;
+    }
+
+    /**
+     * How the visit takes its professional's time, from the durations
+     * frozen when it was booked.
+     */
+    public function shape(): BookingShape
+    {
+        $durations = [];
+
+        foreach ($this->services()->get() as $service) {
+            $durations[] = [
+                'active' => $service->active_minutes,
+                'idle' => $service->idle_minutes,
+                'finish' => $service->finish_minutes,
+            ];
+        }
+
+        return BookingShape::fromServices($durations);
     }
 
     public function needsDeposit(): bool

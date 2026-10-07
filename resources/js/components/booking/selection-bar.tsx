@@ -1,15 +1,25 @@
 import { Button } from '@/components/ui/button';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { formatPrice } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
-type Props = { wizard: BookingWizard };
+type Props = {
+    wizard: BookingWizard;
+    /** Inside the app shell: stick to the content column, not to the window. */
+    inline?: boolean;
+};
 
 /** Running total and the way forward, fixed in the thumb zone. */
-export function SelectionBar({ wizard }: Props) {
+export function SelectionBar({ wizard, inline = false }: Props) {
     const count = wizard.chosen.length;
 
     return (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+        <div
+            className={cn(
+                'bottom-0 z-20 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur',
+                inline ? 'sticky' : 'fixed inset-x-0',
+            )}
+        >
             <div className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 py-3">
                 <p className="min-w-0 flex-1 text-sm" role="status">
                     <span className="block text-muted-foreground">

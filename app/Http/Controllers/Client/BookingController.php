@@ -3,11 +3,18 @@
 namespace App\Http\Controllers\Client;
 
 use App\Actions\Booking\ChangeBookingStatus;
+use App\Actions\Booking\ListBookableDays;
+use App\Actions\Booking\RescheduleBooking;
+use App\Data\Booking\BookingMove;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\BookingDayRequest;
+use App\Http\Requests\Client\MoveBookingRequest;
+use App\Http\Resources\AvailabilityPayload;
 use App\Http\Resources\ClientBookingResource;
 use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,11 +38,42 @@ class BookingController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $code): Response
+    public function show(Request $request, string $code, ListBookableDays $days): Response
     {
+        $booking = $this->find($request, $code);
+
         return Inertia::render('client/bookings/show', [
-            'booking' => new ClientBookingResource($this->find($request, $code)),
+            'booking' => new ClientBookingResource($booking),
+            // The days of the picker for moving it, as this client may book them.
+            'days' => $days->handle($booking->salon, $booking->client->level(), $booking->salon->max_days_ahead),
         ]);
+    }
+
+    /**
+     * Times of one day the booking could move to, with the same
+     * professional and in the hours this client may book.
+     */
+    public function slots(BookingDayRequest $request, string $code, RescheduleBooking $reschedule): JsonResponse
+    {
+        $booking = $this->find($request, $code);
+        $starts = $reschedule->slots($booking, $request->localDate($booking->salon->timezone), byClient: true);
+
+        return response()->json(['slots' => AvailabilityPayload::slots($starts, $booking->salon)]);
+    }
+
+    public function move(MoveBookingRequest $request, string $code, RescheduleBooking $reschedule): RedirectResponse
+    {
+        // Never wrap this in a transaction: it must lock before it reads.
+        $reschedule->handle(new BookingMove(
+            booking: $this->find($request, $code),
+            startsAt: $request->startsAt(),
+            byClient: true,
+            actor: $request->user(),
+        ));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Listo, cambiamos la hora de tu reserva.']);
+
+        return to_route('bookings.show', $code);
     }
 
     public function cancel(Request $request, string $code, ChangeBookingStatus $status): RedirectResponse

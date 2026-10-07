@@ -9,6 +9,7 @@ use App\Models\Salon;
 use App\Models\Staff;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class FindAvailableSlots
 {
@@ -88,5 +89,22 @@ class FindAvailableSlots
             ->orderBy('position')
             ->get()
             ->keyBy('id');
+    }
+
+    /**
+     * Which of these professionals perform each service.
+     *
+     * @param  Collection<int, Staff>  $staff
+     * @return Collection<int, Collection<int, int>> service id => staff ids
+     */
+    public function performers(Collection $staff): Collection
+    {
+        $performers = [];
+
+        foreach (DB::table('service_staff')->whereIn('staff_id', $staff->pluck('id'))->get(['service_id', 'staff_id']) as $row) {
+            $performers[(int) $row->service_id][] = (int) $row->staff_id;
+        }
+
+        return collect($performers)->map(fn (array $staffIds) => collect($staffIds));
     }
 }

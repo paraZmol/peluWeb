@@ -1,19 +1,20 @@
 import { Head, Link } from '@inertiajs/react';
-import { MessageCircle, Navigation } from 'lucide-react';
+import { CalendarClock, MessageCircle, Navigation } from 'lucide-react';
 import { BookingSummary } from '@/components/booking/booking-summary';
 import { DepositCard } from '@/components/booking/deposit-card';
+import { MoveDialog } from '@/components/booking/move-dialog';
 import { StatusBadge } from '@/components/booking/status-badge';
 import { SuccessCheck } from '@/components/booking/success-check';
-import type { ClientBooking } from '@/components/booking/types';
+import type { BookingDay, ClientBooking } from '@/components/booking/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
-import { cancel, index } from '@/routes/bookings';
+import { cancel, index, move, slots } from '@/routes/bookings';
 import { show as salonPage } from '@/routes/salons';
 
-type Props = { booking: ClientBooking };
+type Props = { booking: ClientBooking; days: BookingDay[] };
 
-export default function BookingShow({ booking }: Props) {
+export default function BookingShow({ booking, days }: Props) {
     const { salon } = booking;
     const isActive =
         booking.isUpcoming &&
@@ -58,6 +59,27 @@ export default function BookingShow({ booking }: Props) {
                 />
 
                 <div className="flex flex-wrap gap-2">
+                    {booking.canMove && (
+                        <MoveDialog
+                            trigger={
+                                <Button
+                                    variant="outline"
+                                    className="rounded-full"
+                                >
+                                    <CalendarClock aria-hidden /> Cambiar día u
+                                    hora
+                                </Button>
+                            }
+                            title="Cambiar día u hora"
+                            description={`Con ${booking.staffName}. Los servicios y el precio no cambian.`}
+                            days={days}
+                            date={booking.date}
+                            slotsUrl={(date) =>
+                                slots.url(booking.code, { query: { date } })
+                            }
+                            moveUrl={move.url(booking.code)}
+                        />
+                    )}
                     {isActive && salon.directionsUrl && (
                         <Button
                             asChild

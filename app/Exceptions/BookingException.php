@@ -62,6 +62,26 @@ class BookingException extends BusinessRuleException
         return new self('Solo puedes marcar que llegó el mismo día de la cita.');
     }
 
+    public static function changedMeanwhile(): self
+    {
+        return new self('Alguien acaba de cambiar esta reserva. Vuelve a intentarlo.');
+    }
+
+    public static function staffCannotTake(): self
+    {
+        return new self('Esa persona no puede atender esta cita: no está activa o no hace todos sus servicios.');
+    }
+
+    public static function tooLateToMove(int $hours): self
+    {
+        return new self("Solo puedes cambiar la hora con al menos {$hours} h de anticipación. Escribe al salón para coordinar.");
+    }
+
+    public static function tooManyMoves(): self
+    {
+        return new self('Ya cambiaste esta reserva varias veces. Escribe al salón para coordinar otro cambio.');
+    }
+
     public static function alreadyStarted(): self
     {
         return new self('La hora de esta cita ya pasó. Escribe al salón para cualquier cambio.');

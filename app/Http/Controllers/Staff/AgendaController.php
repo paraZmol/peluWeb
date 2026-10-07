@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Actions\Booking\ListBookableDays;
 use App\Enums\BookingStatus;
+use App\Enums\ClientLevel;
 use App\Enums\SalonPermission;
 use App\Http\Controllers\Owner\SalonAreaController;
 use App\Http\Resources\AgendaBookingResource;
@@ -20,7 +22,7 @@ use Inertia\Response;
  */
 class AgendaController extends SalonAreaController
 {
-    public function index(Request $request): Response
+    public function index(Request $request, ListBookableDays $days): Response
     {
         $salon = $this->currentSalon();
         $seesEveryone = $request->user()?->membershipIn($salon)?->hasPermission(SalonPermission::ViewAllSchedules) ?? false;
@@ -41,11 +43,14 @@ class AgendaController extends SalonAreaController
             'today' => $salon->localNow()->toDateString(),
             'bookings' => $bookings->map(fn (Booking $booking) => (new AgendaBookingResource($booking, $salon->timezone))->resolve($request)),
             'staffOptions' => $seesEveryone
-                ? $salon->staff()->get()->map(fn (Staff $staff) => ['id' => $staff->id, 'name' => $staff->name])
+                ? $salon->staff()->where('is_active', true)->get()->map(fn (Staff $staff) => ['id' => $staff->id, 'name' => $staff->name])
                 : [],
             'selectedStaffId' => $seesEveryone ? $staffId : null,
             'hasProfile' => $own !== null,
             'seesEveryone' => $seesEveryone,
+            'canBook' => $request->user()?->can('create', [Booking::class, $salon]) ?? false,
+            // The days of the picker for moving a booking.
+            'days' => $days->handle($salon, ClientLevel::Team, AgendaBookingController::DAYS_AHEAD),
         ]);
     }
 

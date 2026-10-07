@@ -352,7 +352,7 @@ describe('agenda', function () {
             ->has('bookings', 2)
             ->has('staffOptions', 2)
             ->where('seesEveryone', true)
-            ->where('bookings.0.actions', ['start', 'cancel']));
+            ->where('bookings.0.actions', ['start', 'move', 'cancel']));
 
         $this->actingAs($this->owner)->get(route('agenda.index', ['profesional' => $this->colleague->id]))
             ->assertInertia(fn (Assert $page) => $page->has('bookings', 1)->where('bookings.0.staffName', 'Kevin'));
@@ -400,7 +400,7 @@ describe('agenda', function () {
 
         $this->actingAs($this->member->user)->post(route('agenda.bookings.confirm', $pending))->assertForbidden();
         $this->actingAs($this->member->user)->get(route('agenda.index'))
-            ->assertInertia(fn (Assert $page) => $page->where('bookings.1.actions', ['cancel']));
+            ->assertInertia(fn (Assert $page) => $page->where('bookings.1.actions', ['move', 'cancel']));
 
         $this->member->forceFill(['permissions' => [SalonPermission::ManageCash]])->save();
         $this->actingAs($this->member->user->fresh())->post(route('agenda.bookings.confirm', $pending));

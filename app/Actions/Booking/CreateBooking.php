@@ -10,7 +10,6 @@ use App\Enums\ClientLevel;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\BookingEvent;
-use App\Models\BookingSegment;
 use App\Models\BookingService;
 use App\Models\SalonClient;
 use App\Models\Staff;
@@ -45,6 +44,7 @@ class CreateBooking
         private readonly FindAvailableSlots $finder,
         private readonly QuoteBooking $quote,
         private readonly StaffAvailability $availability,
+        private readonly SyncBookingSegments $segments,
     ) {}
 
     public function handle(NewBooking $data): Booking
@@ -151,14 +151,7 @@ class CreateBooking
             $service->save();
         }
 
-        foreach ($shape->busyAt($start) as $stretch) {
-            $segment = new BookingSegment;
-            $segment->booking_id = $booking->id;
-            $segment->staff_id = $staff->id;
-            $segment->starts_at = CarbonImmutable::createFromTimestampUTC($stretch->start);
-            $segment->ends_at = CarbonImmutable::createFromTimestampUTC($stretch->end);
-            $segment->save();
-        }
+        $this->segments->handle($booking, $shape);
 
         $event = new BookingEvent;
         $event->booking_id = $booking->id;

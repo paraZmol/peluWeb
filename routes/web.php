@@ -19,7 +19,9 @@ use App\Http\Controllers\Owner\StaffController;
 use App\Http\Controllers\Owner\TeamController;
 use App\Http\Controllers\Public\BookingController;
 use App\Http\Controllers\Public\SalonPageController;
+use App\Http\Controllers\Staff\AgendaBookingController;
 use App\Http\Controllers\Staff\AgendaController;
+use App\Http\Controllers\Staff\BookingMoveController;
 use App\Http\Controllers\Staff\BookingStatusController;
 use App\Http\Controllers\Staff\ScheduleController;
 use App\Http\Controllers\Staff\StaffPhotoController;
@@ -75,6 +77,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('mis-reservas/{code}/cancelar', [ClientBookingController::class, 'cancel'])
         ->middleware('throttle:20,1,booking-cancel')
         ->name('bookings.cancel');
+    Route::get('mis-reservas/{code}/horarios', [ClientBookingController::class, 'slots'])
+        ->middleware('throttle:90,1,booking-move-slots')
+        ->name('bookings.slots');
+    Route::post('mis-reservas/{code}/mover', [ClientBookingController::class, 'move'])
+        ->middleware('throttle:10,1,booking-move')
+        ->name('bookings.move');
 
     Route::post('invitaciones/{token}', [InvitationAcceptanceController::class, 'store'])
         ->middleware('throttle:10,1')
@@ -135,6 +143,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('profesionales/{staff}/servicios', [StaffServiceController::class, 'update'])->name('staff.services.update');
 
         Route::get('agenda', [AgendaController::class, 'index'])->name('agenda.index');
+        // The team books for a client, and moves bookings.
+        Route::get('agenda/nueva', [AgendaBookingController::class, 'create'])->name('agenda.bookings.create');
+        Route::get('agenda/disponibilidad', [AgendaBookingController::class, 'availability'])->name('agenda.bookings.availability');
+        Route::get('agenda/clientes', [AgendaBookingController::class, 'clients'])
+            ->middleware('throttle:120,1,agenda-clients')
+            ->name('agenda.bookings.clients');
+        Route::post('agenda', [AgendaBookingController::class, 'store'])
+            ->middleware('throttle:60,1,agenda-store')
+            ->name('agenda.bookings.store');
+        Route::get('agenda/{booking}/horarios', [BookingMoveController::class, 'slots'])->name('agenda.bookings.slots');
+        Route::post('agenda/{booking}/mover', [BookingMoveController::class, 'update'])->name('agenda.bookings.move');
         Route::post('agenda/{booking}/confirmar', [BookingStatusController::class, 'confirm'])->name('agenda.bookings.confirm');
         Route::post('agenda/{booking}/iniciar', [BookingStatusController::class, 'start'])->name('agenda.bookings.start');
         Route::post('agenda/{booking}/completar', [BookingStatusController::class, 'complete'])->name('agenda.bookings.complete');

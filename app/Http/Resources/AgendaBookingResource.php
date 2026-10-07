@@ -37,6 +37,7 @@ class AgendaBookingResource extends JsonResource
         return [
             'id' => $this->id,
             'code' => $this->code,
+            'date' => $start->format('Y-m-d'),
             'time' => $start->format('H:i'),
             'endTime' => $this->ends_at->setTimezone($this->timezone)->format('H:i'),
             'status' => $status->value,
@@ -48,6 +49,7 @@ class AgendaBookingResource extends JsonResource
                 'whatsappUrl' => WhatsApp::link($this->client->phone, "Hola {$this->client->name}, te escribimos por tu cita de las {$start->format('g:i a')}."),
                 'noShows' => $this->client->no_show_count,
             ],
+            'staffId' => $this->staff_id,
             'staffName' => $this->staff->name,
             'services' => $this->services->pluck('name')->values(),
             'price' => Money::toAmount($this->price_cents),
@@ -71,6 +73,7 @@ class AgendaBookingResource extends JsonResource
         $hasStarted = $this->starts_at->lessThanOrEqualTo($now);
         /** @var Booking $booking */
         $booking = $this->resource;
+        $isOpen = in_array($status, [BookingStatus::Pending, BookingStatus::Confirmed], true);
 
         return array_keys(array_filter([
             'confirm' => $this->status === BookingStatus::Pending && ($request->user()?->can('confirmDeposit', $booking) ?? false),
@@ -78,7 +81,8 @@ class AgendaBookingResource extends JsonResource
                 && $this->starts_at->setTimezone($this->timezone)->isSameDay($now->setTimezone($this->timezone)),
             'complete' => $status === BookingStatus::InService,
             'noShow' => $status === BookingStatus::Confirmed && $hasStarted,
-            'cancel' => in_array($status, [BookingStatus::Pending, BookingStatus::Confirmed], true),
+            'move' => $isOpen,
+            'cancel' => $isOpen,
         ]));
     }
 }

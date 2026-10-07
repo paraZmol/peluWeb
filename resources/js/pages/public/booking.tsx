@@ -14,7 +14,9 @@ import type {
 import { WizardHeader } from '@/components/booking/wizard-header';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { useAvailability } from '@/hooks/use-availability';
-import { useBookingWizard } from '@/hooks/use-booking-wizard';
+import { STEPS, useBookingWizard } from '@/hooks/use-booking-wizard';
+import { show as salonPage } from '@/routes/salons';
+import { availability as availabilityRoute } from '@/routes/salons/booking';
 
 type Props = {
     salon: BookableSalon;
@@ -45,7 +47,7 @@ export default function Booking({
     const wizard = useBookingWizard({ salon, preselectedServiceId, resume });
     const firstOpenDay = days.find((day) => !day.closed)?.date ?? null;
     const availability = useAvailability({
-        slug: salon.slug,
+        url: availabilityRoute.url(salon.slug),
         selections: wizard.selections,
         staffId: wizard.staffId,
         // Nothing to ask until a professional was chosen.
@@ -63,8 +65,12 @@ export default function Booking({
         >
             <Head title={`Reservar en ${salon.name}`} />
             <WizardHeader
-                salonName={salon.name}
-                slug={salon.slug}
+                title={salon.name}
+                exit={{
+                    href: salonPage(salon.slug),
+                    label: `Volver a ${salon.name}`,
+                }}
+                steps={STEPS}
                 step={wizard.step}
                 onBack={() => wizard.goTo(wizard.step - 1)}
             />

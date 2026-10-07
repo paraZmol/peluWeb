@@ -58,6 +58,18 @@ Test obligatorio también por HTTP (`tests/Concurrency`), no solo llamando a la 
 Índice obligatorio: `booking_segments (staff_id, starts_at, ends_at)`.
 Test obligatorio: dos procesos concurrentes, el mismo horario → exactamente una reserva.
 
+## Mover una cita (`RescheduleBooking`)
+Se valida igual que una reserva nueva: bloquea a los profesionales implicados (los dos a la vez y
+en orden de id si cambia de profesional), luego la reserva, y el nuevo inicio debe estar entre los
+que ofrecería el selector, ignorando el lugar que la propia cita ocupa (`ignoreBookingId`).
+- Conserva servicios, duraciones, precio y seña congelados al reservar; solo cambian inicio, fin,
+  tramos y (si el equipo lo decide) el profesional. Deja un evento con `from_status = to_status`.
+- Solo citas `pending` (retención viva) o `confirmed`.
+- **Cliente**: mismo profesional, su propio nivel (estándar/VIP), con el aviso de
+  `cancel_window_hours` y hasta `MAX_BY_CLIENT` (3) veces. **Equipo**: nivel `Team`; pasarla a
+  otro profesional exige ver toda la agenda y que ese profesional haga todos sus servicios.
+- Como `CreateBooking`, nunca dentro de otra transacción.
+
 ## Niveles de acceso (VIP)
 Cada franja laboral tiene `access_level`: `public` | `vip` | `staff_only`.
 - `vip`: solo clientes marcados VIP **en ese salón** (`salon_clients.is_vip`). El dueño lo asigna.

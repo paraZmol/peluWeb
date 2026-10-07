@@ -1,19 +1,9 @@
-import { CalendarX, Moon, Sun, Sunrise } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import type { useAvailability } from '@/hooks/use-availability';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
-import { formatTime } from '@/lib/format';
 import { DayStrip } from './day-strip';
-import type { BookingDay, Slot } from './types';
-
-const PERIODS = [
-    { label: 'Mañana', icon: Sunrise, from: 0, to: 12 },
-    { label: 'Tarde', icon: Sun, from: 12, to: 18 },
-    { label: 'Noche', icon: Moon, from: 18, to: 24 },
-];
+import { SlotGrid } from './slot-grid';
+import type { BookingDay } from './types';
 
 type Props = {
     days: BookingDay[];
@@ -22,7 +12,6 @@ type Props = {
 };
 
 export function StepTime({ days, wizard, availability }: Props) {
-    const reduceMotion = useReducedMotion();
     const firstOpen = days.find((day) => !day.closed)?.date ?? null;
     const date = wizard.date ?? firstOpen;
     const { slots, error, isLoading, retry } = availability;
@@ -44,88 +33,22 @@ export function StepTime({ days, wizard, availability }: Props) {
         );
     }
 
-    const inPeriod = (slot: Slot, from: number, to: number) => {
-        const hour = Number(slot.time.slice(0, 2));
-
-        return hour >= from && hour < to;
-    };
-
     return (
         <div className="flex flex-col gap-5">
             <DayStrip days={days} value={date} onChange={wizard.chooseDate} />
-
-            {isLoading && (
-                <div
-                    className="grid grid-cols-3 gap-2 sm:grid-cols-4"
-                    aria-busy
-                    aria-label="Cargando horarios"
-                >
-                    {Array.from({ length: 9 }, (_, i) => (
-                        <Skeleton key={i} className="h-12 rounded-full" />
-                    ))}
-                </div>
-            )}
-
-            {error && (
-                <div
-                    role="alert"
-                    className="flex flex-col items-center gap-3 rounded-xl border p-6 text-center"
-                >
-                    <p className="text-sm text-muted-foreground">{error}</p>
-                    <Button variant="outline" onClick={retry}>
-                        Reintentar
-                    </Button>
-                </div>
-            )}
-
-            {slots?.length === 0 && (
-                <p className="flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                    <CalendarX className="size-6" aria-hidden />
-                    No quedan horarios este día. Prueba con otro día
-                    {wizard.staffId !== null && ' o con otra persona'}.
-                </p>
-            )}
-
-            {slots &&
-                PERIODS.map((period) => {
-                    const inside = slots.filter((slot) =>
-                        inPeriod(slot, period.from, period.to),
-                    );
-
-                    return inside.length === 0 ? null : (
-                        <section
-                            key={period.label}
-                            className="flex flex-col gap-2"
-                        >
-                            <h2 className="flex items-center gap-2 font-sans text-sm font-semibold text-muted-foreground">
-                                <period.icon className="size-4" aria-hidden />
-                                {period.label}
-                            </h2>
-                            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                                {inside.map((slot, index) => (
-                                    <motion.button
-                                        key={slot.start}
-                                        type="button"
-                                        initial={
-                                            reduceMotion
-                                                ? false
-                                                : { opacity: 0, y: 6 }
-                                        }
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{
-                                            duration: 0.15,
-                                            delay: Math.min(index, 8) * 0.02,
-                                        }}
-                                        onClick={() => wizard.chooseSlot(slot)}
-                                        className="h-12 rounded-full border bg-card text-sm font-medium tabular-nums transition-colors hover:border-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-[0.97]"
-                                    >
-                                        {formatTime(slot.time)}
-                                    </motion.button>
-                                ))}
-                            </div>
-                        </section>
-                    );
-                })}
+            <SlotGrid
+                slots={slots}
+                error={error}
+                isLoading={isLoading}
+                retry={retry}
+                onPick={wizard.chooseSlot}
+                empty={
+                    <>
+                        No quedan horarios este día. Prueba con otro día
+                        {wizard.staffId !== null && ' o con otra persona'}.
+                    </>
+                }
+            />
         </div>
     );
 }

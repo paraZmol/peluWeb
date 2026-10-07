@@ -21,6 +21,8 @@ type Props = {
     time: string;
     endTime?: string;
     staffName: string;
+    /** The team reads "Atiende"; the client, "Te atiende". */
+    staffLabel?: string;
     duration?: string;
     address?: string | null;
     items: { name: string; price?: string }[];
@@ -36,6 +38,7 @@ export function BookingSummary({
     time,
     endTime,
     staffName,
+    staffLabel = 'Te atiende',
     duration,
     address,
     items,
@@ -77,7 +80,7 @@ export function BookingSummary({
             </div>
 
             <div className="flex flex-col gap-3 p-4 sm:px-5">
-                {row(<User />, 'Te atiende', staffName)}
+                {row(<User />, staffLabel, staffName)}
                 {duration && row(<Clock />, 'Duración', duration)}
                 {address && row(<MapPin />, 'Dirección', address)}
             </div>

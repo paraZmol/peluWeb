@@ -4,30 +4,24 @@ namespace App\Http\Controllers\Public;
 
 use App\Actions\Booking\CreateBooking;
 use App\Actions\Booking\FindAvailableSlots;
+use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\ResolveSalonClient;
-use App\Data\Booking\BookingQuote;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\ClientLevel;
 use App\Enums\SalonStatus;
-use App\Enums\ScheduleAccess;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\AvailabilityRequest;
 use App\Http\Requests\Public\StoreBookingRequest;
+use App\Http\Resources\AvailabilityPayload;
 use App\Http\Resources\BookableSalonResource;
 use App\Models\Salon;
-use App\Models\SalonHoliday;
 use App\Models\Service;
-use App\Models\Staff;
-use App\Models\StaffSchedule;
 use App\Models\User;
-use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -44,7 +38,7 @@ class BookingController extends Controller
         private readonly ResolveSalonClient $clients,
     ) {}
 
-    public function create(Request $request, Salon $salon): Response
+    public function create(Request $request, Salon $salon, ListBookableDays $days): Response
     {
         abort_if($salon->status === SalonStatus::Suspended, 404);
 
@@ -57,8 +51,8 @@ class BookingController extends Controller
             ->get();
 
         return Inertia::render('public/booking', [
-            'salon' => new BookableSalonResource($salon, $services, $staff, $this->performers($staff)),
-            'days' => $this->days($salon, $request->user()),
+            'salon' => new BookableSalonResource($salon, $services, $staff, $this->finder->performers($staff)),
+            'days' => $days->handle($salon, $this->level($salon, $request->user()), $salon->max_days_ahead),
             'isOpen' => $salon->isWritable() && $salon->accepts_online_bookings,
             'viewer' => $this->viewer($request->user()),
             'preselectedServiceId' => $request->integer('servicio') ?: null,
@@ -81,11 +75,8 @@ class BookingController extends Controller
         );
 
         return response()->json([
-            'slots' => collect(array_keys($slots))->map(fn (int $start) => [
-                'start' => $start,
-                'time' => CarbonImmutable::createFromTimestamp($start, $salon->timezone)->format('H:i'),
-            ]),
-            'quote' => $this->quoteSummary($salon, $quotes, $level),
+            'slots' => AvailabilityPayload::slots(array_keys($slots), $salon),
+            'quote' => AvailabilityPayload::quote($quotes, $salon->depositPercentFor($level === ClientLevel::Vip)),
         ]);
     }
 
@@ -161,89 +152,6 @@ class BookingController extends Controller
                 default => 'ready',
             },
             'name' => $user?->name,
-        ];
-    }
-
-    /**
-     * Which professionals perform each service.
-     *
-     * @param  Collection<int, Staff>  $staff
-     * @return Collection<int, Collection<int, int>> service id => staff ids
-     */
-    private function performers(Collection $staff): Collection
-    {
-        $performers = [];
-
-        foreach (DB::table('service_staff')->whereIn('staff_id', $staff->pluck('id'))->get(['service_id', 'staff_id']) as $row) {
-            $performers[(int) $row->service_id][] = (int) $row->staff_id;
-        }
-
-        return collect($performers)->map(fn (array $staffIds) => collect($staffIds));
-    }
-
-    /**
-     * The days a client can pick, each flagged as closed when nobody could
-     * attend them (no hours for their level that weekday, or a holiday).
-     *
-     * @return list<array{date: string, closed: bool}>
-     */
-    private function days(Salon $salon, ?User $user): array
-    {
-        $today = $salon->localNow()->startOfDay();
-        $allowed = array_map(fn (ScheduleAccess $access) => $access->value, $this->level($salon, $user)->allowedAccess());
-
-        $workingWeekdays = StaffSchedule::withoutGlobalScope('salon')
-            ->where('salon_id', $salon->id)
-            ->whereIn('access_level', $allowed)
-            ->whereHas('staff', fn ($staff) => $staff->withoutGlobalScope('salon')->where('is_active', true))
-            ->distinct()
-            ->pluck('weekday')
-            ->all();
-
-        $holidays = SalonHoliday::withoutGlobalScope('salon')
-            ->where('salon_id', $salon->id)
-            ->whereDate('date', '>=', $today->toDateString())
-            ->get()
-            ->map(fn (SalonHoliday $holiday): string => $holiday->date->format('Y-m-d'))
-            ->all();
-
-        $days = [];
-
-        for ($offset = 0; $offset <= $salon->max_days_ahead; $offset++) {
-            $day = $today->addDays($offset);
-            $days[] = [
-                'date' => $day->toDateString(),
-                'closed' => ! in_array($day->dayOfWeekIso, $workingWeekdays, true) || in_array($day->toDateString(), $holidays, true),
-            ];
-        }
-
-        return $days;
-    }
-
-    /**
-     * Price, length and deposit of the selection. With "anyone" the price
-     * may depend on who attends: the lowest is shown as "from".
-     *
-     * @param  array<int, BookingQuote>  $quotes
-     * @return array<string, mixed>|null
-     */
-    private function quoteSummary(Salon $salon, array $quotes, ClientLevel $level): ?array
-    {
-        if ($quotes === []) {
-            return null;
-        }
-
-        $prices = array_map(fn (BookingQuote $quote): int => $quote->priceCents(), $quotes);
-        $minutes = array_map(fn (BookingQuote $quote): int => $quote->shape()->totalMinutes, $quotes);
-        $percent = $salon->depositPercentFor($level === ClientLevel::Vip);
-
-        return [
-            'price' => Money::toAmount(min($prices)),
-            'priceVaries' => min($prices) !== max($prices),
-            'minutes' => min($minutes),
-            'minutesVary' => min($minutes) !== max($minutes),
-            'depositPercent' => $percent,
-            'deposit' => Money::toAmount(intdiv(min($prices) * $percent + 50, 100)),
         ];
     }
 }

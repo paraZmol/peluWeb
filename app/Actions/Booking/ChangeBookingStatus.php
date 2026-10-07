@@ -3,7 +3,6 @@
 namespace App\Actions\Booking;
 
 use App\Domain\Booking\AvailabilityCalculator;
-use App\Domain\Booking\BookingShape;
 use App\Domain\Booking\TimeSpan;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
@@ -137,6 +136,12 @@ class ChangeBookingStatus
             $now = CarbonImmutable::now();
             $from = $locked->status;
 
+            // Moved to another professional while this waited: the row
+            // locked above is no longer the one that guards its slot.
+            if ($locked->staff_id !== $booking->staff_id) {
+                throw BookingException::changedMeanwhile();
+            }
+
             if (! $from->canBecome($to)) {
                 throw BookingException::cannotChange($locked->effectiveStatus($now)->label());
             }
@@ -171,23 +176,11 @@ class ChangeBookingStatus
         $localDate = $booking->starts_at->setTimezone($salon->timezone);
         $day = new TimeSpan($localDate->startOfDay()->getTimestamp(), $localDate->addDay()->startOfDay()->getTimestamp());
 
-        $durations = [];
-
-        foreach ($booking->services()->get() as $service) {
-            $durations[] = [
-                'active' => $service->active_minutes,
-                'idle' => $service->idle_minutes,
-                'finish' => $service->finish_minutes,
-            ];
-        }
-
-        $shape = BookingShape::fromServices($durations);
-
         return $this->calculator->fits(
             $booking->starts_at->getTimestamp(),
             $this->availability->windows($salon, $staff, $localDate, ClientLevel::Team),
             $this->availability->busy($staff, $day, $now, $booking->id),
-            $shape,
+            $booking->shape(),
         );
     }
 }

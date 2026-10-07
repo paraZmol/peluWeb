@@ -1,14 +1,16 @@
-import { useHttp } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
 import type { Availability, Selection } from '@/components/booking/types';
-import { availability } from '@/routes/salons/booking';
+import { useFetched } from '@/hooks/use-fetched';
 
 type Query = {
-    slug: string;
+    /** The availability endpoint: the salon's public one, or the team's. */
+    url: string;
     selections: Selection[];
     staffId: number | null;
     date: string | null;
 };
+
+export const SLOTS_FAILURE =
+    'No pudimos cargar los horarios. Revisa tu conexión.';
 
 function queryString({ selections, staffId, date }: Query): string {
     const params = new URLSearchParams({ date: date ?? '' });
@@ -36,47 +38,16 @@ function queryString({ selections, staffId, date }: Query): string {
  * decides what this viewer may book; the browser only shows it.
  */
 export function useAvailability(query: Query) {
-    const http = useHttp<Record<string, never>, Availability>();
-    const [result, setResult] = useState<Availability | null>(null);
-    const [error, setError] = useState<string>();
-    const [attempt, setAttempt] = useState(0);
-    const key = query.date ? queryString(query) : null;
-
-    useEffect(() => {
-        if (key === null) {
-            return;
-        }
-
-        let isCurrent = true;
-        setResult(null);
-        setError(undefined);
-
-        http.get(`${availability.url(query.slug)}?${key}`)
-            .then((response) => {
-                if (isCurrent) {
-                    setResult(response);
-                }
-            })
-            .catch(() => {
-                if (isCurrent) {
-                    setError(
-                        'No pudimos cargar los horarios. Revisa tu conexión.',
-                    );
-                }
-            });
-
-        return () => {
-            isCurrent = false;
-        };
-        // `http` is a new object every render; the query string is the input.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [key, attempt]);
+    const { data, error, isLoading, retry } = useFetched<Availability>(
+        query.date ? `${query.url}?${queryString(query)}` : null,
+        SLOTS_FAILURE,
+    );
 
     return {
-        slots: result?.slots ?? null,
-        quote: result?.quote ?? null,
+        slots: data?.slots ?? null,
+        quote: data?.quote ?? null,
         error,
-        isLoading: key !== null && result === null && error === undefined,
-        retry: () => setAttempt((count) => count + 1),
+        isLoading,
+        retry,
     };
 }

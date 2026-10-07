@@ -46,15 +46,18 @@ function restore(slug: string): State | null {
 
 type Options = {
     salon: BookableSalon;
-    preselectedServiceId: number | null;
+    preselectedServiceId?: number | null;
     /** Coming back from signing in: pick up where the visitor left. */
-    resume: boolean;
+    resume?: boolean;
+    /** Keep the choices in the browser, to survive signing in. */
+    persist?: boolean;
 };
 
 export function useBookingWizard({
     salon,
-    preselectedServiceId,
-    resume,
+    preselectedServiceId = null,
+    resume = false,
+    persist = true,
 }: Options) {
     const services = salon.serviceGroups.flatMap((group) => group.services);
     const find = (id: number): BookableService | undefined =>
@@ -84,6 +87,10 @@ export function useBookingWizard({
     }, [resume, salon.slug]);
 
     useEffect(() => {
+        if (!persist) {
+            return;
+        }
+
         try {
             window.sessionStorage.setItem(
                 storageKey(salon.slug),
@@ -92,7 +99,7 @@ export function useBookingWizard({
         } catch {
             // Private mode without storage: the wizard still works.
         }
-    }, [state, salon.slug]);
+    }, [state, salon.slug, persist]);
 
     const patch = (changes: Partial<State>) =>
         setState((current) => ({ ...current, ...changes }));

@@ -1,30 +1,29 @@
-import { Head, router } from '@inertiajs/react';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { CalendarDays, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { AgendaItem } from '@/components/agenda/agenda-item';
-import type { AgendaBooking } from '@/components/booking/types';
+import { StaffSelect } from '@/components/booking/staff-select';
+import type {
+    AgendaBooking,
+    BookingDay,
+    StaffOption,
+} from '@/components/booking/types';
 import { Button } from '@/components/ui/button';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { formatDate } from '@/lib/format';
 import { index } from '@/routes/agenda';
+import { create } from '@/routes/agenda/bookings';
 
 type Props = {
     date: string;
     today: string;
     bookings: AgendaBooking[];
-    staffOptions: { id: number; name: string }[];
+    staffOptions: StaffOption[];
     selectedStaffId: number | null;
     hasProfile: boolean;
     seesEveryone: boolean;
+    canBook: boolean;
+    days: BookingDay[];
 };
-
-const EVERYONE = 'all';
 
 function shift(date: string, days: number): string {
     const [year, month, day] = date.split('-').map(Number);
@@ -42,6 +41,8 @@ export default function Agenda({
     selectedStaffId,
     hasProfile,
     seesEveryone,
+    canBook,
+    days,
 }: Props) {
     const reduceMotion = useReducedMotion();
     const go = (fecha: string, profesional = selectedStaffId) =>
@@ -86,41 +87,26 @@ export default function Agenda({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                    {canBook && (
+                        <Button asChild className="rounded-full">
+                            <Link href={create()}>
+                                <Plus aria-hidden /> Nueva cita
+                            </Link>
+                        </Button>
+                    )}
                     {date !== today && (
                         <Button variant="outline" onClick={() => go(today)}>
                             Volver a hoy
                         </Button>
                     )}
                     {seesEveryone && staffOptions.length > 1 && (
-                        <Select
-                            value={selectedStaffId?.toString() ?? EVERYONE}
-                            onValueChange={(value) =>
-                                go(
-                                    date,
-                                    value === EVERYONE ? null : Number(value),
-                                )
-                            }
-                        >
-                            <SelectTrigger
-                                className="w-auto min-w-44"
-                                aria-label="Profesional"
-                            >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={EVERYONE}>
-                                    Todo el equipo
-                                </SelectItem>
-                                {staffOptions.map((staff) => (
-                                    <SelectItem
-                                        key={staff.id}
-                                        value={staff.id.toString()}
-                                    >
-                                        {staff.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <StaffSelect
+                            className="w-auto min-w-44"
+                            options={staffOptions}
+                            value={selectedStaffId}
+                            everyoneLabel="Todo el equipo"
+                            onChange={(id) => go(date, id)}
+                        />
                     )}
                 </div>
 
@@ -150,6 +136,8 @@ export default function Agenda({
                                             seesEveryone &&
                                             selectedStaffId === null
                                         }
+                                        days={days}
+                                        staffOptions={staffOptions}
                                     />
                                 </motion.li>
                             ))}

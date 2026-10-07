@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
+import { flashFailed } from '@/lib/flash';
 import { formatMinutes, formatPrice } from '@/lib/format';
 import { resume, store } from '@/routes/salons/booking';
 import { notice } from '@/routes/verification';
@@ -41,10 +42,12 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                 note: wizard.note || null,
             },
             {
+                preserveState: true,
                 onStart: () => setSending(true),
                 onFinish: () => setSending(false),
-                onSuccess: wizard.clear,
                 // The slot was taken meanwhile: back to choosing a time.
+                onSuccess: (page) =>
+                    flashFailed(page) ? wizard.goTo(2) : wizard.clear(),
                 onError: () => wizard.goTo(2),
             },
         );

@@ -65,6 +65,16 @@ export type Quote = {
     deposit: string;
 };
 
+export type StaffOption = { id: number; name: string };
+
+/** A client already in the salon's list, offered while the team types. */
+export type ClientSuggestion = {
+    id: number;
+    name: string;
+    phone: string | null;
+    isVip: boolean;
+};
+
 export type Availability = { slots: Slot[]; quote: Quote | null };
 
 export type BookingStatus =
@@ -98,6 +108,7 @@ export type ClientBooking = {
         isRefundable: boolean | null;
     } | null;
     canCancel: boolean;
+    canMove: boolean;
     cancelForfeitsDeposit: boolean;
     cancelWindowHours: number;
     salon: {
@@ -115,11 +126,14 @@ export type AgendaAction =
     | 'start'
     | 'complete'
     | 'noShow'
+    | 'move'
     | 'cancel';
 
 export type AgendaBooking = {
     id: number;
     code: string;
+    /** "Y-m-d" on the salon's clock. */
+    date: string;
     time: string;
     endTime: string;
     status: BookingStatus;
@@ -131,6 +145,7 @@ export type AgendaBooking = {
         whatsappUrl: string | null;
         noShows: number;
     };
+    staffId: number;
     staffName: string;
     services: string[];
     price: string;

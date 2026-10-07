@@ -34,6 +34,8 @@ class ClientBookingResource extends JsonResource
         $start = $this->starts_at->setTimezone($salon->timezone);
         $status = $this->effectiveStatus($now);
         $isUpcoming = $this->starts_at->greaterThan($now);
+        $isOpen = $isUpcoming && in_array($status, [BookingStatus::Pending, BookingStatus::Confirmed], true);
+        $hasNotice = $now->addHours($salon->cancel_window_hours)->lessThanOrEqualTo($this->starts_at);
 
         return [
             'code' => $this->code,
@@ -59,10 +61,11 @@ class ClientBookingResource extends JsonResource
                 'whatsappUrl' => $status === BookingStatus::Pending ? WhatsApp::link($salon->phone, $this->depositMessage($start)) : null,
                 'isRefundable' => $this->deposit_refundable,
             ],
-            'canCancel' => $isUpcoming && in_array($status, [BookingStatus::Pending, BookingStatus::Confirmed], true),
+            'canCancel' => $isOpen,
+            // Moving needs the same notice the salon asks for a cancellation.
+            'canMove' => $isOpen && $hasNotice && $salon->isWritable(),
             // Cancelling now would forfeit the deposit already paid.
-            'cancelForfeitsDeposit' => $this->deposit_paid_at !== null
-                && $now->addHours($salon->cancel_window_hours)->greaterThan($this->starts_at),
+            'cancelForfeitsDeposit' => $this->deposit_paid_at !== null && ! $hasNotice,
             'cancelWindowHours' => $salon->cancel_window_hours,
             'salon' => [
                 'name' => $salon->name,
