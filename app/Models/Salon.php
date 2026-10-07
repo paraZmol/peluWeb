@@ -39,6 +39,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $timezone
  * @property string $currency
  * @property SalonStatus $status
+ * @property int $min_lead_minutes Notice a client must give before a booking starts.
+ * @property int $max_days_ahead How far ahead clients can book.
+ * @property int $slot_step_minutes Grid of the start times offered.
+ * @property int $hold_minutes How long an unpaid deposit keeps the slot.
+ * @property int $cancel_window_hours Cancelling later than this forfeits the deposit.
+ * @property int $deposit_percent 0 = no deposit.
+ * @property int|null $vip_deposit_percent Null = same as everyone.
+ * @property string|null $payment_instructions
+ * @property bool $accepts_online_bookings
  * @property CarbonImmutable|null $trial_ends_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -72,6 +81,15 @@ class Salon extends Model
         'city' => null,
         'latitude' => null,
         'longitude' => null,
+        'min_lead_minutes' => 60,
+        'max_days_ahead' => 60,
+        'slot_step_minutes' => 15,
+        'hold_minutes' => 30,
+        'cancel_window_hours' => 24,
+        'deposit_percent' => 0,
+        'vip_deposit_percent' => null,
+        'payment_instructions' => null,
+        'accepts_online_bookings' => true,
     ];
 
     /**
@@ -86,6 +104,7 @@ class Salon extends Model
             'trial_ends_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
+            'accepts_online_bookings' => 'boolean',
         ];
     }
 
@@ -147,6 +166,14 @@ class Salon extends Model
     public function localNow(): CarbonImmutable
     {
         return CarbonImmutable::now($this->timezone);
+    }
+
+    /**
+     * Share of the price asked in advance. VIP clients may have their own.
+     */
+    public function depositPercentFor(bool $isVip): int
+    {
+        return $isVip ? ($this->vip_deposit_percent ?? $this->deposit_percent) : $this->deposit_percent;
     }
 
     public function hasLocation(): bool

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Concerns\BelongsToSalon;
 use App\Support\Images\ImageStore;
+use App\Support\PersonName;
 use Carbon\CarbonImmutable;
 use Database\Factories\StaffFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -76,9 +77,7 @@ class Staff extends Model
      */
     public static function nameFrom(string $accountName): string
     {
-        $plain = trim((string) preg_replace('/[<>\[\]{}]/u', '', $accountName));
-
-        return mb_substr($plain, 0, self::NAME_MAX_LENGTH) ?: 'Profesional';
+        return PersonName::clean($accountName, self::NAME_MAX_LENGTH, 'Profesional');
     }
 
     /**
