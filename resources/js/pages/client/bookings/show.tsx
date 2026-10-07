@@ -28,7 +28,7 @@ export default function BookingShow({ booking }: Props) {
                     {booking.status === 'confirmed' && booking.isUpcoming && (
                         <SuccessCheck />
                     )}
-                    <h1 className="font-display text-2xl font-semibold">
+                    <h1 className="font-display text-2xl font-semibold text-balance sm:text-3xl">
                         {salon.name}
                     </h1>
                     <StatusBadge
@@ -49,7 +49,10 @@ export default function BookingShow({ booking }: Props) {
                     total={booking.price}
                     footer={
                         <p className="text-xs text-muted-foreground">
-                            Código de reserva: {booking.code}
+                            Código de reserva:{' '}
+                            <span className="font-medium tracking-widest text-foreground">
+                                {booking.code}
+                            </span>
                         </p>
                     }
                 />
@@ -96,7 +99,7 @@ export default function BookingShow({ booking }: Props) {
 
                 {booking.canCancel && (
                     <div className="flex items-center justify-between gap-3 border-t pt-4">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-balance text-muted-foreground">
                             {booking.cancelForfeitsDeposit
                                 ? `Faltan menos de ${booking.cancelWindowHours} h: si cancelas, la seña no se devuelve.`
                                 : '¿No podrás ir? Avisa con tiempo.'}

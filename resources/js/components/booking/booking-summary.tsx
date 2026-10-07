@@ -1,6 +1,20 @@
-import { CalendarDays, Clock, MapPin, User } from 'lucide-react';
+import { Clock, MapPin, User } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { formatDate, formatPrice, formatTime } from '@/lib/format';
+import { formatPrice, formatTime } from '@/lib/format';
+import { DateTile } from './date-tile';
+
+const longDateFormat = new Intl.DateTimeFormat('es-PE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+});
+
+/** "2026-10-14" → "miércoles, 14 de octubre", without timezone shifts. */
+function formatLongDate(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+
+    return longDateFormat.format(new Date(year, month - 1, day));
+}
 
 type Props = {
     date: string;
@@ -31,62 +45,77 @@ export function BookingSummary({
 }: Props) {
     const row = (icon: ReactNode, label: string, value: ReactNode) => (
         <div className="flex items-start gap-3">
-            <span className="mt-0.5 shrink-0 text-primary" aria-hidden>
+            <span
+                className="mt-0.5 flex w-12 shrink-0 justify-center text-muted-foreground [&_svg]:size-5"
+                aria-hidden
+            >
                 {icon}
             </span>
-            <dt className="sr-only">{label}</dt>
-            <dd className="min-w-0 break-words">{value}</dd>
+            <div className="min-w-0">
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="break-words">{value}</dd>
+            </div>
         </div>
     );
 
     return (
-        <dl className="flex flex-col gap-3 rounded-xl border bg-card p-5">
-            {row(
-                <CalendarDays className="size-5" />,
-                'Día y hora',
-                <>
-                    <span className="block font-medium capitalize">
-                        {formatDate(date)}
-                    </span>
-                    <span className="block text-lg font-semibold tabular-nums">
-                        {formatTime(time)}
-                        {endTime && ` – ${formatTime(endTime)}`}
-                    </span>
-                </>,
-            )}
-            {row(<User className="size-5" />, 'Te atiende', staffName)}
-            {duration &&
-                row(<Clock className="size-5" />, 'Duración', duration)}
-            {address &&
-                row(<MapPin className="size-5" />, 'Dirección', address)}
-
-            <ul className="flex flex-col gap-1 border-t pt-3">
-                {items.map((item) => (
-                    <li key={item.name} className="flex justify-between gap-3">
-                        <span className="min-w-0 break-words">{item.name}</span>
-                        {item.price && (
-                            <span className="shrink-0 tabular-nums">
-                                {formatPrice(item.price)}
-                            </span>
-                        )}
-                    </li>
-                ))}
-            </ul>
-
-            {total !== null && (
-                <div className="flex items-baseline justify-between border-t pt-3">
-                    <dt className="font-medium">Total</dt>
-                    <dd className="text-lg font-semibold tabular-nums">
-                        {totalPrefix && (
-                            <span className="text-sm font-normal text-muted-foreground">
-                                {totalPrefix}{' '}
-                            </span>
-                        )}
-                        {formatPrice(total)}
+        <dl className="overflow-hidden rounded-xl border bg-card">
+            <div className="flex items-center gap-3 border-b bg-muted/40 p-4 sm:px-5">
+                <DateTile date={date} />
+                <div className="min-w-0">
+                    <dt className="sr-only">Día y hora</dt>
+                    <dd>
+                        <span className="block text-sm text-muted-foreground first-letter:uppercase">
+                            {formatLongDate(date)}
+                        </span>
+                        <span className="block text-lg font-semibold tabular-nums">
+                            {formatTime(time)}
+                            {endTime && ` – ${formatTime(endTime)}`}
+                        </span>
                     </dd>
                 </div>
-            )}
-            {footer}
+            </div>
+
+            <div className="flex flex-col gap-3 p-4 sm:px-5">
+                {row(<User />, 'Te atiende', staffName)}
+                {duration && row(<Clock />, 'Duración', duration)}
+                {address && row(<MapPin />, 'Dirección', address)}
+            </div>
+
+            <div className="flex flex-col gap-3 border-t p-4 sm:px-5">
+                <ul className="flex flex-col gap-1.5">
+                    {items.map((item) => (
+                        <li
+                            key={item.name}
+                            className="flex justify-between gap-3"
+                        >
+                            <span className="min-w-0 break-words">
+                                {item.name}
+                            </span>
+                            {item.price && (
+                                <span className="shrink-0 text-muted-foreground tabular-nums">
+                                    {formatPrice(item.price)}
+                                </span>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+
+                {total !== null && (
+                    <div className="flex items-baseline justify-between border-t border-dashed pt-3">
+                        <dt className="font-medium">Total</dt>
+                        <dd className="text-xl font-semibold tabular-nums">
+                            {totalPrefix && (
+                                <span className="text-sm font-normal text-muted-foreground">
+                                    {totalPrefix}{' '}
+                                </span>
+                            )}
+                            {formatPrice(total)}
+                        </dd>
+                    </div>
+                )}
+                {footer}
+            </div>
         </dl>
     );
 }

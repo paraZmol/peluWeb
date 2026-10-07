@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { CalendarDays, ChevronRight } from 'lucide-react';
+import { DateTile } from '@/components/booking/date-tile';
 import { StatusBadge } from '@/components/booking/status-badge';
 import type { ClientBooking } from '@/components/booking/types';
 import { formatDate, formatTime } from '@/lib/format';
@@ -9,33 +10,37 @@ type Props = { bookings: ClientBooking[] };
 
 function BookingList({ bookings }: Props) {
     return (
-        <ul className="divide-y rounded-xl border bg-card">
+        <ul className="divide-y overflow-hidden rounded-xl border bg-card">
             {bookings.map((booking) => (
                 <li key={booking.code}>
                     <Link
                         href={show(booking.code)}
-                        className="flex min-h-16 items-center gap-3 p-4 transition-colors hover:bg-accent"
+                        className="flex min-h-16 items-center gap-3 p-4 transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
                     >
-                        <div className="min-w-0 flex-1">
-                            <p className="font-medium break-words">
-                                {booking.salon.name}
-                            </p>
-                            <p className="text-sm text-muted-foreground tabular-nums">
-                                <span className="capitalize">
-                                    {formatDate(booking.date)}
-                                </span>{' '}
-                                · {formatTime(booking.time)}
-                            </p>
-                            <p className="truncate text-sm text-muted-foreground">
-                                {booking.services
-                                    .map((service) => service.name)
-                                    .join(', ')}
-                            </p>
+                        <DateTile date={booking.date} />
+                        <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+                            <div className="min-w-0 flex-1">
+                                <p className="font-medium break-words">
+                                    {booking.salon.name}
+                                </p>
+                                <p className="truncate text-sm text-muted-foreground tabular-nums">
+                                    <span className="capitalize">
+                                        {formatDate(booking.date)}
+                                    </span>{' '}
+                                    · {formatTime(booking.time)}
+                                </p>
+                                <p className="truncate text-sm text-muted-foreground">
+                                    {booking.services
+                                        .map((service) => service.name)
+                                        .join(', ')}
+                                </p>
+                            </div>
+                            <StatusBadge
+                                status={booking.status}
+                                label={booking.statusLabel}
+                                className="shrink-0"
+                            />
                         </div>
-                        <StatusBadge
-                            status={booking.status}
-                            label={booking.statusLabel}
-                        />
                         <ChevronRight
                             className="size-4 shrink-0 text-muted-foreground"
                             aria-hidden
@@ -59,26 +64,40 @@ export default function BookingsIndex({ bookings }: Props) {
             <Head title="Mis reservas" />
 
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6">
-                <h1 className="text-2xl font-semibold">Mis reservas</h1>
+                <h1 className="text-2xl font-semibold sm:text-3xl">
+                    Mis reservas
+                </h1>
 
                 {bookings.length === 0 && (
-                    <p className="flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                        <CalendarDays className="size-6" aria-hidden />
-                        Aún no tienes reservas. Abre la página de tu salón y
-                        toca "Reservar".
-                    </p>
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center">
+                        <span
+                            aria-hidden
+                            className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                        >
+                            <CalendarDays className="size-6" />
+                        </span>
+                        <p className="font-medium">Aún no tienes reservas</p>
+                        <p className="max-w-xs text-sm text-balance text-muted-foreground">
+                            Abre la página de tu salón y toca "Reservar". Tus
+                            citas aparecerán aquí.
+                        </p>
+                    </div>
                 )}
 
                 {upcoming.length > 0 && (
                     <section className="flex flex-col gap-3">
-                        <h2 className="text-lg font-semibold">Próximas</h2>
+                        <h2 className="font-sans text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                            Próximas
+                        </h2>
                         <BookingList bookings={upcoming} />
                     </section>
                 )}
 
                 {past.length > 0 && (
                     <section className="flex flex-col gap-3">
-                        <h2 className="text-lg font-semibold">Anteriores</h2>
+                        <h2 className="font-sans text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                            Anteriores
+                        </h2>
                         <BookingList bookings={past} />
                     </section>
                 )}

@@ -33,15 +33,21 @@ export function AgendaItem({ booking, showStaff }: Props) {
                 DIMMED.includes(booking.status) && 'opacity-60',
             )}
         >
-            <div className="flex items-start gap-3">
-                <p className="w-20 shrink-0 font-semibold tabular-nums">
+            {/* Phone: time and status on top, details below. Wider: one row. */}
+            <div className="grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-2 sm:grid-cols-[7.5rem_1fr_auto]">
+                <p className="font-semibold whitespace-nowrap tabular-nums">
                     {formatTime(booking.time)}
-                    <span className="block text-xs font-normal text-muted-foreground">
+                    <span className="block text-sm font-normal text-muted-foreground">
                         hasta {formatTime(booking.endTime)}
                     </span>
                 </p>
-                <div className="min-w-0 flex-1">
-                    <p className="flex flex-wrap items-center gap-2 font-medium break-words">
+                <StatusBadge
+                    status={booking.status}
+                    label={booking.statusLabel}
+                    className="mt-0.5 sm:col-start-3"
+                />
+                <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+                    <p className="flex flex-wrap items-center gap-2 text-base font-medium break-words">
                         {booking.client.name}
                         {booking.isVip && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
@@ -51,7 +57,7 @@ export function AgendaItem({ booking, showStaff }: Props) {
                     </p>
                     <p className="text-sm break-words text-muted-foreground">
                         {booking.services.join(', ')} ·{' '}
-                        <span className="tabular-nums">
+                        <span className="whitespace-nowrap tabular-nums">
                             {formatPrice(booking.price)}
                         </span>
                     </p>
@@ -61,7 +67,7 @@ export function AgendaItem({ booking, showStaff }: Props) {
                         </p>
                     )}
                     {booking.note && (
-                        <p className="mt-1 text-sm break-words italic">
+                        <p className="mt-2 border-l-2 border-primary/40 pl-3 text-sm break-words italic">
                             "{booking.note}"
                         </p>
                     )}
@@ -73,10 +79,6 @@ export function AgendaItem({ booking, showStaff }: Props) {
                         </p>
                     )}
                 </div>
-                <StatusBadge
-                    status={booking.status}
-                    label={booking.statusLabel}
-                />
             </div>
 
             {booking.deposit && booking.status === 'pending' && (
@@ -89,7 +91,7 @@ export function AgendaItem({ booking, showStaff }: Props) {
                 </p>
             )}
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 [&_a]:h-11 sm:[&_a]:h-9 [&_button]:h-11 sm:[&_button]:h-9">
                 {can('confirm') && (
                     <Button onClick={() => post(confirm(booking.id))}>
                         <Check /> Seña recibida

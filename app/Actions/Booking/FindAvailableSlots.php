@@ -2,6 +2,7 @@
 
 namespace App\Actions\Booking;
 
+use App\Data\Booking\BookingQuote;
 use App\Enums\ClientLevel;
 use App\Exceptions\BookingException;
 use App\Models\Salon;
@@ -32,7 +33,26 @@ class FindAvailableSlots
         ClientLevel $level,
         CarbonImmutable $now,
     ): array {
-        $quotes = $this->quote->handle($salon, $selections, $this->candidates($salon, $staff));
+        return $this->search($salon, $selections, $staff, $localDate, $level, $now)['slots'];
+    }
+
+    /**
+     * The same search, also returning what the selection costs with each
+     * professional who can do it (the wizard shows both).
+     *
+     * @param  list<array{service_id: int, variant_id: int|null}>  $selections
+     * @return array{slots: array<int, list<int>>, quotes: array<int, BookingQuote>}
+     */
+    public function search(
+        Salon $salon,
+        array $selections,
+        ?Staff $staff,
+        CarbonImmutable $localDate,
+        ClientLevel $level,
+        CarbonImmutable $now,
+    ): array {
+        $candidates = $this->candidates($salon, $staff);
+        $quotes = $this->quote->handle($salon, $selections, $candidates);
 
         if ($quotes === []) {
             throw BookingException::nobodyPerformsThem();
@@ -40,7 +60,7 @@ class FindAvailableSlots
 
         $slots = [];
 
-        foreach ($this->candidates($salon, $staff)->only(array_keys($quotes)) as $person) {
+        foreach ($candidates->only(array_keys($quotes)) as $person) {
             foreach ($this->availability->slots($salon, $person, $quotes[$person->id]->shape(), $localDate, $level, $now) as $start) {
                 $slots[$start][] = $person->id;
             }
@@ -48,7 +68,7 @@ class FindAvailableSlots
 
         ksort($slots);
 
-        return $slots;
+        return ['slots' => $slots, 'quotes' => $quotes];
     }
 
     /**

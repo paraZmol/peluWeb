@@ -29,11 +29,17 @@ const dayFormat = new Intl.DateTimeFormat('es-PE', {
     month: 'short',
 });
 
-/** "2026-10-14" → "mié, 14 oct". Built from parts so no timezone shifts it. */
+/**
+ * "2026-10-14" → "mié 14 oct" (the browser adds dots and a comma that only
+ * add noise). Built from parts so no timezone shifts it.
+ */
 export function formatDate(date: string): string {
     const [year, month, day] = date.split('-').map(Number);
 
-    return dayFormat.format(new Date(year, month - 1, day));
+    return dayFormat
+        .format(new Date(year, month - 1, day))
+        .replace(/[.,]/g, '')
+        .toLowerCase();
 }
 
 /** Adds amounts sent as text ("35.50") in whole céntimos, never as floats. */

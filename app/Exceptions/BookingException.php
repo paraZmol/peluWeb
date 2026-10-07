@@ -42,6 +42,11 @@ class BookingException extends BusinessRuleException
         return new self("Ya tienes {$max} reservas próximas en este salón. Cancela alguna para reservar otra.");
     }
 
+    public static function tooManyToday(): self
+    {
+        return new self('Hiciste muchas reservas hoy en este salón. Escríbeles por WhatsApp para coordinar.');
+    }
+
     public static function cannotChange(string $currentStatus): self
     {
         return new self("Esta reserva está \"{$currentStatus}\" y ya no admite ese cambio.");

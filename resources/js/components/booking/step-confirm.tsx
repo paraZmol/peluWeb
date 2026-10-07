@@ -1,4 +1,5 @@
 import { Link, router } from '@inertiajs/react';
+import { Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -65,13 +66,19 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
             />
 
             {quote && quote.depositPercent > 0 && (
-                <p className="rounded-xl bg-primary/10 p-4 text-sm">
-                    Para confirmar, el salón pide una seña de{' '}
-                    <strong className="tabular-nums">
-                        {formatPrice(quote.deposit)}
-                    </strong>{' '}
-                    ({quote.depositPercent}%). Te diremos cómo enviarla al
-                    terminar.
+                <p className="flex items-start gap-3 rounded-xl bg-primary/10 p-4 text-sm">
+                    <Wallet
+                        className="mt-0.5 size-5 shrink-0 text-primary"
+                        aria-hidden
+                    />
+                    <span>
+                        Para confirmar, el salón pide una seña de{' '}
+                        <strong className="whitespace-nowrap tabular-nums">
+                            {formatPrice(quote.deposit)}
+                        </strong>{' '}
+                        ({quote.depositPercent}%). Te diremos cómo enviarla al
+                        terminar.
+                    </span>
                 </p>
             )}
 

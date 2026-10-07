@@ -22,7 +22,7 @@ export function StepServices({ salon, wizard }: Props) {
         <div className="flex flex-col gap-6">
             {salon.serviceGroups.map((group) => (
                 <section key={group.label} className="flex flex-col gap-3">
-                    <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                    <h2 className="font-sans text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                         {group.label}
                     </h2>
                     <ul className="flex flex-col gap-2">
@@ -64,7 +64,9 @@ function ServiceOption({ service, wizard, disabled }: OptionProps) {
         <li
             className={cn(
                 'rounded-xl border bg-card transition-colors',
-                selected && 'border-primary bg-primary/5',
+                selected
+                    ? 'border-primary bg-primary/5'
+                    : 'hover:border-foreground/20',
             )}
         >
             <button
@@ -88,12 +90,17 @@ function ServiceOption({ service, wizard, disabled }: OptionProps) {
                     <span className="block font-medium break-words">
                         {service.name}
                         {service.isAddon && (
-                            <span className="ml-2 text-xs font-normal text-muted-foreground">
+                            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
                                 adicional
                             </span>
                         )}
                     </span>
-                    <span className="flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
+                    {service.description && (
+                        <span className="line-clamp-2 text-sm text-muted-foreground">
+                            {service.description}
+                        </span>
+                    )}
+                    <span className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
                         <Clock className="size-3.5" aria-hidden />
                         {formatMinutes(service.minutes)}
                     </span>
@@ -118,7 +125,7 @@ function ServiceOption({ service, wizard, disabled }: OptionProps) {
                 <div
                     role="radiogroup"
                     aria-label={`Opciones de ${service.name}`}
-                    className="flex flex-wrap gap-2 px-4 pb-4"
+                    className="flex flex-wrap gap-2 px-4 pb-4 sm:pl-13"
                 >
                     {service.variants.map((variant) => (
                         <button

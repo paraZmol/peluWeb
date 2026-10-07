@@ -14,6 +14,8 @@ type Props = {
     businessTypes: Option[];
     clienteles: Option[];
     slotSteps: number[];
+    /** Deposit and payment details are for owners only. */
+    canManageBookingRules: boolean;
 };
 
 const sections = [
@@ -30,6 +32,7 @@ export default function EditSalon({
     businessTypes,
     clienteles,
     slotSteps,
+    canManageBookingRules,
 }: Props) {
     return (
         <>
@@ -47,15 +50,20 @@ export default function EditSalon({
                     aria-label="Secciones"
                     className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
                 >
-                    {sections.map(([id, label]) => (
-                        <a
-                            key={id}
-                            href={`#${id}`}
-                            className="flex min-h-11 shrink-0 items-center rounded-full border bg-card px-4 text-sm hover:bg-accent"
-                        >
-                            {label}
-                        </a>
-                    ))}
+                    {sections
+                        .filter(
+                            ([id]) =>
+                                id !== 'reservas' || canManageBookingRules,
+                        )
+                        .map(([id, label]) => (
+                            <a
+                                key={id}
+                                href={`#${id}`}
+                                className="flex min-h-11 shrink-0 items-center rounded-full border bg-card px-4 text-sm hover:bg-accent"
+                            >
+                                {label}
+                            </a>
+                        ))}
                 </nav>
 
                 <ShareSection salon={salon} />
@@ -67,7 +75,9 @@ export default function EditSalon({
                 <BrandingSection salon={salon} />
                 <LocationSection salon={salon} />
                 <GallerySection salon={salon} />
-                <BookingSection salon={salon} slotSteps={slotSteps} />
+                {canManageBookingRules && (
+                    <BookingSection salon={salon} slotSteps={slotSteps} />
+                )}
             </div>
         </>
     );

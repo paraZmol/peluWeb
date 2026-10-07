@@ -1,5 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { SelectionBar } from '@/components/booking/selection-bar';
+import { SelectionRecap } from '@/components/booking/selection-recap';
 import { StepConfirm } from '@/components/booking/step-confirm';
 import { StepServices } from '@/components/booking/step-services';
 import { StepStaff } from '@/components/booking/step-staff';
@@ -11,10 +13,8 @@ import type {
 } from '@/components/booking/types';
 import { WizardHeader } from '@/components/booking/wizard-header';
 import { BrandTheme } from '@/components/salon/brand-theme';
-import { Button } from '@/components/ui/button';
 import { useAvailability } from '@/hooks/use-availability';
 import { useBookingWizard } from '@/hooks/use-booking-wizard';
-import { formatPrice } from '@/lib/format';
 
 type Props = {
     salon: BookableSalon;
@@ -51,7 +51,9 @@ export default function Booking({
         // Nothing to ask until a professional was chosen.
         date: wizard.step >= 2 ? (wizard.date ?? firstOpenDay) : null,
     });
-    const canContinue = wizard.chosen.length > 0 && !wizard.hasOnlyAddons;
+    const staffName =
+        salon.staff.find((person) => person.id === wizard.staffId)?.name ??
+        null;
     const offset = reduceMotion ? 0 : 32 * wizard.direction;
 
     return (
@@ -67,7 +69,7 @@ export default function Booking({
                 onBack={() => wizard.goTo(wizard.step - 1)}
             />
 
-            <main className="mx-auto w-full max-w-2xl overflow-x-clip px-4 pt-6 pb-32">
+            <main className="mx-auto w-full max-w-2xl overflow-x-clip px-4 pt-6 pb-32 sm:pt-8">
                 {!isOpen ? (
                     <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
                         Este salón no está recibiendo reservas en línea por
@@ -86,9 +88,17 @@ export default function Booking({
                             }}
                             className="flex flex-col gap-5"
                         >
-                            <h1 className="font-display text-2xl font-semibold">
+                            <h1 className="font-display text-2xl font-semibold text-balance sm:text-3xl">
                                 {TITLES[wizard.step]}
                             </h1>
+                            {(wizard.step === 1 || wizard.step === 2) && (
+                                <SelectionRecap
+                                    wizard={wizard}
+                                    staffName={
+                                        wizard.step === 2 ? staffName : null
+                                    }
+                                />
+                            )}
                             {wizard.step === 0 && (
                                 <StepServices salon={salon} wizard={wizard} />
                             )}
@@ -114,29 +124,7 @@ export default function Booking({
             </main>
 
             {isOpen && wizard.step === 0 && wizard.chosen.length > 0 && (
-                <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background pb-[env(safe-area-inset-bottom)]">
-                    <div className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 py-3">
-                        <p className="min-w-0 flex-1 text-sm" role="status">
-                            <span className="block font-medium">
-                                {wizard.chosen.length}{' '}
-                                {wizard.chosen.length === 1
-                                    ? 'servicio'
-                                    : 'servicios'}
-                            </span>
-                            <span className="text-muted-foreground tabular-nums">
-                                desde {formatPrice(wizard.estimate)}
-                            </span>
-                        </p>
-                        <Button
-                            size="lg"
-                            className="h-12 rounded-full px-8"
-                            disabled={!canContinue}
-                            onClick={() => wizard.goTo(1)}
-                        >
-                            Continuar
-                        </Button>
-                    </div>
-                </div>
+                <SelectionBar wizard={wizard} />
             )}
         </BrandTheme>
     );

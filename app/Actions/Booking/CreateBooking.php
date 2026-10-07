@@ -12,6 +12,7 @@ use App\Models\Booking;
 use App\Models\BookingEvent;
 use App\Models\BookingSegment;
 use App\Models\BookingService;
+use App\Models\SalonClient;
 use App\Models\Staff;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -28,6 +29,9 @@ class CreateBooking
 {
     public const int MAX_UPCOMING_PER_CLIENT = 5;
 
+    /** Online bookings one client may create in a salon per day, whatever became of them. */
+    public const int MAX_PER_CLIENT_PER_DAY = 8;
+
     /** Letters and digits that cannot be confused when read aloud or typed. */
     private const string CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
@@ -40,7 +44,7 @@ class CreateBooking
     public function handle(NewBooking $data): Booking
     {
         $now = CarbonImmutable::now();
-        $this->ensureAccepted($data, $now);
+        $this->ensureAccepted($data);
 
         $candidates = $this->finder->candidates($data->salon, $data->staff);
         $quotes = $this->quote->handle($data->salon, $data->selections, $candidates);
@@ -75,6 +79,8 @@ class CreateBooking
         if ($locked === null) {
             return null;
         }
+
+        $this->ensureWithinLimits($data, $now);
 
         // Quoted again under the lock: services and prices cannot change
         // while it is held (SyncStaffServices takes the same lock).
@@ -155,23 +161,40 @@ class CreateBooking
         return $booking;
     }
 
-    private function ensureAccepted(NewBooking $data, CarbonImmutable $now): void
+    private function ensureAccepted(NewBooking $data): void
     {
         $online = $data->source === BookingSource::Client;
 
         if (! $data->salon->isWritable() || ($online && ! $data->salon->accepts_online_bookings)) {
             throw BookingException::bookingsPaused();
         }
+    }
 
-        // Keeps one account from holding every slot of a small salon.
-        $upcoming = Booking::withoutGlobalScope('salon')
+    /**
+     * Keeps one account from holding every slot of a small salon: a cap on
+     * live bookings, and a daily cap that also counts holds left to expire
+     * and cancellations (otherwise slots could be taken again and again).
+     * Runs with the client row locked, so parallel requests cannot all see
+     * "still under the limit". The team's own bookings are not limited.
+     */
+    private function ensureWithinLimits(NewBooking $data, CarbonImmutable $now): void
+    {
+        if ($data->source !== BookingSource::Client) {
+            return;
+        }
+
+        SalonClient::withoutGlobalScope('salon')->lockForUpdate()->find($data->client->id);
+
+        $own = fn () => Booking::withoutGlobalScope('salon')
             ->where('salon_client_id', $data->client->id)
-            ->where('starts_at', '>', $now)
-            ->holdingSlot($now)
-            ->count();
+            ->where('source', BookingSource::Client);
 
-        if ($online && $upcoming >= self::MAX_UPCOMING_PER_CLIENT) {
+        if ($own()->where('starts_at', '>', $now)->holdingSlot($now)->count() >= self::MAX_UPCOMING_PER_CLIENT) {
             throw BookingException::tooManyUpcoming(self::MAX_UPCOMING_PER_CLIENT);
+        }
+
+        if ($own()->where('created_at', '>', $now->subDay())->count() >= self::MAX_PER_CLIENT_PER_DAY) {
+            throw BookingException::tooManyToday();
         }
     }
 

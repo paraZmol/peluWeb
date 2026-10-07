@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Public;
 
 use App\Actions\Booking\CreateBooking;
 use App\Actions\Booking\FindAvailableSlots;
-use App\Actions\Booking\QuoteBooking;
 use App\Actions\Booking\ResolveSalonClient;
 use App\Data\Booking\BookingQuote;
 use App\Data\Booking\NewBooking;
@@ -76,8 +75,9 @@ class BookingController extends Controller
         $staff = $request->staffIn($salon);
         $level = $this->level($salon, $request->user());
 
-        $slots = $this->finder->handle($salon, $selections, $staff, $request->localDate($salon->timezone), $level, CarbonImmutable::now());
-        $quotes = app(QuoteBooking::class)->handle($salon, $selections, $this->finder->candidates($salon, $staff));
+        ['slots' => $slots, 'quotes' => $quotes] = $this->finder->search(
+            $salon, $selections, $staff, $request->localDate($salon->timezone), $level, CarbonImmutable::now(),
+        );
 
         return response()->json([
             'slots' => collect(array_keys($slots))->map(fn (int $start) => [
@@ -95,7 +95,9 @@ class BookingController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $booking = $create->handle(new NewBooking(
+        // One transaction: a first-time client record is only kept if the
+        // booking itself goes through (no empty records from failed attempts).
+        $booking = DB::transaction(fn () => $create->handle(new NewBooking(
             salon: $salon,
             client: $this->clients->forUser($salon, $user),
             selections: $request->selections(),
@@ -104,7 +106,7 @@ class BookingController extends Controller
             source: BookingSource::Client,
             actor: $user,
             note: $request->validated('note'),
-        ));
+        )));
 
         Inertia::flash('toast', [
             'type' => 'success',

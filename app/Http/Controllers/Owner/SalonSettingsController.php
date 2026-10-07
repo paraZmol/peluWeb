@@ -23,6 +23,7 @@ class SalonSettingsController extends SalonAreaController
             'salon' => new SalonSettingsResource($salon),
             'businessTypes' => collect(BusinessType::cases())->map(fn (BusinessType $type) => ['value' => $type->value, 'label' => $type->label()]),
             'slotSteps' => UpdateSalonBookingRequest::SLOT_STEPS,
+            'canManageBookingRules' => request()->user()?->can('manageBookingRules', $salon) ?? false,
             'clienteles' => collect(Clientele::cases())->map(fn (Clientele $clientele) => ['value' => $clientele->value, 'label' => $clientele->label()]),
         ]);
     }
@@ -37,7 +38,7 @@ class SalonSettingsController extends SalonAreaController
 
     public function updateBooking(UpdateSalonBookingRequest $request, UpdateSalonDetails $update): RedirectResponse
     {
-        $update->handle($this->salon('update'), $request->validated());
+        $update->handle($this->salon('manageBookingRules'), $request->validated());
         $this->toast('Reglas de reserva guardadas.');
 
         return to_route('salon.edit');

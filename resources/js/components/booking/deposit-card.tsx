@@ -59,7 +59,7 @@ export function DepositCard({ deposit }: Props) {
             aria-labelledby="deposit-title"
             className="flex flex-col gap-3 rounded-xl border border-primary/40 bg-primary/5 p-5"
         >
-            <h2 id="deposit-title" className="font-semibold">
+            <h2 id="deposit-title" className="text-lg font-semibold">
                 Falta la seña de{' '}
                 <span className="tabular-nums">
                     {formatPrice(deposit.amount)}
@@ -74,7 +74,7 @@ export function DepositCard({ deposit }: Props) {
                 reserva.
             </p>
             {deposit.instructions && (
-                <p className="rounded-lg bg-background p-3 text-sm break-words whitespace-pre-line">
+                <p className="rounded-lg border bg-background p-3 text-sm break-words whitespace-pre-line">
                     {deposit.instructions}
                 </p>
             )}

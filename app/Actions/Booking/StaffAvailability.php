@@ -45,6 +45,11 @@ class StaffAvailability
         CarbonImmutable $now,
         ?int $ignoreBookingId = null,
     ): array {
+        // Days nobody could book anyway are answered without touching the agenda.
+        if (! $this->isBookableDay($salon, $localDate, $level, $now)) {
+            return [];
+        }
+
         $windows = $this->windows($salon, $staff, $localDate, $level);
 
         if ($windows === []) {
@@ -123,6 +128,13 @@ class StaffAvailability
             ->map(fn (StaffTimeOff $off) => new TimeSpan($off->starts_at->getTimestamp(), $off->ends_at->getTimestamp()));
 
         return [...$segments->all(), ...$timeOff->all()];
+    }
+
+    private function isBookableDay(Salon $salon, CarbonImmutable $localDate, ClientLevel $level, CarbonImmutable $now): bool
+    {
+        [$earliest, $latest] = $this->bounds($salon, $level, $now);
+
+        return $localDate->endOfDay()->getTimestamp() >= $earliest && $localDate->startOfDay()->getTimestamp() <= $latest;
     }
 
     /**

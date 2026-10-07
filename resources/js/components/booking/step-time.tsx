@@ -1,4 +1,4 @@
-import { CalendarX } from 'lucide-react';
+import { CalendarX, Moon, Sun, Sunrise } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,9 @@ import { DayStrip } from './day-strip';
 import type { BookingDay, Slot } from './types';
 
 const PERIODS = [
-    { label: 'Mañana', from: 0, to: 12 },
-    { label: 'Tarde', from: 12, to: 18 },
-    { label: 'Noche', from: 18, to: 24 },
+    { label: 'Mañana', icon: Sunrise, from: 0, to: 12 },
+    { label: 'Tarde', icon: Sun, from: 12, to: 18 },
+    { label: 'Noche', icon: Moon, from: 18, to: 24 },
 ];
 
 type Props = {
@@ -97,7 +97,8 @@ export function StepTime({ days, wizard, availability }: Props) {
                             key={period.label}
                             className="flex flex-col gap-2"
                         >
-                            <h2 className="text-sm font-semibold text-muted-foreground">
+                            <h2 className="flex items-center gap-2 font-sans text-sm font-semibold text-muted-foreground">
+                                <period.icon className="size-4" aria-hidden />
                                 {period.label}
                             </h2>
                             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -116,7 +117,7 @@ export function StepTime({ days, wizard, availability }: Props) {
                                             delay: Math.min(index, 8) * 0.02,
                                         }}
                                         onClick={() => wizard.chooseSlot(slot)}
-                                        className="h-12 rounded-full border bg-card text-sm font-medium tabular-nums transition-colors hover:border-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                        className="h-12 rounded-full border bg-card text-sm font-medium tabular-nums transition-colors hover:border-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-[0.97]"
                                     >
                                         {formatTime(slot.time)}
                                     </motion.button>

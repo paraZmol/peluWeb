@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * A person as one salon knows them. The same user is a separate client in
  * each salon: being VIP in one says nothing about another.
  *
- * Nothing is mass assignable: VIP is only written by MarkClientVip.
+ * Nothing is mass assignable: VIP is only written by Owner\ClientController.
  *
  * @property int $id
  * @property int $salon_id

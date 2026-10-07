@@ -51,7 +51,8 @@ class BookingStatusController extends SalonAreaController
 
     public function cancel(Request $request, Booking $booking): RedirectResponse
     {
-        $this->authorize('manage', $booking);
+        // Cancelling on the salon's side makes a paid deposit refundable: that is handling money.
+        $this->authorize($booking->deposit_paid_at === null ? 'manage' : 'confirmDeposit', $booking);
         $this->status->cancel($booking, $request->user(), byClient: false);
 
         return $this->done('Reserva cancelada.');

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ServiceCategory;
 use App\Models\Salon;
 use App\Models\SalonMember;
 use App\Models\Service;
@@ -39,5 +40,77 @@ class E2eSeeder extends Seeder
         $staff = User::factory()->create(['name' => 'Pedro Personal', 'email' => 'personal@example.com']);
         SalonMember::factory()->for($second)->for($staff)->create();
         Staff::factory()->for($second)->linkedTo($staff)->create(['name' => 'Pedro Personal']);
+
+        $this->seedShowcaseSalon();
+    }
+
+    /**
+     * A fuller salon (brand color, several categories, variants, a deposit) to
+     * look at the screens with realistic content. Independent from the salons
+     * above, so the flows that assert on them are not affected.
+     */
+    private function seedShowcaseSalon(): void
+    {
+        $owner = User::factory()->create(['name' => 'Valeria Vitrina', 'email' => 'vitrina@example.com']);
+        $salon = Salon::factory()->ownedBy($owner)->create([
+            'name' => 'Estudio Ñusta Barber & Spa',
+            'slug' => 'estudio-vitrina',
+            'brand_color' => '#1F6F64',
+            'description' => 'Cortes, color y cuidado de barba en el corazón de Miraflores. Atención con cita.',
+            'address' => 'Av. Larco 1234, int. 2',
+            'district' => 'Miraflores',
+            'city' => 'Lima',
+            'deposit_percent' => 30,
+            'payment_instructions' => 'Yape o Plin al 987 654 321 a nombre de Estudio Ñusta.',
+        ]);
+
+        $everyDay = [1, 2, 3, 4, 5, 6, 7];
+        $barber = Staff::factory()->for($salon)->working($everyDay, '00:00', '23:55')
+            ->create(['name' => 'José Antonio Fernández', 'title' => 'Barbero sénior']);
+        $colorist = Staff::factory()->for($salon)->working($everyDay, '09:00', '20:00')
+            ->create(['name' => 'Lucía Ramírez', 'title' => 'Colorista']);
+        Staff::factory()->for($salon)->linkedTo($owner)->create(['name' => 'Valeria Vitrina']);
+
+        $catalog = [
+            [ServiceCategory::MenCut, 'Corte clásico', 3500, 30, [$barber, $colorist]],
+            [ServiceCategory::MenCut, 'Degradado con diseño', 4500, 45, [$barber]],
+            [ServiceCategory::Beard, 'Perfilado de barba', 2000, 20, [$barber]],
+            [ServiceCategory::Beard, 'Afeitado con toalla caliente', 3000, 30, [$barber]],
+            [ServiceCategory::Color, 'Tinte completo', 12000, 90, [$colorist]],
+            [ServiceCategory::Treatment, 'Hidratación profunda con keratina', 8000, 60, [$colorist]],
+        ];
+
+        foreach ($catalog as [$category, $name, $priceCents, $minutes, $performers]) {
+            $service = Service::factory()->for($salon)->create([
+                'category' => $category,
+                'name' => $name,
+                'price_cents' => $priceCents,
+                'active_minutes' => $minutes,
+            ]);
+
+            foreach ($performers as $person) {
+                $person->services()->attach($service->id);
+            }
+        }
+
+        // Color is priced by hair length.
+        Service::withoutGlobalScope('salon')
+            ->where('salon_id', $salon->id)
+            ->where('category', ServiceCategory::Color)
+            ->firstOrFail()
+            ->variants()
+            ->createMany([
+                ['label' => 'Cabello corto', 'price_cents' => 12000, 'extra_minutes' => 0, 'position' => 0],
+                ['label' => 'Cabello largo', 'price_cents' => 18000, 'extra_minutes' => 30, 'position' => 1],
+            ]);
+
+        $wash = Service::factory()->for($salon)->create([
+            'category' => ServiceCategory::MenCut,
+            'name' => 'Lavado',
+            'price_cents' => 1000,
+            'active_minutes' => 10,
+            'is_addon' => true,
+        ]);
+        $barber->services()->attach($wash->id);
     }
 }

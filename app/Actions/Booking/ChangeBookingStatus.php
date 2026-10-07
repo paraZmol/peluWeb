@@ -106,7 +106,16 @@ class ChangeBookingStatus
             return null;
         }
 
-        return $this->change($booking, BookingStatus::Expired, null);
+        try {
+            return $this->change($booking, BookingStatus::Expired, null, function (Booking $locked, CarbonImmutable $now): void {
+                if (! $locked->isHoldExpired($now)) {
+                    throw BookingException::cannotChange($locked->status->label());
+                }
+            });
+        } catch (BookingException) {
+            // Confirmed or cancelled a moment ago: nothing left to expire.
+            return null;
+        }
     }
 
     /**

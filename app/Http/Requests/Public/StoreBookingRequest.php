@@ -12,6 +12,9 @@ class StoreBookingRequest extends FormRequest
 {
     use ParsesBookingSelection, SalonValidationRules;
 
+    /** 2100-01-01 UTC: anything later is not a real appointment. */
+    private const int LATEST_START = 4102444800;
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -20,7 +23,7 @@ class StoreBookingRequest extends FormRequest
         return [
             ...$this->selectionRules(),
             // Unix seconds (UTC), exactly as the availability endpoint offered it.
-            'start' => ['required', 'integer', 'min:1'],
+            'start' => ['required', 'integer', 'min:1', 'max:'.self::LATEST_START],
             'note' => ['nullable', 'string', 'max:255', self::PLAIN_TEXT],
         ];
     }

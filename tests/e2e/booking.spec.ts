@@ -47,7 +47,9 @@ test.describe('Reservar en línea', () => {
         await page.getByRole('button', { name: 'Confirmar reserva' }).click();
 
         await expect(page).toHaveURL(/\/mis-reservas\/[A-Z0-9]{8}$/);
-        await expect(page.getByText('Confirmada', { exact: true })).toBeVisible();
+        await expect(
+            page.getByText('Confirmada', { exact: true }),
+        ).toBeVisible();
         await expect(page.getByText('Corte de prueba')).toBeVisible();
         const overflow = await page.evaluate(
             () =>

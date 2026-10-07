@@ -50,7 +50,9 @@ class ClientController extends SalonAreaController
 
     public function updateVip(Request $request, SalonClient $client): RedirectResponse
     {
-        $this->salon('manageVipClients');
+        $salon = $this->salon('manageVipClients');
+        // Nobody grants VIP hours and VIP deposits to themselves, except an owner.
+        abort_if($client->user_id === $request->user()?->id && ! $request->user()?->can('manageTeam', $salon), 403);
 
         $client->is_vip = $request->boolean('is_vip');
         $client->save();

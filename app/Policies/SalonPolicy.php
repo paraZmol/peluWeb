@@ -23,6 +23,15 @@ class SalonPolicy
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageVipClients) ?? false;
     }
 
+    /**
+     * Deposit, payment details and whether the salon takes bookings: money
+     * and availability, so owners only (not "edit the salon profile").
+     */
+    public function manageBookingRules(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->isOwner() ?? false;
+    }
+
     public function update(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageSalonProfile) ?? false;

@@ -32,19 +32,21 @@ Route::inertia('/', 'welcome')->name('home');
 // Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
 // Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
 Route::get('s/{salon:slug}', [SalonPageController::class, 'show'])
-    ->middleware('throttle:120,1')
+    ->middleware('throttle:120,1,salon-page')
     ->name('salons.show');
 
 // Online booking: anyone can browse services and free times; confirming
 // needs a verified account.
 Route::get('s/{salon:slug}/reservar', [BookingController::class, 'create'])
-    ->middleware('throttle:120,1')
+    ->middleware('throttle:120,1,booking-page')
     ->name('salons.booking.create');
 Route::get('s/{salon:slug}/disponibilidad', [BookingController::class, 'availability'])
-    ->middleware('throttle:90,1')
+    ->middleware('throttle:90,1,booking-availability')
     ->name('salons.booking.availability');
 
-Route::middleware(['guest', 'throttle:10,1'])->group(function () {
+// A third argument gives each limit its own counter: unnamed throttles of
+// the same user or IP would otherwise add up across routes.
+Route::middleware(['guest', 'throttle:10,1,google-login'])->group(function () {
     Route::get('auth/google/redirect', [GoogleLoginController::class, 'redirect'])->name('google.redirect');
     Route::get('auth/google/callback', [GoogleLoginController::class, 'callback'])->name('google.callback');
 });
@@ -65,13 +67,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('s/{salon:slug}/reservar/continuar', [BookingController::class, 'resume'])->name('salons.booking.resume');
     Route::post('s/{salon:slug}/reservas', [BookingController::class, 'store'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:10,1,booking-store')
         ->name('salons.booking.store');
 
     Route::get('mis-reservas', [ClientBookingController::class, 'index'])->name('bookings.index');
     Route::get('mis-reservas/{code}', [ClientBookingController::class, 'show'])->name('bookings.show');
     Route::post('mis-reservas/{code}/cancelar', [ClientBookingController::class, 'cancel'])
-        ->middleware('throttle:20,1')
+        ->middleware('throttle:20,1,booking-cancel')
         ->name('bookings.cancel');
 
     Route::post('invitaciones/{token}', [InvitationAcceptanceController::class, 'store'])

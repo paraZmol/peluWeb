@@ -58,19 +58,29 @@ export function DayStrip({ days, value, onChange }: Props) {
                             'flex h-20 w-16 shrink-0 snap-start flex-col items-center justify-center rounded-2xl border text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                             isSelected
                                 ? 'border-primary bg-primary text-primary-foreground'
-                                : 'bg-card hover:bg-accent',
+                                : 'bg-card hover:border-foreground/20 hover:bg-accent',
                             day.closed && 'opacity-40',
                         )}
                     >
-                        <span className="text-xs capitalize">
+                        <span
+                            className={cn(
+                                'text-xs capitalize',
+                                !isSelected && 'text-muted-foreground',
+                            )}
+                        >
                             {index === 0
                                 ? 'Hoy'
                                 : weekdayFormat.format(date).replace('.', '')}
                         </span>
-                        <span className="text-xl font-semibold tabular-nums">
+                        <span className="text-xl leading-7 font-semibold tabular-nums">
                             {date.getDate()}
                         </span>
-                        <span className="text-xs">
+                        <span
+                            className={cn(
+                                'text-xs',
+                                !isSelected && 'text-muted-foreground',
+                            )}
+                        >
                             {monthFormat.format(date).replace('.', '')}
                         </span>
                     </button>
