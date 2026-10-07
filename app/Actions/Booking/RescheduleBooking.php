@@ -8,6 +8,7 @@ use App\Enums\ClientLevel;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\BookingEvent;
+use App\Models\BookingService;
 use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\Staff;
@@ -139,6 +140,10 @@ class RescheduleBooking
             return;
         }
 
+        if (! $salon->accepts_online_bookings) {
+            throw BookingException::bookingsPaused();
+        }
+
         if (! $this->hasNotice($booking, $salon, $now)) {
             throw BookingException::tooLateToMove($salon->cancel_window_hours);
         }
@@ -159,7 +164,7 @@ class RescheduleBooking
     {
         return $this->isOpen($booking, $now)
             && $salon->isWritable()
-            && (! $byClient || $this->hasNotice($booking, $salon, $now));
+            && (! $byClient || ($salon->accepts_online_bookings && $this->hasNotice($booking, $salon, $now)));
     }
 
     /**
@@ -192,7 +197,15 @@ class RescheduleBooking
             return true;
         }
 
-        $serviceIds = $booking->services()->whereNotNull('service_id')->pluck('service_id')->unique();
+        $services = $booking->services()->get();
+
+        // A service deleted since then cannot be checked: it stays with
+        // whoever took it.
+        if ($services->contains(fn (BookingService $service) => $service->service_id === null)) {
+            return false;
+        }
+
+        $serviceIds = $services->pluck('service_id')->unique();
         $performed = DB::table('service_staff')
             ->where('staff_id', $staff->id)
             ->whereIn('service_id', $serviceIds)

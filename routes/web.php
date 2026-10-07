@@ -145,15 +145,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('agenda', [AgendaController::class, 'index'])->name('agenda.index');
         // The team books for a client, and moves bookings.
         Route::get('agenda/nueva', [AgendaBookingController::class, 'create'])->name('agenda.bookings.create');
-        Route::get('agenda/disponibilidad', [AgendaBookingController::class, 'availability'])->name('agenda.bookings.availability');
+        Route::get('agenda/disponibilidad', [AgendaBookingController::class, 'availability'])
+            ->middleware('throttle:120,1,agenda-availability')
+            ->name('agenda.bookings.availability');
         Route::get('agenda/clientes', [AgendaBookingController::class, 'clients'])
-            ->middleware('throttle:120,1,agenda-clients')
+            ->middleware('throttle:60,1,agenda-clients')
             ->name('agenda.bookings.clients');
         Route::post('agenda', [AgendaBookingController::class, 'store'])
             ->middleware('throttle:60,1,agenda-store')
             ->name('agenda.bookings.store');
-        Route::get('agenda/{booking}/horarios', [BookingMoveController::class, 'slots'])->name('agenda.bookings.slots');
-        Route::post('agenda/{booking}/mover', [BookingMoveController::class, 'update'])->name('agenda.bookings.move');
+        Route::get('agenda/{booking}/horarios', [BookingMoveController::class, 'slots'])
+            ->middleware('throttle:120,1,agenda-move-slots')
+            ->name('agenda.bookings.slots');
+        Route::post('agenda/{booking}/mover', [BookingMoveController::class, 'update'])
+            ->middleware('throttle:60,1,agenda-move')
+            ->name('agenda.bookings.move');
         Route::post('agenda/{booking}/confirmar', [BookingStatusController::class, 'confirm'])->name('agenda.bookings.confirm');
         Route::post('agenda/{booking}/iniciar', [BookingStatusController::class, 'start'])->name('agenda.bookings.start');
         Route::post('agenda/{booking}/completar', [BookingStatusController::class, 'complete'])->name('agenda.bookings.complete');

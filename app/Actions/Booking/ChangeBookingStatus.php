@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ChangeBookingStatus
 {
+    private const int DEADLOCK_ATTEMPTS = 3;
+
     public function __construct(
         private readonly StaffAvailability $availability,
         private readonly AvailabilityCalculator $calculator,
@@ -162,7 +164,7 @@ class ChangeBookingStatus
             $event->save();
 
             return $locked;
-        });
+        }, self::DEADLOCK_ATTEMPTS);
     }
 
     /**

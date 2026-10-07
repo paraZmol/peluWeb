@@ -58,6 +58,13 @@ Test obligatorio también por HTTP (`tests/Concurrency`), no solo llamando a la 
 Índice obligatorio: `booking_segments (staff_id, starts_at, ends_at)`.
 Test obligatorio: dos procesos concurrentes, el mismo horario → exactamente una reserva.
 
+**La ficha del cliente nace con su primera reserva.** `ResolveSalonClient` devuelve la ficha
+existente o una nueva **sin guardar**; `CreateBooking` la guarda dentro de la transacción, justo
+antes de la reserva. Nunca crear la ficha antes ni borrarla después: borrar una ficha "vacía" se
+llevó en cascada la cita que otra petición acababa de colgarle (bug real, 2026-10-08).
+Quien cierra días o cambia horarios (feriado, ausencia, horario semanal) toma el bloqueo de los
+profesionales afectados **antes** de comprobar que no deja citas fuera.
+
 ## Mover una cita (`RescheduleBooking`)
 Se valida igual que una reserva nueva: bloquea a los profesionales implicados (los dos a la vez y
 en orden de id si cambia de profesional), luego la reserva, y el nuevo inicio debe estar entre los

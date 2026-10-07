@@ -6,7 +6,7 @@ use App\Actions\Booking\RescheduleBooking;
 use App\Data\Booking\BookingMove;
 use App\Http\Controllers\Owner\SalonAreaController;
 use App\Http\Requests\Client\BookingDayRequest;
-use App\Http\Requests\Client\MoveBookingRequest;
+use App\Http\Requests\Staff\MoveBookingRequest;
 use App\Http\Resources\AvailabilityPayload;
 use App\Models\Booking;
 use App\Models\Staff;
@@ -42,11 +42,12 @@ class BookingMoveController extends SalonAreaController
     public function update(MoveBookingRequest $request, Booking $booking): RedirectResponse
     {
         $this->authorize('manage', $booking);
+        $salon = $this->currentSalon();
 
         // Never wrap this in a transaction: it must lock before it reads.
         $moved = $this->reschedule->handle(new BookingMove(
             booking: $booking,
-            startsAt: $request->startsAt(),
+            startsAt: $request->startsAtIn($salon->timezone),
             byClient: false,
             actor: $request->user(),
             staff: $this->newStaff($request, $booking),
@@ -54,9 +55,12 @@ class BookingMoveController extends SalonAreaController
 
         $this->toast('Cita movida. Avísale a tu cliente.');
 
-        return to_route('agenda.index', [
-            'fecha' => $moved->starts_at->setTimezone($this->currentSalon()->timezone)->toDateString(),
-        ]);
+        // Dropped on the grid: stay on the view it was dropped in.
+        if ($request->boolean('stay')) {
+            return back();
+        }
+
+        return to_route('agenda.index', ['fecha' => $moved->starts_at->setTimezone($salon->timezone)->toDateString()]);
     }
 
     /**

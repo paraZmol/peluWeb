@@ -24,7 +24,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Throwable;
 
 /**
  * The public booking wizard of a salon. Visitors have no current salon, so
@@ -87,32 +86,20 @@ class BookingController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $isFirstVisit = $this->clients->find($salon, $user) === null;
-        $client = $this->clients->forUser($salon, $user);
-
         // Never wrap this in a transaction: CreateBooking must open its own
         // and lock the professional before it reads anything (a read made
         // earlier in the same transaction would pin a stale view of the
         // agenda and let two people book the same time).
-        try {
-            $booking = $create->handle(new NewBooking(
-                salon: $salon,
-                client: $client,
-                selections: $request->selections(),
-                staff: $request->staffIn($salon),
-                startsAt: $request->startsAt(),
-                source: BookingSource::Client,
-                actor: $user,
-                note: $request->validated('note'),
-            ));
-        } catch (Throwable $exception) {
-            // A failed first booking leaves no empty client record behind.
-            if ($isFirstVisit) {
-                $client->delete();
-            }
-
-            throw $exception;
-        }
+        $booking = $create->handle(new NewBooking(
+            salon: $salon,
+            client: $this->clients->forUser($salon, $user),
+            selections: $request->selections(),
+            staff: $request->staffIn($salon),
+            startsAt: $request->startsAt(),
+            source: BookingSource::Client,
+            actor: $user,
+            note: $request->validated('note'),
+        ));
 
         Inertia::flash('toast', [
             'type' => 'success',

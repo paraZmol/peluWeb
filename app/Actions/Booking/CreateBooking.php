@@ -14,6 +14,7 @@ use App\Models\BookingService;
 use App\Models\SalonClient;
 use App\Models\Staff;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -114,21 +115,53 @@ class CreateBooking
         return $this->store($data, $locked, $quote, $now);
     }
 
+    /**
+     * The client record, stored if it is new: only once the booking is
+     * certain and inside its transaction, so a refused booking leaves no
+     * empty record. Two first bookings of one
+     * account at once share the record the first of them stored.
+     */
+    private function client(NewBooking $data): SalonClient
+    {
+        if ($data->client->exists) {
+            return $data->client;
+        }
+
+        // A copy per attempt: a rolled back attempt must not leave the
+        // caller's model looking stored.
+        $client = $data->client->replicate();
+
+        try {
+            $client->save();
+        } catch (UniqueConstraintViolationException) {
+            // A locking read: a plain one would not see a row committed
+            // after this transaction first read.
+            return SalonClient::withoutGlobalScope('salon')
+                ->where('salon_id', $client->salon_id)
+                ->where('user_id', $client->user_id)
+                ->sharedLock()
+                ->firstOrFail();
+        }
+
+        return $client;
+    }
+
     private function store(NewBooking $data, Staff $staff, BookingQuote $quote, CarbonImmutable $now): Booking
     {
+        $client = $this->client($data);
         $start = $data->startsAt->getTimestamp();
         $shape = $quote->shape();
-        $deposit = $this->depositCents($data, $quote->priceCents());
+        $deposit = $this->depositCents($data, $client, $quote->priceCents());
 
         $booking = new Booking;
         $booking->salon_id = $data->salon->id;
         $booking->code = $this->uniqueCode();
-        $booking->salon_client_id = $data->client->id;
+        $booking->salon_client_id = $client->id;
         $booking->staff_id = $staff->id;
         $booking->source = $data->source;
         $booking->starts_at = CarbonImmutable::createFromTimestampUTC($start);
         $booking->ends_at = CarbonImmutable::createFromTimestampUTC($shape->endsAt($start));
-        $booking->is_vip = $data->client->is_vip;
+        $booking->is_vip = $client->is_vip;
         $booking->price_cents = $quote->priceCents();
         $booking->deposit_cents = $deposit;
         // Without a deposit there is nothing to wait for: it is confirmed.
@@ -180,14 +213,16 @@ class CreateBooking
      */
     private function ensureWithinLimits(NewBooking $data, CarbonImmutable $now): void
     {
-        if ($data->source !== BookingSource::Client) {
+        // Someone new to the salon has no bookings to count yet.
+        if ($data->source !== BookingSource::Client || ! $data->client->exists) {
             return;
         }
 
-        SalonClient::withoutGlobalScope('salon')->lockForUpdate()->find($data->client->id);
+        $client = $data->client;
+        SalonClient::withoutGlobalScope('salon')->lockForUpdate()->find($client->id);
 
         $own = fn () => Booking::withoutGlobalScope('salon')
-            ->where('salon_client_id', $data->client->id)
+            ->where('salon_client_id', $client->id)
             ->where('source', BookingSource::Client);
 
         if ($own()->where('starts_at', '>', $now)->holdingSlot($now)->sharedLock()->count() >= self::MAX_UPCOMING_PER_CLIENT) {
@@ -238,13 +273,13 @@ class CreateBooking
      * Bookings made by the team carry no deposit: they are arranged in
      * person or by phone.
      */
-    private function depositCents(NewBooking $data, int $priceCents): int
+    private function depositCents(NewBooking $data, SalonClient $client, int $priceCents): int
     {
         if ($data->source === BookingSource::Staff) {
             return 0;
         }
 
-        return intdiv($priceCents * $data->salon->depositPercentFor($data->client->is_vip) + 50, 100);
+        return intdiv($priceCents * $data->salon->depositPercentFor($client->is_vip) + 50, 100);
     }
 
     private function uniqueCode(): string

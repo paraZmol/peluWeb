@@ -26,7 +26,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Throwable;
 
 /**
  * The team books for a client who called, wrote or walked in: any of the
@@ -79,10 +78,14 @@ class AgendaBookingController extends SalonAreaController
 
     /**
      * Clients already in the salon's list whose name or phone matches.
+     * Whoever runs every agenda searches the whole list; a professional
+     * only among the people they have attended, so the search cannot be
+     * used to copy the salon's client list.
      */
     public function clients(Request $request): JsonResponse
     {
-        $this->bookingSalon();
+        $salon = $this->bookingSalon();
+        $own = $this->staffFor($request, $salon, null);
         $search = $request->string('buscar')->trim()->limit(60, '')->toString();
 
         if (mb_strlen($search) < self::MIN_SEARCH_LENGTH) {
@@ -94,6 +97,7 @@ class AgendaBookingController extends SalonAreaController
 
         $clients = SalonClient::query()
             ->where(fn ($match) => $match->whereLike('name', $like)->orWhereLike('phone', $like))
+            ->when($own !== null, fn ($query) => $query->whereHas('bookings', fn ($bookings) => $bookings->where('staff_id', $own?->id)))
             ->orderBy('name')
             ->limit(self::CLIENT_SUGGESTIONS)
             ->get();
@@ -113,25 +117,16 @@ class AgendaBookingController extends SalonAreaController
         $client = $request->clientIn($salon, $this->clients);
 
         // Never wrap this in a transaction: see Public\BookingController::store.
-        try {
-            $booking = $create->handle(new NewBooking(
-                salon: $salon,
-                client: $client,
-                selections: $request->selections(),
-                staff: $staff,
-                startsAt: $request->startsAt(),
-                source: BookingSource::Staff,
-                actor: $request->user(),
-                note: $request->validated('note'),
-            ));
-        } catch (Throwable $exception) {
-            // A failed booking leaves no client record without visits behind.
-            if ($client->wasRecentlyCreated) {
-                $client->delete();
-            }
-
-            throw $exception;
-        }
+        $booking = $create->handle(new NewBooking(
+            salon: $salon,
+            client: $client,
+            selections: $request->selections(),
+            staff: $staff,
+            startsAt: $request->startsAt(),
+            source: BookingSource::Staff,
+            actor: $request->user(),
+            note: $request->validated('note'),
+        ));
 
         $this->toast("Cita agendada para {$client->name}.");
 

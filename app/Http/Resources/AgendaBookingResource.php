@@ -40,6 +40,8 @@ class AgendaBookingResource extends JsonResource
             'date' => $start->format('Y-m-d'),
             'time' => $start->format('H:i'),
             'endTime' => $this->ends_at->setTimezone($this->timezone)->format('H:i'),
+            'startsAt' => $this->starts_at->toIso8601String(),
+            'endsAt' => $this->ends_at->toIso8601String(),
             'status' => $status->value,
             'statusLabel' => $status->label(),
             'isVip' => $this->is_vip,

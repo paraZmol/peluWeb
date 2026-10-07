@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\BookingService;
@@ -52,7 +53,8 @@ class ClientBookingResource extends JsonResource
                 'price' => Money::toAmount($service->price_cents),
             ])->values(),
             'price' => Money::toAmount($this->price_cents),
-            'note' => $this->client_note,
+            // A note the team wrote is theirs; the client sees only their own.
+            'note' => $this->source === BookingSource::Client ? $this->client_note : null,
             'deposit' => $this->deposit_cents === 0 ? null : [
                 'amount' => Money::toAmount($this->deposit_cents),
                 'isPaid' => $this->deposit_paid_at !== null,
@@ -63,7 +65,7 @@ class ClientBookingResource extends JsonResource
             ],
             'canCancel' => $isOpen,
             // Moving needs the same notice the salon asks for a cancellation.
-            'canMove' => $isOpen && $hasNotice && $salon->isWritable(),
+            'canMove' => $isOpen && $hasNotice && $salon->isWritable() && $salon->accepts_online_bookings,
             // Cancelling now would forfeit the deposit already paid.
             'cancelForfeitsDeposit' => $this->deposit_paid_at !== null && ! $hasNotice,
             'cancelWindowHours' => $salon->cancel_window_hours,

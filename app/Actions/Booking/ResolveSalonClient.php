@@ -6,11 +6,15 @@ use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\User;
 use App\Support\PersonName;
-use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
- * Finds or creates the record a salon keeps of a person. Names the salon
- * explicitly: a client booking online is not a member of it.
+ * Finds the record a salon keeps of a person, or prepares a new one.
+ * Names the salon explicitly: a client booking online is not a member of it.
+ *
+ * A new record is returned unsaved: CreateBooking stores it in the same
+ * transaction as the booking, so a refused booking leaves no empty record
+ * and nothing has to be deleted afterwards (deleting it once took another
+ * request's booking with it).
  */
 class ResolveSalonClient
 {
@@ -20,52 +24,27 @@ class ResolveSalonClient
      */
     public function forUser(Salon $salon, User $user): SalonClient
     {
-        $existing = $this->find($salon, $user);
-
-        if ($existing !== null) {
-            return $existing;
-        }
-
-        $client = new SalonClient;
-        $client->salon_id = $salon->id;
-        $client->user_id = $user->id;
-        $client->name = PersonName::clean($user->name, SalonClient::NAME_MAX_LENGTH, 'Cliente');
-        $client->phone = $user->phone;
-
-        try {
-            $client->save();
-        } catch (UniqueConstraintViolationException) {
-            // Two first bookings at once: the other request created it.
-            return $this->find($salon, $user) ?? throw new \LogicException('Salon client vanished after a unique violation.');
-        }
-
-        return $client;
+        return $this->find($salon, $user)
+            ?? $this->prepare($salon, PersonName::clean($user->name, SalonClient::NAME_MAX_LENGTH, 'Cliente'), $user->phone, $user);
     }
 
     /**
-     * Someone the team books for, with or without an account. Whoever
-     * already has that phone in the salon is the same person; otherwise a
-     * new record without an account is created.
+     * Someone the team books for by name and phone. A record without an
+     * account that already has that phone is the same person. Records of
+     * accounts are never matched by phone: the phone of an account is
+     * whatever its owner typed, and matching it would hand them the
+     * bookings of whoever really has that number.
      */
     public function walkIn(Salon $salon, string $name, ?string $phone): SalonClient
     {
         $known = $phone === null ? null : SalonClient::withoutGlobalScope('salon')
             ->where('salon_id', $salon->id)
+            ->whereNull('user_id')
             ->where('phone', $phone)
             ->orderBy('id')
             ->first();
 
-        if ($known !== null) {
-            return $known;
-        }
-
-        $client = new SalonClient;
-        $client->salon_id = $salon->id;
-        $client->name = PersonName::clean($name, SalonClient::NAME_MAX_LENGTH, 'Cliente');
-        $client->phone = $phone;
-        $client->save();
-
-        return $client;
+        return $known ?? $this->prepare($salon, PersonName::clean($name, SalonClient::NAME_MAX_LENGTH, 'Cliente'), $phone);
     }
 
     public function find(Salon $salon, User $user): ?SalonClient
@@ -74,5 +53,16 @@ class ResolveSalonClient
             ->where('salon_id', $salon->id)
             ->where('user_id', $user->id)
             ->first();
+    }
+
+    private function prepare(Salon $salon, string $name, ?string $phone, ?User $user = null): SalonClient
+    {
+        $client = new SalonClient;
+        $client->salon_id = $salon->id;
+        $client->user_id = $user?->id;
+        $client->name = $name;
+        $client->phone = $phone;
+
+        return $client;
     }
 }

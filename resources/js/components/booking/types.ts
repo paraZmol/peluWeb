@@ -136,6 +136,9 @@ export type AgendaBooking = {
     date: string;
     time: string;
     endTime: string;
+    /** ISO instants, for countdowns. */
+    startsAt: string;
+    endsAt: string;
     status: BookingStatus;
     statusLabel: string;
     isVip: boolean;

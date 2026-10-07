@@ -6,6 +6,7 @@ use App\Actions\Booking\FindAffectedBookings;
 use App\Exceptions\StaffException;
 use App\Models\Salon;
 use App\Models\SalonHoliday;
+use App\Models\Staff;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +23,11 @@ class AddHoliday
     public function handle(Salon $salon, string $date, string $name): SalonHoliday
     {
         return DB::transaction(function () use ($salon, $date, $name): SalonHoliday {
-            // Serializes two saves of the same day and keeps the limit true.
+            // Every professional first, the same lock a booking or a move
+            // takes: nothing lands on the day between the check below and
+            // the holiday being stored. Then the salon, which serializes
+            // two saves of the same day and keeps the limit true.
+            Staff::withoutGlobalScope('salon')->where('salon_id', $salon->id)->orderBy('id')->lockForUpdate()->pluck('id');
             Salon::query()->lockForUpdate()->findOrFail($salon->id);
 
             $holiday = $salon->holidays()->whereDate('date', $date)->first();

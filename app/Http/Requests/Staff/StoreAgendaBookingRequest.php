@@ -29,7 +29,7 @@ class StoreAgendaBookingRequest extends FormRequest
             ...$this->selectionRules(),
             ...$this->startRules(),
             'client_id' => ['nullable', 'integer'],
-            'client_name' => ['nullable', 'required_without:client_id', 'string', 'min:2', 'max:'.SalonClient::NAME_MAX_LENGTH, self::PLAIN_TEXT],
+            'client_name' => ['nullable', 'required_without:client_id', 'string', 'min:2', 'max:'.SalonClient::NAME_MAX_LENGTH, self::PLAIN_TEXT, 'not_regex:/[\p{Cc}\p{Cf}]/u'],
             'client_phone' => ['nullable', 'string', 'regex:/^\+?[0-9]{7,15}$/'],
             'note' => ['nullable', 'string', 'max:255', self::PLAIN_TEXT],
         ];

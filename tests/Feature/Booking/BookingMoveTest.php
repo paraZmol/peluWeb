@@ -216,13 +216,45 @@ describe('the team books for a client', function () {
         SalonClient::factory()->for($this->salon)->create(['name' => 'Rosa Díaz', 'phone' => '900111222']);
         SalonClient::factory()->for($this->salon)->create(['name' => 'Mario', 'phone' => '955000111']);
         SalonClient::factory()->for(Salon::factory()->create())->create(['name' => 'Rosa Ajena']);
-        $search = fn (string $text) => $this->actingAs($this->member->user)->getJson(route('agenda.bookings.clients', ['buscar' => $text]));
+        $search = fn (string $text) => $this->actingAs($this->owner)->getJson(route('agenda.bookings.clients', ['buscar' => $text]));
 
         expect($search('ros')->json('clients'))->toHaveCount(1)
             ->and($search('ros')->json('clients.0'))->toMatchArray(['name' => 'Rosa Díaz', 'phone' => '900111222', 'isVip' => false])
             ->and($search('9550')->json('clients.0.name'))->toBe('Mario')
             ->and($search('r')->json('clients'))->toBe([])
             ->and($search('%%')->json('clients'))->toBe([]);
+    });
+
+    it('lets a professional search only among the clients they have attended', function () {
+        $pedros = movable('10:00');
+        $kevins = movable('11:00', staff: $this->kevin);
+        SalonClient::withoutGlobalScopes()->whereKey($pedros->salon_client_id)->update(['name' => 'Rosa de Pedro']);
+        SalonClient::withoutGlobalScopes()->whereKey($kevins->salon_client_id)->update(['name' => 'Rosa de Kevin']);
+
+        $names = collect($this->actingAs($this->member->user)->getJson(route('agenda.bookings.clients', ['buscar' => 'rosa']))->json('clients'))->pluck('name');
+
+        expect($names->all())->toBe(['Rosa de Kevin']);
+    });
+
+    it('never attaches a visit to the record of an account just because the phone matches', function () {
+        $account = SalonClient::factory()->for($this->salon)->forUser($this->customer)->create(['phone' => '900111222']);
+
+        $this->actingAs($this->owner)->post(route('agenda.bookings.store'), agendaPayload(['client_name' => 'Doña Rosa', 'client_phone' => '900111222']));
+
+        $booking = Booking::withoutGlobalScopes()->sole();
+        expect($booking->salon_client_id)->not->toBe($account->id)
+            ->and(SalonClient::withoutGlobalScopes()->find($booking->salon_client_id)->only(['name', 'user_id']))->toBe(['name' => 'Doña Rosa', 'user_id' => null]);
+        $this->actingAs($this->customer)->get(route('bookings.show', $booking->code))->assertNotFound();
+    });
+
+    it('keeps a note written by the team away from the client', function () {
+        $account = SalonClient::factory()->for($this->salon)->forUser($this->customer)->create();
+
+        $this->actingAs($this->owner)->post(route('agenda.bookings.store'), agendaPayload(['client_id' => $account->id, 'client_name' => null, 'note' => 'Suele llegar tarde']));
+
+        $booking = Booking::withoutGlobalScopes()->sole();
+        $this->actingAs($this->customer)->get(route('bookings.show', $booking->code))
+            ->assertInertia(fn (Assert $page) => $page->where('booking.note', null));
     });
 });
 
@@ -422,6 +454,94 @@ describe('the team moves a booking from the agenda', function () {
         $this->actingAs($this->owner)->post(route('agenda.bookings.move', $this->pedros), [])->assertSessionHasErrors('start');
         $this->actingAs($this->owner)->getJson(route('agenda.bookings.slots', [$this->pedros, 'date' => 'mañana']))->assertStatus(422);
     });
+});
+
+describe('agenda on a clock', function () {
+    beforeEach(function () {
+        $this->pedros = movable('10:00');
+        $this->kevins = movable('16:00', '2026-10-09', staff: $this->kevin);
+    });
+
+    it('shows one professional\'s week, Monday to Sunday', function () {
+        $this->actingAs($this->owner)->get(route('agenda.index', ['vista' => 'semana', 'fecha' => '2026-10-08', 'profesional' => $this->kevin->id]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('view', 'semana')
+                ->where('weekDays', ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11'])
+                ->where('selectedStaffId', $this->kevin->id)
+                ->has('bookings', 1)
+                ->where('bookings.0.id', $this->kevins->id)
+                ->where('hours', ['from' => 9, 'to' => 18])
+                ->where('slotStep', 15));
+    });
+
+    it('picks a professional for the week when none was asked for', function () {
+        $this->actingAs($this->owner)->get(route('agenda.index', ['vista' => 'semana']))
+            ->assertInertia(fn (Assert $page) => $page->where('selectedStaffId', $this->pedro->id)->has('bookings', 1));
+    });
+
+    it('shows a professional only their own week, whatever they ask for', function () {
+        $this->actingAs($this->member->user)->get(route('agenda.index', ['vista' => 'semana', 'profesional' => $this->pedro->id]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('view', 'semana')
+                ->where('selectedStaffId', null)
+                ->where('staffOptions', [])
+                ->has('bookings', 1)
+                ->where('bookings.0.id', $this->kevins->id));
+    });
+
+    it('shows the day by professional only to whoever sees the team', function () {
+        $this->actingAs($this->owner)->get(route('agenda.index', ['vista' => 'tablero', 'fecha' => '2026-10-08', 'profesional' => $this->kevin->id]))
+            ->assertInertia(fn (Assert $page) => $page->where('view', 'tablero')->where('selectedStaffId', null)->has('bookings', 1));
+        $this->actingAs($this->member->user)->get(route('agenda.index', ['vista' => 'tablero']))
+            ->assertInertia(fn (Assert $page) => $page->where('view', 'lista'));
+        $this->actingAs($this->owner)->get(route('agenda.index', ['vista' => 'otra']))
+            ->assertInertia(fn (Assert $page) => $page->where('view', 'lista'));
+    });
+
+    it('widens the clock to fit a visit outside the working hours', function () {
+        StaffSchedule::withoutGlobalScopes()->forceCreate([
+            'salon_id' => $this->salon->id, 'staff_id' => $this->pedro->id, 'weekday' => 4, 'start_time' => '21:00', 'end_time' => '22:30', 'access_level' => ScheduleAccess::StaffOnly,
+        ]);
+
+        $this->actingAs($this->owner)->get(route('agenda.index', ['vista' => 'semana']))
+            ->assertInertia(fn (Assert $page) => $page->where('hours', ['from' => 9, 'to' => 23]));
+    });
+
+    it('moves a visit dropped on a day and time of the salon clock, and stays on the view', function () {
+        $this->actingAs($this->owner)
+            ->from(route('agenda.index', ['vista' => 'semana']))
+            ->post(route('agenda.bookings.move', $this->pedros), ['date' => '2026-10-09', 'time' => '11:15', 'stay' => true])
+            ->assertRedirect(route('agenda.index', ['vista' => 'semana']));
+
+        expect($this->pedros->refresh()->starts_at->getTimestamp())->toBe(moveAt('11:15', '2026-10-09'));
+    });
+
+    it('hands a visit dropped on a colleague\'s column to them, if the viewer may', function () {
+        $drop = ['date' => '2026-10-08', 'time' => '12:00', 'stay' => true];
+
+        $this->actingAs($this->member->user)->post(route('agenda.bookings.move', $this->kevins), [...$drop, 'date' => '2026-10-09', 'staff' => $this->pedro->id])->assertForbidden();
+        $this->actingAs($this->owner)->post(route('agenda.bookings.move', $this->pedros), [...$drop, 'staff' => $this->kevin->id]);
+
+        expect($this->pedros->refresh()->staff_id)->toBe($this->kevin->id)
+            ->and($this->pedros->starts_at->getTimestamp())->toBe(moveAt('12:00', '2026-10-08'))
+            ->and($this->kevins->refresh()->staff_id)->toBe($this->kevin->id);
+    });
+
+    it('refuses a drop on a taken time or with a broken day or time', function (array $payload, bool $isValidation) {
+        movable('12:00');
+
+        $response = $this->actingAs($this->owner)->post(route('agenda.bookings.move', $this->pedros), $payload);
+        $isValidation ? $response->assertSessionHasErrors() : $response->assertInertiaFlash('toast.type', 'error');
+
+        expect($this->pedros->refresh()->starts_at->getTimestamp())->toBe(moveAt('10:00', '2026-10-08'));
+    })->with([
+        'taken' => [['date' => '2026-10-08', 'time' => '12:15'], false],
+        'outside the hours' => [['date' => '2026-10-08', 'time' => '03:00'], false],
+        'no time' => [['date' => '2026-10-08'], true],
+        'bad time' => [['date' => '2026-10-08', 'time' => '25:99'], true],
+        'bad day' => [['date' => 'mañana', 'time' => '10:00'], true],
+        'nothing' => [[], true],
+    ]);
 });
 
 describe('a client moves their own booking', function () {
