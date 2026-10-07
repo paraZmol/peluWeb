@@ -1,7 +1,10 @@
 import { Link } from '@inertiajs/react';
 import {
+    BookHeart,
     CalendarClock,
+    CalendarDays,
     Contact,
+    Ticket,
     LayoutGrid,
     Scissors,
     Store,
@@ -22,6 +25,9 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { dashboard } from '@/routes';
+import { index as agenda } from '@/routes/agenda';
+import { index as myBookings } from '@/routes/bookings';
+import { index as clients } from '@/routes/clients';
 import { edit as editSalon } from '@/routes/salon';
 import { index as services } from '@/routes/services';
 import { index as staff } from '@/routes/staff';
@@ -34,6 +40,9 @@ export function AppSidebar() {
 
     const mainNavItems: NavItem[] = [
         { title: 'Panel', href: dashboard(), icon: LayoutGrid },
+        ...(currentSalon
+            ? [{ title: 'Agenda', href: agenda(), icon: CalendarDays }]
+            : []),
         ...(currentSalon?.hasStaffProfile
             ? [
                   {
@@ -49,12 +58,17 @@ export function AppSidebar() {
         ...(can('manage_services')
             ? [{ title: 'Servicios', href: services(), icon: Scissors }]
             : []),
+        ...(can('manage_vip_clients')
+            ? [{ title: 'Clientes', href: clients(), icon: BookHeart }]
+            : []),
         ...(isOwner
             ? [
                   { title: 'Profesionales', href: staff(), icon: Contact },
                   { title: 'Equipo', href: team(), icon: Users },
               ]
             : []),
+        // Everyone can also be a client of some salon.
+        { title: 'Mis reservas', href: myBookings(), icon: Ticket },
     ];
 
     return (

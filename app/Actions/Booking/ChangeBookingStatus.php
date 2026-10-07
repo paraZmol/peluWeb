@@ -10,7 +10,6 @@ use App\Enums\ClientLevel;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\BookingEvent;
-use App\Models\BookingService;
 use App\Models\Salon;
 use App\Models\Staff;
 use App\Models\User;
@@ -155,11 +154,17 @@ class ChangeBookingStatus
         $localDate = $booking->starts_at->setTimezone($salon->timezone);
         $day = new TimeSpan($localDate->startOfDay()->getTimestamp(), $localDate->addDay()->startOfDay()->getTimestamp());
 
-        $shape = BookingShape::fromServices($booking->services()->get()->map(fn (BookingService $service): array => [
-            'active' => $service->active_minutes,
-            'idle' => $service->idle_minutes,
-            'finish' => $service->finish_minutes,
-        ])->all());
+        $durations = [];
+
+        foreach ($booking->services()->get() as $service) {
+            $durations[] = [
+                'active' => $service->active_minutes,
+                'idle' => $service->idle_minutes,
+                'finish' => $service->finish_minutes,
+            ];
+        }
+
+        $shape = BookingShape::fromServices($durations);
 
         return $this->calculator->fits(
             $booking->starts_at->getTimestamp(),

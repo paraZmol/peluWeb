@@ -55,6 +55,10 @@ class PublicSalonResource extends JsonResource
             'coverUrl' => $images->url($this->cover_path),
             'brand' => $this->brandTokens(),
             'whatsappUrl' => WhatsApp::link($this->phone, "Hola, vi {$this->name} en peluWeb y quisiera reservar."),
+            // Online booking needs someone with working hours and a salon that takes bookings.
+            'bookingUrl' => $this->openingHours !== null && $this->isWritable() && $this->accepts_online_bookings
+                ? route('salons.booking.create', $this->slug)
+                : null,
             'instagramUrl' => $this->instagram === null ? null : "https://instagram.com/{$this->instagram}",
             'address' => collect([$this->address, $this->district, $this->city])->filter()->join(', ') ?: null,
             'location' => $this->hasLocation() ? [

@@ -34,6 +34,7 @@ export default function Salon({ salon }: Props) {
                 {/* Not inside Reveal: a transformed ancestor would break `fixed` on mobile */}
                 <StickyActions
                     salonName={salon.name}
+                    bookingUrl={salon.bookingUrl}
                     whatsappUrl={salon.whatsappUrl}
                     instagramUrl={salon.instagramUrl}
                     directionsUrl={salon.location?.directionsUrl ?? null}
@@ -42,6 +43,7 @@ export default function Salon({ salon }: Props) {
                 <Reveal order={2} className={SECTION_CLASS}>
                     <ServiceList
                         groups={salon.serviceGroups}
+                        bookingUrl={salon.bookingUrl}
                         whatsappUrl={salon.whatsappUrl}
                     />
                 </Reveal>

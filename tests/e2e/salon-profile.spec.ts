@@ -29,7 +29,7 @@ test.describe('Perfil y página pública del salón', () => {
         await expect(page.getByText('Datos del salón guardados')).toBeVisible();
 
         await page.goto('/s/salon-uno');
-        const cta = page.getByRole('link', { name: 'Reservar por WhatsApp' });
+        const cta = page.getByRole('link', { name: 'Reservar', exact: true });
         await expect(cta).toBeVisible();
         await expect(cta).toHaveCSS('background-color', 'rgb(29, 78, 216)');
         await expect(

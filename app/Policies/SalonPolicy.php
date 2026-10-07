@@ -18,6 +18,11 @@ class SalonPolicy
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageServices) ?? false;
     }
 
+    public function manageVipClients(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageVipClients) ?? false;
+    }
+
     public function update(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageSalonProfile) ?? false;

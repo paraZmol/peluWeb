@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { ChevronDown, Clock } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -7,9 +8,11 @@ import type { PublicService } from './types';
 
 type Props = {
     service: PublicService;
+    /** Online booking wizard; falls back to WhatsApp when null. */
+    bookingUrl: string | null;
 };
 
-export function ServiceRow({ service }: Props) {
+export function ServiceRow({ service, bookingUrl }: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const variantsId = useId();
     const hasVariantList = service.hasVariants && service.variants.length > 0;
@@ -45,7 +48,23 @@ export function ServiceRow({ service }: Props) {
                 </p>
             )}
 
-            {service.whatsappUrl && (
+            {bookingUrl && (
+                <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-11 self-start rounded-full md:h-9"
+                >
+                    <Link
+                        href={`${bookingUrl}?servicio=${service.id}`}
+                        aria-label={`Reservar ${service.name}`}
+                    >
+                        Reservar
+                    </Link>
+                </Button>
+            )}
+
+            {!bookingUrl && service.whatsappUrl && (
                 <Button
                     asChild
                     variant="outline"

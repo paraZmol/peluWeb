@@ -2,14 +2,20 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Booking\CreateBooking;
+use App\Actions\Booking\ResolveSalonClient;
 use App\Actions\Salon\AddHoliday;
 use App\Actions\Staff\AddTimeOff;
 use App\Actions\Staff\LinkStaffProfile;
 use App\Actions\Staff\ReplaceWeeklySchedule;
 use App\Actions\Staff\SaveStaff;
+use App\Data\Booking\NewBooking;
+use App\Enums\BookingSource;
 use App\Enums\ScheduleAccess;
 use App\Enums\TimeOffReason;
+use App\Exceptions\BookingException;
 use App\Models\Salon;
+use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
 use App\Support\CurrentSalon;
@@ -33,6 +39,8 @@ class DemoScheduleSeeder extends Seeder
         private readonly ReplaceWeeklySchedule $replaceSchedule,
         private readonly AddTimeOff $addTimeOff,
         private readonly AddHoliday $addHoliday,
+        private readonly CreateBooking $createBooking,
+        private readonly ResolveSalonClient $resolveClient,
         private readonly CurrentSalon $currentSalon,
     ) {}
 
@@ -49,7 +57,9 @@ class DemoScheduleSeeder extends Seeder
             $this->addHoliday->handle($salon, $salon->localNow()->month(12)->day(25)->toDateString(), 'Navidad');
         }
 
-        $this->barbershopTeam(Salon::query()->where('slug', 'barberia-don-lucho')->firstOrFail());
+        $barbershop = Salon::query()->where('slug', 'barberia-don-lucho')->firstOrFail();
+        $this->barbershopTeam($barbershop);
+        $this->barbershopBookings($barbershop);
         $this->currentSalon->set(null);
     }
 
@@ -76,6 +86,44 @@ class DemoScheduleSeeder extends Seeder
 
         $martin = $this->saveStaff->handle($salon, null, ['name' => 'Martín Soto', 'title' => 'Barbero clásico']);
         $this->schedule($martin, [1, 3, 5, self::SATURDAY], [['09:00', '17:00']]);
+    }
+
+    /**
+     * The barbershop asks for a deposit, and the demo client already has a
+     * visit booked, so the agenda and "Mis reservas" are not empty.
+     */
+    private function barbershopBookings(Salon $salon): void
+    {
+        $salon->forceFill([
+            'deposit_percent' => 30,
+            'payment_instructions' => 'Yape o Plin al 987 654 321, a nombre de Luis Quispe.',
+        ])->save();
+
+        $client = User::where('email', 'cliente@peluweb.test')->first();
+        $service = Service::query()->where('is_addon', false)->orderBy('position')->first();
+
+        if ($client === null || $service === null) {
+            return;
+        }
+
+        // The first working day from tomorrow on, at 11:00 on the salon's clock.
+        foreach (range(1, 7) as $daysAhead) {
+            try {
+                $this->createBooking->handle(new NewBooking(
+                    salon: $salon,
+                    client: $this->resolveClient->forUser($salon, $client),
+                    selections: [['service_id' => $service->id, 'variant_id' => $service->variants()->value('id')]],
+                    staff: null,
+                    startsAt: $salon->localNow()->addDays($daysAhead)->setTime(11, 0)->utc(),
+                    source: BookingSource::Staff,
+                    note: 'Degradado bajo, como la última vez',
+                ));
+
+                return;
+            } catch (BookingException) {
+                continue;
+            }
+        }
     }
 
     /**

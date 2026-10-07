@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Actions\Salon\UpdateSalonDetails;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
+use App\Http\Requests\Owner\UpdateSalonBookingRequest;
 use App\Http\Requests\Owner\UpdateSalonLocationRequest;
 use App\Http\Requests\Owner\UpdateSalonProfileRequest;
 use App\Http\Resources\SalonSettingsResource;
@@ -21,6 +22,7 @@ class SalonSettingsController extends SalonAreaController
         return Inertia::render('owner/salon/edit', [
             'salon' => new SalonSettingsResource($salon),
             'businessTypes' => collect(BusinessType::cases())->map(fn (BusinessType $type) => ['value' => $type->value, 'label' => $type->label()]),
+            'slotSteps' => UpdateSalonBookingRequest::SLOT_STEPS,
             'clienteles' => collect(Clientele::cases())->map(fn (Clientele $clientele) => ['value' => $clientele->value, 'label' => $clientele->label()]),
         ]);
     }
@@ -29,6 +31,14 @@ class SalonSettingsController extends SalonAreaController
     {
         $update->handle($this->salon('update'), $request->validated());
         $this->toast('Datos del salón guardados.');
+
+        return to_route('salon.edit');
+    }
+
+    public function updateBooking(UpdateSalonBookingRequest $request, UpdateSalonDetails $update): RedirectResponse
+    {
+        $update->handle($this->salon('update'), $request->validated());
+        $this->toast('Reglas de reserva guardadas.');
 
         return to_route('salon.edit');
     }

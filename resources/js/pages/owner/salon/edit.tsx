@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { BookingSection } from '@/components/salon-settings/booking-section';
 import { BrandingSection } from '@/components/salon-settings/branding-section';
 import { GallerySection } from '@/components/salon-settings/gallery-section';
 import { LocationSection } from '@/components/salon-settings/location-section';
@@ -12,6 +13,7 @@ type Props = {
     salon: SalonSettings;
     businessTypes: Option[];
     clienteles: Option[];
+    slotSteps: number[];
 };
 
 const sections = [
@@ -20,9 +22,15 @@ const sections = [
     ['marca', 'Marca'],
     ['ubicacion', 'Ubicación'],
     ['galeria', 'Galería'],
+    ['reservas', 'Reservas'],
 ] as const;
 
-export default function EditSalon({ salon, businessTypes, clienteles }: Props) {
+export default function EditSalon({
+    salon,
+    businessTypes,
+    clienteles,
+    slotSteps,
+}: Props) {
     return (
         <>
             <Head title="Mi salón" />
@@ -59,6 +67,7 @@ export default function EditSalon({ salon, businessTypes, clienteles }: Props) {
                 <BrandingSection salon={salon} />
                 <LocationSection salon={salon} />
                 <GallerySection salon={salon} />
+                <BookingSection salon={salon} slotSteps={slotSteps} />
             </div>
         </>
     );

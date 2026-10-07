@@ -42,6 +42,17 @@ class SalonSettingsResource extends JsonResource
             'city' => $this->city,
             'latitude' => $this->latitude === null ? null : (float) $this->latitude,
             'longitude' => $this->longitude === null ? null : (float) $this->longitude,
+            'booking' => [
+                'acceptsOnlineBookings' => $this->accepts_online_bookings,
+                'minLeadMinutes' => $this->min_lead_minutes,
+                'maxDaysAhead' => $this->max_days_ahead,
+                'slotStepMinutes' => $this->slot_step_minutes,
+                'cancelWindowHours' => $this->cancel_window_hours,
+                'depositPercent' => $this->deposit_percent,
+                'vipDepositPercent' => $this->vip_deposit_percent,
+                'holdMinutes' => $this->hold_minutes,
+                'paymentInstructions' => $this->payment_instructions,
+            ],
             'photos' => $this->photos->map(fn (SalonPhoto $photo) => [
                 'id' => $photo->id,
                 'url' => $photo->url,

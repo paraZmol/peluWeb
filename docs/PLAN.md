@@ -342,6 +342,7 @@ Inicio previsto: **lunes 2026-10-05**.
 | `qa-tester` | Al terminar cada paso | Que cada criterio funcione por rol; tests Pest y Playwright, móvil y escritorio, claro y oscuro |
 | `booking-breaker` | Cada vez que se toca la agenda | Dobles reservas, concurrencia, zonas horarias, fugas de horarios VIP |
 | `security-auditor` | Auth, roles, subidas, dinero, consultas por salón; cierre de fase | Fugas entre salones, IDOR, escalada, XSS, SQLi, dependencias |
+| `visual-designer` | Cada pantalla nueva o cambiada, antes del ux-reviewer | Que se vea profesional: mira capturas reales y **corrige** jerarquía, espaciado, tipografía, color, estados y animaciones (solo presentación) |
 | `ux-reviewer` | Cada pantalla | Intuitivo, 360 px, contraste, animaciones, lenguaje neutro |
 
 **Definición de terminado:** tests verdes, phpstan y lint limpios, agentes aplicables sin hallazgos
@@ -378,6 +379,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-04 | Portada de ventas adelantada de la Fase 7 a la 2.8 | Pedido del usuario: al entrar solo se veía "crear cuenta", sin menú ni explicación del producto |
 | 2026-10-07 | Fase 3: la tabla pivote se llama `service_staff` (orden alfabético, convención de Laravel) y lo que cada profesional ajusta es el **tiempo de trabajo** del servicio; el perfil de profesional se crea solo para el dueño y para quien acepta una invitación de personal; el paso 3.5 (aviso de reservas afectadas) pasa a 4.11 | Coherencia con la skill `clean-code`; menos pasos manuales para el dueño; aún no existen reservas |
 | 2026-10-07 | Cierre de la Fase 3: el horario público excluye las franjas solo-VIP; qué servicios hace cada profesional lo decide quien gestiona servicios (el profesional solo ajusta su tiempo); ausencias, baja y servicios toman el mismo bloqueo del profesional que usará la reserva | Hallazgos de security-auditor y qa-tester |
+| 2026-10-08 | Nuevo agente `visual-designer`, exclusivo para la calidad visual del frontend (edita la presentación; el ux-reviewer sigue siendo de solo lectura) | Pedido del usuario: que la app se vea profesional y adecuada |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

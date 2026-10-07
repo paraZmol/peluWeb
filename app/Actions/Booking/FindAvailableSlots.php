@@ -60,6 +60,8 @@ class FindAvailableSlots
     public function candidates(Salon $salon, ?Staff $staff): Collection
     {
         return Staff::withoutGlobalScope('salon')
+            // The linked account's photo is the fallback for the professional's.
+            ->with('user')
             ->where('salon_id', $salon->id)
             ->where('is_active', true)
             ->when($staff !== null, fn ($query) => $query->whereKey($staff?->id))

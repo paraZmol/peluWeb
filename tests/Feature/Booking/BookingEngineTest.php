@@ -314,12 +314,6 @@ describe('VIP and team-only hours', function () {
             ->and(book('10:30', ['staff' => $this->vipStaff])->deposit_cents)->toBe(1750);
     });
 
-    it('is VIP per salon: the same person is a regular client elsewhere', function () {
-        $elsewhere = SalonClient::factory()->for(Salon::factory()->create())->vip()->create();
-
-        expect(fn () => book('12:00', ['staff' => $this->vipStaff, 'client' => $elsewhere]))->toThrow(BookingException::class);
-    })->skip('A client of another salon cannot reach this action: covered at the HTTP layer.');
-
     it('lets the team use every range', function () {
         expect(book('18:00', ['staff' => $this->vipStaff, 'source' => BookingSource::Staff])->status)->toBe(BookingStatus::Confirmed);
     });

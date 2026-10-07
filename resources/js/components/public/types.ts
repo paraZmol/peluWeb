@@ -58,6 +58,8 @@ export type PublicSalon = {
     coverUrl: string | null;
     brand: BrandTokens | null;
     whatsappUrl: string | null;
+    /** Online booking wizard; null when the salon cannot take bookings yet. */
+    bookingUrl: string | null;
     instagramUrl: string | null;
     address: string | null;
     location: PublicLocation | null;

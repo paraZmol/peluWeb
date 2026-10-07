@@ -1,0 +1,128 @@
+import { Head, router } from '@inertiajs/react';
+import { Search, Star, Users } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { index } from '@/routes/clients';
+import { update as updateVip } from '@/routes/clients/vip';
+
+type Client = {
+    id: number;
+    name: string;
+    phone: string | null;
+    isVip: boolean;
+    hasAccount: boolean;
+    bookingsCount: number;
+    noShows: number;
+};
+
+type Props = { clients: Client[]; search: string; isTruncated: boolean };
+
+export default function Clients({ clients, search, isTruncated }: Props) {
+    const [term, setTerm] = useState(search);
+
+    const submit = (event: React.FormEvent) => {
+        event.preventDefault();
+        router.get(index(), term ? { buscar: term } : {}, {
+            preserveState: true,
+        });
+    };
+
+    return (
+        <>
+            <Head title="Clientes" />
+
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
+                <div>
+                    <h1 className="text-2xl font-semibold">Clientes</h1>
+                    <p className="text-sm text-muted-foreground">
+                        Quienes han reservado contigo. Marca como VIP a quien
+                        quieras darle acceso a tus horarios reservados.
+                    </p>
+                </div>
+
+                <form onSubmit={submit} role="search" className="flex gap-2">
+                    <Input
+                        type="search"
+                        aria-label="Buscar por nombre o teléfono"
+                        placeholder="Buscar por nombre o teléfono"
+                        value={term}
+                        onChange={(e) => setTerm(e.target.value)}
+                    />
+                    <Button type="submit" variant="outline">
+                        <Search /> Buscar
+                    </Button>
+                </form>
+
+                {clients.length === 0 ? (
+                    <p className="flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+                        <Users className="size-6" aria-hidden />
+                        {search
+                            ? 'Nadie coincide con esa búsqueda.'
+                            : 'Aquí aparecerán tus clientes cuando hagan su primera reserva.'}
+                    </p>
+                ) : (
+                    <ul className="divide-y rounded-xl border bg-card">
+                        {clients.map((client) => (
+                            <li
+                                key={client.id}
+                                className="flex items-center gap-3 p-4"
+                            >
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-medium break-words">
+                                        {client.name}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground tabular-nums">
+                                        {[
+                                            client.phone,
+                                            `${client.bookingsCount} ${client.bookingsCount === 1 ? 'reserva' : 'reservas'}`,
+                                            client.noShows > 0
+                                                ? `faltó ${client.noShows}`
+                                                : null,
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' · ')}
+                                    </p>
+                                </div>
+                                <Button
+                                    variant={
+                                        client.isVip ? 'default' : 'outline'
+                                    }
+                                    aria-pressed={client.isVip}
+                                    aria-label={`${client.name}: ${client.isVip ? 'quitar VIP' : 'marcar como VIP'}`}
+                                    onClick={() =>
+                                        router.patch(
+                                            updateVip(client.id),
+                                            { is_vip: !client.isVip },
+                                            { preserveScroll: true },
+                                        )
+                                    }
+                                >
+                                    <Star
+                                        className={
+                                            client.isVip
+                                                ? 'fill-current'
+                                                : undefined
+                                        }
+                                    />
+                                    VIP
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+                {isTruncated && (
+                    <p className="text-center text-sm text-muted-foreground">
+                        Mostramos los primeros 50. Usa el buscador para
+                        encontrar a alguien más.
+                    </p>
+                )}
+            </div>
+        </>
+    );
+}
+
+Clients.layout = {
+    breadcrumbs: [{ title: 'Clientes', href: index() }],
+};

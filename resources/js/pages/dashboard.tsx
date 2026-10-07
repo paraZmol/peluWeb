@@ -6,6 +6,7 @@ import type { SetupStep } from '@/components/salon/setup-checklist';
 import { Button } from '@/components/ui/button';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { dashboard } from '@/routes';
+import { index as agenda } from '@/routes/agenda';
 import { create as createSalon } from '@/routes/salons';
 import { index as team } from '@/routes/team';
 
@@ -48,14 +49,16 @@ export default function Dashboard({ setup, publicUrl }: Props) {
 
                 {currentSalon ? (
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="flex flex-col gap-2 rounded-xl border bg-card p-5">
+                        <Link
+                            href={agenda()}
+                            className="flex flex-col gap-2 rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
+                        >
                             <CalendarDays className="size-5 text-primary" />
                             <h2 className="font-semibold">Agenda de hoy</h2>
                             <p className="text-sm text-muted-foreground">
-                                Aquí verás tus próximas citas cuando activemos
-                                las reservas.
+                                Las citas del día y lo que falta confirmar.
                             </p>
-                        </div>
+                        </Link>
                         {isOwner && (
                             <Link
                                 href={team()}

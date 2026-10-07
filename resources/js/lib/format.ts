@@ -35,3 +35,14 @@ export function formatDate(date: string): string {
 
     return dayFormat.format(new Date(year, month - 1, day));
 }
+
+/** Adds amounts sent as text ("35.50") in whole céntimos, never as floats. */
+export function sumAmounts(amounts: string[]): string {
+    const cents = amounts.reduce((total, amount) => {
+        const [units, decimals = ''] = amount.split('.');
+
+        return total + Number(units) * 100 + Number(decimals.padEnd(2, '0'));
+    }, 0);
+
+    return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`;
+}

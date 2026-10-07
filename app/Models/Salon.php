@@ -56,6 +56,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'name', 'business_type', 'clientele', 'phone', 'timezone', 'description', 'instagram',
     'address', 'district', 'city', 'latitude', 'longitude',
+    'accepts_online_bookings', 'min_lead_minutes', 'max_days_ahead', 'slot_step_minutes',
+    'cancel_window_hours', 'deposit_percent', 'vip_deposit_percent', 'hold_minutes', 'payment_instructions',
 ])]
 class Salon extends Model
 {

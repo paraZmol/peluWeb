@@ -5,10 +5,11 @@ import type { PublicServiceGroup } from './types';
 
 type Props = {
     groups: PublicServiceGroup[];
+    bookingUrl: string | null;
     whatsappUrl: string | null;
 };
 
-export function ServiceList({ groups, whatsappUrl }: Props) {
+export function ServiceList({ groups, bookingUrl, whatsappUrl }: Props) {
     const visibleGroups = groups.filter((group) => group.services.length > 0);
 
     return (
@@ -48,6 +49,7 @@ export function ServiceList({ groups, whatsappUrl }: Props) {
                                 <ServiceRow
                                     key={service.id}
                                     service={service}
+                                    bookingUrl={bookingUrl}
                                 />
                             ))}
                         </ul>

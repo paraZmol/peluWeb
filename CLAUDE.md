@@ -67,8 +67,11 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
 - Lista de la sección 8 de la skill `clean-code` y `/simplify` sobre lo cambiado.
 - Lanzar el agente **qa-tester** sobre el paso. Si tocó agenda → **booking-breaker**.
   Si tocó auth, roles, subidas, dinero o consultas por salón → **security-auditor**.
-  Si tocó una pantalla → **ux-reviewer**.
-- Al cerrar cada fase: los cuatro agentes en paralelo, y corregir CRÍTICO/ALTO antes de seguir.
+  Si tocó una pantalla → **visual-designer** (mira capturas y corrige la presentación para que
+  se vea profesional) y después **ux-reviewer** (solo opina).
+- Al cerrar cada fase: todos los agentes, y corregir CRÍTICO/ALTO antes de seguir. Solo uno a la
+  vez puede correr tests o Playwright (comparten `peluweb_test` y el puerto 8123); los de solo
+  lectura (security-auditor, ux-reviewer) sí pueden ir en paralelo.
 
 ===
 

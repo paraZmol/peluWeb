@@ -1,7 +1,20 @@
 import type { BrandTokens } from '@/types';
 
 /** Mirrors App\Http\Resources\SalonSettingsResource. */
+export type BookingSettings = {
+    acceptsOnlineBookings: boolean;
+    minLeadMinutes: number;
+    maxDaysAhead: number;
+    slotStepMinutes: number;
+    cancelWindowHours: number;
+    depositPercent: number;
+    vipDepositPercent: number | null;
+    holdMinutes: number;
+    paymentInstructions: string | null;
+};
+
 export type SalonSettings = {
+    booking: BookingSettings;
     name: string;
     slug: string;
     publicUrl: string;
