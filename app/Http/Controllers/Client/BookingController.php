@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Client;
 use App\Actions\Booking\ChangeBookingStatus;
 use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\RescheduleBooking;
+use App\Actions\Booking\UpdateReferencePhoto;
 use App\Data\Booking\BookingMove;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\BookingDayRequest;
 use App\Http\Requests\Client\MoveBookingRequest;
+use App\Http\Requests\Owner\SalonImageRequest;
 use App\Http\Resources\AvailabilityPayload;
 use App\Http\Resources\ClientBookingResource;
 use App\Models\Booking;
@@ -81,6 +83,27 @@ class BookingController extends Controller
         $status->cancel($this->find($request, $code), $request->user(), byClient: true);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Reserva cancelada.']);
+
+        return to_route('bookings.show', $code);
+    }
+
+    /**
+     * "Mi estilo": a picture of what the client wants, for whoever attends.
+     */
+    public function storePhoto(SalonImageRequest $request, string $code, UpdateReferencePhoto $photo): RedirectResponse
+    {
+        $photo->handle($this->find($request, $code), $request->file('image'));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Foto guardada. La verá quien te atienda.']);
+
+        return to_route('bookings.show', $code);
+    }
+
+    public function destroyPhoto(Request $request, string $code, UpdateReferencePhoto $photo): RedirectResponse
+    {
+        $photo->remove($this->find($request, $code));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Foto eliminada.']);
 
         return to_route('bookings.show', $code);
     }

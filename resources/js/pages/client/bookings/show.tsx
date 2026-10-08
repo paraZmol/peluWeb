@@ -1,8 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import { CalendarClock, MessageCircle, Navigation } from 'lucide-react';
+import { CalendarClock, MessageCircle, Navigation, Repeat } from 'lucide-react';
 import { BookingSummary } from '@/components/booking/booking-summary';
 import { DepositCard } from '@/components/booking/deposit-card';
 import { MoveDialog } from '@/components/booking/move-dialog';
+import { ReferencePhoto } from '@/components/booking/reference-photo';
 import { StatusBadge } from '@/components/booking/status-badge';
 import { SuccessCheck } from '@/components/booking/success-check';
 import type { BookingDay, ClientBooking } from '@/components/booking/types';
@@ -10,7 +11,7 @@ import { BrandTheme } from '@/components/salon/brand-theme';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
 import { cancel, index, move, slots } from '@/routes/bookings';
-import { show as salonPage } from '@/routes/salons';
+import { create as bookAgain } from '@/routes/salons/booking';
 
 type Props = { booking: ClientBooking; days: BookingDay[] };
 
@@ -113,12 +114,22 @@ export default function BookingShow({ booking, days }: Props) {
                     )}
                     {!isActive && (
                         <Button asChild className="rounded-full">
-                            <Link href={salonPage(salon.slug)}>
-                                Reservar de nuevo
+                            <Link
+                                href={bookAgain(salon.slug, {
+                                    query: { repetir: booking.code },
+                                })}
+                            >
+                                <Repeat aria-hidden /> Repetir esta cita
                             </Link>
                         </Button>
                     )}
                 </div>
+
+                <ReferencePhoto
+                    code={booking.code}
+                    url={booking.referencePhotoUrl}
+                    canChange={booking.canAttachPhoto}
+                />
 
                 {booking.canCancel && (
                     <div className="flex items-center justify-between gap-3 border-t pt-4 [&_button]:h-11 sm:[&_button]:h-9">

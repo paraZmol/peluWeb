@@ -76,6 +76,51 @@ test.describe('Reservar en línea', () => {
         assertNoErrors();
     });
 
+    test('repetir una cita abre el asistente ya en "¿Cuándo?", y se puede adjuntar una foto', async ({
+        page,
+    }, testInfo) => {
+        test.skip(
+            testInfo.project.name !== 'movil',
+            'un solo flujo que modifica datos',
+        );
+        const assertNoErrors = watchForErrors(page);
+
+        await login(page, client.email, client.password);
+        await expect(page).toHaveURL(/dashboard$/);
+        await page.goto('/s/salon-uno/reservar');
+        await chooseUntilConfirm(page);
+        await page.getByRole('button', { name: 'Confirmar reserva' }).click();
+        await expect(page).toHaveURL(/\/mis-reservas\/[A-Z0-9]{8}$/);
+        const code = page.url().split('/').pop();
+
+        // "Mi estilo": a 1x1 PNG is enough to go through the real upload.
+        await page.getByLabel('Subir foto').setInputFiles({
+            name: 'estilo.png',
+            mimeType: 'image/png',
+            buffer: Buffer.from(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+                'base64',
+            ),
+        });
+        await expect(
+            page.getByAltText('Foto de referencia de tu estilo'),
+        ).toBeVisible();
+
+        await page.goto(`/s/salon-uno/reservar?repetir=${code}`);
+        await expect(
+            page.getByRole('heading', { name: '¿Cuándo?' }),
+        ).toBeVisible();
+        await expect(page.getByText('Con Siempre Abierto')).toBeVisible();
+
+        await page.goto(`/mis-reservas/${code}`);
+        await page.getByRole('button', { name: 'Cancelar reserva' }).click();
+        await page.getByRole('button', { name: 'Sí, cancelar' }).click();
+        await expect(
+            page.getByText('Cancelada', { exact: true }),
+        ).toBeVisible();
+        assertNoErrors();
+    });
+
     test('un visitante elige todo y se le pide entrar solo para confirmar', async ({
         page,
     }) => {

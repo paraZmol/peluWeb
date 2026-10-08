@@ -83,6 +83,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('mis-reservas/{code}/mover', [ClientBookingController::class, 'move'])
         ->middleware('throttle:10,1,booking-move')
         ->name('bookings.move');
+    Route::post('mis-reservas/{code}/foto', [ClientBookingController::class, 'storePhoto'])
+        ->middleware('throttle:10,1,booking-photo')
+        ->name('bookings.photo.store');
+    Route::delete('mis-reservas/{code}/foto', [ClientBookingController::class, 'destroyPhoto'])->name('bookings.photo.destroy');
 
     Route::post('invitaciones/{token}', [InvitationAcceptanceController::class, 'store'])
         ->middleware('throttle:10,1')

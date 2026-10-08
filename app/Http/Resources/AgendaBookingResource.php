@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Support\Images\ImageStore;
 use App\Support\Money;
 use App\Support\WhatsApp;
 use Carbon\CarbonImmutable;
@@ -60,6 +61,7 @@ class AgendaBookingResource extends JsonResource
                 'isPaid' => $this->deposit_paid_at !== null,
             ],
             'note' => $this->client_note,
+            'referencePhotoUrl' => app(ImageStore::class)->url($this->reference_photo_path),
             'actions' => $this->actions($request, $status, $now),
         ];
     }

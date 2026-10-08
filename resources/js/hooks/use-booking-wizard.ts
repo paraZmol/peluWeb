@@ -3,6 +3,7 @@ import { sumAmounts } from '@/lib/format';
 import type {
     BookableSalon,
     BookableService,
+    RepeatBooking,
     Selection,
     Slot,
 } from '@/components/booking/types';
@@ -47,6 +48,8 @@ function restore(slug: string): State | null {
 type Options = {
     salon: BookableSalon;
     preselectedServiceId?: number | null;
+    /** "Repetir cita": start with what was booked before. */
+    repeat?: RepeatBooking | null;
     /** Coming back from signing in: pick up where the visitor left. */
     resume?: boolean;
     /** Keep the choices in the browser, to survive signing in. */
@@ -56,6 +59,7 @@ type Options = {
 export function useBookingWizard({
     salon,
     preselectedServiceId = null,
+    repeat = null,
     resume = false,
     persist = true,
 }: Options) {
@@ -64,6 +68,29 @@ export function useBookingWizard({
         services.find((service) => service.id === id);
 
     const [state, setState] = useState<State>(() => {
+        const repeated = (repeat?.serviceIds ?? [])
+            .map(find)
+            .filter((service) => service !== undefined);
+
+        if (repeated.length > 0) {
+            // Straight to choosing a time when the same person still does it all.
+            const staffId = repeated.every((service) =>
+                service.staffIds.includes(repeat?.staffId ?? 0),
+            )
+                ? (repeat?.staffId ?? null)
+                : null;
+
+            return {
+                ...EMPTY,
+                selections: repeated.map((service) => ({
+                    serviceId: service.id,
+                    variantId: service.variants[0]?.id ?? null,
+                })),
+                staffId,
+                step: staffId === null ? 1 : 2,
+            };
+        }
+
         const preselected = find(preselectedServiceId ?? 0);
 
         return {

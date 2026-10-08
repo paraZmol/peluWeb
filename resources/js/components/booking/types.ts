@@ -47,6 +47,9 @@ export type Viewer = {
     name: string | null;
 };
 
+/** Services and professional of an earlier booking, to start the wizard from. */
+export type RepeatBooking = { serviceIds: number[]; staffId: number | null };
+
 export type Selection = { serviceId: number; variantId: number | null };
 
 export type Slot = {
@@ -107,6 +110,8 @@ export type ClientBooking = {
         whatsappUrl: string | null;
         isRefundable: boolean | null;
     } | null;
+    referencePhotoUrl: string | null;
+    canAttachPhoto: boolean;
     canCancel: boolean;
     canMove: boolean;
     cancelForfeitsDeposit: boolean;
@@ -154,5 +159,6 @@ export type AgendaBooking = {
     price: string;
     deposit: { amount: string; isPaid: boolean } | null;
     note: string | null;
+    referencePhotoUrl: string | null;
     actions: AgendaAction[];
 };

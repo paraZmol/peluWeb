@@ -15,13 +15,16 @@ use App\Http\Requests\Public\AvailabilityRequest;
 use App\Http\Requests\Public\StoreBookingRequest;
 use App\Http\Resources\AvailabilityPayload;
 use App\Http\Resources\BookableSalonResource;
+use App\Models\Booking;
 use App\Models\Salon;
 use App\Models\Service;
+use App\Models\Staff;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,6 +58,7 @@ class BookingController extends Controller
             'isOpen' => $salon->isWritable() && $salon->accepts_online_bookings,
             'viewer' => $this->viewer($request->user()),
             'preselectedServiceId' => $request->integer('servicio') ?: null,
+            'repeat' => $this->repeat($request, $salon, $services, $staff),
         ]);
     }
 
@@ -116,6 +120,50 @@ class BookingController extends Controller
     public function resume(Salon $salon): RedirectResponse
     {
         return to_route('salons.booking.create', ['salon' => $salon->slug, 'continuar' => 1]);
+    }
+
+    /**
+     * "Repetir cita": the services and the professional of one of the
+     * viewer's own bookings in this salon, as far as they still exist.
+     * Only a starting point for the wizard: booking checks everything again.
+     *
+     * @param  Collection<int, Service>  $services  the salon's active services
+     * @param  Collection<int, Staff>  $staff  the salon's active professionals
+     * @return array{serviceIds: list<int>, staffId: int|null}|null
+     */
+    private function repeat(Request $request, Salon $salon, Collection $services, Collection $staff): ?array
+    {
+        $code = $request->string('repetir')->toString();
+        $user = $request->user();
+
+        if ($code === '' || $user === null) {
+            return null;
+        }
+
+        $booking = Booking::withoutGlobalScope('salon')
+            ->where('salon_id', $salon->id)
+            ->where('code', $code)
+            ->whereHas('client', fn ($client) => $client->withoutGlobalScope('salon')->where('user_id', $user->id))
+            ->with('services')
+            ->first();
+
+        if ($booking === null) {
+            return null;
+        }
+
+        $serviceIds = [];
+
+        foreach ($booking->services as $booked) {
+            if ($booked->service_id !== null && $services->contains('id', $booked->service_id)) {
+                $serviceIds[] = $booked->service_id;
+            }
+        }
+
+        if ($serviceIds === []) {
+            return null;
+        }
+
+        return ['serviceIds' => $serviceIds, 'staffId' => $staff->has($booking->staff_id) ? $booking->staff_id : null];
     }
 
     /**

@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('bookings', function (Blueprint $table) {
+            // "Mi estilo": a picture the client attaches to show what they want.
+            $table->string('reference_photo_path')->nullable()->after('client_note');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('bookings', function (Blueprint $table) {
+            $table->dropColumn('reference_photo_path');
+        });
+    }
+};

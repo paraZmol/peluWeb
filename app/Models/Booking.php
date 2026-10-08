@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool|null $deposit_refundable
  * @property CarbonImmutable|null $hold_expires_at
  * @property string|null $client_note
+ * @property string|null $reference_photo_path
  * @property int|null $created_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -61,6 +62,7 @@ class Booking extends Model
         'deposit_refundable' => null,
         'hold_expires_at' => null,
         'client_note' => null,
+        'reference_photo_path' => null,
         'created_by' => null,
     ];
 

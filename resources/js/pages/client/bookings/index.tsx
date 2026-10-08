@@ -1,10 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
-import { CalendarDays, ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronRight, Repeat } from 'lucide-react';
 import { DateTile } from '@/components/booking/date-tile';
 import { StatusBadge } from '@/components/booking/status-badge';
 import type { ClientBooking } from '@/components/booking/types';
 import { formatDate, formatTime } from '@/lib/format';
 import { index, show } from '@/routes/bookings';
+import { create as bookAgain } from '@/routes/salons/booking';
 
 type Props = { bookings: ClientBooking[] };
 
@@ -58,6 +59,8 @@ export default function BookingsIndex({ bookings }: Props) {
         (booking.status === 'pending' || booking.status === 'confirmed');
     const upcoming = bookings.filter(isActive).reverse();
     const past = bookings.filter((booking) => !isActive(booking));
+    // The newest visit that actually happened.
+    const last = past.find((booking) => booking.status === 'completed');
 
     return (
         <>
@@ -82,6 +85,37 @@ export default function BookingsIndex({ bookings }: Props) {
                             citas aparecerán aquí.
                         </p>
                     </div>
+                )}
+
+                {last && (
+                    <Link
+                        href={bookAgain(last.salon.slug, {
+                            query: { repetir: last.code },
+                        })}
+                        className="flex min-h-16 items-center gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                        <span
+                            aria-hidden
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"
+                        >
+                            <Repeat className="size-5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                            <span className="block font-medium">
+                                Repetir mi última cita
+                            </span>
+                            <span className="block truncate text-sm text-muted-foreground">
+                                {last.services
+                                    .map((service) => service.name)
+                                    .join(', ')}{' '}
+                                · {last.salon.name}
+                            </span>
+                        </span>
+                        <ChevronRight
+                            className="size-4 shrink-0 text-muted-foreground"
+                            aria-hidden
+                        />
+                    </Link>
                 )}
 
                 {upcoming.length > 0 && (

@@ -74,6 +74,22 @@ export function AgendaItem({
                             "{booking.note}"
                         </p>
                     )}
+                    {booking.referencePhotoUrl && (
+                        <a
+                            href={booking.referencePhotoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-2 rounded-lg border p-1 pr-3 text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        >
+                            <img
+                                src={booking.referencePhotoUrl}
+                                alt=""
+                                className="size-12 rounded-md object-cover"
+                                loading="lazy"
+                            />
+                            Ver foto de referencia
+                        </a>
+                    )}
                     {booking.client.noShows > 0 && (
                         <p className="mt-1 text-xs text-warning">
                             Faltó {booking.client.noShows}{' '}

@@ -9,6 +9,7 @@ import { StepTime } from '@/components/booking/step-time';
 import type {
     BookableSalon,
     BookingDay,
+    RepeatBooking,
     Viewer,
 } from '@/components/booking/types';
 import { WizardHeader } from '@/components/booking/wizard-header';
@@ -24,6 +25,7 @@ type Props = {
     isOpen: boolean;
     viewer: Viewer;
     preselectedServiceId: number | null;
+    repeat: RepeatBooking | null;
 };
 
 const TITLES = [
@@ -39,12 +41,18 @@ export default function Booking({
     isOpen,
     viewer,
     preselectedServiceId,
+    repeat,
 }: Props) {
     const reduceMotion = useReducedMotion();
     const resume =
         typeof window !== 'undefined' &&
         new URLSearchParams(window.location.search).has('continuar');
-    const wizard = useBookingWizard({ salon, preselectedServiceId, resume });
+    const wizard = useBookingWizard({
+        salon,
+        preselectedServiceId,
+        repeat,
+        resume,
+    });
     const firstOpenDay = days.find((day) => !day.closed)?.date ?? null;
     const availability = useAvailability({
         url: availabilityRoute.url(salon.slug),

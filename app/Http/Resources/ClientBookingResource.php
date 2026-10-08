@@ -7,6 +7,7 @@ use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\BookingService;
 use App\Models\Salon;
+use App\Support\Images\ImageStore;
 use App\Support\Money;
 use App\Support\WhatsApp;
 use Carbon\CarbonImmutable;
@@ -63,6 +64,8 @@ class ClientBookingResource extends JsonResource
                 'whatsappUrl' => $status === BookingStatus::Pending ? WhatsApp::link($salon->phone, $this->depositMessage($start)) : null,
                 'isRefundable' => $this->deposit_refundable,
             ],
+            'referencePhotoUrl' => app(ImageStore::class)->url($this->reference_photo_path),
+            'canAttachPhoto' => $isOpen,
             'canCancel' => $isOpen,
             // Moving needs the same notice the salon asks for a cancellation.
             'canMove' => $isOpen && $hasNotice && $salon->isWritable() && $salon->accepts_online_bookings,
