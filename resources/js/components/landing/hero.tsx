@@ -5,8 +5,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { HERO } from './content';
+import { HeroCollage } from './hero-collage';
 import { CONTAINER_CLASS } from './landing-section';
-import { PhoneMockup } from './phone-mockup';
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
@@ -27,25 +27,25 @@ export function Hero() {
             {/* Decorative glow in the brand color; purely visual */}
             <div
                 aria-hidden
-                className="pointer-events-none absolute top-16 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl md:left-3/4"
+                className="pointer-events-none absolute top-24 left-1/2 size-[40rem] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl lg:left-3/4"
             />
 
             <div
                 className={cn(
                     CONTAINER_CLASS,
-                    'relative grid items-center gap-14 pt-10 pb-20 md:pt-16 md:pb-24 lg:grid-cols-[1.15fr_1fr]',
+                    'relative grid items-center gap-10 pt-8 pb-16 md:pt-14 md:pb-24 lg:grid-cols-[1.05fr_1fr] lg:gap-14',
                 )}
             >
                 <div className="flex flex-col items-start gap-6">
                     <motion.p
                         {...enter(0)}
-                        className="rounded-full border bg-card px-3 py-1 text-sm font-medium text-muted-foreground"
+                        className="rounded-full border bg-card px-3 py-1 text-sm font-medium text-muted-foreground shadow-card"
                     >
                         {HERO.eyebrow}
                     </motion.p>
                     <motion.h1
                         {...enter(0.05)}
-                        className="font-display text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+                        className="font-display text-[2.5rem] leading-[1.04] font-semibold tracking-tight text-balance sm:text-5xl lg:text-[4rem]"
                     >
                         {HERO.title}
                     </motion.h1>
@@ -64,7 +64,7 @@ export function Hero() {
                             href={register()}
                             className={cn(
                                 buttonVariants({ size: 'lg' }),
-                                'rounded-full px-7 md:h-12',
+                                'h-12 rounded-full px-7 shadow-brand',
                             )}
                         >
                             {HERO.primaryCta}
@@ -77,7 +77,7 @@ export function Hero() {
                                     variant: 'outline',
                                     size: 'lg',
                                 }),
-                                'rounded-full px-7 md:h-12',
+                                'h-12 rounded-full px-7',
                             )}
                         >
                             {HERO.secondaryCta}
@@ -94,7 +94,7 @@ export function Hero() {
                                 className="flex items-center gap-1.5"
                             >
                                 <Check
-                                    className="size-4 text-primary"
+                                    className="size-4 text-brand-text"
                                     aria-hidden
                                 />
                                 {item}
@@ -103,11 +103,8 @@ export function Hero() {
                     </motion.ul>
                 </div>
 
-                <motion.div
-                    {...enter(0.2)}
-                    className="flex justify-center lg:justify-end"
-                >
-                    <PhoneMockup />
+                <motion.div {...enter(0.15)}>
+                    <HeroCollage />
                 </motion.div>
             </div>
         </section>

@@ -52,7 +52,7 @@ enum SalonTheme: string
     {
         return match ($this) {
             self::Editorial => 'Sobria, con aire de revista: fondo cálido de día y carbón de noche, tus fotos y tu color.',
-            self::Nocturna => 'Oscura y con carácter, como una barbería de noche. Tus fotos a pantalla completa.',
+            self::Nocturna => 'Siempre oscura y con carácter: tus fotos a pantalla completa y tu color brillando en los botones.',
             self::Luminosa => 'Blanca y fresca, como un salón con luz natural. Tarjetas con foto y precio.',
             self::Vibrante => 'Tu color a toda pantalla, con energía de app moderna.',
         };

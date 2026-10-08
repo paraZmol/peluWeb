@@ -12,8 +12,10 @@ export function PlanCard({ plan }: { plan: Plan }) {
     return (
         <article
             className={cn(
-                'relative flex h-full flex-col gap-6 rounded-3xl border bg-card p-6 md:p-8',
-                isFeatured && 'shadow-xl ring-2 shadow-primary/10 ring-primary',
+                'relative flex h-full flex-col gap-6 rounded-3xl p-6 md:p-8',
+                isFeatured
+                    ? 'skin-raised outline-2 outline-primary'
+                    : 'skin-card',
             )}
         >
             {isFeatured && (
@@ -43,7 +45,7 @@ export function PlanCard({ plan }: { plan: Plan }) {
                         {PRICING.perMonth}
                     </span>
                 </p>
-                <p className="text-sm font-medium text-primary">
+                <p className="text-sm font-medium text-brand-text">
                     {plan.capacity}
                 </p>
             </div>
@@ -52,7 +54,7 @@ export function PlanCard({ plan }: { plan: Plan }) {
                 {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2.5">
                         <Check
-                            className="mt-0.5 size-4 shrink-0 text-primary"
+                            className="mt-0.5 size-4 shrink-0 text-brand-text"
                             strokeWidth={2.5}
                             aria-hidden
                         />

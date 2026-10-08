@@ -19,7 +19,7 @@ function Column({ title, items, icon: Icon, isHighlighted }: ColumnProps) {
             className={cn(
                 'flex h-full flex-col gap-5 rounded-3xl border p-6 md:p-8',
                 isHighlighted
-                    ? 'border-primary/30 bg-primary/10'
+                    ? 'border-brand-line bg-brand-soft shadow-card'
                     : 'bg-muted/60',
             )}
         >

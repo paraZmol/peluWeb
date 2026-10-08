@@ -13,9 +13,9 @@ export function Pricing() {
             <SectionHeading eyebrow={PRICING.eyebrow} title={PRICING.title} />
 
             <Reveal className="mt-6 flex justify-center">
-                <p className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-center text-sm font-medium">
+                <p className="inline-flex items-center gap-2 rounded-full border border-brand-line bg-brand-soft px-4 py-2 text-center text-sm font-medium">
                     <Gift
-                        className="size-4 shrink-0 text-primary"
+                        className="size-4 shrink-0 text-brand-text"
                         aria-hidden
                     />
                     {PRICING.trialNote}

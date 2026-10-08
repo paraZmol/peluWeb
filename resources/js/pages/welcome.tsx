@@ -13,6 +13,7 @@ import { HowItWorks } from '@/components/landing/how-it-works';
 import { Pricing } from '@/components/landing/pricing';
 import { SiteFooter } from '@/components/landing/site-footer';
 import { SiteHeader } from '@/components/landing/site-header';
+import { TemplateShowcase } from '@/components/landing/template-showcase';
 
 /** Smooth anchor scrolling only while this page is mounted and motion is allowed. */
 function useSmoothScroll(): void {
@@ -50,10 +51,11 @@ export default function Welcome() {
                 <SiteHeader isAuthenticated={Boolean(auth.user)} />
                 <main>
                     <Hero />
+                    <Audiences />
+                    <TemplateShowcase />
+                    <HowItWorks />
                     <BeforeAfter />
                     <Features />
-                    <HowItWorks />
-                    <Audiences />
                     <Pricing />
                     <Faq />
                     <About />

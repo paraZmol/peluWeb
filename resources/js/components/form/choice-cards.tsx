@@ -52,7 +52,7 @@ export function ChoiceCards({
                         className="peer sr-only"
                         required
                     />
-                    <span className="flex min-h-12 items-center justify-center rounded-xl border bg-card px-4 py-3 text-center text-sm font-medium transition-colors peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring hover:bg-accent">
+                    <span className="flex min-h-12 items-center justify-center rounded-xl border bg-card px-4 py-3 text-center text-sm font-medium transition-colors peer-checked:border-primary peer-checked:bg-brand-soft peer-checked:text-foreground peer-checked:ring-1 peer-checked:ring-primary peer-checked:ring-inset peer-focus-visible:ring-2 peer-focus-visible:ring-ring hover:bg-accent">
                         {option.label}
                     </span>
                 </motion.label>

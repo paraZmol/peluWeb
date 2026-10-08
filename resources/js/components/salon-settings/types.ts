@@ -1,4 +1,13 @@
-import type { BrandTokens } from '@/types';
+import type { BrandTokens, SalonTheme } from '@/types';
+
+/** One option of "Diseño de tu página" (SalonSettingsController::edit). */
+export type ThemeChoice = {
+    value: SalonTheme;
+    label: string;
+    tagline: string;
+    /** The public page with that template and sample photos where missing. */
+    previewUrl: string;
+};
 
 /** Mirrors App\Http\Resources\SalonSettingsResource. */
 export type BookingSettings = {
@@ -27,6 +36,7 @@ export type SalonSettings = {
     coverUrl: string | null;
     brandColor: string | null;
     brand: BrandTokens | null;
+    theme: SalonTheme;
     address: string | null;
     district: string | null;
     city: string | null;

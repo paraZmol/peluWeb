@@ -59,15 +59,13 @@ export default function PasskeyVerify({
                 )}
             </div>
 
-            <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                        {separator ?? 'O continúa con tu correo electrónico'}
-                    </span>
-                </div>
+            {/* Lines on both sides instead of a masked label: it sits on cards and glows too. */}
+            <div className="my-6 flex items-center gap-3">
+                <Separator className="flex-1" />
+                <span className="text-center text-xs text-muted-foreground uppercase">
+                    {separator ?? 'O continúa con tu correo electrónico'}
+                </span>
+                <Separator className="flex-1" />
             </div>
         </>
     );

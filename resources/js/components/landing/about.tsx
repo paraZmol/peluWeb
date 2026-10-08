@@ -35,9 +35,9 @@ export function About() {
                             <li key={value.title}>
                                 <Reveal
                                     delay={index * STAGGER_SECONDS}
-                                    className="flex items-start gap-4 rounded-3xl border bg-background p-5"
+                                    className="flex items-start gap-4 rounded-3xl p-5 skin-card"
                                 >
-                                    <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-text">
                                         <Icon className="size-5" aria-hidden />
                                     </span>
                                     <div className="flex flex-col gap-1">

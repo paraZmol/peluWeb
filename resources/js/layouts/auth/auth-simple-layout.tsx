@@ -28,12 +28,17 @@ export default function AuthSimpleLayout({
     }, [errors, errorCount, reduceMotion, shake]);
 
     return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
+        <div className="relative isolate flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden bg-background p-6 md:p-10">
+            {/* Soft brand glow behind the card; purely visual */}
+            <div
+                aria-hidden
+                className="pointer-events-none absolute -top-48 left-1/2 -z-10 size-[42rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+            />
             <motion.div
                 initial={reduceMotion ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease }}
-                className="w-full max-w-sm"
+                className="w-full max-w-sm sm:max-w-md sm:rounded-3xl sm:p-10 sm:skin-raised"
             >
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col items-center gap-4">

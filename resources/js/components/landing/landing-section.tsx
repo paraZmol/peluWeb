@@ -5,7 +5,7 @@ export const CONTAINER_CLASS = 'mx-auto w-full max-w-6xl px-4 sm:px-6';
 
 const TONE_CLASSES = {
     plain: 'bg-background',
-    muted: 'border-y bg-muted/40',
+    muted: 'bg-band',
     card: 'border-y bg-card',
 } as const;
 

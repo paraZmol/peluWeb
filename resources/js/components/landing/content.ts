@@ -8,11 +8,9 @@ import {
     CalendarCheck,
     Crown,
     Flower2,
-    Hand,
     HeartHandshake,
     MessageCircle,
     Palette,
-    Scissors,
     Smartphone,
     Sparkles,
     Star,
@@ -21,6 +19,8 @@ import {
     Wallet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { MiniSalon } from '@/components/theme-preview/types';
+import { show as samplePhoto } from '@/routes/samples';
 
 export type NavItem = { label: string; href: string };
 
@@ -30,11 +30,13 @@ export type IconItem = {
     description: string;
 };
 
-export type Appointment = {
-    time: string;
-    service: string;
-    client: string;
-    isNow?: boolean;
+/** A real photo (database/seeders/images/CREDITS.md) and what it shows. */
+export type Photo = { src: string; alt: string };
+
+export type PhotoItem = {
+    photo: Photo;
+    title: string;
+    description: string;
 };
 
 export type Plan = {
@@ -56,13 +58,17 @@ export const META_DESCRIPTION =
     'peluWeb: reservas online 24/7 sin choques, señas por WhatsApp y Yape/Plin, caja y reportes, y una página con la marca de tu salón. Prueba gratis 30 días.';
 
 export const NAV_ITEMS: NavItem[] = [
-    { label: 'Funciones', href: '#funciones' },
-    { label: 'Cómo funciona', href: '#como-funciona' },
     { label: 'Para quién', href: '#para-quien' },
+    { label: 'Tu página', href: '#tu-pagina' },
+    { label: 'Cómo funciona', href: '#como-funciona' },
+    { label: 'Funciones', href: '#funciones' },
     { label: 'Precios', href: '#precios' },
     { label: 'Preguntas', href: '#preguntas' },
-    { label: 'Nosotros', href: '#nosotros' },
 ];
+
+function photo(file: string, alt: string): Photo {
+    return { src: samplePhoto.url(file), alt };
+}
 
 export const AUTH_LABELS = {
     dashboard: 'Ir a mi panel',
@@ -73,33 +79,50 @@ export const AUTH_LABELS = {
 };
 
 export const HERO = {
-    eyebrow: 'Para barberías, salones y spas del Perú',
-    title: 'Tu salón lleno, tu agenda en orden',
+    eyebrow: 'Para peluquerías, barberías, uñas y spas del Perú',
+    title: 'Tu agenda llena, sin contestar WhatsApp a medianoche',
     subtitle:
-        'Tus clientes reservan a cualquier hora desde el celular, sin choques de horario. Confirmas por WhatsApp, cobras la seña con Yape o Plin y te olvidas del cuaderno.',
+        'Tus clientes reservan solos desde tu enlace, a cualquier hora y sin choques de horario. Cobras la seña con Yape o Plin y te olvidas del cuaderno.',
     primaryCta: 'Prueba gratis 30 días',
-    secondaryCta: 'Ver cómo funciona',
-    secondaryHref: '#como-funciona',
+    secondaryCta: 'Ver cómo queda tu página',
+    secondaryHref: '#tu-pagina',
     trust: ['Sin tarjeta', 'Cancela cuando quieras', 'Hecho en Perú'],
 };
 
-export const PHONE_MOCKUP = {
-    title: 'Hoy',
-    date: 'mar 14 oct',
-    nowLabel: 'Ahora',
-    nextLabel: 'Siguiente en 15 min',
-    depositLabel: 'Seña recibida por Yape',
-    depositAmount: 'S/ 20.00',
-    appointments: [
+export const HERO_PHOTOS = {
+    main: {
+        ...photo(
+            'pexels-3993311.jpg',
+            'Clienta con color recién aplicado frente a un espejo con luces',
+        ),
+        label: 'Salón de belleza',
+    },
+    side: [
         {
-            time: '10:00',
-            service: 'Degradado medio',
-            client: 'Carlos',
-            isNow: true,
+            ...photo(
+                'pexels-1813272.jpg',
+                'Dos barberos atendiendo en una barbería amplia',
+            ),
+            label: 'Barbería',
         },
-        { time: '10:45', service: 'Perfilado de barba', client: 'Diego' },
-        { time: '11:30', service: 'Balayage', client: 'Lucía' },
-    ] satisfies Appointment[],
+        {
+            ...photo(
+                'pexels-3422099.jpg',
+                'Manicurista aplicando esmalte con guantes negros',
+            ),
+            label: 'Uñas',
+        },
+    ],
+};
+
+export const HERO_CARDS = {
+    booking: {
+        label: 'Nueva reserva',
+        when: 'hace 1 min',
+        title: 'Corte y peinado con Lucía',
+        detail: 'Hoy, 4:30 p. m.',
+    },
+    deposit: { label: 'Seña recibida por Yape', amount: 'S/ 20.00' },
 };
 
 export const BEFORE_AFTER = {
@@ -200,7 +223,7 @@ export const HOW_IT_WORKS = {
         {
             title: 'Crea tu salón en un minuto',
             description:
-                'Elige si eres barbería, salón, unisex, uñas o spa. Sube tu logo y escoge tu color.',
+                'Elige si eres barbería, salón, unisex, uñas o spa. Sube tu logo, escoge tu color y el diseño de tu página.',
         },
         {
             title: 'Ajusta servicios, precios y horarios',
@@ -217,35 +240,47 @@ export const HOW_IT_WORKS = {
 
 export const AUDIENCES_HEADING = {
     eyebrow: 'Para quién',
-    title: 'Hecho a la medida de tu tipo de salón',
+    title: 'Hecho para negocios como el tuyo',
     description:
         'Al crear tu salón, peluWeb carga los servicios y ajustes típicos de tu rubro.',
 };
 
-export const AUDIENCES: IconItem[] = [
+export const AUDIENCES: PhotoItem[] = [
     {
-        icon: Scissors,
+        photo: photo(
+            'pexels-7518731.jpg',
+            'Barbero joven cortando el cabello en una barbería de ladrillo',
+        ),
         title: 'Barberías',
         description:
             'Turnos cortos, barbero favorito y una cola para quien llega sin cita.',
     },
     {
-        icon: Sparkles,
+        photo: photo(
+            'pexels-6503329.jpg',
+            'Estilista peinando un cabello rubio largo',
+        ),
         title: 'Salones de belleza',
         description:
-            'Mientras un tinte reposa, ese tiempo de espera se puede reservar para otro servicio.',
+            'Mientras un tinte reposa, ese tiempo se puede reservar para otro servicio.',
     },
+    {
+        photo: photo(
+            'pexels-16363470.jpg',
+            'Manos con manicura brillante sobre un fondo rosa',
+        ),
+        title: 'Centros de uñas',
+        description:
+            'Paquetes, fichas de cada cliente y un plan accesible si trabajas por tu cuenta.',
+    },
+];
+
+export const AUDIENCES_MORE: IconItem[] = [
     {
         icon: UsersRound,
         title: 'Peluquerías unisex',
         description:
             'Servicios para todo público, cada profesional con su agenda y sus comisiones.',
-    },
-    {
-        icon: Hand,
-        title: 'Centros de uñas',
-        description:
-            'Paquetes, fichas de cada cliente y un plan accesible si trabajas por tu cuenta.',
     },
     {
         icon: Flower2,
@@ -254,6 +289,40 @@ export const AUDIENCES: IconItem[] = [
             'Tratamientos largos, señas para asegurar la cita y notas de cada cliente.',
     },
 ];
+
+export const SHOWCASE = {
+    eyebrow: 'Tu página',
+    title: 'Así se ve tu página',
+    description:
+        'Elige uno de los cuatro diseños y ponle tu logo, tu color y tus fotos. Tus clientes la abren desde tu Instagram o tu WhatsApp y reservan ahí mismo.',
+    pickerLabel: 'Diseños de página',
+    bullets: [
+        'Tus fotos, tu logo y tu color',
+        'Servicios con precio y duración',
+        'Reservan en tres toques, de día o de noche',
+        'Seña por Yape o Plin antes de la cita',
+    ],
+};
+
+/** The example salon inside the phone of "Así se ve tu página". */
+export const SHOWCASE_SALON: MiniSalon = {
+    name: 'Studio Bella',
+    subtitle: 'Peluquería unisex · Miraflores',
+    coverUrl: samplePhoto.url('pexels-705255.jpg'),
+    logoUrl: null,
+    photoUrls: [
+        samplePhoto.url('pexels-2799605.jpg'),
+        samplePhoto.url('pexels-1319462.jpg'),
+        samplePhoto.url('pexels-22668324.jpg'),
+    ],
+    services: [
+        { name: 'Corte y peinado', minutes: 45, price: '45.00' },
+        { name: 'Corte clásico', minutes: 30, price: '30.00' },
+        { name: 'Manicure en gel', minutes: 60, price: '55.00' },
+        { name: 'Perfilado de barba', minutes: 20, price: '20.00' },
+        { name: 'Tinte completo', minutes: 90, price: '120.00' },
+    ],
+};
 
 // Prices are a proposal pending decision D3 in docs/PLAN.md (see docs/mercado.md).
 export const PRICING = {
@@ -375,6 +444,10 @@ export const FINAL_CTA = {
     title: 'Empieza hoy, tu primer mes es gratis',
     description: 'Crea tu salón en un minuto. Sin tarjeta y sin compromiso.',
     cta: 'Crear mi salón gratis',
+    photo: photo(
+        'pexels-3993133.jpg',
+        'Salón en penumbra con espejos iluminados',
+    ),
 };
 
 export const FOOTER = {

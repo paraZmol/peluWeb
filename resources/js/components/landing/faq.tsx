@@ -34,7 +34,7 @@ export function Faq() {
     return (
         <LandingSection id="preguntas">
             <SectionHeading {...FAQ_HEADING} />
-            <Reveal className="mx-auto mt-12 max-w-3xl rounded-3xl border bg-card px-5 md:px-8">
+            <Reveal className="mx-auto mt-12 max-w-3xl rounded-3xl px-5 skin-card md:px-8">
                 {FAQS.map((faq) => (
                     <FaqItem key={faq.question} faq={faq} />
                 ))}

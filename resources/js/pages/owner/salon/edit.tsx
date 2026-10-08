@@ -5,7 +5,11 @@ import { GallerySection } from '@/components/salon-settings/gallery-section';
 import { LocationSection } from '@/components/salon-settings/location-section';
 import { ProfileSection } from '@/components/salon-settings/profile-section';
 import { ShareSection } from '@/components/salon-settings/share-section';
-import type { SalonSettings } from '@/components/salon-settings/types';
+import { ThemeSection } from '@/components/salon-settings/theme-section';
+import type {
+    SalonSettings,
+    ThemeChoice,
+} from '@/components/salon-settings/types';
 import { edit } from '@/routes/salon';
 import type { Option } from '@/types';
 
@@ -14,6 +18,8 @@ type Props = {
     businessTypes: Option[];
     clienteles: Option[];
     slotSteps: number[];
+    /** The four templates, with a link to preview each one. */
+    themes: ThemeChoice[];
     /** Deposit and payment details are for owners only. */
     canManageBookingRules: boolean;
 };
@@ -22,6 +28,7 @@ const sections = [
     ['compartir', 'Tu página'],
     ['datos', 'Datos'],
     ['marca', 'Marca'],
+    ['diseno', 'Diseño'],
     ['ubicacion', 'Ubicación'],
     ['galeria', 'Galería'],
     ['reservas', 'Reservas'],
@@ -32,6 +39,7 @@ export default function EditSalon({
     businessTypes,
     clienteles,
     slotSteps,
+    themes,
     canManageBookingRules,
 }: Props) {
     return (
@@ -73,6 +81,11 @@ export default function EditSalon({
                     clienteles={clienteles}
                 />
                 <BrandingSection salon={salon} />
+                <ThemeSection
+                    salon={salon}
+                    themes={themes}
+                    businessTypes={businessTypes}
+                />
                 <LocationSection salon={salon} />
                 <GallerySection salon={salon} />
                 {canManageBookingRules && (
