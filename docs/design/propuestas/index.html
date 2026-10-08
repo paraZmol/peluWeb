@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>peluWeb · Propuestas de diseño (4.12)</title>
+<style>
+  :root { color-scheme: light; --ink: #16181d; --muted: #5f6672; --line: #e3e6eb; --bg: #f4f5f7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: var(--bg); }
+  header { padding: 28px 24px 12px; max-width: 1600px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 26px; }
+  header p { margin: 0; color: var(--muted); max-width: 70ch; }
+  nav { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 24px 16px; max-width: 1600px; margin: 0 auto; }
+  nav a { padding: 8px 14px; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 600; }
+  section { max-width: 1600px; margin: 0 auto 32px; padding: 0 24px; }
+  h2 { font-size: 20px; margin: 28px 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 14px; }
+  .row { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  figure { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  figcaption { padding: 10px 12px; font-weight: 700; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  figcaption span { font-weight: 500; color: var(--muted); font-size: 13px; }
+  .shot { max-height: 760px; overflow: auto; background: #111; }
+  .shot img { display: block; width: 100%; height: auto; }
+  .wide .shot { max-height: 420px; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .actual .tag { background: #ffe8e8; color: #9b1c1c; }
+  .a .tag { background: #fff3d6; color: #7a4b00; }
+  .b .tag { background: #ffe0ea; color: #9b1346; }
+  .c .tag { background: #dfe7ff; color: #1d3fb8; }
+  .notes { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .notes a { color: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Propuestas de diseño para lo que ve el cliente final</h1>
+  <p>Tres direcciones distintas, maquetadas con las fotos reales de la demo, frente al estado actual. Cada bloque compara la misma pantalla. Abre cada maqueta completa con los enlaces de abajo; el <code>README</code> de cada una explica paleta, tipografía y cómo entra el color de marca de cada salón.</p>
+</header>
+<nav>
+  <a href="a-nocturna/index.html">Maqueta A · Barbería nocturna</a>
+  <a href="b-luminosa/index.html">Maqueta B · Salón luminoso</a>
+  <a href="c-vibrante/index.html">Maqueta C · Vibrante</a>
+  <a href="a-nocturna/README.md">README A</a>
+  <a href="b-luminosa/README.md">README B</a>
+  <a href="c-vibrante/README.md">README C</a>
+</nav>
+
+<section>
+  <h2>Página pública del salón · celular (390 px)</h2>
+  <p class="sub">Lo que ve quien llega por Instagram o WhatsApp. Desplaza dentro de cada captura.</p>
+  <div class="row">
+    <figure class="actual"><figcaption>Actual <span class="tag">descartado</span></figcaption><div class="shot"><img src="actual/salon-390.png" alt="Actual, salón en celular"></div></figure>
+    <figure class="a"><figcaption>A · Barbería nocturna <span class="tag">oscura</span></figcaption><div class="shot"><img src="a-nocturna/capturas/salon-390.png" alt="A, salón en celular"></div></figure>
+    <figure class="b"><figcaption>B · Salón luminoso <span class="tag">clara</span></figcaption><div class="shot"><img src="b-luminosa/capturas/salon-390.png" alt="B, salón en celular"></div></figure>
+    <figure class="c"><figcaption>C · Vibrante <span class="tag">color de marca</span></figcaption><div class="shot"><img src="c-vibrante/capturas/salon-390.png" alt="C, salón en celular"></div></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Página pública del salón · otro color de marca y otro tema</h2>
+  <p class="sub">Cada salón elige su color: la dirección tiene que aguantarlo. Y el tema contrario al principal de cada propuesta.</p>
+  <div class="row">
+    <figure class="a"><figcaption>A · marca roja <span>mismo diseño, otro salón</span></figcaption><div class="shot"><img src="a-nocturna/capturas/salon-390-marca-roja.png" alt="A con marca roja"></div></figure>
+    <figure class="a"><figcaption>A · modo claro</figcaption><div class="shot"><img src="a-nocturna/capturas/salon-390-claro.png" alt="A en modo claro"></div></figure>
+    <figure class="b"><figcaption>B · marca verde <span>mismo diseño, otro salón</span></figcaption><div class="shot"><img src="b-luminosa/capturas/salon-390-marca-verde.png" alt="B con marca verde"></div></figure>
+    <figure class="b"><figcaption>B · modo oscuro</figcaption><div class="shot"><img src="b-luminosa/capturas/salon-390-oscuro.png" alt="B en modo oscuro"></div></figure>
+    <figure class="c"><figcaption>C · marca naranja <span>mismo diseño, otro salón</span></figcaption><div class="shot"><img src="c-vibrante/capturas/salon-390-marca-naranja.png" alt="C con marca naranja"></div></figure>
+    <figure class="c"><figcaption>C · modo oscuro</figcaption><div class="shot"><img src="c-vibrante/capturas/salon-390-oscuro.png" alt="C en modo oscuro"></div></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Reserva · paso "¿Cuándo?" (390 px)</h2>
+  <p class="sub">Tira de días, horarios por Mañana/Tarde/Noche, resumen y botón fijo.</p>
+  <div class="row">
+    <figure class="actual"><figcaption>Actual <span class="tag">descartado</span></figcaption><div class="shot"><img src="actual/reserva-390.png" alt="Actual, reserva"></div></figure>
+    <figure class="a"><figcaption>A · Barbería nocturna</figcaption><div class="shot"><img src="a-nocturna/capturas/reserva-390.png" alt="A, reserva"></div></figure>
+    <figure class="b"><figcaption>B · Salón luminoso</figcaption><div class="shot"><img src="b-luminosa/capturas/reserva-390.png" alt="B, reserva"></div></figure>
+    <figure class="c"><figcaption>C · Vibrante</figcaption><div class="shot"><img src="c-vibrante/capturas/reserva-390.png" alt="C, reserva"></div></figure>
+  </div>
+</section>
+
+<section class="wide">
+  <h2>Portada para dueños · escritorio (1440 px)</h2>
+  <p class="sub">La que convence a una peluquería de darse de alta.</p>
+  <div class="row" style="grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));">
+    <figure class="actual"><figcaption>Actual <span class="tag">descartado</span></figcaption><div class="shot"><img src="actual/portada-1440.png" alt="Actual, portada"></div></figure>
+    <figure class="a"><figcaption>A · Barbería nocturna</figcaption><div class="shot"><img src="a-nocturna/capturas/portada-1440.png" alt="A, portada"></div></figure>
+    <figure class="b"><figcaption>B · Salón luminoso</figcaption><div class="shot"><img src="b-luminosa/capturas/portada-1440.png" alt="B, portada"></div></figure>
+    <figure class="c"><figcaption>C · Vibrante</figcaption><div class="shot"><img src="c-vibrante/capturas/portada-1440.png" alt="C, portada"></div></figure>
+  </div>
+</section>
+
+<section>
+  <h2>Portada para dueños · celular (390 px)</h2>
+  <div class="row">
+    <figure class="actual"><figcaption>Actual</figcaption><div class="shot"><img src="actual/portada-390.png" alt="Actual, portada móvil"></div></figure>
+    <figure class="a"><figcaption>A</figcaption><div class="shot"><img src="a-nocturna/capturas/portada-390.png" alt="A, portada móvil"></div></figure>
+    <figure class="b"><figcaption>B</figcaption><div class="shot"><img src="b-luminosa/capturas/portada-390.png" alt="B, portada móvil"></div></figure>
+    <figure class="c"><figcaption>C</figcaption><div class="shot"><img src="c-vibrante/capturas/portada-390.png" alt="C, portada móvil"></div></figure>
+  </div>
+</section>
+
+<section class="wide">
+  <h2>Página pública del salón · escritorio (1440 px)</h2>
+  <div class="row" style="grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));">
+    <figure class="actual"><figcaption>Actual</figcaption><div class="shot"><img src="actual/salon-1440.png" alt="Actual, salón escritorio"></div></figure>
+    <figure class="a"><figcaption>A</figcaption><div class="shot"><img src="a-nocturna/capturas/salon-1440.png" alt="A, salón escritorio"></div></figure>
+    <figure class="b"><figcaption>B</figcaption><div class="shot"><img src="b-luminosa/capturas/salon-1440.png" alt="B, salón escritorio"></div></figure>
+    <figure class="c"><figcaption>C</figcaption><div class="shot"><img src="c-vibrante/capturas/salon-1440.png" alt="C, salón escritorio"></div></figure>
+  </div>
+</section>
+
+<section>
+  <div class="notes">
+    <strong>Cómo decidir.</strong> Mira primero el celular: ahí reservan los clientes y ahí trabajan los dueños. Pregúntate: ¿parece una peluquería? ¿Encontrarías el botón de reservar sin buscarlo? ¿Te daría confianza poner tu negocio aquí? Se puede elegir una dirección y pedir cambios puntuales (por ejemplo, "la A pero con la tipografía de la B").
+  </div>
+</section>
+</body>
+</html>

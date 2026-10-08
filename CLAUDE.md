@@ -69,12 +69,21 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
   Si tocó auth, roles, subidas, dinero o consultas por salón → **security-auditor**.
   Si tocó una pantalla → **visual-designer** (mira capturas y corrige la presentación para que
   se vea profesional) y después **ux-reviewer** (solo opina).
+- Pantallas públicas y de alta del salón (portada, registro, página del salón, reserva, Mis
+  reservas): cargar `design-craft` además de `ui-system`. La dirección la fija **design-director**
+  (propone con maquetas y capturas reales; el usuario elige) y la construye **frontend-builder**;
+  no se mezclan direcciones ni se vuelve a la paleta hueso + cobre (descartada el 2026-10-08).
+  Fotos de demostración solo de `database/seeders/images/` con licencia en `CREDITS.md`.
 - Tests rápidos: `php artisan test --parallel --processes=6 --exclude-testsuite=Concurrency` (~1 min) y
   después `php artisan test --testsuite=Concurrency` (va solo: compite por bloqueos reales).
-- Al cerrar cada fase: todos los agentes, y corregir CRÍTICO/ALTO antes de seguir. Dos corridas de Playwright a la vez
-  necesitan carriles distintos: `E2E_PORT`, `E2E_DB_DATABASE` (el usuario `peluweb` puede crear bases
-  `peluweb_test%`) y `E2E_OUTPUT`; sin eso comparten `peluweb_test` y el puerto 8123 y se pisan; los de solo
-  lectura (security-auditor, ux-reviewer) sí pueden ir en paralelo.
+- Al cerrar cada fase: todos los agentes, y corregir CRÍTICO/ALTO antes de seguir.
+- Agentes en paralelo: cada corrida de Playwright usa un **carril** propio —
+  `E2E_PORT=812N E2E_DB_DATABASE=peluweb_test_e2eN E2E_OUTPUT=test-results-N` (existen
+  `peluweb_test_e2e2..4`; el usuario MySQL `peluweb` puede crear más `peluweb_test%`). El carril por
+  defecto (8123 / `peluweb_test`) es del coordinador. Dos corridas en el mismo carril se rompen
+  entre sí. Los agentes de solo lectura (security-auditor, ux-reviewer) no necesitan carril. Un
+  agente nuevo en `.claude/agents/` solo aparece al reiniciar la sesión; hasta entonces se lanza
+  con un agente existente indicándole que lea y siga esa definición.
 
 ===
 
