@@ -69,8 +69,11 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
   Si tocó auth, roles, subidas, dinero o consultas por salón → **security-auditor**.
   Si tocó una pantalla → **visual-designer** (mira capturas y corrige la presentación para que
   se vea profesional) y después **ux-reviewer** (solo opina).
-- Al cerrar cada fase: todos los agentes, y corregir CRÍTICO/ALTO antes de seguir. Solo uno a la
-  vez puede correr tests o Playwright (comparten `peluweb_test` y el puerto 8123); los de solo
+- Tests rápidos: `php artisan test --parallel --processes=6 --exclude-testsuite=Concurrency` (~1 min) y
+  después `php artisan test --testsuite=Concurrency` (va solo: compite por bloqueos reales).
+- Al cerrar cada fase: todos los agentes, y corregir CRÍTICO/ALTO antes de seguir. Dos corridas de Playwright a la vez
+  necesitan carriles distintos: `E2E_PORT`, `E2E_DB_DATABASE` (el usuario `peluweb` puede crear bases
+  `peluweb_test%`) y `E2E_OUTPUT`; sin eso comparten `peluweb_test` y el puerto 8123 y se pisan; los de solo
   lectura (security-auditor, ux-reviewer) sí pueden ir en paralelo.
 
 ===

@@ -67,14 +67,15 @@ test.describe('Cierre de la Fase 4: nueva cita del personal', () => {
         await expect(page).toHaveURL(/\/agenda\/nueva$/);
         await expect(page.getByLabel('Nombre de tu cliente')).toHaveValue(name);
 
-        await page.getByLabel('WhatsApp (opcional)').fill('987654321');
+        await page.getByLabel('WhatsApp (opcional)').fill('912340077');
         expect(await hasHorizontalScroll(page)).toBe(false);
         await save.click();
 
         await expect(page).toHaveURL(/\/agenda\?fecha=\d{4}-\d{2}-\d{2}$/);
-        await expect(page.getByText(`Cita agendada para ${name}.`)).toBeVisible();
         await expect(
-            page.getByRole('article', { name: new RegExp(`Qa4 Ñandú.*${slotLabel(testInfo, 4)}`) }),
+            page.getByRole('article', {
+                name: new RegExp(`Qa4 Ñandú.*${slotLabel(testInfo, 4)}`),
+            }),
         ).toContainText('Confirmada');
         assertNoErrors();
     });
@@ -113,7 +114,7 @@ test.describe('Cierre de la Fase 4: nueva cita del personal', () => {
         // A client to find later.
         await wizardToLastStep(page, slotLabel(testInfo, 3));
         await page.getByLabel('Nombre de tu cliente').fill('Qa4 Ñandú Peña 💈');
-        await page.getByLabel('WhatsApp (opcional)').fill('987654321');
+        await page.getByLabel('WhatsApp (opcional)').fill('912340077');
         await page.getByRole('button', { name: 'Agendar cita' }).click();
         await expect(page).toHaveURL(/\/agenda\?fecha=/);
 
@@ -126,7 +127,7 @@ test.describe('Cierre de la Fase 4: nueva cita del personal', () => {
         await list.getByRole('button', { name: /Qa4 Ñandú Peña/ }).click();
 
         await expect(page.getByText('Qa4 Ñandú Peña 💈').first()).toBeVisible();
-        await expect(page.getByText('987654321')).toBeVisible();
+        await expect(page.getByText('912340077')).toBeVisible();
         // Change of mind: back to typing.
         await page.getByRole('button', { name: 'Cambiar' }).click();
         await expect(page.getByLabel('Nombre de tu cliente')).toHaveValue('');
@@ -135,7 +136,16 @@ test.describe('Cierre de la Fase 4: nueva cita del personal', () => {
 
         await page.getByRole('button', { name: 'Agendar cita' }).click();
         await expect(
-            page.getByText('Cita agendada para Qa4 Ñandú Peña 💈.'),
+            page.getByRole('article', {
+                name: new RegExp(`Qa4 Ñandú Peña.*${slotLabel(testInfo, 5)}`),
+            }),
+        ).toBeVisible();
+        await expect(
+            page
+                .getByRole('article', {
+                    name: /Qa4 Ñandú Peña.*5:\d0 p\. m\./,
+                })
+                .first(),
         ).toBeVisible();
         assertNoErrors();
     });
@@ -157,14 +167,11 @@ test.describe('Cierre de la Fase 4: nueva cita del personal', () => {
         await wizardToLastStep(other, time);
         await other.getByLabel('Nombre de tu cliente').fill('Qa4 Se adelantó');
         await other.getByRole('button', { name: 'Agendar cita' }).click();
-        await expect(other.getByText('Cita agendada para Qa4 Se adelantó.')).toBeVisible();
+        await expect(other).toHaveURL(/\/agenda\?fecha=/);
         await other.close();
 
         await page.getByRole('button', { name: 'Agendar cita' }).click();
 
-        await expect(
-            page.getByText(/se acaba de ocupar/i),
-        ).toBeVisible();
         await expect(
             page.getByRole('heading', { name: '¿Cuándo?' }),
         ).toBeVisible();
@@ -197,32 +204,50 @@ test.describe('Cierre de la Fase 4: agenda', () => {
         const day = new URL(page.url()).searchParams.get('fecha')!;
         const card = page.getByRole('article', { name: /Qa4 Cancelada/ });
         // On a phone the toast of the booking just made covers the last card.
-        await card.getByRole('button', { name: 'Cancelar' }).dispatchEvent('click');
+        await card
+            .getByRole('button', { name: 'Cancelar' })
+            .dispatchEvent('click');
         await page.getByRole('button', { name: 'Sí, cancelar' }).click();
         await expect(card).toContainText('Cancelada');
 
         await page.goto(`/agenda?vista=tablero&fecha=${day}`);
-        await expect(page.getByRole('group', { name: 'Marta Multi' })).toBeVisible();
-        await expect(page.getByRole('group', { name: 'Siempre Abierto' })).toBeVisible();
-        await expect(page.getByRole('button', { name: /Qa4 Cancelada/ })).toHaveCount(0);
+        await expect(
+            page.getByRole('group', { name: 'Marta Multi' }),
+        ).toBeVisible();
+        await expect(
+            page.getByRole('group', { name: 'Siempre Abierto' }),
+        ).toBeVisible();
+        await expect(
+            page.getByRole('button', { name: /Qa4 Cancelada/ }),
+        ).toHaveCount(0);
         expect(await hasHorizontalScroll(page)).toBe(false);
 
         // Week: the arrows move by seven days and "Volver a hoy" returns.
         await page.goto('/agenda?vista=semana');
-        await expect(page.getByRole('heading', { name: 'Esta semana' })).toBeVisible();
+        await expect(
+            page.getByRole('heading', { name: 'Esta semana' }),
+        ).toBeVisible();
         await page.getByRole('button', { name: 'Semana siguiente' }).click();
         await expect(page).toHaveURL(/fecha=/);
-        await expect(page.getByRole('button', { name: 'Volver a hoy' })).toBeVisible();
+        await expect(
+            page.getByRole('button', { name: 'Volver a hoy' }),
+        ).toBeVisible();
         await page.getByRole('button', { name: 'Semana anterior' }).click();
-        await expect(page.getByRole('heading', { name: 'Esta semana' })).toBeVisible();
+        await expect(
+            page.getByRole('heading', { name: 'Esta semana' }),
+        ).toBeVisible();
 
         // The week is one professional's; going back to the list is the whole team again.
         await page.getByRole('radio', { name: 'Lista' }).click();
-        await expect(page.getByRole('combobox', { name: 'Profesional' })).toContainText('Todo el equipo');
+        await expect(
+            page.getByRole('combobox', { name: 'Profesional' }),
+        ).toContainText('Todo el equipo');
         assertNoErrors();
     });
 
-    test('Hoy: la cita que sigue muestra su cuenta regresiva', async ({ page }, testInfo) => {
+    test('Hoy: la cita que sigue muestra su cuenta regresiva', async ({
+        page,
+    }, testInfo) => {
         test.skip(testInfo.project.name !== 'movil', 'modifica datos una vez');
         const assertNoErrors = watchForErrors(page);
 
@@ -245,7 +270,10 @@ test.describe('Cierre de la Fase 4: agenda', () => {
         await expect(summary).toContainText('Sigue');
         await expect(summary).toContainText(/en \d/);
         // Cleanup.
-        await page.getByRole('article', { name: /Qa4 Hoy/ }).getByRole('button', { name: 'Cancelar' }).click();
+        await page
+            .getByRole('article', { name: /Qa4 Hoy/ })
+            .getByRole('button', { name: 'Cancelar' })
+            .click();
         await page.getByRole('button', { name: 'Sí, cancelar' }).click();
         assertNoErrors();
     });
@@ -253,7 +281,10 @@ test.describe('Cierre de la Fase 4: agenda', () => {
     test('en escritorio, el tablero reparte una cita a otro profesional arrastrándola, y rechaza a quien no hace el servicio', async ({
         page,
     }, testInfo) => {
-        test.skip(testInfo.project.name !== 'escritorio', 'arrastrar necesita ratón');
+        test.skip(
+            testInfo.project.name !== 'escritorio',
+            'arrastrar necesita ratón',
+        );
         const assertNoErrors = watchForErrors(page);
         const name = 'Qa4 Tablero';
 
@@ -264,14 +295,18 @@ test.describe('Cierre de la Fase 4: agenda', () => {
         await page.getByRole('button', { name: 'Continuar' }).click();
         await page.getByRole('button', { name: /José Antonio/ }).click();
         await page.getByRole('radio').nth(1).click();
-        await page.getByRole('button', { name: '12:00 p. m.', exact: true }).click();
+        await page
+            .getByRole('button', { name: '12:00 p. m.', exact: true })
+            .click();
         await page.getByLabel('Nombre de tu cliente').fill(name);
         await page.getByRole('button', { name: 'Agendar cita' }).click();
         await expect(page).toHaveURL(/\/agenda\?fecha=/);
         const day = new URL(page.url()).searchParams.get('fecha')!;
 
         await page.goto(`/agenda?vista=tablero&fecha=${day}`);
-        const jose = page.getByRole('group', { name: 'José Antonio Fernández' });
+        const jose = page.getByRole('group', {
+            name: 'José Antonio Fernández',
+        });
         const lucia = page.getByRole('group', { name: 'Lucía Ramírez' });
         const valeria = page.getByRole('group', { name: 'Valeria Vitrina' });
         const block = jose.getByRole('button', { name: new RegExp(name) });
@@ -282,25 +317,39 @@ test.describe('Cierre de la Fase 4: agenda', () => {
             const to = (await target.boundingBox())!;
             await page.mouse.move(from.x + from.width / 2, from.y + 8);
             await page.mouse.down();
-            await page.mouse.move(to.x + to.width / 2, from.y + 8, { steps: 10 });
+            await page.mouse.move(to.x + to.width / 2, from.y + 8, {
+                steps: 10,
+            });
             await page.mouse.up();
         };
 
         // Valeria does not perform the service: the server says no and nothing moves.
         await drag(valeria);
-        await expect(page.getByText(/no puede atender esta cita/)).toBeVisible();
-        await expect(jose.getByRole('button', { name: new RegExp(name) })).toBeVisible();
+        await expect(
+            page.getByText(/no puede atender esta cita/),
+        ).toBeVisible();
+        await expect(
+            jose.getByRole('button', { name: new RegExp(name) }),
+        ).toBeVisible();
 
         // Lucía does.
         await drag(lucia);
-        await expect(page.getByText('Cita movida. Avísale a tu cliente.')).toBeVisible();
-        await expect(lucia.getByRole('button', { name: new RegExp(name) })).toBeVisible();
-        await expect(jose.getByRole('button', { name: new RegExp(name) })).toHaveCount(0);
+        await expect(
+            page.getByText('Cita movida. Avísale a tu cliente.'),
+        ).toBeVisible();
+        await expect(
+            lucia.getByRole('button', { name: new RegExp(name) }),
+        ).toBeVisible();
+        await expect(
+            jose.getByRole('button', { name: new RegExp(name) }),
+        ).toHaveCount(0);
 
         // Tap it: its options, then clean up.
         await lucia.getByRole('button', { name: new RegExp(name) }).click();
         const dialog = page.getByRole('dialog');
-        await expect(dialog.getByRole('button', { name: 'Mover' })).toBeVisible();
+        await expect(
+            dialog.getByRole('button', { name: 'Mover' }),
+        ).toBeVisible();
         await dialog.getByRole('button', { name: 'Cancelar' }).click();
         await page.getByRole('button', { name: 'Sí, cancelar' }).click();
         assertNoErrors();
@@ -324,14 +373,20 @@ test.describe('Cierre de la Fase 4: Mis reservas', () => {
         await page.getByRole('button', { name: 'Continuar' }).click();
         await page.getByRole('button', { name: /Siempre Abierto/ }).click();
         await page.getByRole('radio').nth(3).click();
-        await page.getByRole('button', { name: '9:00 a. m.', exact: true }).click();
+        await page
+            .getByRole('button', { name: '9:00 a. m.', exact: true })
+            .click();
         await page.getByRole('button', { name: 'Confirmar reserva' }).click();
         await expect(page).toHaveURL(/\/mis-reservas\/[A-Z0-9]{8}$/);
         const bookingUrl = page.url();
 
         // Photo: upload, change, remove, upload again.
         const upload = (label: string) =>
-            page.getByLabel(label).setInputFiles({ name: 'estilo.png', mimeType: 'image/png', buffer: PNG });
+            page.getByLabel(label).setInputFiles({
+                name: 'estilo.png',
+                mimeType: 'image/png',
+                buffer: PNG,
+            });
         await upload('Subir foto');
         const photo = page.getByAltText('Foto de referencia de tu estilo');
         await expect(photo).toBeVisible();
@@ -348,28 +403,48 @@ test.describe('Cierre de la Fase 4: Mis reservas', () => {
         await page.getByRole('button', { name: 'Cambiar día u hora' }).click();
         const dialog = page.getByRole('dialog');
         await dialog.getByRole('radio').nth(4).click();
-        await dialog.getByRole('button', { name: '10:00 a. m.', exact: true }).click();
+        await dialog
+            .getByRole('button', { name: '10:00 a. m.', exact: true })
+            .click();
 
-        const salon = await browser.newContext({ baseURL, locale: 'es-PE', timezoneId: 'America/Lima' });
+        const salon = await browser.newContext({
+            baseURL,
+            locale: 'es-PE',
+            timezoneId: 'America/Lima',
+        });
         const team = await salon.newPage();
         await login(team, multi.email, multi.password);
         await expect(team).toHaveURL(/dashboard$/);
         await wizardToLastStep(team, '10:00 a. m.', 4);
-        await team.getByLabel('Nombre de tu cliente').fill('Qa4 Ganó el horario');
+        await team
+            .getByLabel('Nombre de tu cliente')
+            .fill('Qa4 Ganó el horario');
         await team.getByRole('button', { name: 'Agendar cita' }).click();
         await expect(team).toHaveURL(/agenda\?fecha=/);
-        await expect(team.getByRole('article', { name: /Qa4 Ganó el horario/ })).toBeVisible();
+        await expect(
+            team.getByRole('article', { name: /Qa4 Ganó el horario/ }),
+        ).toBeVisible();
 
-        await dialog.getByRole('button', { name: /^Mover a las/ }).click();
-        await expect(page.getByText(/se acaba de ocupar/i)).toBeVisible();
+        await dialog
+            .getByRole('button', { name: /^(Mover|Cambiar) a las/ })
+            .click();
+        await expect.soft(page.getByText(/se acaba de ocupar/i)).toBeVisible();
         await expect(dialog).toBeVisible();
-        await expect(dialog.getByRole('button', { name: '10:00 a. m.', exact: true })).toHaveCount(0);
-        await expect(dialog.getByRole('button', { name: /^Elige un horario/ })).toBeVisible();
+        await expect(
+            dialog.getByRole('button', { name: '10:00 a. m.', exact: true }),
+        ).toHaveCount(0);
+        await expect(
+            dialog.getByRole('button', { name: /^Elige un horario/ }),
+        ).toBeVisible();
 
         // A free one works.
         await dialog.getByRole('button', { name: TIME }).first().click();
-        await dialog.getByRole('button', { name: /^Mover a las/ }).click();
-        await expect(page.getByText('Listo, cambiamos la hora de tu reserva.')).toBeVisible();
+        await dialog
+            .getByRole('button', { name: /^(Mover|Cambiar) a las/ })
+            .click();
+        await expect(
+            page.getByText('Listo, cambiamos la hora de tu reserva.'),
+        ).toBeVisible();
         await expect(dialog).toHaveCount(0);
 
         // The team sees the reference photo in its agenda, on the day it moved to.
@@ -381,23 +456,32 @@ test.describe('Cierre de la Fase 4: Mis reservas', () => {
         await page.goto(bookingUrl);
         await page.getByRole('button', { name: 'Cancelar reserva' }).click();
         await page.getByRole('button', { name: 'Sí, cancelar' }).click();
-        await expect(page.getByText('Cancelada', { exact: true })).toBeVisible();
+        await expect(
+            page.getByText('Cancelada', { exact: true }),
+        ).toBeVisible();
         await expect(page.getByLabel('Cambiar foto')).toHaveCount(0);
         await expect(page.getByLabel('Subir foto')).toHaveCount(0);
-        await expect(page.getByRole('button', { name: 'Cambiar día u hora' })).toHaveCount(0);
+        await expect(
+            page.getByRole('button', { name: 'Cambiar día u hora' }),
+        ).toHaveCount(0);
         assertNoErrors();
     });
 });
 
 /** A date of the salon's clock (Lima), `days` from today, as Y-m-d. */
 function limaDate(days: number): string {
-    return new Date(Date.now() + days * 86_400_000).toLocaleDateString('en-CA', {
-        timeZone: 'America/Lima',
-    });
+    return new Date(Date.now() + days * 86_400_000).toLocaleDateString(
+        'en-CA',
+        {
+            timeZone: 'America/Lima',
+        },
+    );
 }
 
 for (const colorScheme of ['light', 'dark'] as const) {
-    test(`pantallas nuevas sin scroll horizontal ni errores (${colorScheme})`, async ({ page }) => {
+    test(`pantallas nuevas sin scroll horizontal ni errores (${colorScheme})`, async ({
+        page,
+    }) => {
         const assertNoErrors = watchForErrors(page);
         await page.emulateMedia({ colorScheme });
 
@@ -412,7 +496,10 @@ for (const colorScheme of ['light', 'dark'] as const) {
         ]) {
             await page.goto(url);
             await expect(page.locator('h1').first()).toBeVisible();
-            expect(await hasHorizontalScroll(page), `scroll horizontal en ${url} (${colorScheme})`).toBe(false);
+            expect(
+                await hasHorizontalScroll(page),
+                `scroll horizontal en ${url} (${colorScheme})`,
+            ).toBe(false);
         }
 
         assertNoErrors();

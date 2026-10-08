@@ -43,7 +43,7 @@ Route::get('s/{salon:slug}/reservar', [BookingController::class, 'create'])
     ->middleware('throttle:120,1,booking-page')
     ->name('salons.booking.create');
 Route::get('s/{salon:slug}/disponibilidad', [BookingController::class, 'availability'])
-    ->middleware('throttle:90,1,booking-availability')
+    ->middleware(['throttle:90,1,booking-availability', 'lookup'])
     ->name('salons.booking.availability');
 
 // A third argument gives each limit its own counter: unnamed throttles of
@@ -78,7 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:20,1,booking-cancel')
         ->name('bookings.cancel');
     Route::get('mis-reservas/{code}/horarios', [ClientBookingController::class, 'slots'])
-        ->middleware('throttle:90,1,booking-move-slots')
+        ->middleware(['throttle:90,1,booking-move-slots', 'lookup'])
         ->name('bookings.slots');
     Route::post('mis-reservas/{code}/mover', [ClientBookingController::class, 'move'])
         ->middleware('throttle:10,1,booking-move')
@@ -150,16 +150,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // The team books for a client, and moves bookings.
         Route::get('agenda/nueva', [AgendaBookingController::class, 'create'])->name('agenda.bookings.create');
         Route::get('agenda/disponibilidad', [AgendaBookingController::class, 'availability'])
-            ->middleware('throttle:120,1,agenda-availability')
+            ->middleware(['throttle:120,1,agenda-availability', 'lookup'])
             ->name('agenda.bookings.availability');
         Route::get('agenda/clientes', [AgendaBookingController::class, 'clients'])
-            ->middleware('throttle:60,1,agenda-clients')
+            ->middleware(['throttle:60,1,agenda-clients', 'lookup'])
             ->name('agenda.bookings.clients');
         Route::post('agenda', [AgendaBookingController::class, 'store'])
             ->middleware('throttle:60,1,agenda-store')
             ->name('agenda.bookings.store');
         Route::get('agenda/{booking}/horarios', [BookingMoveController::class, 'slots'])
-            ->middleware('throttle:120,1,agenda-move-slots')
+            ->middleware(['throttle:120,1,agenda-move-slots', 'lookup'])
             ->name('agenda.bookings.slots');
         Route::post('agenda/{booking}/mover', [BookingMoveController::class, 'update'])
             ->middleware('throttle:60,1,agenda-move')

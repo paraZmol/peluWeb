@@ -158,6 +158,9 @@ test.describe('Reservar en línea', () => {
             const assertNoErrors = watchForErrors(page);
 
             await page.goto('/s/salon-uno/reservar');
+            // A wizard left half-way is picked up again: start clean each time.
+            await page.evaluate(() => window.sessionStorage.clear());
+            await page.goto('/s/salon-uno/reservar');
             await chooseUntilConfirm(page);
             const overflow = await page.evaluate(
                 () =>

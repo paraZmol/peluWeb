@@ -1,12 +1,15 @@
-import { useHttp } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 /**
- * JSON from a GET endpoint, reloaded whenever the URL changes. A null URL
- * means "nothing to ask yet".
+ * JSON from a GET endpoint of this app, reloaded whenever the URL changes.
+ * A null URL means "nothing to ask yet".
+ *
+ * A plain `fetch`, on purpose: these lookups (free times, client
+ * suggestions) run while forms are being sent, and must stay out of the way
+ * of Inertia's own visits. One still in flight when a form came back with
+ * validation errors used to swallow those errors.
  */
 export function useFetched<T>(url: string | null, failure: string) {
-    const http = useHttp<Record<string, never>, T>();
     const [data, setData] = useState<T | null>(null);
     const [error, setError] = useState<string>();
     const [attempt, setAttempt] = useState(0);
@@ -16,28 +19,29 @@ export function useFetched<T>(url: string | null, failure: string) {
             return;
         }
 
-        let isCurrent = true;
+        const request = new AbortController();
         setData(null);
         setError(undefined);
 
-        http.get(url)
-            .then((response) => {
-                if (isCurrent) {
-                    setData(response);
-                }
-            })
+        fetch(url, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+            signal: request.signal,
+        })
+            .then((response) =>
+                response.ok
+                    ? (response.json() as Promise<T>)
+                    : Promise.reject(new Error(String(response.status))),
+            )
+            .then(setData)
             .catch(() => {
-                if (isCurrent) {
+                if (!request.signal.aborted) {
                     setError(failure);
                 }
             });
 
-        return () => {
-            isCurrent = false;
-        };
-        // `http` is a new object every render; the URL is the input.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [url, attempt]);
+        return () => request.abort();
+    }, [url, attempt, failure]);
 
     return {
         data: url === null ? null : data,

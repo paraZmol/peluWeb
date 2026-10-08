@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureSalonMember;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\KeepFlashedData;
 use App\Http\Middleware\ResolveCurrentSalon;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\ThrottleAccountEndpoints;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'salon' => EnsureSalonMember::class,
+            'lookup' => KeepFlashedData::class,
         ]);
 
         // The current salon must be known before route model binding runs,

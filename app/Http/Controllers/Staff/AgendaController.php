@@ -68,6 +68,8 @@ class AgendaController extends SalonAreaController
             'bookings' => $bookings->map(fn (Booking $booking) => (new AgendaBookingResource($booking, $salon->timezone))->resolve($request)),
             'staffOptions' => $team->map(fn (Staff $staff) => ['id' => $staff->id, 'name' => $staff->name])->values(),
             'selectedStaffId' => $seesEveryone ? $staffId : null,
+            // True when nobody asked for that professional: the week needs one and picked it.
+            'staffIsDefault' => $seesEveryone && $staffId !== null && $team->doesntContain('id', $request->integer('profesional')),
             'hasProfile' => $own !== null,
             'seesEveryone' => $seesEveryone,
             'canBook' => $request->user()?->can('create', [Booking::class, $salon]) ?? false,

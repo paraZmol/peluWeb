@@ -21,6 +21,8 @@ type Props = {
     bookings: AgendaBooking[];
     staffOptions: StaffOption[];
     selectedStaffId: number | null;
+    /** The week view picked that professional by itself; nobody asked for them. */
+    staffIsDefault: boolean;
     hasProfile: boolean;
     seesEveryone: boolean;
     canBook: boolean;
@@ -37,6 +39,7 @@ export default function Agenda({
     bookings,
     staffOptions,
     selectedStaffId,
+    staffIsDefault,
     hasProfile,
     seesEveryone,
     canBook,
@@ -51,7 +54,9 @@ export default function Agenda({
     }) => {
         const next = {
             fecha: date,
-            profesional: selectedStaffId,
+            // Not carried along when the week chose it: back in the list,
+            // "Todo el equipo" is what was being looked at.
+            profesional: staffIsDefault ? null : selectedStaffId,
             vista: view,
             ...changes,
         };

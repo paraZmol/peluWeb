@@ -10,7 +10,9 @@ import { defineConfig, devices } from '@playwright/test';
 const php =
     process.env.PHP ??
     (process.platform === 'win32' ? 'C:\\php84\\php.exe' : 'php');
-const port = 8123;
+// A second lane (another agent, another terminal) sets its own port,
+// database and results folder so two runs never step on each other.
+const port = Number(process.env.E2E_PORT ?? 8123);
 const baseURL = `http://127.0.0.1:${port}`;
 
 export const testEnv = {
@@ -26,6 +28,7 @@ export const testEnv = {
 
 export default defineConfig({
     testDir: './tests/e2e',
+    outputDir: process.env.E2E_OUTPUT ?? 'test-results',
     fullyParallel: false,
     workers: 1,
     retries: process.env.CI ? 1 : 0,
