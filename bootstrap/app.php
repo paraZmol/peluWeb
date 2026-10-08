@@ -18,6 +18,8 @@ use Inertia\Inertia;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        apiPrefix: 'api/v1',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -54,7 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // Business rule violations go back to the form as a toast, not a 500.
         $exceptions->render(function (BusinessRuleException $exception, Request $request) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['message' => $exception->getMessage()], 422);
             }
 

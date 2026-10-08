@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Actions\Booking\ChangeBookingStatus;
+use App\Actions\Booking\ClientBookings;
 use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\RescheduleBooking;
 use App\Actions\Booking\UpdateReferencePhoto;
@@ -15,7 +16,6 @@ use App\Http\Resources\AvailabilityPayload;
 use App\Http\Resources\ClientBookingResource;
 use App\Models\Booking;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,15 +25,20 @@ use Inertia\Response;
 /**
  * "Mis reservas": someone's own bookings across every salon. They are not
  * members of those salons, so the salon scope is replaced by ownership:
- * every query goes through mine(), and a code that is not theirs is a 404.
+ * every query goes through ClientBookings, and a code that is not theirs is
+ * a 404.
  */
 class BookingController extends Controller
 {
-    private const int HISTORY_LIMIT = 30;
+    public const int HISTORY_LIMIT = 30;
+
+    public function __construct(private readonly ClientBookings $bookings) {}
 
     public function index(Request $request): Response
     {
-        $bookings = $this->mine($request)->orderByDesc('starts_at')->limit(self::HISTORY_LIMIT)->get();
+        /** @var User $user */
+        $user = $request->user();
+        $bookings = $this->bookings->query($user)->orderByDesc('starts_at')->limit(self::HISTORY_LIMIT)->get();
 
         return Inertia::render('client/bookings/index', [
             'bookings' => ClientBookingResource::collection($bookings)->resolve(),
@@ -110,25 +115,9 @@ class BookingController extends Controller
 
     private function find(Request $request, string $code): Booking
     {
-        return $this->mine($request)->where('code', $code)->firstOrFail();
-    }
-
-    /**
-     * Bookings whose client record belongs to the signed-in account, with
-     * what the pages show, loaded without the salon scope.
-     *
-     * @return Builder<Booking>
-     */
-    private function mine(Request $request): Builder
-    {
         /** @var User $user */
         $user = $request->user();
-        $unscoped = fn ($query) => $query->withoutGlobalScope('salon');
 
-        return Booking::withoutGlobalScope('salon')
-            ->whereHas('client', fn (Builder $client) => $client->withoutGlobalScope('salon')->where('user_id', $user->id))
-            // A deleted salon takes its bookings out of sight.
-            ->whereHas('salon')
-            ->with(['salon', 'services', 'client' => $unscoped, 'staff' => $unscoped]);
+        return $this->bookings->findOrFail($user, $code);
     }
 }

@@ -54,7 +54,7 @@ class BookingController extends Controller
 
         return Inertia::render('public/booking', [
             'salon' => new BookableSalonResource($salon, $services, $staff, $this->finder->performers($staff)),
-            'days' => $days->handle($salon, $this->level($salon, $request->user()), $salon->max_days_ahead),
+            'days' => $days->handle($salon, $this->clients->levelOf($salon, $request->user()), $salon->max_days_ahead),
             'isOpen' => $salon->isWritable() && $salon->accepts_online_bookings,
             'viewer' => $this->viewer($request->user()),
             'preselectedServiceId' => $request->integer('servicio') ?: null,
@@ -71,7 +71,7 @@ class BookingController extends Controller
 
         $selections = $request->selections();
         $staff = $request->staffIn($salon);
-        $level = $this->level($salon, $request->user());
+        $level = $this->clients->levelOf($salon, $request->user());
 
         ['slots' => $slots, 'quotes' => $quotes] = $this->finder->search(
             $salon, $selections, $staff, $request->localDate($salon->timezone), $level, CarbonImmutable::now(),
@@ -164,15 +164,6 @@ class BookingController extends Controller
         }
 
         return ['serviceIds' => $serviceIds, 'staffId' => $staff->has($booking->staff_id) ? $booking->staff_id : null];
-    }
-
-    /**
-     * VIP only for someone this salon marked as such; everyone else,
-     * signed in or not, is a regular client.
-     */
-    private function level(Salon $salon, ?User $user): ClientLevel
-    {
-        return $user === null ? ClientLevel::Standard : ($this->clients->find($salon, $user)?->level() ?? ClientLevel::Standard);
     }
 
     /**

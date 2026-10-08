@@ -2,6 +2,7 @@
 
 namespace App\Actions\Booking;
 
+use App\Enums\ClientLevel;
 use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\User;
@@ -45,6 +46,15 @@ class ResolveSalonClient
             ->first();
 
         return $known ?? $this->prepare($salon, PersonName::clean($name, SalonClient::NAME_MAX_LENGTH, 'Cliente'), $phone);
+    }
+
+    /**
+     * What hours someone may book online: VIP only for whom this salon
+     * marked as such; everyone else, signed in or not, is a regular client.
+     */
+    public function levelOf(Salon $salon, ?User $user): ClientLevel
+    {
+        return $user === null ? ClientLevel::Standard : ($this->find($salon, $user)?->level() ?? ClientLevel::Standard);
     }
 
     public function find(Salon $salon, User $user): ?SalonClient
