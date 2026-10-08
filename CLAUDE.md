@@ -72,7 +72,10 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
 - Pantallas públicas y de alta del salón (portada, registro, página del salón, reserva, Mis
   reservas): cargar `design-craft` además de `ui-system`. La dirección la fija **design-director**
   (propone con maquetas y capturas reales; el usuario elige) y la construye **frontend-builder**;
-  no se mezclan direcciones ni se vuelve a la paleta hueso + cobre (descartada el 2026-10-08).
+  no se mezclan direcciones. Cada salón elige su **plantilla** (Editorial, Nocturna, Luminosa,
+  Vibrante; Nocturna siempre oscura) y las cuatro sirven para cualquier negocio, no solo barberías.
+  Hueso + cobre queda solo como identidad de peluWeb en claro y como plantilla Editorial (decisión
+  del 2026-10-08), nunca plana ni sin fotos; en oscuro la plataforma usa la paleta Nocturna.
   Fotos de demostración solo de `database/seeders/images/` con licencia en `CREDITS.md`.
 - Tests rápidos: `php artisan test --parallel --processes=6 --exclude-testsuite=Concurrency` (~1 min) y
   después `php artisan test --testsuite=Concurrency` (va solo: compite por bloqueos reales).

@@ -23,8 +23,11 @@ la velocidad; no se decoran.
 ## 2. Lo prohibido (por experiencia, 2026-10-08)
 - **Plano y genérico**: fondos de un solo tono con tarjetas blancas de borde gris, sin fotos, sin
   jerarquía. Se ve como una plantilla de panel de administración.
-- **La paleta del chat de Claude**: hueso `#FAF8F5` con acento cobre/terracota y serif suave. El
-  usuario la reconoce al instante y la rechaza. Nada de beige cálido + cobre como base.
+- **La paleta del chat de Claude servida plana**: hueso `#FAF8F5` con acento cobre/terracota y
+  serif suave, sin fotos ni profundidad. El usuario la reconoció al instante y la rechazó. Después,
+  al verla con fotos reales, decidió conservarla en dos sitios y solo ahí: la identidad de peluWeb
+  en modo claro y la plantilla Editorial. No es la base de ninguna otra plantilla ni de una
+  dirección nueva, y donde se usa va siempre con fotos, tres planos de profundidad y jerarquía.
 - Colores escritos a mano en componentes; fotos deformadas o pixeladas; texto sobre foto sin
   velo de contraste; íconos de distintas familias; tres botones primarios en una vista.
 - Un asistente de reserva "de formulario": campos y selects donde deberían ir chips, tiras de

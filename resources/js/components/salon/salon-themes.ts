@@ -88,3 +88,12 @@ export const SALON_THEME_ORDER: SalonTheme[] = [
  * template is decided by the server from its business type.
  */
 export const PLATFORM_THEME: SalonTheme = 'editorial';
+
+/**
+ * Templates that look the same whatever the visitor's light/dark setting:
+ * an owner who picks Nocturna gets a dark page for every client. The other
+ * templates follow the visitor's mode.
+ */
+export const ALWAYS_DARK_THEMES: ReadonlySet<SalonTheme> = new Set([
+    'nocturna',
+]);

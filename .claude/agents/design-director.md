@@ -36,8 +36,9 @@ Cuando te piden maquetar una dirección (te darán nombre, intención y límites
   maqueta que no has mirado no está entregada.
 - Una dirección es una postura: no la diluyas para que "guste a todos". Pero debe funcionar
   para una barbería, un salón femenino y un local de uñas cambiando solo el color de marca.
-- Prohibido: hueso + cobre, lo plano, texto sobre foto sin velo, colores a mano fuera de los
-  tokens de la maqueta, fotos deformadas.
+- Prohibido: otra dirección hueso + cobre (ya existe: es la plataforma en claro y la plantilla
+  Editorial, y no se extiende a más), lo plano, texto sobre foto sin velo, colores a mano fuera de
+  los tokens de la maqueta, fotos deformadas.
 
 ## Modo "convertir la elegida en spec"
 1. Reescribe `.claude/skills/ui-system/SKILL.md`: dirección, tokens (claro/oscuro), fuentes y

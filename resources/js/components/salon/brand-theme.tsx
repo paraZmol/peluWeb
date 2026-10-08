@@ -2,7 +2,11 @@ import { createContext, use } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import type { BrandTokens, SalonTheme } from '@/types';
-import { PLATFORM_THEME, SALON_THEMES } from './salon-themes';
+import {
+    ALWAYS_DARK_THEMES,
+    PLATFORM_THEME,
+    SALON_THEMES,
+} from './salon-themes';
 import type { SalonThemeLayout } from './salon-themes';
 
 type Props = {
@@ -43,7 +47,12 @@ export function BrandTheme({
         <SalonThemeContext value={{ theme, brand }}>
             <div
                 data-theme={theme}
-                className={cn(brand && 'brand-scope', 'font-sans', className)}
+                className={cn(
+                    brand && 'brand-scope',
+                    ALWAYS_DARK_THEMES.has(theme) && 'dark',
+                    'font-sans',
+                    className,
+                )}
                 style={style}
             >
                 {children}

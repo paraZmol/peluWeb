@@ -119,10 +119,14 @@ Fondo previo a la carga en `app.blade.php`: `#FAF8F5` / `#0B0F14`.
 | `--primary` sin marca | ámbar `#F2B544` / tinta `#0B0F14` | igual | frambuesa `#D6336C` / blanco | igual | azul `#2D5BFF` / blanco | igual |
 | `--ring` | marca | marca | marca | marca | tinta `#0E0E11` | `#F4F4F7` |
 
-Nocturna en claro conserva su identidad: **la portada, el cierre y las tarjetas de equipo son
-bloques de foto oscuros con velo** en los dos modos. Las plantillas siguen el modo del visitante
-(claro/oscuro, como el resto de la app). Si un día se quiere Nocturna siempre oscura, basta con
-añadir `dark` al contenedor de `BrandTheme`: el CSS ya lo admite (`[data-theme].dark`).
+**Nocturna es siempre oscura** (decisión del 2026-10-08: es lo que mostraba la maqueta elegida y
+lo que promete su nombre). `BrandTheme` añade `dark` al contenedor para las plantillas de
+`ALWAYS_DARK_THEMES` (`components/salon/salon-themes.ts`); el CSS lo admite con
+`[data-theme].dark` y `.brand-scope.dark`, y `PortalTheme` lo hereda. La columna "Nocturna claro
+(humo)" sigue definida en `app.css` pero no se usa mientras Nocturna esté en ese conjunto.
+Editorial, Luminosa y Vibrante siguen el modo del visitante (claro/oscuro, como el resto de la
+app). Ojo: la variante `dark:` es `&:is(.dark *)`, así que no se aplica al propio contenedor de
+`BrandTheme`, solo a lo que lleva dentro.
 
 ### 2.4 Color de marca del salón
 1. El dueño elige un color; el servidor (`App\Support\BrandColor::tokens`, vía `Salon::brandTokens()`)
