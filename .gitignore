@@ -45,3 +45,4 @@ yarn-error.log
 /test-results
 /playwright-report
 /test-results-*
+/public/propuestas
