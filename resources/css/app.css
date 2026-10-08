@@ -7,18 +7,44 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Design system — spec in .claude/skills/ui-system. Never hard-code colors in
+ * components: only these tokens. Fonts are literal stacks so a template can
+ * override them on its container; everything else is `inline` so utilities
+ * read the variable where they are used (nested [data-theme] just works).
+ */
 @theme {
     --font-sans:
-        'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'Fraunces', ui-serif, Georgia, serif;
+        'Inter', 'Inter fallback', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+    --font-display: 'Fraunces', 'Fraunces fallback', ui-serif, Georgia, serif;
+}
 
-    --radius-lg: var(--radius);
-    --radius-md: calc(var(--radius) - 2px);
+@theme inline {
     --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: var(--radius-card);
+    --radius-2xl: var(--radius-photo);
+    --radius-3xl: var(--radius-hero);
+    --radius-portrait: var(--shape-portrait);
+    --radius-feature: var(--shape-feature);
+    --radius-tile: var(--shape-tile);
+
+    --shadow-card: var(--elevation-1);
+    --shadow-raised: var(--elevation-2);
+    --shadow-float: var(--elevation-3);
+    --shadow-brand: var(--primary-shadow);
+
+    --text-title-1: var(--title-1);
+    --text-title-2: var(--title-2);
+    --text-title-3: var(--title-3);
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
+    --color-band: var(--band);
+    --color-surface-2: var(--surface-2);
 
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
@@ -28,6 +54,11 @@
 
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
+
+    --color-brand-text: var(--brand-text);
+    --color-brand-soft: var(--brand-soft);
+    --color-brand-line: var(--brand-line);
+    --color-brand-2: var(--brand-2);
 
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
@@ -47,8 +78,12 @@
     --color-warning-foreground: var(--warning-foreground);
 
     --color-border: var(--border);
+    --color-border-strong: var(--border-strong);
     --color-input: var(--input);
     --color-ring: var(--ring);
+
+    --color-on-photo: var(--on-photo);
+    --color-veil: var(--veil);
 
     --color-chart-1: var(--chart-1);
     --color-chart-2: var(--chart-2);
@@ -66,15 +101,16 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
- * Design tokens — see .claude/skills/ui-system. Never hard-code colors in
- * components; each salon overrides --primary / --primary-foreground / --ring
- * at runtime with its brand color (contrast-checked server side).
- */
+/* ==========================================================================
+   1. Platform (= template "editorial"). Light: bone + copper. Dark: Nocturna.
+   ========================================================================== */
 :root {
+    color-scheme: light;
     --background: #faf8f5;
+    --band: #f4f0eb;
     --foreground: #1f1b18;
     --card: #ffffff;
+    --surface-2: #fdfcfa;
     --card-foreground: #1f1b18;
     --popover: #ffffff;
     --popover-foreground: #1f1b18;
@@ -93,14 +129,16 @@
     --warning: #b45309;
     --warning-foreground: #ffffff;
     --border: #e8e2db;
+    --border-strong: #d6cdc3;
     --input: #e8e2db;
     --ring: #8f5e45;
+    --on-photo: #ffffff;
+    --veil-base: #1f1b18;
     --chart-1: #8f5e45;
     --chart-2: #2f7d7a;
     --chart-3: #7a4e7e;
     --chart-4: #8a8a3c;
     --chart-5: #4f6178;
-    --radius: 0.875rem;
     --sidebar: #f4f0eb;
     --sidebar-foreground: #1f1b18;
     --sidebar-primary: #8f5e45;
@@ -109,45 +147,663 @@
     --sidebar-accent-foreground: #1f1b18;
     --sidebar-border: #e8e2db;
     --sidebar-ring: #8f5e45;
+
+    /* Shape */
+    --radius: 0.875rem;
+    --radius-card: 0.75rem;
+    --radius-photo: 1rem;
+    --radius-hero: 1.5rem;
+    --shape-portrait: 1rem;
+    --shape-feature: 1rem;
+    --shape-tile: 0.75rem;
+
+    /* Type (public pages: `display-type` + `text-title-*`) */
+    --title-1: clamp(1.875rem, 1.5rem + 1.6vw, 3rem);
+    --title-2: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+    --title-3: 1.375rem;
+    --display-weight: 600;
+    --display-tracking: -0.01em;
+    --display-leading: 1.1;
+    --display-case: none;
+
+    /* Depth (warm ink, two layers, never hard black) */
+    --highlight: rgb(255 255 255 / 0.9);
+    --elevation-1:
+        0 1px 2px rgb(31 27 24 / 0.05), 0 6px 16px -8px rgb(31 27 24 / 0.12);
+    --elevation-2:
+        0 2px 6px rgb(31 27 24 / 0.06), 0 18px 36px -14px rgb(31 27 24 / 0.22);
+    --elevation-3:
+        0 4px 10px rgb(31 27 24 / 0.06), 0 32px 64px -20px rgb(31 27 24 / 0.3);
+    --dock-shadow: 0 -10px 30px -18px rgb(31 27 24 / 0.25);
+
+    /* Skins (see @utility skin-* below) */
+    --card-fill: var(--card);
+    --card-edge: 1px solid var(--border);
+    --chip-fill: var(--card);
+    --chip-edge: 1px solid var(--border);
+    --chip-shadow: none;
+    --photo-edge: none;
+    --photo-vignette: none;
+
+    /* Brand derivation knobs (light) */
+    --brand-text-min: 0;
+    --brand-text-max: 0.5;
+    --brand-text-mix: black;
+    --brand-soft-amount: 12%;
+    --brand-glow-amount: 0%;
+    --brand-2-l: -0.1;
+    --brand-2-h: 0;
+    --veil-tint: 0%;
 }
 
 .dark {
-    --background: #121110;
-    --foreground: #f2eee9;
-    --card: #1c1a18;
-    --card-foreground: #f2eee9;
-    --popover: #1c1a18;
-    --popover-foreground: #f2eee9;
-    --primary: #d4a58a;
-    --primary-foreground: #1f1b18;
-    --secondary: #26231f;
-    --secondary-foreground: #f2eee9;
-    --muted: #26231f;
-    --muted-foreground: #a39a91;
-    --accent: #26231f;
-    --accent-foreground: #f2eee9;
+    color-scheme: dark;
+    --background: #0b0f14;
+    --band: #0e131a;
+    --foreground: #f3f4f6;
+    --card: #151b22;
+    --surface-2: #1b232c;
+    --card-foreground: #f3f4f6;
+    --popover: #1b232c;
+    --popover-foreground: #f3f4f6;
+    --primary: #f2b544;
+    --primary-foreground: #0b0f14;
+    --secondary: #232c37;
+    --secondary-foreground: #f3f4f6;
+    --muted: #232c37;
+    --muted-foreground: #a3adba;
+    --accent: #232c37;
+    --accent-foreground: #f3f4f6;
     --destructive: #7a271a;
     --destructive-foreground: #f97066;
-    --success: #4ade80;
-    --success-foreground: #121110;
+    --success: #34d399;
+    --success-foreground: #0b0f14;
     --warning: #fbbf24;
-    --warning-foreground: #121110;
-    --border: #2e2a26;
-    --input: #2e2a26;
-    --ring: #d4a58a;
-    --chart-1: #d4a58a;
+    --warning-foreground: #0b0f14;
+    --border: rgb(255 255 255 / 0.1);
+    --border-strong: rgb(255 255 255 / 0.16);
+    --input: rgb(255 255 255 / 0.16);
+    --ring: #f2b544;
+    --veil-base: #080b0f;
+    --chart-1: #f2b544;
     --chart-2: #5fb3ae;
     --chart-3: #b98abd;
     --chart-4: #c2c26a;
     --chart-5: #8fa3bd;
-    --sidebar: #181614;
-    --sidebar-foreground: #f2eee9;
-    --sidebar-primary: #d4a58a;
-    --sidebar-primary-foreground: #1f1b18;
-    --sidebar-accent: #26231f;
-    --sidebar-accent-foreground: #f2eee9;
-    --sidebar-border: #2e2a26;
-    --sidebar-ring: #d4a58a;
+    --sidebar: #0e131a;
+    --sidebar-foreground: #f3f4f6;
+    --sidebar-primary: #f2b544;
+    --sidebar-primary-foreground: #0b0f14;
+    --sidebar-accent: #1b232c;
+    --sidebar-accent-foreground: #f3f4f6;
+    --sidebar-border: rgb(255 255 255 / 0.1);
+    --sidebar-ring: #f2b544;
+
+    --highlight: rgb(255 255 255 / 0.07);
+    --elevation-1:
+        inset 0 1px 0 var(--highlight), 0 1px 2px rgb(0 0 0 / 0.45),
+        0 10px 24px -12px rgb(0 0 0 / 0.6);
+    --elevation-2:
+        inset 0 1px 0 var(--highlight), 0 2px 6px rgb(0 0 0 / 0.4),
+        0 28px 56px -20px rgb(0 0 0 / 0.75);
+    --elevation-3:
+        inset 0 1px 0 var(--highlight), 0 4px 10px rgb(0 0 0 / 0.4),
+        0 40px 80px -20px rgb(0 0 0 / 0.8);
+    --dock-shadow: 0 -18px 40px -20px rgb(0 0 0 / 0.6);
+    --card-fill: linear-gradient(180deg, var(--surface-2), var(--card));
+
+    --brand-text-min: 0.74;
+    --brand-text-max: 1;
+    --brand-text-mix: white;
+    --brand-soft-amount: 14%;
+    --brand-glow-amount: 40%;
+}
+
+/* ==========================================================================
+   2. Templates of the public salon page (data-theme on BrandTheme).
+   "editorial" adds nothing: it is the platform itself.
+   Dark blocks also match a container that carries `.dark` itself.
+   ========================================================================== */
+
+/* ---------- Nocturna: blue charcoal, photos to the edge, one glowing accent */
+[data-theme='nocturna'] {
+    --font-sans:
+        'Manrope', 'Manrope fallback', 'Inter', ui-sans-serif, system-ui,
+        sans-serif;
+    --font-display:
+        'Bebas Neue', 'Bebas Neue fallback', 'Oswald', Impact, sans-serif;
+    --title-1: clamp(3.5rem, 2rem + 6.5vw, 6.5rem);
+    --title-2: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+    --title-3: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+    --display-weight: 400;
+    --display-tracking: 0.01em;
+    --display-leading: 0.92;
+    --display-case: uppercase;
+    --radius: 1rem;
+    --radius-card: 1.5rem;
+    --radius-photo: 2rem;
+    --radius-hero: 2.5rem;
+    --shape-portrait: 1.5rem;
+    --shape-feature: 2rem;
+    --shape-tile: 1rem;
+
+    --primary: #f2b544;
+    --primary-foreground: #0b0f14;
+    --ring: #f2b544;
+    --background: #f3f4f6;
+    --band: #e9ecf0;
+    --foreground: #0b0f14;
+    --card: #ffffff;
+    --surface-2: #fbfbfc;
+    --card-foreground: #0b0f14;
+    --popover: #ffffff;
+    --popover-foreground: #0b0f14;
+    --secondary: #eef0f3;
+    --secondary-foreground: #0b0f14;
+    --muted: #eef0f3;
+    --muted-foreground: #48515e;
+    --accent: #eef0f3;
+    --accent-foreground: #0b0f14;
+    --success: #047857;
+    --success-foreground: #ffffff;
+    --border: rgb(11 15 20 / 0.09);
+    --border-strong: rgb(11 15 20 / 0.15);
+    --input: rgb(11 15 20 / 0.18);
+    --veil-base: #080b0f;
+    --highlight: rgb(255 255 255 / 0.9);
+    --elevation-1:
+        inset 0 1px 0 var(--highlight), 0 1px 2px rgb(11 15 20 / 0.06),
+        0 10px 24px -12px rgb(11 15 20 / 0.2);
+    --elevation-2:
+        inset 0 1px 0 var(--highlight), 0 2px 6px rgb(11 15 20 / 0.06),
+        0 28px 56px -22px rgb(11 15 20 / 0.32);
+    --elevation-3:
+        inset 0 1px 0 var(--highlight), 0 4px 10px rgb(11 15 20 / 0.08),
+        0 40px 80px -24px rgb(11 15 20 / 0.4);
+    --dock-shadow: 0 -10px 30px -18px rgb(11 15 20 / 0.25);
+    --card-fill: linear-gradient(180deg, var(--surface-2), var(--card));
+    --chip-fill: linear-gradient(180deg, var(--muted), var(--surface-2));
+    --chip-edge: 1px solid var(--border);
+    --chip-shadow:
+        inset 0 1px 0 var(--highlight), 0 1px 3px rgb(11 15 20 / 0.1);
+    --photo-vignette: radial-gradient(
+        120% 90% at 50% 40%,
+        transparent 55%,
+        rgb(8 11 15 / 0.55)
+    );
+    --brand-glow-amount: 38%;
+    --brand-2-l: -0.12;
+    --veil-tint: 10%;
+}
+
+:is(.dark [data-theme='nocturna'], [data-theme='nocturna'].dark) {
+    --background: #0b0f14;
+    --band: #0e131a;
+    --foreground: #f3f4f6;
+    --card: #151b22;
+    --surface-2: #1b232c;
+    --card-foreground: #f3f4f6;
+    --popover: #1b232c;
+    --popover-foreground: #f3f4f6;
+    --secondary: #232c37;
+    --secondary-foreground: #f3f4f6;
+    --muted: #232c37;
+    --muted-foreground: #a3adba;
+    --accent: #232c37;
+    --accent-foreground: #f3f4f6;
+    --success: #34d399;
+    --success-foreground: #0b0f14;
+    --border: rgb(255 255 255 / 0.1);
+    --border-strong: rgb(255 255 255 / 0.16);
+    --input: rgb(255 255 255 / 0.16);
+    --highlight: rgb(255 255 255 / 0.07);
+    --elevation-1:
+        inset 0 1px 0 var(--highlight), 0 1px 2px rgb(0 0 0 / 0.45),
+        0 10px 24px -12px rgb(0 0 0 / 0.6);
+    --elevation-2:
+        inset 0 1px 0 var(--highlight), 0 2px 6px rgb(0 0 0 / 0.4),
+        0 28px 56px -20px rgb(0 0 0 / 0.75);
+    --elevation-3:
+        inset 0 1px 0 var(--highlight), 0 4px 10px rgb(0 0 0 / 0.4),
+        0 40px 80px -20px rgb(0 0 0 / 0.8);
+    --dock-shadow: 0 -18px 40px -20px rgb(0 0 0 / 0.6);
+    --chip-shadow: inset 0 1px 0 var(--highlight), 0 2px 6px rgb(0 0 0 / 0.3);
+    --brand-glow-amount: 42%;
+}
+
+/* ---------- Luminosa: real white, cool light, brand halos, floating cards */
+[data-theme='luminosa'] {
+    --font-sans:
+        'Plus Jakarta Sans', 'Plus Jakarta Sans fallback', 'Inter',
+        ui-sans-serif, system-ui, sans-serif;
+    --font-display:
+        'DM Serif Display', 'DM Serif Display fallback', ui-serif, Georgia,
+        serif;
+    --title-1: clamp(2.625rem, 1.9rem + 3.6vw, 5rem);
+    --title-2: clamp(2.125rem, 1.8rem + 1.6vw, 3rem);
+    --title-3: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+    --display-weight: 400;
+    --display-tracking: -0.01em;
+    --display-leading: 1.05;
+    --display-case: none;
+    --radius: 1.125rem;
+    --radius-card: 1.5rem;
+    --radius-photo: 2rem;
+    --radius-hero: 2rem;
+    --shape-portrait: 1.125rem;
+    --shape-feature: 1.5rem;
+    --shape-tile: 1.125rem;
+
+    --primary: #d6336c;
+    --primary-foreground: #ffffff;
+    --ring: #d6336c;
+    --background: #ffffff;
+    --band: #f7f8fa;
+    --foreground: #111318;
+    --card: #ffffff;
+    --surface-2: #f1f3f7;
+    --card-foreground: #111318;
+    --popover: #ffffff;
+    --popover-foreground: #111318;
+    --secondary: #f1f3f7;
+    --secondary-foreground: #111318;
+    --muted: #f1f3f7;
+    --muted-foreground: #5a6172;
+    --accent: #f1f3f7;
+    --accent-foreground: #111318;
+    --success: #047857;
+    --success-foreground: #ffffff;
+    --border: rgb(17 19 24 / 0.07);
+    --border-strong: rgb(17 19 24 / 0.14);
+    --input: rgb(17 19 24 / 0.16);
+    --veil-base: #0a0b0f;
+    --highlight: rgb(255 255 255 / 0.9);
+    --elevation-1:
+        0 1px 2px rgb(16 24 40 / 0.06), 0 6px 16px -4px rgb(16 24 40 / 0.08);
+    --elevation-2:
+        0 2px 6px rgb(16 24 40 / 0.06), 0 18px 36px -10px rgb(16 24 40 / 0.18);
+    --elevation-3:
+        0 4px 10px rgb(16 24 40 / 0.06), 0 36px 72px -18px rgb(16 24 40 / 0.28);
+    --dock-shadow: 0 -10px 30px -18px rgb(16 24 40 / 0.22);
+    --card-fill: var(--card);
+    --chip-fill: var(--muted);
+    --chip-edge: 1px solid transparent;
+    --chip-shadow: none;
+    --brand-soft-amount: 11%;
+    --brand-glow-amount: 30%;
+    --brand-2-l: 0.05;
+    --brand-2-h: -40;
+    --veil-tint: 6%;
+}
+
+:is(.dark [data-theme='luminosa'], [data-theme='luminosa'].dark) {
+    --background: #111318;
+    --band: #161920;
+    --foreground: #f3f4f7;
+    --card: #1a1d24;
+    --surface-2: #232731;
+    --card-foreground: #f3f4f7;
+    --popover: #1a1d24;
+    --popover-foreground: #f3f4f7;
+    --secondary: #232731;
+    --secondary-foreground: #f3f4f7;
+    --muted: #232731;
+    --muted-foreground: #a6adbb;
+    --accent: #232731;
+    --accent-foreground: #f3f4f7;
+    --success: #32d583;
+    --success-foreground: #111318;
+    --border: rgb(255 255 255 / 0.07);
+    --border-strong: rgb(255 255 255 / 0.12);
+    --input: rgb(255 255 255 / 0.16);
+    --highlight: rgb(255 255 255 / 0.05);
+    --elevation-1:
+        inset 0 1px 0 var(--highlight), 0 1px 2px rgb(0 0 0 / 0.4),
+        0 8px 20px -6px rgb(0 0 0 / 0.45);
+    --elevation-2:
+        inset 0 1px 0 var(--highlight), 0 2px 6px rgb(0 0 0 / 0.4),
+        0 20px 40px -12px rgb(0 0 0 / 0.6);
+    --elevation-3:
+        inset 0 1px 0 var(--highlight), 0 4px 10px rgb(0 0 0 / 0.4),
+        0 40px 80px -20px rgb(0 0 0 / 0.7);
+    --dock-shadow: 0 -16px 36px -20px rgb(0 0 0 / 0.6);
+    --brand-glow-amount: 20%;
+}
+
+/* ---------- Vibrante: brand color in blocks, ink outlines, offset shadows */
+[data-theme='vibrante'] {
+    --font-sans:
+        'Inter', 'Inter fallback', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Syne', 'Syne fallback', 'Inter', system-ui, sans-serif;
+    --title-1: clamp(2.25rem, 1rem + 6vw, 4.75rem);
+    --title-2: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
+    --title-3: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+    --display-weight: 800;
+    --display-tracking: -0.03em;
+    --display-leading: 1;
+    --display-case: none;
+    --radius: 0.75rem;
+    --radius-card: 1.5rem;
+    --radius-photo: 2.25rem;
+    --radius-hero: 2.25rem;
+    --shape-portrait: 999px 999px 1.375rem 1.375rem;
+    --shape-feature: 1.375rem 4rem 1.375rem 1.375rem;
+    --shape-tile: 3rem 0.875rem 3rem 0.875rem;
+
+    --primary: #2d5bff;
+    --primary-foreground: #ffffff;
+    --ring: #0e0e11;
+    --background: #fbfbfd;
+    --band: #f2f2f6;
+    --foreground: #0e0e11;
+    --card: #ffffff;
+    --surface-2: #f2f2f6;
+    --card-foreground: #0e0e11;
+    --popover: #ffffff;
+    --popover-foreground: #0e0e11;
+    --secondary: #f2f2f6;
+    --secondary-foreground: #0e0e11;
+    --muted: #f2f2f6;
+    --muted-foreground: #565663;
+    --accent: #f2f2f6;
+    --accent-foreground: #0e0e11;
+    --success: #047857;
+    --success-foreground: #ffffff;
+    --border: rgb(14 14 17 / 0.1);
+    --border-strong: #0e0e11;
+    --input: rgb(14 14 17 / 0.22);
+    --veil-base: #0e0e11;
+    --hard: #0e0e11;
+    --highlight: transparent;
+    --elevation-1:
+        4px 4px 0 0 var(--primary), 0 1px 2px rgb(14 14 17 / 0.05),
+        0 18px 36px -20px rgb(14 14 17 / 0.3);
+    --elevation-2:
+        5px 5px 0 0 var(--hard), 0 1px 2px rgb(14 14 17 / 0.05),
+        0 18px 36px -20px rgb(14 14 17 / 0.3);
+    --elevation-3: 0 4px 10px rgb(14 14 17 / 0.06),
+        0 32px 64px -20px rgb(14 14 17 / 0.3);
+    --dock-shadow: 0 -10px 30px -18px rgb(14 14 17 / 0.22);
+    --card-fill: var(--card);
+    --card-edge: 1.5px solid var(--border-strong);
+    --chip-fill: var(--card);
+    --chip-edge: 1.5px solid var(--input);
+    --chip-shadow: none;
+    --photo-edge: 1.5px solid var(--border-strong);
+    --primary-edge: 1.5px solid var(--border-strong);
+    --brand-soft-amount: 10%;
+    --brand-glow-amount: 0%;
+    --brand-2-l: 0;
+    --veil-tint: 0%;
+}
+
+:is(.dark [data-theme='vibrante'], [data-theme='vibrante'].dark) {
+    --ring: #f4f4f7;
+    --background: #0e0e11;
+    --band: #141418;
+    --foreground: #f4f4f7;
+    --card: #18181d;
+    --surface-2: #222229;
+    --card-foreground: #f4f4f7;
+    --popover: #18181d;
+    --popover-foreground: #f4f4f7;
+    --secondary: #222229;
+    --secondary-foreground: #f4f4f7;
+    --muted: #222229;
+    --muted-foreground: #a7a7b4;
+    --accent: #222229;
+    --accent-foreground: #f4f4f7;
+    --success: #32d583;
+    --success-foreground: #0e0e11;
+    --border: rgb(244 244 247 / 0.09);
+    --border-strong: #3c3c48;
+    --input: rgb(244 244 247 / 0.2);
+    --hard: #000000;
+    --elevation-3: inset 0 1px 0 rgb(255 255 255 / 0.04),
+        0 22px 44px -22px rgb(0 0 0 / 0.9);
+    --dock-shadow: 0 -16px 36px -20px rgb(0 0 0 / 0.7);
+    --brand-soft-amount: 16%;
+}
+
+/* ==========================================================================
+   3. Salon brand (BrandTheme). Goes after the templates so a salon's color
+   wins over a template's default accent. The server already made both
+   variants readable (App\Support\BrandColor).
+   ========================================================================== */
+.brand-scope {
+    --primary: var(--brand-light);
+    --primary-foreground: var(--brand-light-foreground);
+    --ring: var(--brand-light);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-ring: var(--ring);
+}
+
+:is(.dark .brand-scope, .brand-scope.dark) {
+    --primary: var(--brand-dark);
+    --primary-foreground: var(--brand-dark-foreground);
+    --ring: var(--brand-dark);
+}
+
+/* Vibrante keeps an ink focus ring: a brand ring would vanish on brand blocks. */
+:is([data-theme='vibrante'].brand-scope) {
+    --ring: #0e0e11;
+}
+
+:is(.dark [data-theme='vibrante'].brand-scope, [data-theme='vibrante'].brand-scope.dark) {
+    --ring: #f4f4f7;
+}
+
+/* ==========================================================================
+   4. Brand derivatives. Declared on every element that may change --primary
+   (root, brand scope, template) so they are recomputed there. Base values
+   are safe for any browser; each @supports tier refines them.
+   ========================================================================== */
+:root,
+.brand-scope,
+[data-theme] {
+    --brand-text: var(--foreground);
+    --brand-soft: var(--muted);
+    --brand-line: var(--border-strong);
+    --brand-glow: transparent;
+    --brand-hi: var(--primary);
+    --brand-2: var(--primary);
+    --veil: var(--veil-base);
+    --dock-fill: var(--background);
+    --halo: none;
+    --primary-fill: none;
+    --primary-shadow: var(--elevation-1);
+    --veil-gradient: linear-gradient(to top, var(--veil) 0%, transparent 80%);
+    --veil-top: none;
+}
+
+@supports (color: color-mix(in oklab, red, blue)) {
+    :root,
+    .brand-scope,
+    [data-theme] {
+        --brand-text: color-mix(
+            in oklab,
+            var(--primary) 62%,
+            var(--brand-text-mix)
+        );
+        --brand-soft: color-mix(
+            in oklab,
+            var(--primary) var(--brand-soft-amount),
+            var(--card)
+        );
+        --brand-line: color-mix(in oklab, var(--primary) 45%, transparent);
+        --brand-glow: color-mix(
+            in oklab,
+            var(--primary) var(--brand-glow-amount),
+            transparent
+        );
+        --brand-hi: color-mix(in oklab, var(--primary), white 22%);
+        --brand-2: color-mix(in oklab, var(--primary), black 18%);
+        --veil: color-mix(
+            in oklab,
+            var(--veil-base),
+            var(--primary) var(--veil-tint)
+        );
+        --dock-fill: color-mix(in oklab, var(--background) 82%, transparent);
+        --primary-shadow:
+            0 2px 6px color-mix(in oklab, var(--primary) 24%, transparent),
+            0 14px 30px -12px var(--brand-glow);
+        --veil-gradient: linear-gradient(
+            to top,
+            color-mix(in oklab, var(--veil) 94%, transparent) 0%,
+            color-mix(in oklab, var(--veil) 78%, transparent) 30%,
+            color-mix(in oklab, var(--veil) 30%, transparent) 62%,
+            transparent 100%
+        );
+        --veil-top: linear-gradient(
+            to bottom,
+            color-mix(in oklab, var(--veil) 55%, transparent) 0%,
+            transparent 22%
+        );
+    }
+
+    [data-theme='nocturna'] {
+        --primary-fill: linear-gradient(
+            180deg,
+            var(--brand-hi),
+            var(--primary) 48%,
+            var(--brand-2)
+        );
+        --primary-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.4),
+            inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 12px 32px -8px var(--brand-glow),
+            0 0 0 1px var(--brand-2);
+    }
+
+    [data-theme='luminosa'] {
+        --primary-fill: linear-gradient(135deg, var(--primary), var(--brand-2));
+        --halo: linear-gradient(
+            135deg,
+            color-mix(in oklab, var(--primary) var(--brand-glow-amount), transparent),
+            color-mix(in oklab, var(--brand-2) var(--brand-glow-amount), transparent)
+        );
+    }
+
+    [data-theme='vibrante'] {
+        --primary-shadow: 3px 3px 0 0 var(--hard);
+    }
+
+    :is(.dark [data-theme='vibrante'], [data-theme='vibrante'].dark) {
+        --hard: color-mix(in oklab, var(--primary) 40%, black);
+    }
+}
+
+@supports (color: oklch(from red l c h)) {
+    :root,
+    .brand-scope,
+    [data-theme] {
+        --brand-text: oklch(
+            from var(--primary)
+                clamp(var(--brand-text-min), l, var(--brand-text-max)) c h
+        );
+        --brand-2: oklch(
+            from var(--primary) calc(l + var(--brand-2-l)) c
+                calc(h + var(--brand-2-h))
+        );
+    }
+}
+
+/* ==========================================================================
+   5. Skins: one class per surface role, each template fills the tokens.
+   Never combine a skin with bg-*, border-* or shadow-* on the same element.
+   ========================================================================== */
+@utility skin-card {
+    background: var(--card-fill);
+    border: var(--card-edge);
+    box-shadow: var(--elevation-1);
+    color: var(--card-foreground);
+}
+
+@utility skin-raised {
+    background: var(--card-fill);
+    border: var(--card-edge);
+    box-shadow: var(--elevation-2);
+    color: var(--card-foreground);
+}
+
+@utility skin-primary {
+    background-color: var(--primary);
+    background-image: var(--primary-fill);
+    border: var(--primary-edge, 0 solid transparent);
+    box-shadow: var(--primary-shadow);
+    color: var(--primary-foreground);
+}
+
+@utility skin-chip {
+    background: var(--chip-fill);
+    border: var(--chip-edge);
+    box-shadow: var(--chip-shadow);
+    color: var(--foreground);
+}
+
+@utility skin-glass {
+    background: rgb(255 255 255 / 0.12);
+    border: 1px solid rgb(255 255 255 / 0.22);
+    color: var(--on-photo);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+
+@utility skin-dock {
+    background: var(--dock-fill);
+    border-top: 1px solid var(--border);
+    box-shadow: var(--dock-shadow);
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+}
+
+/* Photo container: fixed ratio set by the component, cover image inside. */
+@utility photo-frame {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--muted);
+    border: var(--photo-edge);
+
+    & > img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: var(--photo-vignette);
+    }
+}
+
+/* Veils for text or buttons on a photo (absolute inset-0 layer). */
+@utility photo-veil {
+    background-image: var(--veil-gradient);
+}
+
+@utility photo-veil-top {
+    background-image: var(--veil-top);
+}
+
+/* Blurred brand halo behind a key card (Luminosa; none elsewhere). */
+@utility brand-halo {
+    background-image: var(--halo);
+    filter: blur(26px);
+}
+
+/* Display titles: salon name, section titles, the question of each step. */
+@utility display-type {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    line-height: var(--display-leading);
+    text-transform: var(--display-case);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
 }
 
 @layer base {
@@ -160,6 +816,10 @@
         transition:
             background-color 200ms ease,
             color 200ms ease;
+    }
+
+    [data-theme] {
+        color: var(--foreground);
     }
 
     h1,
@@ -176,29 +836,6 @@
         animation-duration: 1ms !important;
         transition-duration: 1ms !important;
     }
-}
-
-/*
- * Salon brand color (see components/salon/brand-theme.tsx).
- * Tailwind's --color-* tokens are resolved once at :root, so they must be
- * re-declared here or utilities like bg-primary keep the platform color.
- */
-.brand-scope {
-    --primary: var(--brand-light);
-    --primary-foreground: var(--brand-light-foreground);
-    --ring: var(--brand-light);
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-ring: var(--ring);
-    --color-sidebar-primary: var(--primary);
-    --color-sidebar-primary-foreground: var(--primary-foreground);
-    --color-sidebar-ring: var(--ring);
-}
-
-.dark .brand-scope {
-    --primary: var(--brand-dark);
-    --primary-foreground: var(--brand-dark-foreground);
-    --ring: var(--brand-dark);
 }
 
 /* Leaflet sits below dialogs and sheets. */

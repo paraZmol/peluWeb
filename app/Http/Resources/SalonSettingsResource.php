@@ -36,6 +36,7 @@ class SalonSettingsResource extends JsonResource
             'logoUrl' => $images->url($this->logo_path),
             'coverUrl' => $images->url($this->cover_path),
             'brandColor' => $this->brand_color,
+            'theme' => $this->theme->value,
             'brand' => $this->brandTokens(),
             'address' => $this->address,
             'district' => $this->district,

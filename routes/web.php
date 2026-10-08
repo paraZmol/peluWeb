@@ -19,6 +19,7 @@ use App\Http\Controllers\Owner\StaffController;
 use App\Http\Controllers\Owner\TeamController;
 use App\Http\Controllers\Public\BookingController;
 use App\Http\Controllers\Public\SalonPageController;
+use App\Http\Controllers\Public\SamplePhotoController;
 use App\Http\Controllers\Staff\AgendaBookingController;
 use App\Http\Controllers\Staff\AgendaController;
 use App\Http\Controllers\Staff\BookingMoveController;
@@ -33,6 +34,12 @@ Route::inertia('/', 'welcome')->name('home');
 
 // Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
 // Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
+// Bundled sample photos for previews and the landing page.
+Route::get('img/muestra/{file}', [SamplePhotoController::class, 'show'])
+    ->where('file', '[a-z0-9.-]+')
+    ->middleware('throttle:300,1,samples')
+    ->name('samples.show');
+
 Route::get('s/{salon:slug}', [SalonPageController::class, 'show'])
     ->middleware('throttle:120,1,salon-page')
     ->name('salons.show');
@@ -107,6 +114,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('mi-salon/reservas', [SalonSettingsController::class, 'updateBooking'])->name('salon.booking.update');
         Route::put('mi-salon/ubicacion', [SalonSettingsController::class, 'updateLocation'])->name('salon.location.update');
         Route::put('mi-salon/color', [SalonBrandingController::class, 'updateColor'])->name('salon.color.update');
+        Route::put('mi-salon/diseno', [SalonBrandingController::class, 'updateTheme'])->name('salon.theme.update');
 
         Route::middleware('throttle:30,1')->group(function () {
             Route::post('mi-salon/logo', [SalonBrandingController::class, 'storeLogo'])->name('salon.logo.store');

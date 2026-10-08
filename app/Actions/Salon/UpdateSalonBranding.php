@@ -2,6 +2,7 @@
 
 namespace App\Actions\Salon;
 
+use App\Enums\SalonTheme;
 use App\Models\Salon;
 use App\Support\BrandColor;
 use App\Support\Images\ImageStore;
@@ -27,6 +28,15 @@ class UpdateSalonBranding
         $path = $this->images->storeCropped($file, "salons/{$salon->id}/cover", self::COVER_WIDTH, self::COVER_HEIGHT);
 
         $this->replaceImage($salon, 'cover_path', $path);
+    }
+
+    /**
+     * The design template of the public page.
+     */
+    public function setTheme(Salon $salon, SalonTheme $theme): void
+    {
+        $salon->theme = $theme;
+        $salon->save();
     }
 
     /**

@@ -351,13 +351,17 @@ describe('weekly schedule', function () {
             ->where('salon.openingHours.status.time', '12:00'));
     });
 
-    it('does not leak professionals, emails or ids in the public page', function () {
-        $secret = Staff::factory()->for($this->salon)->working([1])->create(['name' => 'Secretísimo Ñandú 💈']);
+    // Since step 4.12 the public page shows the active team (name, title,
+    // photo) as "quién te atiende"; the rest stays private.
+    it('shows the active team by name and title only, never emails, ids or hours access', function () {
+        Staff::factory()->for($this->salon)->working([1])->create(['name' => 'Visible Ñandú 💈', 'title' => 'Colorista']);
+        Staff::factory()->for($this->salon)->create(['name' => 'Pausada Secreta', 'is_active' => false]);
 
-        $json = json_encode($this->get('/s/qa-tres')->inertiaProps());
+        $props = $this->get('/s/qa-tres')->inertiaProps();
+        $json = json_encode($props, JSON_UNESCAPED_UNICODE);
 
-        expect($json)->not->toContain('Secret')->not->toContain($this->owner->email)->not->toContain('access');
-        expect(isset($secret))->toBeTrue();
+        expect($props['salon']['team'])->toBe([['name' => 'Visible Ñandú 💈', 'title' => 'Colorista', 'photoUrl' => null]])
+            ->and($json)->not->toContain('Pausada Secreta')->not->toContain($this->owner->email)->not->toContain('access');
     });
 });
 

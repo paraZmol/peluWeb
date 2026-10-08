@@ -2,13 +2,16 @@
 
 namespace App\Http\Resources;
 
+use App\Data\Salon\PublicSalonContent;
+use App\Data\Salon\SalonPreview;
 use App\Enums\ServiceCategory;
 use App\Models\Salon;
-use App\Models\SalonPhoto;
 use App\Models\Service;
 use App\Models\ServiceVariant;
+use App\Models\Staff;
 use App\Support\Images\ImageStore;
 use App\Support\Money;
+use App\Support\SamplePhotos;
 use App\Support\WhatsApp;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,7 +19,8 @@ use Illuminate\Support\Collection;
 
 /**
  * What a visitor sees on the salon's public page. Only public data: no
- * internal ids of members, no status, no trial dates.
+ * internal ids of members or staff, no status, no trial dates. With a
+ * SalonPreview (owners only) it shows another template and sample photos.
  *
  * @mixin Salon
  */
@@ -24,16 +28,10 @@ class PublicSalonResource extends JsonResource
 {
     public static $wrap = null;
 
-    /**
-     * @param  Collection<int, Service>  $services  active services of this salon
-     * @param  Collection<int, SalonPhoto>  $photos
-     * @param  array<string, mixed>|null  $openingHours  null while nobody has working hours
-     */
     public function __construct(
         Salon $salon,
-        private readonly Collection $services,
-        private readonly Collection $photos,
-        private readonly ?array $openingHours = null,
+        private readonly PublicSalonContent $content,
+        private readonly ?SalonPreview $preview = null,
     ) {
         parent::__construct($salon);
     }
@@ -52,11 +50,15 @@ class PublicSalonResource extends JsonResource
             'clientele' => $this->clientele->label(),
             'description' => $this->description,
             'logoUrl' => $images->url($this->logo_path),
-            'coverUrl' => $images->url($this->cover_path),
+            'coverUrl' => $images->url($this->cover_path) ?? ($this->withSamples() ? SamplePhotos::cover($this->business_type) : null),
             'brand' => $this->brandTokens(),
+            'theme' => ($this->preview->theme ?? $this->theme)->value,
+            // Only in a preview: tells the page which photos are samples, not the salon's.
+            'isPreview' => $this->preview !== null,
+            'usesSamplePhotos' => $this->withSamples(),
             'whatsappUrl' => WhatsApp::link($this->phone, "Hola, vi {$this->name} en peluWeb y quisiera reservar."),
             // Online booking needs someone with working hours and a salon that takes bookings.
-            'bookingUrl' => $this->openingHours !== null && $this->isWritable() && $this->accepts_online_bookings
+            'bookingUrl' => $this->content->openingHours !== null && $this->isWritable() && $this->accepts_online_bookings
                 ? route('salons.booking.create', $this->slug)
                 : null,
             'instagramUrl' => $this->instagram === null ? null : "https://instagram.com/{$this->instagram}",
@@ -66,8 +68,9 @@ class PublicSalonResource extends JsonResource
                 'longitude' => (float) $this->longitude,
                 'directionsUrl' => 'https://www.google.com/maps/dir/?api=1&destination='.$this->latitude.','.$this->longitude,
             ] : null,
-            'photos' => $this->photos->map(fn (SalonPhoto $photo) => ['url' => $photo->url, 'caption' => $photo->caption])->values(),
-            'openingHours' => $this->openingHours,
+            'photos' => $this->photos(),
+            'team' => $this->team(),
+            'openingHours' => $this->content->openingHours,
             'serviceGroups' => $this->serviceGroups(),
         ];
     }
@@ -77,7 +80,7 @@ class PublicSalonResource extends JsonResource
      */
     private function serviceGroups(): array
     {
-        return $this->services
+        return $this->content->services
             ->groupBy(fn (Service $service) => $service->category->value)
             ->sortBy(fn (Collection $group, string $category) => array_search(ServiceCategory::from($category), ServiceCategory::cases(), true))
             ->map(fn (Collection $group, string $category) => [
@@ -99,5 +102,49 @@ class PublicSalonResource extends JsonResource
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @return list<array{url: string|null, caption: string|null}>
+     */
+    private function photos(): array
+    {
+        if ($this->content->photos->isEmpty() && $this->withSamples()) {
+            return SamplePhotos::gallery($this->business_type);
+        }
+
+        $photos = [];
+
+        foreach ($this->content->photos as $photo) {
+            $photos[] = ['url' => $photo->url, 'caption' => $photo->caption];
+        }
+
+        return $photos;
+    }
+
+    /**
+     * Who attends, as a client may see them: name, title and photo. In a
+     * preview with samples, professionals without a photo get one.
+     *
+     * @return list<array{name: string, title: string|null, photoUrl: string|null}>
+     */
+    private function team(): array
+    {
+        $team = [];
+
+        foreach ($this->content->team->values() as $index => $person) {
+            $team[] = [
+                'name' => $person->name,
+                'title' => $person->title,
+                'photoUrl' => $person->photoUrl() ?? ($this->withSamples() ? SamplePhotos::portrait($this->business_type, $index) : null),
+            ];
+        }
+
+        return $team;
+    }
+
+    private function withSamples(): bool
+    {
+        return $this->preview !== null && $this->preview->withSamples;
     }
 }

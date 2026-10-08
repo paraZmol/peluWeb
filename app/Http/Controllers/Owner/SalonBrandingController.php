@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Actions\Salon\UpdateSalonBranding;
 use App\Http\Requests\Owner\SalonImageRequest;
+use App\Http\Requests\Owner\UpdateSalonThemeRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -48,6 +49,13 @@ class SalonBrandingController extends SalonAreaController
         return $this->saved($adjusted
             ? 'Color guardado. Lo ajustamos un poco para que se lea bien en modo claro y oscuro.'
             : 'Color guardado.');
+    }
+
+    public function updateTheme(UpdateSalonThemeRequest $request): RedirectResponse
+    {
+        $this->branding->setTheme($this->salon('update'), $request->theme());
+
+        return $this->saved('Diseño guardado.');
     }
 
     private function saved(string $message): RedirectResponse

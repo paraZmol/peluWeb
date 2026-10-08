@@ -8,6 +8,7 @@ use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonRole;
 use App\Enums\SalonStatus;
+use App\Enums\SalonTheme;
 use App\Models\Salon;
 use App\Models\SalonMember;
 use App\Models\ServiceTemplate;
@@ -43,6 +44,7 @@ class CreateSalon
             $salon->slug = $this->uniqueSlug($name);
             $salon->status = SalonStatus::Trial;
             $salon->trial_ends_at = now()->addDays(Salon::TRIAL_DAYS);
+            $salon->theme = SalonTheme::defaultFor($businessType);
             $salon->save();
 
             $membership = new SalonMember;

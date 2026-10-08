@@ -79,6 +79,7 @@ class ClientBookingResource extends JsonResource
                 'name' => $salon->name,
                 'slug' => $salon->slug,
                 'brand' => $salon->brandTokens(),
+                'theme' => $salon->theme->value,
                 'address' => collect([$salon->address, $salon->district, $salon->city])->filter()->join(', ') ?: null,
                 'directionsUrl' => $salon->hasLocation()
                     ? 'https://www.google.com/maps/dir/?api=1&destination='.$salon->latitude.','.$salon->longitude

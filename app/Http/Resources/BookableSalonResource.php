@@ -48,6 +48,7 @@ class BookableSalonResource extends JsonResource
             'slug' => $this->slug,
             'logoUrl' => app(ImageStore::class)->url($this->logo_path),
             'brand' => $this->brandTokens(),
+            'theme' => $this->theme->value,
             'staff' => $this->staff->map(fn (Staff $person) => [
                 'id' => $person->id,
                 'name' => $person->name,

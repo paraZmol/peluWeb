@@ -8,6 +8,7 @@ use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonRole;
 use App\Enums\SalonStatus;
+use App\Enums\SalonTheme;
 use App\Enums\ScheduleAccess;
 use App\Support\BrandColor;
 use Carbon\CarbonImmutable;
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $logo_path
  * @property string|null $cover_path
  * @property string|null $brand_color
+ * @property SalonTheme $theme
  * @property string|null $instagram
  * @property string|null $address
  * @property string|null $district
@@ -77,6 +79,7 @@ class Salon extends Model
         'logo_path' => null,
         'cover_path' => null,
         'brand_color' => null,
+        'theme' => 'nocturna',
         'instagram' => null,
         'address' => null,
         'district' => null,
@@ -103,6 +106,7 @@ class Salon extends Model
             'business_type' => BusinessType::class,
             'clientele' => Clientele::class,
             'status' => SalonStatus::class,
+            'theme' => SalonTheme::class,
             'trial_ends_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',

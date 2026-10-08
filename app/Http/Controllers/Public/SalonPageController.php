@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Data\Salon\PublicSalonContent;
+use App\Data\Salon\SalonPreview;
 use App\Domain\Schedule\TimeRange;
 use App\Enums\SalonStatus;
+use App\Enums\SalonTheme;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PublicSalonResource;
 use App\Models\Salon;
 use App\Models\SalonHoliday;
 use App\Models\SalonPhoto;
 use App\Models\Service;
+use App\Models\Staff;
 use App\Support\Images\ImageStore;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,26 +26,47 @@ class SalonPageController extends Controller
      * Public profile. Visitors have no current salon, so the salon scope is
      * bypassed explicitly and replaced by `where salon_id = this salon`.
      */
-    public function show(Salon $salon): Response
+    public function show(Request $request, Salon $salon): Response
     {
         abort_if($salon->status === SalonStatus::Suspended, 404);
 
-        $services = Service::withoutGlobalScope('salon')
-            ->where('salon_id', $salon->id)
-            ->where('is_active', true)
-            ->where('is_addon', false)
-            ->with('variants')
-            ->orderBy('position')
-            ->get();
-
-        $photos = SalonPhoto::withoutGlobalScope('salon')
-            ->where('salon_id', $salon->id)
-            ->orderBy('position')
-            ->get();
+        $content = new PublicSalonContent(
+            services: Service::withoutGlobalScope('salon')
+                ->where('salon_id', $salon->id)
+                ->where('is_active', true)
+                ->where('is_addon', false)
+                ->with('variants')
+                ->orderBy('position')
+                ->get(),
+            photos: SalonPhoto::withoutGlobalScope('salon')->where('salon_id', $salon->id)->orderBy('position')->get(),
+            team: Staff::withoutGlobalScope('salon')
+                ->where('salon_id', $salon->id)
+                ->where('is_active', true)
+                ->with('user')
+                ->orderBy('position')
+                ->get(),
+            openingHours: $this->openingHours($salon),
+        );
 
         return Inertia::render('public/salon', [
-            'salon' => new PublicSalonResource($salon, $services, $photos, $this->openingHours($salon)),
+            'salon' => new PublicSalonResource($salon, $content, $this->preview($request, $salon)),
         ])->withViewData(['meta' => $this->meta($salon)]);
+    }
+
+    /**
+     * "How would it look with that template / with photos": only for
+     * whoever manages the salon. Visitors always get the saved template.
+     */
+    private function preview(Request $request, Salon $salon): ?SalonPreview
+    {
+        if (! $request->hasAny(['diseno', 'muestra']) || ! ($request->user()?->can('update', $salon) ?? false)) {
+            return null;
+        }
+
+        return new SalonPreview(
+            theme: SalonTheme::tryFrom($request->string('diseno')->toString()) ?? $salon->theme,
+            withSamples: $request->boolean('muestra'),
+        );
     }
 
     /**

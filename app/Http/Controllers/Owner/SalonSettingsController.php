@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Actions\Salon\UpdateSalonDetails;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
+use App\Enums\SalonTheme;
 use App\Http\Requests\Owner\UpdateSalonBookingRequest;
 use App\Http\Requests\Owner\UpdateSalonLocationRequest;
 use App\Http\Requests\Owner\UpdateSalonProfileRequest;
@@ -23,6 +24,13 @@ class SalonSettingsController extends SalonAreaController
             'salon' => new SalonSettingsResource($salon),
             'businessTypes' => collect(BusinessType::cases())->map(fn (BusinessType $type) => ['value' => $type->value, 'label' => $type->label()]),
             'slotSteps' => UpdateSalonBookingRequest::SLOT_STEPS,
+            'themes' => collect(SalonTheme::cases())->map(fn (SalonTheme $theme) => [
+                'value' => $theme->value,
+                'label' => $theme->label(),
+                'tagline' => $theme->tagline(),
+                // The public page as it would look with that template and, where photos are missing, with samples.
+                'previewUrl' => route('salons.show', ['salon' => $salon->slug, 'diseno' => $theme->value, 'muestra' => 1]),
+            ]),
             'canManageBookingRules' => request()->user()?->can('manageBookingRules', $salon) ?? false,
             'clienteles' => collect(Clientele::cases())->map(fn (Clientele $clientele) => ['value' => $clientele->value, 'label' => $clientele->label()]),
         ]);
