@@ -46,3 +46,4 @@ yarn-error.log
 /playwright-report
 /test-results-*
 /public/propuestas
+/public/build-*

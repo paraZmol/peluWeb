@@ -19,6 +19,7 @@ export const testEnv = {
     APP_ENV: 'local',
     APP_URL: baseURL,
     DB_DATABASE: process.env.E2E_DB_DATABASE ?? 'peluweb_test',
+    VITE_BUILD_DIR: process.env.VITE_BUILD_DIR ?? 'build',
     MAIL_MAILER: 'log',
     QUEUE_CONNECTION: 'sync',
     // Rate limits live in the cache: with `array` they reset on every request,

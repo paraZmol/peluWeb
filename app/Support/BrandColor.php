@@ -16,9 +16,11 @@ use InvalidArgumentException;
  */
 final class BrandColor
 {
-    public const string LIGHT_BACKGROUND = '#faf8f5';
+    /** The lightest light background among the templates (Nocturna in light mode). */
+    public const string LIGHT_BACKGROUND = '#f3f4f6';
 
-    public const string DARK_BACKGROUND = '#121110';
+    /** The lightest dark background among the templates (Luminosa in dark mode). */
+    public const string DARK_BACKGROUND = '#111318';
 
     private const string DARK_TEXT = '#1f1b18';
 

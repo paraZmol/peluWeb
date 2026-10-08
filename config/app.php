@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Where the compiled assets live under public/; test lanes use their own.
+    'build_directory' => env('VITE_BUILD_DIR', 'build'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

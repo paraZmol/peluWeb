@@ -33,7 +33,7 @@ conviertes en pantallas reales, con los datos y rutas que ya existen.
 
 ## Carril propio de pruebas
 Antes de correr Playwright pide (o recibe) un carril: `E2E_PORT=812N`,
-`E2E_DB_DATABASE=peluweb_test_e2eN`, `E2E_OUTPUT=test-results-N`. Entorno Windows:
+`E2E_DB_DATABASE=peluweb_test_e2eN`, `E2E_OUTPUT=test-results-N VITE_BUILD_DIR=build-N` (la misma `VITE_BUILD_DIR` delante de `npm run build`). Entorno Windows:
 `export PATH=/c/php84:$PATH`. Para capturas: `rm -f public/hot && npm run build`, un spec
 temporal `tests/e2e/zz-build-<pantalla>.spec.ts` que entre con las cuentas de
 `database/seeders/E2eSeeder.php` y guarde `page.screenshot()` en tu carpeta de resultados, en

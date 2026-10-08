@@ -11,6 +11,8 @@ export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
+            // A second lane builds into its own folder (see CLAUDE.md, carriles).
+            buildDirectory: process.env.VITE_BUILD_DIR ?? 'build',
             refresh: true,
             // Platform fonts are preloaded. Template fonts (ui-system §3) are
             // only declared: a browser downloads a @font-face file the first
@@ -18,7 +20,11 @@ export default defineConfig({
             fonts: [
                 bunny('Inter', {
                     weights: [400, 500, 600, 700, 800],
-                    preload: [{ weight: 400 }, { weight: 500 }, { weight: 600 }],
+                    preload: [
+                        { weight: 400 },
+                        { weight: 500 },
+                        { weight: 600 },
+                    ],
                 }),
                 bunny('Fraunces', {
                     weights: [500, 600],

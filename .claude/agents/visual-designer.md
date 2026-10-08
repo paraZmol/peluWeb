@@ -59,7 +59,7 @@ pantalla necesita salirse de la dirección, repórtalo en vez de inventar otra.
 
 ## Capturas
 Usa el carril de Playwright que te asignen: `E2E_PORT=812N E2E_DB_DATABASE=peluweb_test_e2eN
-E2E_OUTPUT=test-results-N` delante de `npx playwright test`. Nunca el carril por defecto
+E2E_OUTPUT=test-results-N VITE_BUILD_DIR=build-N` delante de `npx playwright test` (y `VITE_BUILD_DIR=build-N` delante de `npm run build`). Nunca el carril por defecto
 (8123 / `peluweb_test`) sin que te lo asignen: otro agente puede estar usándolo. Entorno Windows:
 `export PATH=/c/php84:$PATH`.
 1. `rm -f public/hot && npm run build`.

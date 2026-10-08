@@ -165,6 +165,8 @@
     --display-tracking: -0.01em;
     --display-leading: 1.1;
     --display-case: none;
+    /* Widest glyph of the display font, in em (display-fit) */
+    --display-char: 0.6;
 
     /* Depth (warm ink, two layers, never hard black) */
     --highlight: rgb(255 255 255 / 0.9);
@@ -251,6 +253,9 @@
         0 40px 80px -20px rgb(0 0 0 / 0.8);
     --dock-shadow: 0 -18px 40px -20px rgb(0 0 0 / 0.6);
     --card-fill: linear-gradient(180deg, var(--surface-2), var(--card));
+    --card-edge: 1px solid var(--border);
+    --chip-fill: var(--card);
+    --chip-edge: 1px solid var(--border);
 
     --brand-text-min: 0.74;
     --brand-text-max: 1;
@@ -279,6 +284,7 @@
     --display-tracking: 0.01em;
     --display-leading: 0.92;
     --display-case: uppercase;
+    --display-char: 0.46;
     --radius: 1rem;
     --radius-card: 1.5rem;
     --radius-photo: 2rem;
@@ -387,6 +393,7 @@
     --display-tracking: -0.01em;
     --display-leading: 1.05;
     --display-case: none;
+    --display-char: 0.56;
     --radius: 1.125rem;
     --radius-card: 1.5rem;
     --radius-photo: 2rem;
@@ -484,6 +491,7 @@
     --display-tracking: -0.03em;
     --display-leading: 1;
     --display-case: none;
+    --display-char: 0.8;
     --radius: 0.75rem;
     --radius-card: 1.5rem;
     --radius-photo: 2.25rem;
@@ -523,8 +531,8 @@
     --elevation-2:
         5px 5px 0 0 var(--hard), 0 1px 2px rgb(14 14 17 / 0.05),
         0 18px 36px -20px rgb(14 14 17 / 0.3);
-    --elevation-3: 0 4px 10px rgb(14 14 17 / 0.06),
-        0 32px 64px -20px rgb(14 14 17 / 0.3);
+    --elevation-3:
+        0 4px 10px rgb(14 14 17 / 0.06), 0 32px 64px -20px rgb(14 14 17 / 0.3);
     --dock-shadow: 0 -10px 30px -18px rgb(14 14 17 / 0.22);
     --card-fill: var(--card);
     --card-edge: 1.5px solid var(--border-strong);
@@ -561,7 +569,8 @@
     --border-strong: #3c3c48;
     --input: rgb(244 244 247 / 0.2);
     --hard: #000000;
-    --elevation-3: inset 0 1px 0 rgb(255 255 255 / 0.04),
+    --elevation-3:
+        inset 0 1px 0 rgb(255 255 255 / 0.04),
         0 22px 44px -22px rgb(0 0 0 / 0.9);
     --dock-shadow: 0 -16px 36px -20px rgb(0 0 0 / 0.7);
     --brand-soft-amount: 16%;
@@ -592,7 +601,10 @@
     --ring: #0e0e11;
 }
 
-:is(.dark [data-theme='vibrante'].brand-scope, [data-theme='vibrante'].brand-scope.dark) {
+:is(
+    .dark [data-theme='vibrante'].brand-scope,
+    [data-theme='vibrante'].brand-scope.dark
+) {
     --ring: #f4f4f7;
 }
 
@@ -673,16 +685,24 @@
         );
         --primary-shadow:
             inset 0 1px 0 rgb(255 255 255 / 0.4),
-            inset 0 -1px 0 rgb(0 0 0 / 0.18), 0 12px 32px -8px var(--brand-glow),
-            0 0 0 1px var(--brand-2);
+            inset 0 -1px 0 rgb(0 0 0 / 0.18),
+            0 12px 32px -8px var(--brand-glow), 0 0 0 1px var(--brand-2);
     }
 
     [data-theme='luminosa'] {
         --primary-fill: linear-gradient(135deg, var(--primary), var(--brand-2));
         --halo: linear-gradient(
             135deg,
-            color-mix(in oklab, var(--primary) var(--brand-glow-amount), transparent),
-            color-mix(in oklab, var(--brand-2) var(--brand-glow-amount), transparent)
+            color-mix(
+                in oklab,
+                var(--primary) var(--brand-glow-amount),
+                transparent
+            ),
+            color-mix(
+                in oklab,
+                var(--brand-2) var(--brand-glow-amount),
+                transparent
+            )
         );
     }
 
@@ -806,6 +826,18 @@
     text-transform: var(--display-case);
     text-wrap: balance;
     overflow-wrap: anywhere;
+}
+
+/*
+ * Long names: never break a word. The component sets `--longest-word` (chars
+ * of the longest word) and the parent is an `@container`; the size shrinks
+ * just enough for that word to fit, capped at `--fit-size` (default title-1).
+ */
+@utility display-fit {
+    font-size: min(
+        var(--fit-size, var(--title-1)),
+        calc(100cqi / (var(--longest-word, 8) * var(--display-char)))
+    );
 }
 
 @layer base {

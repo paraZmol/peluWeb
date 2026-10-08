@@ -78,7 +78,8 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
   después `php artisan test --testsuite=Concurrency` (va solo: compite por bloqueos reales).
 - Al cerrar cada fase: todos los agentes, y corregir CRÍTICO/ALTO antes de seguir.
 - Agentes en paralelo: cada corrida de Playwright usa un **carril** propio —
-  `E2E_PORT=812N E2E_DB_DATABASE=peluweb_test_e2eN E2E_OUTPUT=test-results-N` (existen
+  `E2E_PORT=812N E2E_DB_DATABASE=peluweb_test_e2eN E2E_OUTPUT=test-results-N VITE_BUILD_DIR=build-N`
+  (la misma variable delante de `npm run build`, que compila en `public/build-N`; existen
   `peluweb_test_e2e2..4`; el usuario MySQL `peluweb` puede crear más `peluweb_test%`). El carril por
   defecto (8123 / `peluweb_test`) es del coordinador. Dos corridas en el mismo carril se rompen
   entre sí. Los agentes de solo lectura (security-auditor, ux-reviewer) no necesitan carril. Un

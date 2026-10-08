@@ -30,6 +30,9 @@ export type Option<T extends string = string> = {
     label: string;
 };
 
+/** Design template of a salon's public pages (App\Enums\SalonTheme). */
+export type SalonTheme = 'editorial' | 'nocturna' | 'luminosa' | 'vibrante';
+
 export type BrandTokens = {
     light: { primary: string; foreground: string };
     dark: { primary: string; foreground: string };
