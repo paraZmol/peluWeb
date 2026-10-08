@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>¿Cuándo? · Reserva en Barbería Don Lucho · maqueta Barbería nocturna</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    />
+    <link rel="stylesheet" href="nocturna.css" />
+    <script src="nocturna.js"></script>
+    <style>
+        body {
+            background:
+                radial-gradient(90% 40% at 100% 0%, var(--brand-soft), transparent 70%),
+                var(--bg);
+        }
+
+        /* ---- Cabecera con progreso ---- */
+        .w-head {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            padding: 12px 0 14px;
+            background: color-mix(in oklab, var(--bg) 82%, transparent);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--line);
+        }
+        .w-head-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .w-salon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .w-salon .mono {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            font-size: 18px;
+        }
+        .w-salon p {
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 14px;
+            padding: 0;
+            list-style: none;
+        }
+        .steps li {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-subtle);
+        }
+        .steps li::before {
+            content: '';
+            height: 4px;
+            border-radius: 4px;
+            background: var(--surface-3);
+        }
+        .steps .done {
+            color: var(--text-muted);
+        }
+        .steps .done::before {
+            background: var(--brand-ui);
+            opacity: 0.55;
+        }
+        .steps .now {
+            color: var(--text);
+            font-weight: 800;
+        }
+        .steps .now::before {
+            background: linear-gradient(90deg, var(--brand-ui) 50%, var(--surface-3) 50%);
+            box-shadow: 0 0 12px var(--brand-glow);
+        }
+
+        /* ---- Pregunta ---- */
+        .w-main {
+            padding-top: 24px;
+            padding-bottom: 140px;
+        }
+        .w-title {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .w-title .lead {
+            font-size: 16px;
+        }
+
+        /* ---- Resumen que se va armando ---- */
+        .recap {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px 12px 12px;
+            border-radius: var(--radius);
+        }
+        .recap img {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            object-fit: cover;
+            box-shadow: 0 0 0 1px var(--line-strong);
+        }
+        .recap-what {
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+        .recap-who {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .recap-price {
+            text-align: right;
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+        .recap-price span {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* ---- Tira de días ---- */
+        .block-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 28px 0 12px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .block-label .muted {
+            font-weight: 500;
+        }
+        .days {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            margin-inline: -16px;
+            padding: 6px 16px 14px;
+            margin-bottom: 12px;
+            scroll-snap-type: x mandatory;
+            scroll-padding-inline: 16px;
+        }
+        .day {
+            flex: none;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            width: 66px;
+            height: 88px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+            border: 1px solid var(--line);
+            box-shadow: inset 0 1px 0 var(--highlight), var(--lift);
+            transition: transform var(--t-micro) var(--ease);
+        }
+        .day:active {
+            transform: scale(0.96);
+        }
+        .day-dow {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .day-num {
+            font-family: var(--font-display);
+            font-size: 32px;
+            line-height: 1;
+        }
+        .day-mon {
+            font-size: 12px;
+            color: var(--text-subtle);
+        }
+        .day[aria-pressed='true'] {
+            color: var(--brand-ink);
+            background: linear-gradient(180deg, var(--brand-hi), var(--brand-ui) 55%, var(--brand-deep));
+            border-color: transparent;
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.4),
+                0 12px 28px -8px var(--brand-glow),
+                0 0 0 1px var(--brand-deep);
+        }
+        .day[aria-pressed='true'] .day-dow,
+        .day[aria-pressed='true'] .day-mon {
+            color: var(--brand-ink);
+            opacity: 0.8;
+        }
+        .day[disabled] {
+            opacity: 0.45;
+            box-shadow: none;
+            background: repeating-linear-gradient(-45deg, var(--surface) 0 6px, var(--surface-2) 6px 12px);
+            cursor: not-allowed;
+        }
+
+        /* ---- Horarios ---- */
+        .period + .period {
+            margin-top: 22px;
+        }
+        .period-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .period-head .ic {
+            color: var(--brand-text);
+        }
+        .period-head .muted {
+            margin-left: auto;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .slot {
+            position: relative;
+            min-height: 52px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+            border: 1px solid var(--line);
+            box-shadow: inset 0 1px 0 var(--highlight), var(--lift);
+            transition:
+                transform var(--t-micro) var(--ease),
+                box-shadow var(--t-move) var(--ease);
+        }
+        .slot:hover {
+            border-color: var(--brand-line);
+        }
+        .slot:active {
+            transform: scale(0.96);
+            box-shadow: 0 0 0 4px var(--brand-soft), 0 0 24px var(--brand-glow);
+        }
+        .slot[aria-pressed='true'] {
+            color: var(--brand-ink);
+            background: linear-gradient(180deg, var(--brand-hi), var(--brand-ui) 55%, var(--brand-deep));
+            border-color: transparent;
+            box-shadow:
+                inset 0 1px 0 rgb(255 255 255 / 0.4),
+                0 12px 28px -8px var(--brand-glow),
+                0 0 0 1px var(--brand-deep);
+        }
+        /* Al elegir: un anillo de brillo que sale una sola vez */
+        .slot[aria-pressed='true']::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            box-shadow: 0 0 0 2px var(--brand-ui);
+            animation: ping 600ms var(--ease) both;
+        }
+        @keyframes ping {
+            from {
+                opacity: 0.9;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(1.15);
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .slot[aria-pressed='true']::after {
+                display: none;
+            }
+        }
+
+        .deposit {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-top: 28px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--brand-soft);
+            border: 1px solid var(--brand-line);
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .deposit .ic {
+            color: var(--brand-text);
+            margin-top: 1px;
+        }
+        .deposit strong {
+            color: var(--text);
+        }
+
+        /* ---- Barra fija ---- */
+        .dock-sum {
+            flex: 1;
+            min-width: 0;
+            line-height: 1.3;
+        }
+        .dock-sum strong {
+            display: block;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+        .dock-sum span {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* ---- Escritorio ---- */
+        .side {
+            display: none;
+        }
+        @media (min-width: 1024px) {
+            .w-layout {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 380px;
+                gap: 48px;
+                align-items: start;
+                max-width: 1100px;
+            }
+            .w-main {
+                padding-top: 40px;
+                padding-bottom: 64px;
+            }
+            .w-main .recap,
+            .hint {
+                display: none;
+            }
+            .days {
+                margin-inline: 0;
+                padding-inline: 0;
+            }
+            .slots {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            .side {
+                display: block;
+                position: sticky;
+                top: 140px;
+                margin-top: 40px;
+                overflow: hidden;
+            }
+            .side .photo {
+                height: 160px;
+            }
+            .side-body {
+                padding: 20px 24px 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
+            .side-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                font-size: 15px;
+            }
+            .side-row span:first-child {
+                color: var(--text-muted);
+            }
+            .side-row span:last-child {
+                font-weight: 700;
+                text-align: right;
+            }
+            .dock {
+                display: none;
+            }
+            .w-head .wrap {
+                max-width: 1100px;
+            }
+            .steps {
+                max-width: 520px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="w-head">
+        <div class="wrap">
+            <div class="w-head-row">
+                <a href="salon.html" class="btn btn-quiet btn-sm btn-icon" aria-label="Volver al paso anterior">
+                    <svg class="ic"><use href="#i-arrow-left" /></svg>
+                </a>
+                <div class="w-salon">
+                    <div class="mono" aria-hidden="true">DL</div>
+                    <p>Barbería Don Lucho</p>
+                </div>
+            </div>
+            <ol class="steps" aria-label="Paso 3 de 4">
+                <li class="done">Servicio</li>
+                <li class="done">Profesional</li>
+                <li class="now" aria-current="step">Cuándo</li>
+                <li>Confirmar</li>
+            </ol>
+        </div>
+    </header>
+
+    <div class="wrap w-layout">
+        <main class="w-main">
+            <div class="w-title rise" style="--i: 0">
+                <p class="eyebrow">Paso 3 de 4</p>
+                <h1 class="display d-lg">¿Cuándo?</h1>
+                <p class="lead">Elige el día y la hora. Solo ves los horarios libres de Pedro.</p>
+            </div>
+
+            <div class="card recap rise" style="--i: 1">
+                <img src="../../../../database/seeders/images/pexels-897265-square.jpg" alt="" />
+                <div>
+                    <p class="recap-what">Corte + barba</p>
+                    <p class="recap-who">con Pedro Barbero</p>
+                </div>
+                <p class="recap-price num">S/ 50.00<span>50 min</span></p>
+            </div>
+
+            <div class="block-label rise" style="--i: 2">
+                <span>Octubre</span><span class="muted hint">Desliza para ver más días</span>
+            </div>
+            <div class="days rise" style="--i: 2" role="group" aria-label="Día">
+                <button class="day" aria-pressed="true">
+                    <span class="day-dow">Hoy</span><span class="day-num">8</span><span class="day-mon">mié</span>
+                </button>
+                <button class="day" aria-pressed="false">
+                    <span class="day-dow">Jue</span><span class="day-num">9</span><span class="day-mon">oct</span>
+                </button>
+                <button class="day" aria-pressed="false">
+                    <span class="day-dow">Vie</span><span class="day-num">10</span><span class="day-mon">oct</span>
+                </button>
+                <button class="day" aria-pressed="false">
+                    <span class="day-dow">Sáb</span><span class="day-num">11</span><span class="day-mon">oct</span>
+                </button>
+                <button class="day" disabled aria-label="Domingo 12, cerrado">
+                    <span class="day-dow">Dom</span><span class="day-num">12</span><span class="day-mon">cerrado</span>
+                </button>
+                <button class="day" aria-pressed="false">
+                    <span class="day-dow">Lun</span><span class="day-num">13</span><span class="day-mon">oct</span>
+                </button>
+                <button class="day" aria-pressed="false">
+                    <span class="day-dow">Mar</span><span class="day-num">14</span><span class="day-mon">oct</span>
+                </button>
+                <button class="day" aria-pressed="false">
+                    <span class="day-dow">Mié</span><span class="day-num">15</span><span class="day-mon">oct</span>
+                </button>
+            </div>
+
+            <section class="period rise" style="--i: 3" aria-labelledby="p-manana">
+                <h2 class="period-head" id="p-manana">
+                    <svg class="ic"><use href="#i-sun" /></svg>Mañana<span class="muted">2 horarios</span>
+                </h2>
+                <div class="slots">
+                    <button class="slot" aria-pressed="false">11:00 a. m.</button>
+                    <button class="slot" aria-pressed="false">11:30 a. m.</button>
+                </div>
+            </section>
+            <section class="period rise" style="--i: 4" aria-labelledby="p-tarde">
+                <h2 class="period-head" id="p-tarde">
+                    <svg class="ic"><use href="#i-sunset" /></svg>Tarde<span class="muted">5 horarios</span>
+                </h2>
+                <div class="slots">
+                    <button class="slot" aria-pressed="false">2:00 p. m.</button>
+                    <button class="slot" aria-pressed="false">2:30 p. m.</button>
+                    <button class="slot" aria-pressed="false">3:30 p. m.</button>
+                    <button class="slot" aria-pressed="false">4:00 p. m.</button>
+                    <button class="slot" aria-pressed="false">5:30 p. m.</button>
+                </div>
+            </section>
+            <section class="period rise" style="--i: 5" aria-labelledby="p-noche">
+                <h2 class="period-head" id="p-noche">
+                    <svg class="ic"><use href="#i-moon" /></svg>Noche<span class="muted">3 horarios</span>
+                </h2>
+                <div class="slots">
+                    <button class="slot" aria-pressed="false">7:00 p. m.</button>
+                    <button class="slot" aria-pressed="true">7:30 p. m.</button>
+                    <button class="slot" aria-pressed="false">8:00 p. m.</button>
+                </div>
+            </section>
+
+            <p class="deposit rise" style="--i: 6">
+                <svg class="ic"><use href="#i-wallet" /></svg>
+                <span>Al confirmar dejas una seña de <strong class="num">S/ 15.00</strong> (30&nbsp;%) por Yape o Plin. El resto lo pagas en el local.</span>
+            </p>
+        </main>
+
+        <!-- Escritorio: resumen fijo a la derecha -->
+        <aside class="card card-raised side" aria-label="Tu reserva">
+            <div class="photo grain">
+                <img src="../../../../database/seeders/images/pexels-1813272.jpg" alt="" />
+                <div class="veil-bottom"></div>
+            </div>
+            <div class="side-body">
+                <p class="display" style="font-size: 30px">Tu reserva</p>
+                <div class="side-row"><span>Servicio</span><span>Corte + barba</span></div>
+                <div class="side-row"><span>Con</span><span>Pedro Barbero</span></div>
+                <div class="side-row"><span>Cuándo</span><span class="num">Mié 8 oct · 7:30 p. m.</span></div>
+                <div class="side-row"><span>Duración</span><span class="num">50 min</span></div>
+                <hr class="divider" />
+                <div class="side-row" style="font-size: 17px"><span>Total</span><span class="num">S/ 50.00</span></div>
+                <a href="#" class="btn btn-brand btn-block">Continuar <svg class="ic"><use href="#i-arrow-right" /></svg></a>
+            </div>
+        </aside>
+    </div>
+
+    <div class="dock">
+        <div class="dock-inner">
+            <p class="dock-sum">
+                <strong class="num">Mié 8 oct · 7:30 p. m.</strong>
+                <span class="num">S/ 50.00 · 50 min</span>
+            </p>
+            <a href="#" class="btn btn-brand">Continuar <svg class="ic"><use href="#i-arrow-right" /></svg></a>
+        </div>
+    </div>
+</body>
+</html>

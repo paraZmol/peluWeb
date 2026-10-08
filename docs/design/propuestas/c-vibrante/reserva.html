@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Cuándo? · Reserva en Corte &amp; Color Surco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="vibrante.css">
+<script src="vibrante.js"></script>
+<style>
+    .r-wrap { width: 100%; max-width: 600px; margin-inline: auto; padding-inline: 20px; }
+
+    .r-head { padding: 12px 0 64px; }
+    .r-top { display: flex; align-items: center; gap: 12px; }
+    .r-top__salon { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 600; font-size: 15px; }
+    .r-top__salon span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .r-step { font: 600 14px/1 var(--font-body); font-variant-numeric: tabular-nums; }
+    .progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 16px; }
+    .progress span { height: 6px; border-radius: var(--r-pill); background: color-mix(in oklab, var(--brand-ink) 28%, transparent); }
+    .progress span.on { background: var(--brand-ink); }
+    .r-title { font-size: clamp(38px, 11vw, 52px); margin-top: 28px; }
+    .r-sub { margin-top: 10px; font-size: 17px; font-weight: 500; }
+
+    .summary { position: relative; z-index: 2; margin-top: -40px; display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 14px; padding: 14px 16px 14px 14px; }
+    .summary img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: var(--bw) solid var(--line); }
+    .summary__what { font: 600 16px/1.25 var(--font-body); }
+    .summary__who { font-size: 14px; color: var(--muted); margin-top: 2px; }
+    .summary__price { text-align: right; }
+    .summary__price b { display: block; font: 700 17px/1 var(--font-body); font-variant-numeric: tabular-nums; }
+    .summary__price span { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .summary__edit { grid-column: 1 / -1; display: flex; gap: 8px; border-top: 1px solid var(--line-soft); padding-top: 12px; margin-top: 2px; font-size: 14px; }
+    .summary__edit a { color: var(--brand-text); font-weight: 600; text-decoration: none; }
+
+    .block { margin-top: 32px; }
+    .block__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+    .block__title { font: 700 20px/1.2 var(--font-body); letter-spacing: -0.01em; }
+
+    .days { display: flex; gap: 10px; overflow-x: auto; padding: 4px 20px 10px; margin-inline: -20px; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; scrollbar-width: none; }
+    .day {
+        flex: none; width: 68px; display: grid; justify-items: center; gap: 4px; padding: 12px 0 12px;
+        border-radius: var(--r-md); border: var(--bw) solid var(--line-mid); background: var(--surface); scroll-snap-align: start;
+        cursor: pointer; transition: transform var(--t-micro) var(--ease-pop), box-shadow var(--t-micro) var(--ease);
+    }
+    .day:hover { transform: translateY(-2px); border-color: var(--line); }
+    .day small { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: lowercase; }
+    .day b { font: 700 24px/1.1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .day[aria-pressed='true'] { background: var(--brand); color: var(--brand-ink); border-color: var(--hard); box-shadow: var(--shadow-hard); }
+    .day[aria-pressed='true'] small { color: inherit; }
+    .day:disabled { cursor: not-allowed; background: var(--surface-2); border-style: dashed; color: var(--muted); }
+    .day:disabled b { text-decoration: line-through; text-decoration-thickness: 2px; }
+
+    .group + .group { margin-top: 24px; }
+    .group__title { display: flex; align-items: center; gap: 8px; font: 600 15px/1 var(--font-body); margin-bottom: 12px; }
+    .group__title .icon { color: var(--brand-text); }
+    .group__title .count { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    @media (min-width: 520px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+    .note { display: flex; gap: 12px; align-items: flex-start; margin-top: 32px; padding: 14px 16px; border-radius: var(--r-md); background: var(--brand-soft); font-size: 14px; }
+    .note .icon { color: var(--brand-text); margin-top: 1px; }
+
+    main { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+    .bookbar { justify-content: center; }
+    .bookbar__inner { width: 100%; max-width: 560px; display: flex; align-items: center; gap: 14px; }
+    .bookbar__when { flex: 1; min-width: 0; }
+    .bookbar__when b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+    .bookbar__when span { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<header class="brand-block r-head">
+    <div class="r-wrap">
+        <div class="r-top">
+            <a class="icon-btn on-brand" href="salon.html" aria-label="Volver"><i data-i="arrow-left"></i></a>
+            <p class="r-top__salon"><span class="mono mono-sm" aria-hidden="true">CC</span><span>Corte &amp; Color Surco</span></p>
+            <span class="r-step">Paso 3 de 4</span>
+        </div>
+        <div class="progress" aria-hidden="true"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+        <h1 class="display r-title">¿Cuándo?</h1>
+        <p class="r-sub">Estos son los horarios libres de Renzo.</p>
+    </div>
+    <div class="wave"></div>
+</header>
+
+<main class="r-wrap">
+    <div class="card summary rise">
+        <img src="../../../../database/seeders/images/pexels-4625648-square.jpg" alt="">
+        <div>
+            <p class="summary__what">Corte + barba</p>
+            <p class="summary__who">con Renzo Paz · Barbero</p>
+        </div>
+        <div class="summary__price"><b>S/ 55.00</b><span>55 min</span></div>
+    </div>
+
+    <section class="block rise" style="--i:1">
+        <div class="block__head"><h2 class="block__title">Octubre</h2><span class="muted" style="font-size:14px">Desliza para ver más días</span></div>
+        <div class="days" role="group" aria-label="Día">
+            <button class="day" aria-pressed="true"><small>Hoy</small><b>8</b><small>mié</small></button>
+            <button class="day" aria-pressed="false"><small>jue</small><b>9</b><small>oct</small></button>
+            <button class="day" aria-pressed="false"><small>vie</small><b>10</b><small>oct</small></button>
+            <button class="day" aria-pressed="false"><small>sáb</small><b>11</b><small>oct</small></button>
+            <button class="day" disabled aria-label="Domingo 12, cerrado"><small>dom</small><b>12</b><small>cerrado</small></button>
+            <button class="day" aria-pressed="false"><small>lun</small><b>13</b><small>oct</small></button>
+            <button class="day" aria-pressed="false"><small>mar</small><b>14</b><small>oct</small></button>
+        </div>
+    </section>
+
+    <section class="block rise" style="--i:2">
+        <div class="block__head"><h2 class="block__title">Hoy, miércoles 8</h2></div>
+
+        <div class="group">
+            <h3 class="group__title"><i data-i="sun"></i>Mañana<span class="count">3 horarios</span></h3>
+            <div class="grid">
+                <button class="chip" aria-pressed="false">10:00 a. m.</button>
+                <button class="chip" aria-pressed="false">10:45 a. m.</button>
+                <button class="chip" aria-pressed="false">11:30 a. m.</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <h3 class="group__title"><i data-i="sunset"></i>Tarde<span class="count">6 horarios</span></h3>
+            <div class="grid">
+                <button class="chip" aria-pressed="false">12:30 p. m.</button>
+                <button class="chip" aria-pressed="false">1:15 p. m.</button>
+                <button class="chip" aria-pressed="false">2:00 p. m.</button>
+                <button class="chip" aria-pressed="false">3:30 p. m.</button>
+                <button class="chip" aria-pressed="true">4:30 p. m.</button>
+                <button class="chip" aria-pressed="false">5:15 p. m.</button>
+            </div>
+        </div>
+
+        <div class="group">
+            <h3 class="group__title"><i data-i="moon"></i>Noche<span class="count">3 horarios</span></h3>
+            <div class="grid">
+                <button class="chip" aria-pressed="false">6:00 p. m.</button>
+                <button class="chip" aria-pressed="false">7:00 p. m.</button>
+                <button class="chip" aria-pressed="false">7:45 p. m.</button>
+            </div>
+        </div>
+    </section>
+
+    <p class="note"><i data-i="wallet"></i><span>Al confirmar, pagas una seña de <b class="num">S/ 16.50</b> (30 %) por Yape o Plin. El resto, en el salón.</span></p>
+</main>
+
+<div class="bookbar">
+    <div class="bookbar__inner">
+        <div class="bookbar__when">
+            <b data-when>mié 8 oct · 4:30 p. m.</b>
+            <span>Termina a las 5:25 p. m.</span>
+        </div>
+        <a class="btn btn-brand" href="#">Continuar <i data-i="arrow-right"></i></a>
+    </div>
+</div>
+
+<script>
+    // Solo para probar la maqueta a mano: elegir día y hora.
+    document.querySelectorAll('.grid .chip').forEach((chip) =>
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.grid .chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+            chip.setAttribute('aria-pressed', 'true');
+            document.querySelector('[data-when]').textContent = 'mié 8 oct · ' + chip.textContent;
+        }),
+    );
+    document.querySelectorAll('.day:not(:disabled)').forEach((day) =>
+        day.addEventListener('click', () => {
+            document.querySelectorAll('.day').forEach((d) => d.setAttribute('aria-pressed', 'false'));
+            day.setAttribute('aria-pressed', 'true');
+        }),
+    );
+</script>
+</body>
+</html>

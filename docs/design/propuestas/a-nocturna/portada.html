@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>peluWeb · reservas para tu barbería o salón · maqueta Barbería nocturna</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    />
+    <link rel="stylesheet" href="nocturna.css" />
+    <script src="nocturna.js"></script>
+    <style>
+        /* ---- Marca de la plataforma ---- */
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-display);
+            font-size: 28px;
+            letter-spacing: 0.04em;
+            line-height: 1;
+            color: var(--on-photo);
+        }
+        .logo .mono {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+        }
+        .logo .mono .ic {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+        }
+
+        /* ---- Cabecera ---- */
+        .top {
+            position: absolute;
+            inset: 0 0 auto;
+            z-index: 10;
+        }
+        .top .wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            padding-bottom: 16px;
+        }
+        .nav {
+            display: none;
+        }
+
+        /* ---- Hero ---- */
+        .hero {
+            position: relative;
+            min-height: 780px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: rgb(var(--veil));
+            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        }
+        .hero .photo {
+            position: absolute;
+            inset: 0;
+        }
+        .hero .photo img {
+            object-position: 45% 55%;
+        }
+        .hero-veil {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background:
+                linear-gradient(180deg, rgb(var(--veil) / 0.7) 0%, rgb(var(--veil) / 0.1) 22%, rgb(var(--veil) / 0.55) 45%, rgb(var(--veil) / 0.95) 70%, rgb(var(--veil)) 100%),
+                radial-gradient(70% 50% at 20% 100%, var(--brand-soft), transparent 70%);
+        }
+        .hero-body {
+            position: relative;
+            z-index: 3;
+            margin-top: auto;
+            padding-bottom: 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            color: var(--on-photo);
+        }
+        .hero-body .lead {
+            color: var(--on-photo-muted);
+        }
+        .hero-title .hl {
+            color: var(--brand-ui);
+            text-shadow: 0 0 40px var(--brand-glow);
+        }
+        .hero-ctas {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 4px;
+        }
+        .hero-note {
+            font-size: 14px;
+            color: var(--on-photo-muted);
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .hero-note span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hero-note .ic {
+            width: 16px;
+            height: 16px;
+            color: var(--brand-ui);
+        }
+        .link-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            font-weight: 700;
+            color: var(--on-photo);
+        }
+
+        /* Aviso de reserva flotando sobre la foto */
+        .notif {
+            position: relative;
+            z-index: 3;
+            margin: 96px 16px 0 auto;
+            width: min(300px, calc(100% - 48px));
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 20px;
+            color: var(--on-photo);
+            background: rgb(var(--veil) / 0.62);
+            border: 1px solid rgb(255 255 255 / 0.14);
+            backdrop-filter: blur(16px) saturate(1.4);
+            -webkit-backdrop-filter: blur(16px) saturate(1.4);
+            box-shadow: 0 24px 48px -16px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.1);
+            rotate: -2deg;
+        }
+        .notif-ic {
+            display: grid;
+            place-items: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            color: var(--brand-ink);
+            background: var(--brand-ui);
+            box-shadow: 0 8px 20px -6px var(--brand-glow);
+        }
+        .notif-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--brand-ui);
+        }
+        .notif-top span:last-child {
+            color: var(--on-photo-muted);
+            letter-spacing: 0;
+            text-transform: none;
+            font-weight: 500;
+        }
+        .notif-what {
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        .notif-meta {
+            font-size: 14px;
+            color: var(--on-photo-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .notif-meta .ic {
+            width: 15px;
+            height: 15px;
+            color: var(--success);
+        }
+
+        /* ---- Secciones ---- */
+        .section {
+            padding-top: 72px;
+        }
+        .s-head {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        /* Prueba: salones de la demo */
+        .proof {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .proof figure {
+            margin: 0;
+            border-radius: var(--radius);
+        }
+        .proof .shade {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(180deg, transparent 40%, rgb(var(--veil) / 0.92));
+        }
+        .proof figcaption {
+            position: absolute;
+            z-index: 3;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            color: var(--on-photo);
+            line-height: 1.25;
+        }
+        .proof figcaption strong {
+            display: block;
+            font-family: var(--font-display);
+            font-weight: 400;
+            font-size: 20px;
+            letter-spacing: 0.02em;
+        }
+        .proof figcaption span {
+            font-size: 14px;
+            color: var(--on-photo-muted);
+        }
+        .proof figcaption b {
+            display: none;
+            font-weight: 400;
+        }
+        .hero-title {
+            font-size: 58px;
+        }
+        .hero-l1 {
+            display: block;
+        }
+
+        /* Así se ve tu página */
+        .showcase {
+            display: grid;
+            gap: 40px;
+        }
+        .ticks {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin: 24px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .ticks li {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .tick {
+            flex: none;
+            display: grid;
+            place-items: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            color: var(--brand-ink);
+            background: var(--brand-ui);
+            box-shadow: 0 6px 16px -6px var(--brand-glow);
+        }
+        .tick .ic {
+            width: 15px;
+            height: 15px;
+            stroke-width: 2.5;
+        }
+        .swatches {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 28px;
+            padding: 12px 16px;
+            border-radius: 999px;
+            width: fit-content;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .sw {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--sw);
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 0 0 2px var(--surface), 0 0 0 3px var(--line-strong);
+        }
+        .sw.on {
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 0 0 2px var(--surface), 0 0 0 4px var(--brand-ui);
+        }
+
+        .stage {
+            position: relative;
+            display: grid;
+            place-items: center;
+            padding: 24px 0;
+        }
+        .stage::before {
+            content: '';
+            position: absolute;
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--brand-glow), transparent 65%);
+            filter: blur(20px);
+            opacity: 0.7;
+        }
+        .phone {
+            position: relative;
+            width: 300px;
+            height: 640px;
+            padding: 10px;
+            border-radius: 48px;
+            background: linear-gradient(160deg, var(--device-edge), var(--device) 40%);
+            box-shadow:
+                0 0 0 1px var(--line-strong),
+                inset 0 0 0 2px rgb(255 255 255 / 0.06),
+                0 40px 80px -24px rgb(0 0 0 / 0.8);
+        }
+        .phone-screen {
+            position: relative;
+            width: 280px;
+            height: 620px;
+            border-radius: 38px;
+            overflow: hidden;
+            background: var(--bg);
+        }
+        .phone-screen iframe {
+            width: 390px;
+            height: 864px;
+            border: 0;
+            transform: scale(0.718);
+            transform-origin: 0 0;
+            pointer-events: none;
+        }
+        .phone-notch {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            translate: -50% 0;
+            width: 92px;
+            height: 26px;
+            border-radius: 999px;
+            background: var(--device);
+            z-index: 2;
+        }
+
+        /* 3 pasos */
+        .steps3 {
+            display: grid;
+            gap: 12px;
+            counter-reset: paso;
+        }
+        .step {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 18px;
+        }
+        .step-num {
+            grid-row: span 2;
+            font-family: var(--font-display);
+            font-size: 56px;
+            line-height: 0.85;
+            background: linear-gradient(180deg, var(--brand-hi), var(--brand-deep));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 6px 18px var(--brand-glow));
+        }
+        .step h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .step h3 .ic {
+            color: var(--brand-text);
+        }
+        .step p {
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        /* Precio */
+        .price {
+            padding: 32px 24px 28px;
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+        .price::before {
+            content: '';
+            position: absolute;
+            inset: -40% -20% auto;
+            height: 260px;
+            background: radial-gradient(50% 50% at 50% 50%, var(--brand-soft), transparent 70%);
+            pointer-events: none;
+        }
+        .price-amount {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 8px;
+        }
+        .price-amount small {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .price-amount .display {
+            font-size: 104px;
+            line-height: 0.85;
+        }
+        .price .ticks {
+            margin: 0;
+            text-align: left;
+        }
+        .trial {
+            font-weight: 800;
+            color: var(--brand-text);
+        }
+
+        /* Cierre */
+        .closing {
+            position: relative;
+            margin: 72px 0 0;
+            min-height: 460px;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        }
+        .closing .photo {
+            position: absolute;
+            inset: 0;
+        }
+        .closing .photo img {
+            object-position: 50% 60%;
+        }
+        .closing-body {
+            position: relative;
+            z-index: 3;
+            padding-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            color: var(--on-photo);
+        }
+        .closing-veil {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(180deg, rgb(var(--veil) / 0.35) 0%, rgb(var(--veil) / 0.8) 35%, rgb(var(--veil) / 0.95) 60%, rgb(var(--veil)) 100%);
+        }
+        .foot {
+            background: rgb(var(--veil));
+            color: var(--on-photo-muted);
+            font-size: 14px;
+            padding: 28px 0 36px;
+            border-top: 1px solid rgb(255 255 255 / 0.08);
+        }
+        .foot .wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* ---- Escritorio ---- */
+        @media (min-width: 1024px) {
+            .nav {
+                display: flex;
+                align-items: center;
+                gap: 28px;
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--on-photo-muted);
+            }
+            .top .btn-glass {
+                display: none;
+            }
+            .hero {
+                min-height: 800px;
+                margin: 0 16px;
+                border-radius: 0 0 40px 40px;
+            }
+            .hero .photo img {
+                object-position: 50% 62%;
+            }
+            .hero-veil {
+                background:
+                    linear-gradient(90deg, rgb(var(--veil) / 0.96) 0%, rgb(var(--veil) / 0.82) 38%, rgb(var(--veil) / 0.15) 70%, rgb(var(--veil) / 0.35) 100%),
+                    linear-gradient(180deg, rgb(var(--veil) / 0.6) 0%, transparent 25%, transparent 70%, rgb(var(--veil) / 0.8) 100%);
+            }
+            .hero-body {
+                margin-block: auto;
+                padding-block: 140px 80px;
+                max-width: 1200px;
+            }
+            .hero-body > * {
+                max-width: 640px;
+            }
+            .hero-ctas {
+                flex-direction: row;
+                align-items: center;
+                gap: 24px;
+            }
+            .notif {
+                position: absolute;
+                right: 9%;
+                bottom: 140px;
+                margin: 0;
+                width: 330px;
+            }
+            .section {
+                padding-top: 120px;
+            }
+            .s-head {
+                margin-bottom: 40px;
+            }
+            .proof {
+                gap: 16px;
+            }
+            .proof figure {
+                aspect-ratio: 16 / 10;
+            }
+            .proof figcaption {
+                left: 20px;
+                bottom: 18px;
+            }
+            .proof figcaption strong {
+                font-size: 32px;
+            }
+            .proof figcaption b {
+                display: inline;
+            }
+            .hero-title {
+                font-size: 96px;
+            }
+            .hero-body > .hero-title {
+                max-width: 760px;
+            }
+            .showcase {
+                grid-template-columns: 1fr 1fr;
+                align-items: center;
+                gap: 64px;
+            }
+            .steps3 {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+            }
+            .step {
+                grid-template-columns: 1fr;
+                padding: 32px;
+            }
+            .step-num {
+                grid-row: auto;
+                font-size: 88px;
+                margin-bottom: 18px;
+            }
+            .price-wrap {
+                display: grid;
+                grid-template-columns: 1fr 460px;
+                gap: 64px;
+                align-items: center;
+            }
+            .closing {
+                margin: 120px 16px 0;
+                min-height: 520px;
+                border-radius: 40px 40px 0 0;
+            }
+            .closing-veil {
+                background: linear-gradient(90deg, rgb(var(--veil) / 0.95) 0%, rgb(var(--veil) / 0.75) 45%, rgb(var(--veil) / 0.2) 100%);
+            }
+            .closing-body > * {
+                max-width: 620px;
+            }
+            .closing {
+                align-items: center;
+            }
+            .closing-body {
+                padding-bottom: 0;
+            }
+            .foot .wrap {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="top">
+        <div class="wrap">
+            <a href="index.html" class="logo"
+                ><span class="mono"><svg class="ic"><use href="#i-scissors" /></svg></span>peluWeb</a
+            >
+            <nav class="nav" aria-label="Principal">
+                <a href="#como">Cómo funciona</a>
+                <a href="#precio">Precio</a>
+                <a href="#">Ingresar</a>
+                <a href="#" class="btn btn-brand btn-sm">Crea tu salón gratis</a>
+            </nav>
+            <a href="#" class="btn btn-glass btn-sm">Ingresar</a>
+        </div>
+    </header>
+
+    <section class="hero grain" aria-labelledby="t-hero">
+        <div class="photo">
+            <img src="../../../../database/seeders/images/pexels-3993133.jpg" alt="Salón con espejos iluminados de noche" />
+        </div>
+        <div class="hero-veil"></div>
+
+        <div class="notif rise" style="--i: 5" aria-hidden="true">
+            <span class="notif-ic"><svg class="ic"><use href="#i-bell" /></svg></span>
+            <div>
+                <p class="notif-top"><span>Nueva reserva</span><span>hace 1 min</span></p>
+                <p class="notif-what">Corte + barba con Pedro</p>
+                <p class="notif-meta num">Hoy 7:30 p. m.</p>
+                <p class="notif-meta num"><svg class="ic"><use href="#i-check" /></svg>Seña S/ 15.00 por Yape</p>
+            </div>
+        </div>
+
+        <div class="hero-body wrap">
+            <p class="chip chip-photo rise" style="--i: 0; width: fit-content">
+                <svg class="ic"><use href="#i-scissors" /></svg>Para barberías, salones y uñas
+            </p>
+            <h1 id="t-hero" class="display d-xl hero-title rise" style="--i: 1">
+                <span class="hero-l1">Tu agenda <span class="hl">llena.</span></span> Sin contestar WhatsApp a medianoche.
+            </h1>
+            <p class="lead rise" style="--i: 2">
+                Tus clientes reservan solos desde tu enlace: eligen servicio, quién les atiende y la hora, y dejan
+                su seña por Yape o Plin. Tú solo atiendes.
+            </p>
+            <div class="hero-ctas rise" style="--i: 3">
+                <a href="#" class="btn btn-brand">Crea tu salón gratis <svg class="ic"><use href="#i-arrow-right" /></svg></a>
+                <a href="salon.html" class="link-arrow">Mira una página de ejemplo <svg class="ic ic-sm"><use href="#i-chevron-right" /></svg></a>
+            </div>
+            <p class="hero-note rise" style="--i: 4">
+                <span><svg class="ic"><use href="#i-check" /></svg>14 días gratis</span>
+                <span><svg class="ic"><use href="#i-check" /></svg>Lo armas en 10 minutos</span>
+                <span><svg class="ic"><use href="#i-check" /></svg>Sin comisión por cliente</span>
+            </p>
+        </div>
+    </section>
+
+    <main>
+        <!-- Prueba: salones de la demo -->
+        <section class="section wrap" aria-labelledby="t-proof">
+            <div class="s-head">
+                <p class="eyebrow">Ya reciben reservas así</p>
+                <h2 id="t-proof" class="display d-md">Hecho para negocios como el tuyo</h2>
+            </div>
+            <div class="proof">
+                <figure class="photo r-3-4 grain">
+                    <img src="../../../../database/seeders/images/pexels-1836983.jpg" alt="" />
+                    <div class="shade"></div>
+                    <figcaption><strong>Don Lucho</strong><span>Barbería<b> · Miraflores</b></span></figcaption>
+                </figure>
+                <figure class="photo r-3-4 grain">
+                    <img src="../../../../database/seeders/images/pexels-3993311.jpg" alt="" />
+                    <div class="shade"></div>
+                    <figcaption><strong>Studio Bella</strong><span>Salón<b> · San Isidro</b></span></figcaption>
+                </figure>
+                <figure class="photo r-3-4 grain">
+                    <img src="../../../../database/seeders/images/pexels-3422099.jpg" alt="" />
+                    <div class="shade"></div>
+                    <figcaption><strong>Nails Spa</strong><span>Uñas<b> · Barranco</b></span></figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Así se ve tu página -->
+        <section class="section wrap showcase" aria-labelledby="t-show">
+            <div>
+                <div class="s-head" style="margin-bottom: 0">
+                    <p class="eyebrow">Tu página</p>
+                    <h2 id="t-show" class="display d-md">Así se ve tu página</h2>
+                    <p class="lead">
+                        Tu portada con tus fotos, tus servicios con precio y un botón de Reservar que siempre queda
+                        a mano. Tus clientes la abren desde Instagram o WhatsApp.
+                    </p>
+                </div>
+                <ul class="ticks">
+                    <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Tus fotos, tu logo y tu color</li>
+                    <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Servicios con precio y duración</li>
+                    <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Reservan en tres toques, de día o de noche</li>
+                    <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Seña por Yape o Plin antes de la cita</li>
+                </ul>
+                <div class="swatches card" aria-label="Cada salón elige su color">
+                    Tu color:
+                    <span class="sw on" style="--sw: #f2b544" title="Ámbar"></span>
+                    <span class="sw" style="--sw: #e63946" title="Rojo"></span>
+                    <span class="sw" style="--sw: #c2185b" title="Fucsia"></span>
+                    <span class="sw" style="--sw: #6d28d9" title="Violeta"></span>
+                    <span class="sw" style="--sw: #0f766e" title="Verde azulado"></span>
+                </div>
+            </div>
+            <div class="stage">
+                <div class="phone">
+                    <div class="phone-screen">
+                        <span class="phone-notch"></span>
+                        <iframe src="salon.html" title="Página de Barbería Don Lucho" tabindex="-1" loading="eager"></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tres pasos -->
+        <section id="como" class="section wrap" aria-labelledby="t-pasos">
+            <div class="s-head">
+                <p class="eyebrow">Cómo funciona</p>
+                <h2 id="t-pasos" class="display d-md">Tres pasos y listo</h2>
+            </div>
+            <div class="steps3">
+                <article class="card step">
+                    <span class="step-num">01</span>
+                    <h3><svg class="ic"><use href="#i-store" /></svg>Crea tu salón</h3>
+                    <p>Sube tu logo, tus servicios con precio y el horario de tu equipo.</p>
+                </article>
+                <article class="card step">
+                    <span class="step-num">02</span>
+                    <h3><svg class="ic"><use href="#i-link" /></svg>Comparte tu enlace</h3>
+                    <p>En la bio de tu Instagram, en tu estado de WhatsApp o en un QR junto al espejo.</p>
+                </article>
+                <article class="card step">
+                    <span class="step-num">03</span>
+                    <h3><svg class="ic"><use href="#i-calendar-check" /></svg>Recibe reservas</h3>
+                    <p>Te llega cada cita con su seña. La confirmas con un toque y listo.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Precio -->
+        <section id="precio" class="section wrap" aria-labelledby="t-precio">
+            <div class="price-wrap">
+                <div class="s-head">
+                    <p class="eyebrow">Precio</p>
+                    <h2 id="t-precio" class="display d-md">Un precio fijo. Sin comisión por cliente.</h2>
+                    <p class="lead">Pagas lo mismo tengas 20 o 200 reservas al mes. Pruébalo gratis antes de decidir.</p>
+                </div>
+                <div class="card card-raised card-brand price">
+                    <p class="eyebrow" style="position: relative">Plan salón</p>
+                    <div class="price-amount" style="position: relative">
+                        <small>desde</small><span class="display num">S/ 49</span><small>al mes</small>
+                    </div>
+                    <p class="trial" style="position: relative">14 días gratis para probar</p>
+                    <ul class="ticks" style="position: relative">
+                        <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Reservas ilimitadas</li>
+                        <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Tu página con tu logo y tu color</li>
+                        <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Señas por Yape o Plin</li>
+                        <li><span class="tick"><svg class="ic"><use href="#i-check" /></svg></span>Agenda para todo tu equipo</li>
+                    </ul>
+                    <a href="#" class="btn btn-brand btn-block" style="position: relative">Crea tu salón gratis</a>
+                    <p class="muted" style="font-size: 14px; position: relative">Precios en soles.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <section class="closing grain" aria-labelledby="t-cierre">
+        <div class="photo">
+            <img src="../../../../database/seeders/images/pexels-7518728.jpg" alt="" />
+        </div>
+        <div class="closing-veil"></div>
+        <div class="closing-body wrap">
+            <h2 id="t-cierre" class="display d-lg">Que tu próximo cliente reserve mientras tú duermes</h2>
+            <p class="lead" style="color: var(--on-photo-muted)">Tu página queda lista hoy. Compártela esta noche.</p>
+            <a href="#" class="btn btn-brand" style="width: fit-content">Crea tu salón gratis <svg class="ic"><use href="#i-arrow-right" /></svg></a>
+        </div>
+    </section>
+    <footer class="foot">
+        <div class="wrap">
+            <a href="index.html" class="logo" style="font-size: 24px"
+                ><span class="mono"><svg class="ic"><use href="#i-scissors" /></svg></span>peluWeb</a
+            >
+            <p>Hecho en Lima para salones de todo el Perú.</p>
+        </div>
+    </footer>
+</body>
+</html>

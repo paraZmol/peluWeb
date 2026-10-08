@@ -1,0 +1,504 @@
+/* ==========================================================================
+   Barbería nocturna — maqueta (docs/design/propuestas/a-nocturna)
+   Todos los colores salen de estas variables. Para probar otro salón basta
+   con cambiar --brand (ver nocturna.js: ?marca=E63946, ?tema=claro).
+   ========================================================================== */
+
+:root {
+    color-scheme: dark;
+
+    /* Color de marca del salón (lo pone cada salón) */
+    --brand: #f2b544;
+
+    /* Derivados: nunca se escriben a mano */
+    --brand-ui: oklch(from var(--brand) clamp(0.62, l, 0.9) c h);
+    --brand-ink: oklch(from var(--brand-ui) clamp(0, calc((0.58 - l) * 100), 1) 0 0);
+    --brand-text: oklch(from var(--brand) clamp(0.74, l, 0.92) c h);
+    --brand-hi: color-mix(in oklab, var(--brand-ui), white 22%);
+    --brand-deep: oklch(from var(--brand-ui) calc(l - 0.12) c h);
+    --brand-soft: color-mix(in oklab, var(--brand-ui) 14%, transparent);
+    --brand-line: color-mix(in oklab, var(--brand-ui) 45%, transparent);
+    --brand-glow: color-mix(in oklab, var(--brand-ui) 42%, transparent);
+
+    /* Carbón azulado */
+    --bg: #0b0f14;
+    --bg-band: #0e131a;
+    --surface: #151b22;
+    --surface-2: #1b232c;
+    --surface-3: #232c37;
+    --line: rgb(255 255 255 / 0.1);
+    --line-strong: rgb(255 255 255 / 0.16);
+    --highlight: rgb(255 255 255 / 0.07);
+    --text: #f3f4f6;
+    --text-muted: #a3adba;
+    --text-subtle: #8591a0;
+    --success: #34d399;
+    --device: #05070a;
+    --device-edge: #2a323c;
+
+    /* Sobre foto: siempre igual, con velo, en los dos temas */
+    --on-photo: #f3f4f6;
+    --on-photo-muted: rgb(243 244 246 / 0.78);
+    --veil: 8 11 15;
+
+    /* Profundidad */
+    --shadow-1: inset 0 1px 0 var(--highlight), 0 1px 2px rgb(0 0 0 / 0.45),
+        0 10px 24px -12px rgb(0 0 0 / 0.6);
+    --shadow-2: inset 0 1px 0 var(--highlight), 0 2px 6px rgb(0 0 0 / 0.4),
+        0 28px 56px -20px rgb(0 0 0 / 0.75);
+    --glow: 0 10px 32px -8px var(--brand-glow), 0 0 0 1px var(--brand-line);
+    --lift: 0 2px 6px rgb(0 0 0 / 0.3);
+    --dock-shadow: 0 -18px 40px -20px rgb(0 0 0 / 0.6);
+
+    /* Forma */
+    --radius-sm: 10px;
+    --radius: 16px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+
+    /* Tipo */
+    --font-display: 'Bebas Neue', 'Oswald', Impact, sans-serif;
+    --font-body: 'Manrope', 'Inter', system-ui, sans-serif;
+
+    /* Movimiento */
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --t-micro: 150ms;
+    --t-move: 250ms;
+}
+
+[data-theme='light'] {
+    color-scheme: light;
+    --brand-ui: oklch(from var(--brand) clamp(0.3, l, 0.84) c h);
+    --brand-text: oklch(from var(--brand) clamp(0.2, l, 0.5) c h);
+    --brand-soft: color-mix(in oklab, var(--brand-ui) 16%, transparent);
+    --brand-glow: color-mix(in oklab, var(--brand-ui) 38%, transparent);
+
+    --bg: #f3f4f6;
+    --bg-band: #e9ecf0;
+    --surface: #ffffff;
+    --surface-2: #fbfbfc;
+    --surface-3: #eef0f3;
+    --line: rgb(11 15 20 / 0.09);
+    --line-strong: rgb(11 15 20 / 0.15);
+    --highlight: rgb(255 255 255 / 0.9);
+    --text: #0b0f14;
+    --text-muted: #48515e;
+    --text-subtle: #5b6573;
+    --success: #047857;
+
+    --shadow-1: inset 0 1px 0 var(--highlight), 0 1px 2px rgb(11 15 20 / 0.06),
+        0 10px 24px -12px rgb(11 15 20 / 0.2);
+    --shadow-2: inset 0 1px 0 var(--highlight), 0 2px 6px rgb(11 15 20 / 0.06),
+        0 28px 56px -22px rgb(11 15 20 / 0.32);
+    --lift: 0 1px 3px rgb(11 15 20 / 0.1);
+    --dock-shadow: 0 -10px 30px -18px rgb(11 15 20 / 0.25);
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+html {
+    -webkit-text-size-adjust: 100%;
+}
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+}
+img {
+    display: block;
+    max-width: 100%;
+}
+a {
+    color: inherit;
+    text-decoration: none;
+}
+button {
+    font: inherit;
+    color: inherit;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+p {
+    margin: 0;
+}
+h1,
+h2,
+h3,
+h4 {
+    margin: 0;
+    font-weight: 400;
+}
+:focus-visible {
+    outline: 2px solid var(--brand-ui);
+    outline-offset: 3px;
+}
+
+.wrap {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: 16px;
+}
+@media (min-width: 768px) {
+    .wrap {
+        padding-inline: 32px;
+    }
+}
+
+.num {
+    font-variant-numeric: tabular-nums;
+}
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+/* ---------- Iconos (trazo lucide 1.75) ---------- */
+.ic {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.ic-sm {
+    width: 16px;
+    height: 16px;
+}
+
+/* ---------- Tipografía ---------- */
+.display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    text-transform: uppercase;
+}
+.d-xl {
+    font-size: 64px;
+}
+.d-lg {
+    font-size: 48px;
+}
+.d-md {
+    font-size: 40px;
+}
+.d-sm {
+    font-size: 28px;
+}
+@media (min-width: 768px) {
+    .d-xl {
+        font-size: 104px;
+    }
+    .d-lg {
+        font-size: 72px;
+    }
+    .d-md {
+        font-size: 56px;
+    }
+}
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand-text);
+}
+.eyebrow::before {
+    content: '';
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+}
+.lead {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 34em;
+    text-wrap: pretty;
+}
+.muted {
+    color: var(--text-muted);
+}
+.accent {
+    color: var(--brand-text);
+}
+
+/* ---------- Botones ---------- */
+.btn {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 26px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    transition:
+        transform var(--t-micro) var(--ease),
+        box-shadow var(--t-move) var(--ease);
+}
+.btn:active {
+    transform: scale(0.97);
+}
+.btn-brand {
+    color: var(--brand-ink);
+    background: linear-gradient(180deg, var(--brand-hi), var(--brand-ui) 48%, var(--brand-deep));
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.4),
+        inset 0 -1px 0 rgb(0 0 0 / 0.18),
+        0 12px 32px -8px var(--brand-glow),
+        0 0 0 1px var(--brand-deep);
+}
+/* Brillo que cruza al pasar o tocar */
+.btn-brand::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.45) 50%, transparent 65%);
+    transform: translateX(-120%);
+    transition: transform 600ms var(--ease);
+}
+.btn-brand:hover::after,
+.btn-brand:active::after {
+    transform: translateX(120%);
+}
+.btn-brand:hover {
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.4),
+        inset 0 -1px 0 rgb(0 0 0 / 0.18),
+        0 16px 44px -8px var(--brand-glow),
+        0 0 0 1px var(--brand-deep);
+}
+.btn-glass {
+    color: var(--on-photo);
+    background: rgb(255 255 255 / 0.1);
+    border: 1px solid rgb(255 255 255 / 0.18);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+.btn-quiet {
+    color: var(--text);
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-1);
+}
+.btn-block {
+    width: 100%;
+}
+.btn-sm {
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 15px;
+}
+.btn-icon {
+    width: 52px;
+    padding: 0;
+}
+.btn-sm.btn-icon {
+    width: 44px;
+}
+
+/* ---------- Chips con relieve ---------- */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+    border: 1px solid var(--line);
+    box-shadow:
+        inset 0 1px 0 var(--highlight),
+        var(--lift);
+}
+.chip .ic {
+    width: 16px;
+    height: 16px;
+    color: var(--brand-text);
+}
+.chip-photo {
+    color: var(--on-photo);
+    background: rgb(255 255 255 / 0.1);
+    border-color: rgb(255 255 255 / 0.16);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+.chip-photo .ic {
+    color: var(--brand-ui);
+}
+.dot-live {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--success) 25%, transparent);
+}
+
+/* ---------- Superficies ---------- */
+.card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-1);
+}
+.card-raised {
+    box-shadow: var(--shadow-2);
+}
+.card-brand {
+    border-color: var(--brand-line);
+    box-shadow: var(--shadow-2), 0 0 80px -30px var(--brand-glow);
+}
+.divider {
+    height: 1px;
+    background: var(--line);
+    border: 0;
+    margin: 0;
+}
+
+/* ---------- Fotos: proporción fija, viñeta, grano y velo ---------- */
+.photo {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface);
+}
+.photo > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.photo::after {
+    /* viñeta */
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgb(var(--veil) / 0.55));
+}
+.grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.12;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.veil-bottom {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        180deg,
+        rgb(var(--veil) / 0.6) 0%,
+        rgb(var(--veil) / 0) 20%,
+        rgb(var(--veil) / 0.5) 42%,
+        rgb(var(--veil) / 0.9) 64%,
+        rgb(var(--veil) / 0.97) 100%
+    );
+}
+.r-1-1 {
+    aspect-ratio: 1;
+}
+.r-4-5 {
+    aspect-ratio: 4 / 5;
+}
+.r-3-4 {
+    aspect-ratio: 3 / 4;
+}
+.r-16-9 {
+    aspect-ratio: 16 / 9;
+}
+
+/* ---------- Monograma del salón ---------- */
+.mono {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    color: var(--brand-ink);
+    background: linear-gradient(160deg, var(--brand-hi), var(--brand-ui) 55%, var(--brand-deep));
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.45),
+        0 8px 24px -6px var(--brand-glow),
+        0 0 0 1px rgb(0 0 0 / 0.25);
+}
+
+/* ---------- Barra fija inferior ---------- */
+.dock {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 40;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: color-mix(in oklab, var(--bg) 78%, transparent);
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    border-top: 1px solid var(--line);
+    box-shadow: var(--dock-shadow);
+}
+.dock-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 720px;
+    margin-inline: auto;
+}
+
+/* ---------- Movimiento ---------- */
+.rise {
+    animation: rise var(--t-move) var(--ease) both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

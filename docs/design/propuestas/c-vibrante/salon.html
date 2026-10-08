@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Corte &amp; Color Surco · Reserva tu cita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="vibrante.css">
+<script src="vibrante.js"></script>
+<style>
+    /* ---- Portada del salón ---- */
+    .s-hero { padding: 16px 0 56px; }
+    .s-hero__grid { display: grid; gap: 28px; }
+    .s-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .s-top__actions { display: flex; gap: 8px; }
+    .s-title { font-size: clamp(36px, 11vw, 44px); margin: 18px 0 12px; }
+    .s-meta { font-size: 17px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .s-hero__ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .s-hero__media { position: relative; height: 340px; }
+    .s-hero__media .m-main { position: absolute; left: 0; top: 0; width: 64%; height: 100%; }
+    .s-hero__media .m-side { position: absolute; right: 0; top: 10px; width: 42%; height: auto; }
+    .s-hero__media .m-small { position: absolute; right: 4%; bottom: 0; width: 31%; height: auto; aspect-ratio: 4 / 5; }
+    .s-hero__media .sticker { position: absolute; left: 10px; bottom: 22px; --tilt: -4deg; }
+    @media (max-width: 1023px) { .only-lg { display: none !important; } }
+    @media (min-width: 1024px) { .only-sm { display: none !important; } }
+
+    /* ---- Cuerpo ---- */
+    .s-body { display: grid; gap: 56px; padding-top: 40px; padding-bottom: 120px; }
+    .s-main { display: grid; gap: 56px; min-width: 0; }
+
+    .svc-group + .svc-group { margin-top: 28px; }
+    .svc-group > .label { margin-bottom: 12px; }
+    .svc-list { display: grid; gap: 14px; }
+    .svc {
+        display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px;
+        padding: 12px 14px 12px 12px; text-decoration: none;
+        transition: transform var(--t-micro) var(--ease), box-shadow var(--t-micro) var(--ease);
+    }
+    .svc:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 0 var(--brand), var(--shadow-soft); }
+    .svc__img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: var(--bw) solid var(--line); }
+    .svc__name { font: 600 17px/1.25 var(--font-body); }
+    .svc__meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 14px; color: var(--muted); }
+    .svc__meta .icon { width: 16px; height: 16px; }
+    .svc__end { display: grid; justify-items: end; gap: 6px; }
+    .price { font: 700 17px/1 var(--font-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .price small { font-size: 13px; font-weight: 500; color: var(--muted); margin-right: 3px; }
+    .go {
+        display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px 6px 12px; border-radius: var(--r-pill);
+        background: var(--brand-soft); color: var(--brand-text); font: 600 14px/1 var(--font-body);
+    }
+    .go .icon { width: 16px; height: 16px; }
+
+    .team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .pro__photo { height: auto; aspect-ratio: 4 / 5; }
+    .pro:nth-child(2) .pro__photo { border-radius: var(--r-asym); }
+    .pro:nth-child(3) .pro__photo { border-radius: var(--r-leaf); }
+    .pro__name { margin-top: 12px; font: 600 15px/1.25 var(--font-body); }
+    .pro__role { font-size: 14px; color: var(--muted); }
+
+    .gallery { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 120px; gap: 12px; }
+    .gallery .g1 { grid-row: span 2; border-radius: var(--r-arch); }
+    .gallery .g2 { border-radius: var(--r-asym); }
+    .gallery .g3 { border-radius: 22px 22px 999px 999px; }
+    .gallery .g4 { grid-column: span 2; grid-row: span 2; border-radius: var(--r-lg); }
+    .gallery .g5 { border-radius: var(--r-leaf); }
+    .gallery .g6 { border-radius: var(--r-arch); }
+
+    .hours { padding: 8px 0; }
+    .hours__head { display: flex; align-items: center; gap: 10px; padding: 12px 20px 14px; font-weight: 600; }
+    .hours li { display: flex; justify-content: space-between; gap: 12px; padding: 11px 20px; font-size: 15px; border-top: 1px solid var(--line-soft); }
+    .hours li span:last-child { font-variant-numeric: tabular-nums; }
+    .hours li.today { margin: 0 8px; padding-inline: 12px; border-radius: var(--r-sm); border-top-color: transparent; background: var(--brand); color: var(--brand-ink); font-weight: 600; }
+    .hours li.today + li { border-top-color: transparent; }
+    .hours li.closed span:last-child { color: var(--muted); }
+
+    .map {
+        position: relative; aspect-ratio: 16 / 9; border-radius: calc(var(--r-lg) - 6px); overflow: hidden; margin: 8px 8px 0;
+        background:
+            linear-gradient(28deg, transparent 47%, var(--surface) 47%, var(--surface) 53%, transparent 53%) 0 0 / 100% 100%,
+            repeating-linear-gradient(0deg, transparent 0 38px, var(--surface) 38px 44px),
+            repeating-linear-gradient(90deg, transparent 0 54px, var(--surface) 54px 60px),
+            var(--brand-tint);
+        border: 1px solid var(--line-soft);
+    }
+    .map__pin { position: absolute; left: 50%; top: 46%; translate: -50% -50%; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50% 50% 50% 4px; rotate: -45deg; background: var(--brand); color: var(--brand-ink); border: var(--bw) solid var(--hard); box-shadow: var(--shadow-hard); }
+    .map__pin .icon { rotate: 45deg; }
+    .place { padding: 16px 20px 20px; display: grid; gap: 14px; }
+
+    .pay { display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; background: var(--brand-soft); border-radius: var(--r-lg); border: 1px solid var(--line-soft); }
+    .pay__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); flex: none; }
+    .pay strong { display: block; font-size: 16px; }
+
+    .s-aside { display: grid; gap: 56px; align-content: start; }
+    .book-card { padding: 24px; display: grid; gap: 16px; }
+    .book-card h2 { font-size: 26px; }
+    .book-card ul { display: grid; gap: 10px; font-size: 15px; }
+    .book-card li { display: flex; gap: 10px; align-items: center; }
+    .book-card li .icon { color: var(--brand-text); }
+
+    footer.s-foot { padding: 0 0 calc(110px + env(safe-area-inset-bottom)); text-align: center; font-size: 14px; color: var(--muted); }
+    footer.s-foot b { font-family: var(--font-display); color: var(--ink); }
+
+    .bookbar .btn-brand { flex: 1; }
+
+    @media (min-width: 1024px) {
+        .s-hero { padding: 24px 0 96px; }
+        .s-hero__grid { grid-template-columns: 1.05fr 0.95fr; align-items: end; gap: 56px; }
+        .s-top { grid-column: 1 / -1; margin-bottom: 8px; }
+        .s-title { font-size: 76px; margin: 24px 0 18px; }
+        .s-meta { font-size: 19px; }
+        .s-hero__ctas { margin-top: 32px; }
+        .s-hero__media { height: 500px; }
+        .s-hero__media .sticker { bottom: 56px; }
+        .s-body { grid-template-columns: minmax(0, 1fr) 380px; gap: 64px; padding-top: 56px; padding-bottom: 80px; }
+        .s-aside { position: sticky; top: 24px; gap: 28px; }
+        .gallery { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 170px; grid-template-areas: 'a b d d' 'a c d d' 'e e f f'; }
+        .gallery .g1 { grid-area: a; } .gallery .g2 { grid-area: b; } .gallery .g3 { grid-area: c; }
+        .gallery .g4 { grid-area: d; } .gallery .g5 { grid-area: e; } .gallery .g6 { grid-area: f; }
+        .team { gap: 24px; }
+        .pro__name { font-size: 17px; }
+        .bookbar { display: none; }
+        footer.s-foot { padding-bottom: 40px; }
+    }
+</style>
+</head>
+<body>
+
+<header class="brand-block s-hero">
+    <div class="wrap s-hero__grid">
+        <div class="s-top">
+            <span class="mono" aria-hidden="true">CC</span>
+            <div class="s-top__actions">
+                <a class="icon-btn on-brand" href="#" aria-label="Instagram del salón"><i data-i="instagram"></i></a>
+                <a class="icon-btn on-brand" href="#" aria-label="Compartir"><i data-i="share"></i></a>
+            </div>
+        </div>
+
+        <div class="rise">
+            <span class="sticker sticker-surface" style="--tilt:-2deg"><span class="dot"></span>Hoy abierto hasta las 9:00 p. m.</span>
+            <h1 class="display s-title">Corte &amp; Color Surco</h1>
+            <p class="s-meta"><i data-i="pin"></i>Salón unisex · Santiago de Surco, Lima</p>
+            <div class="s-hero__ctas">
+                <a class="btn btn-surface only-lg" href="reserva.html">Reservar cita <i data-i="arrow-right"></i></a>
+                <a class="btn btn-on-brand btn-sm" href="#"><i data-i="chat"></i>WhatsApp</a>
+                <a class="btn btn-on-brand btn-sm" href="#ubicacion"><i data-i="pin"></i>Cómo llegar</a>
+            </div>
+        </div>
+
+        <div class="s-hero__media rise" style="--i:2">
+            <img class="ph shape-arch m-main" src="../../../../database/seeders/images/pexels-705255.jpg" alt="Interior luminoso del salón con sillones y espejos">
+            <img class="ph shape-circle m-side" src="../../../../database/seeders/images/pexels-3065171.jpg" alt="Peinado con ondas">
+            <img class="ph shape-leaf m-small" src="../../../../database/seeders/images/pexels-1319462.jpg" alt="Degradado hecho con máquina">
+            <span class="sticker sticker-ink">Seña 30 % · Yape / Plin</span>
+        </div>
+    </div>
+    <div class="wave"></div>
+</header>
+
+<div class="wrap s-body">
+    <main class="s-main">
+        <section id="servicios" class="rise" style="--i:3">
+            <div class="section-head">
+                <h2 class="display h2">Servicios</h2>
+                <p class="muted">Precios en soles. Eliges a quien te atiende en el siguiente paso.</p>
+            </div>
+
+            <div class="svc-group">
+                <p class="label">Cortes y peinado</p>
+                <ul class="svc-list">
+                    <li><a class="card svc" href="reserva.html">
+                        <img class="svc__img" src="../../../../database/seeders/images/pexels-3356170.jpg" alt="">
+                        <div><h3 class="svc__name">Corte</h3><p class="svc__meta num"><i data-i="clock"></i>40 min</p></div>
+                        <div class="svc__end"><p class="price">S/ 40.00</p><span class="go">Reservar<i data-i="arrow-right"></i></span></div>
+                    </a></li>
+                    <li><a class="card svc" href="reserva.html">
+                        <img class="svc__img" src="../../../../database/seeders/images/pexels-2076932.jpg" alt="">
+                        <div><h3 class="svc__name">Corte + barba</h3><p class="svc__meta num"><i data-i="clock"></i>55 min</p></div>
+                        <div class="svc__end"><p class="price">S/ 55.00</p><span class="go">Reservar<i data-i="arrow-right"></i></span></div>
+                    </a></li>
+                    <li><a class="card svc" href="reserva.html">
+                        <img class="svc__img" src="../../../../database/seeders/images/pexels-3065170.jpg" alt="">
+                        <div><h3 class="svc__name">Peinado</h3><p class="svc__meta num"><i data-i="clock"></i>40 min</p></div>
+                        <div class="svc__end"><p class="price">S/ 50.00</p><span class="go">Reservar<i data-i="arrow-right"></i></span></div>
+                    </a></li>
+                </ul>
+            </div>
+
+            <div class="svc-group">
+                <p class="label">Color</p>
+                <ul class="svc-list">
+                    <li><a class="card svc" href="reserva.html">
+                        <img class="svc__img" src="../../../../database/seeders/images/pexels-3993312.jpg" alt="">
+                        <div><h3 class="svc__name">Color</h3><p class="svc__meta num"><i data-i="clock"></i>1 h 30 min</p></div>
+                        <div class="svc__end"><p class="price"><small>desde</small>S/ 110.00</p><span class="go">Reservar<i data-i="arrow-right"></i></span></div>
+                    </a></li>
+                    <li><a class="card svc" href="reserva.html">
+                        <img class="svc__img" src="../../../../database/seeders/images/pexels-3993311.jpg" alt="">
+                        <div><h3 class="svc__name">Mechas</h3><p class="svc__meta num"><i data-i="clock"></i>2 h</p></div>
+                        <div class="svc__end"><p class="price">S/ 160.00</p><span class="go">Reservar<i data-i="arrow-right"></i></span></div>
+                    </a></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="equipo">
+            <div class="section-head">
+                <h2 class="display h2">Quién te atiende</h2>
+            </div>
+            <ul class="team">
+                <li class="pro">
+                    <img class="ph shape-arch pro__photo" src="../../../../database/seeders/images/pexels-3993312-square.jpg" alt="Jorge Huamán">
+                    <p class="pro__name">Jorge Huamán</p><p class="pro__role">Cortes y color</p>
+                </li>
+                <li class="pro">
+                    <img class="ph pro__photo" src="../../../../database/seeders/images/pexels-3992875-square.jpg" alt="Dana Flores">
+                    <p class="pro__name">Dana Flores</p><p class="pro__role">Estilista</p>
+                </li>
+                <li class="pro">
+                    <img class="ph pro__photo" src="../../../../database/seeders/images/pexels-4625648-square.jpg" alt="Renzo Paz">
+                    <p class="pro__name">Renzo Paz</p><p class="pro__role">Barbero</p>
+                </li>
+            </ul>
+        </section>
+
+        <section id="galeria">
+            <div class="section-head">
+                <h2 class="display h2">Trabajos recientes</h2>
+            </div>
+            <div class="gallery">
+                <img class="ph g1" src="../../../../database/seeders/images/pexels-3356170.jpg" alt="Corte con tijera y peine">
+                <img class="ph g2" src="../../../../database/seeders/images/pexels-3993312.jpg" alt="Aplicación de color">
+                <img class="ph g3" src="../../../../database/seeders/images/pexels-1319462.jpg" alt="Degradado con máquina">
+                <img class="ph g4" src="../../../../database/seeders/images/pexels-7518731.jpg" alt="Corte en el sillón">
+                <img class="ph g5" src="../../../../database/seeders/images/pexels-3065170.jpg" alt="Recogido">
+                <img class="ph g6" src="../../../../database/seeders/images/pexels-2076932.jpg" alt="Perfilado con máquina">
+            </div>
+        </section>
+    </main>
+
+    <aside class="s-aside">
+        <div class="card book-card only-lg">
+            <span class="label">Reserva en línea</span>
+            <h2 class="display">Elige tu servicio, tu hora y listo.</h2>
+            <ul>
+                <li><span class="dot"></span>Hoy abierto hasta las 9:00 p. m.</li>
+                <li><i data-i="wallet"></i>Seña del 30 % por Yape o Plin</li>
+                <li><i data-i="chat"></i>El salón te confirma por WhatsApp</li>
+            </ul>
+            <a class="btn btn-brand btn-block" href="reserva.html">Reservar cita <i data-i="arrow-right"></i></a>
+            <a class="btn btn-ghost btn-block btn-sm" href="#"><i data-i="chat"></i>Escribir por WhatsApp</a>
+        </div>
+
+        <section id="horario">
+            <div class="section-head only-sm"><h2 class="display h2">Horario</h2></div>
+            <div class="card hours">
+                <p class="hours__head"><span class="dot"></span>Hoy abierto hasta las 9:00 p. m.</p>
+                <ul>
+                    <li><span>Lunes</span><span>9:00 a. m. – 9:00 p. m.</span></li>
+                    <li><span>Martes</span><span>9:00 a. m. – 9:00 p. m.</span></li>
+                    <li class="today"><span>Miércoles · hoy</span><span>9:00 a. m. – 9:00 p. m.</span></li>
+                    <li><span>Jueves</span><span>9:00 a. m. – 9:00 p. m.</span></li>
+                    <li><span>Viernes</span><span>9:00 a. m. – 9:00 p. m.</span></li>
+                    <li><span>Sábado</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+                    <li class="closed"><span>Domingo</span><span>Cerrado</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="ubicacion">
+            <div class="section-head only-sm"><h2 class="display h2">Cómo llegar</h2></div>
+            <div class="card">
+                <div class="map" role="img" aria-label="Mapa de Santiago de Surco"><span class="map__pin"><i data-i="pin"></i></span></div>
+                <div class="place">
+                    <p><strong>Santiago de Surco, Lima</strong><br><span class="muted">Abre la ruta desde tu celular.</span></p>
+                    <a class="btn btn-ghost btn-sm" href="#"><i data-i="pin"></i>Abrir en Google Maps</a>
+                </div>
+            </div>
+        </section>
+
+        <div class="pay">
+            <span class="pay__icon"><i data-i="wallet"></i></span>
+            <p><strong>Reservas con seña del 30 %</strong><span class="muted">La pagas por Yape o Plin y el salón te confirma por WhatsApp.</span></p>
+        </div>
+    </aside>
+</div>
+
+<footer class="s-foot">Hecho con <b>peluWeb</b></footer>
+
+<div class="bookbar">
+    <a class="icon-btn" href="#" aria-label="Escribir por WhatsApp" style="width:52px;height:52px"><i data-i="chat"></i></a>
+    <a class="btn btn-brand" href="reserva.html">Reservar cita <i data-i="arrow-right"></i></a>
+</div>
+
+</body>
+</html>

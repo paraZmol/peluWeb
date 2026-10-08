@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Barbería Don Lucho · maqueta Barbería nocturna</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    />
+    <link rel="stylesheet" href="nocturna.css" />
+    <script src="nocturna.js"></script>
+    <style>
+        /* ---- Portada del salón ---- */
+        .s-hero {
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+            overflow: hidden;
+            background: rgb(var(--veil));
+        }
+        .s-hero-photo {
+            position: absolute;
+            inset: 0;
+        }
+        .s-hero-photo img {
+            object-position: 38% 40%;
+            /* acerca a los barberos y saca del cuadro los letreros del techo */
+            transform: scale(1.3);
+            transform-origin: 40% 100%;
+        }
+        .s-topbar {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+        }
+        .s-topbar-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .s-hero-body {
+            position: relative;
+            z-index: 3;
+            margin-top: auto;
+            padding-bottom: 28px;
+            color: var(--on-photo);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .s-hero-id {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .s-hero-type {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--on-photo-muted);
+            line-height: 1.3;
+        }
+        .s-hero-type strong {
+            display: block;
+            color: var(--on-photo);
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .s-hero-desc {
+            max-width: 30em;
+            font-size: 16px;
+            color: var(--on-photo-muted);
+            text-wrap: pretty;
+        }
+        .s-hero-cta {
+            display: none;
+        }
+
+        /* ---- Datos rápidos ---- */
+        .facts {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding: 20px 16px 4px;
+        }
+        .facts .chip {
+            flex: none;
+        }
+
+        /* ---- Layout ---- */
+        .s-main {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+            padding-top: 32px;
+            padding-bottom: 120px;
+        }
+        .s-section-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .s-section-head .eyebrow {
+            margin-bottom: 8px;
+        }
+        .s-count {
+            font-size: 14px;
+            color: var(--text-muted);
+            padding-bottom: 6px;
+        }
+
+        /* ---- Servicios ---- */
+        .svc-card {
+            padding: 4px 0;
+            overflow: hidden;
+        }
+        .svc-group {
+            padding: 16px 20px 6px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-subtle);
+        }
+        .svc {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 20px;
+            position: relative;
+            transition: background var(--t-micro) var(--ease);
+        }
+        .svc + .svc::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: var(--line);
+        }
+        .svc:hover {
+            background: var(--brand-soft);
+        }
+        .svc-name {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        .svc-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        .svc-price {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+        }
+        .svc-meta .sep {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--text-subtle);
+        }
+        .svc-go {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: var(--brand-text);
+            background: var(--brand-soft);
+            border: 1px solid var(--brand-line);
+            box-shadow: inset 0 1px 0 var(--highlight);
+        }
+
+        /* ---- Equipo ---- */
+        .team {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 200px;
+            gap: 12px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            margin-inline: -16px;
+            padding: 4px 16px 8px;
+            scroll-snap-type: x mandatory;
+            scroll-padding-inline: 16px;
+        }
+        .pro {
+            scroll-snap-align: start;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .pro .photo {
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .pro-veil {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(180deg, transparent 45%, rgb(var(--veil) / 0.9));
+        }
+        .pro-name {
+            position: absolute;
+            z-index: 3;
+            left: 14px;
+            right: 14px;
+            bottom: 12px;
+            color: var(--on-photo);
+        }
+        .pro-name .display {
+            font-size: 28px;
+        }
+        .pro-name span {
+            display: block;
+            font-size: 14px;
+            color: var(--on-photo-muted);
+            line-height: 1.3;
+            min-height: 18px;
+        }
+        .pro-cta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 48px;
+            padding: 0 14px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--brand-text);
+        }
+
+        /* ---- Galería ---- */
+        .gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-auto-rows: 150px;
+            gap: 8px;
+        }
+        .gallery figure {
+            margin: 0;
+            border-radius: var(--radius);
+        }
+        .gallery figure:first-child {
+            grid-row: span 2;
+        }
+        .gallery figure:nth-child(6) {
+            grid-column: span 2;
+        }
+        .gallery figcaption {
+            position: absolute;
+            z-index: 3;
+            left: 12px;
+            bottom: 10px;
+            right: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--on-photo);
+            line-height: 1.3;
+        }
+        .gallery .pro-veil {
+            background: linear-gradient(180deg, transparent 55%, rgb(var(--veil) / 0.85));
+        }
+
+        /* ---- Horario y ubicación ---- */
+        .info-grid {
+            display: grid;
+            gap: 16px;
+        }
+        .hours {
+            padding: 8px 8px;
+        }
+        .hours-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            min-height: 44px;
+            padding: 0 12px;
+            border-radius: 12px;
+            font-size: 15px;
+        }
+        .hours-row span:first-child {
+            color: var(--text-muted);
+        }
+        .hours-row.is-today {
+            background: var(--brand-soft);
+            box-shadow: inset 0 0 0 1px var(--brand-line);
+            font-weight: 700;
+        }
+        .hours-row.is-today span:first-child {
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tag {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 999px;
+            color: var(--brand-ink);
+            background: var(--brand-ui);
+        }
+        .map {
+            position: relative;
+            height: 180px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            overflow: hidden;
+            background:
+                linear-gradient(115deg, transparent 47%, var(--line-strong) 47.5%, var(--line-strong) 49%, transparent 49.5%),
+                linear-gradient(25deg, transparent 60%, var(--line) 60.5%, var(--line) 62%, transparent 62.5%),
+                repeating-linear-gradient(0deg, var(--line) 0 1px, transparent 1px 36px),
+                repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 44px),
+                radial-gradient(60% 80% at 50% 50%, var(--surface-3), var(--surface));
+        }
+        .map-pin {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -70%);
+            display: grid;
+            place-items: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50% 50% 50% 4px;
+            rotate: -45deg;
+            color: var(--brand-ink);
+            background: var(--brand-ui);
+            box-shadow: 0 0 0 8px var(--brand-soft), 0 12px 30px -6px var(--brand-glow);
+        }
+        .map-pin .ic {
+            rotate: 45deg;
+        }
+        .loc-body {
+            padding: 18px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .loc-addr strong {
+            display: block;
+            font-size: 17px;
+        }
+
+        .s-footer {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-subtle);
+            padding: 8px 16px 0;
+        }
+        .s-footer a {
+            color: var(--brand-text);
+            font-weight: 700;
+        }
+
+        /* ---- Tarjeta de reserva (solo escritorio) ---- */
+        .book-card {
+            display: none;
+        }
+
+        /* ---- Escritorio ---- */
+        @media (min-width: 1024px) {
+            .s-hero {
+                min-height: 620px;
+                margin: 0 16px;
+                border-radius: 0 0 40px 40px;
+            }
+            .s-hero-photo img {
+                object-position: 50% 58%;
+                transform: none;
+            }
+            .s-hero-body {
+                padding-bottom: 56px;
+                padding-right: 420px;
+            }
+            .facts {
+                display: none;
+            }
+            /* En escritorio las secciones se reparten en dos columnas:
+               carta, equipo y galería a la izquierda; reserva y visita a la derecha. */
+            .s-layout {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 380px;
+                column-gap: 48px;
+                row-gap: 64px;
+                align-items: start;
+                padding-top: 56px;
+                padding-bottom: 48px;
+            }
+            .s-main {
+                display: contents;
+            }
+            #sec-servicios {
+                grid-area: 1 / 1;
+            }
+            #sec-equipo {
+                grid-area: 2 / 1;
+            }
+            #sec-galeria {
+                grid-area: 3 / 1;
+            }
+            #sec-visita {
+                grid-area: 2 / 2 / span 2;
+            }
+            .s-footer {
+                grid-area: 4 / 1 / auto / -1;
+            }
+            .book-card {
+                grid-area: 1 / 2;
+            }
+            #sec-visita .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .team {
+                grid-auto-flow: row;
+                grid-template-columns: repeat(3, 1fr);
+                margin: 0;
+                padding: 0;
+            }
+            .gallery {
+                grid-template-columns: repeat(3, 1fr);
+                grid-auto-rows: 180px;
+            }
+            .gallery figure:first-child {
+                grid-column: span 2;
+            }
+            .gallery figure:nth-child(6) {
+                grid-column: auto;
+            }
+            .book-card {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                margin-top: -256px;
+                z-index: 5;
+                padding: 24px;
+            }
+            .dock {
+                display: none;
+            }
+        }
+        .book-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .book-head .display {
+            font-size: 30px;
+        }
+        .book-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-muted);
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        .book-list li {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .book-list .ic {
+            color: var(--brand-text);
+            width: 18px;
+            height: 18px;
+        }
+        .dock-wa {
+            flex: none;
+        }
+        .dock .btn-brand {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <header class="s-hero grain">
+        <div class="photo s-hero-photo">
+            <img
+                src="../../../../database/seeders/images/pexels-1813272.jpg"
+                alt="Dos barberos atendiendo en Barbería Don Lucho"
+            />
+        </div>
+        <div class="veil-bottom"></div>
+
+        <div class="s-topbar wrap">
+            <a href="index.html" class="btn btn-glass btn-sm btn-icon" aria-label="Volver">
+                <svg class="ic"><use href="#i-arrow-left" /></svg>
+            </a>
+            <div class="s-topbar-actions">
+                <a href="#" class="btn btn-glass btn-sm btn-icon" aria-label="Instagram de Barbería Don Lucho">
+                    <svg class="ic"><use href="#i-instagram" /></svg>
+                </a>
+                <a href="#" class="btn btn-glass btn-sm btn-icon" aria-label="Compartir">
+                    <svg class="ic"><use href="#i-share" /></svg>
+                </a>
+            </div>
+        </div>
+
+        <div class="s-hero-body wrap">
+            <div class="s-hero-id rise" style="--i: 0">
+                <div class="mono" aria-hidden="true">DL</div>
+                <p class="s-hero-type">
+                    <strong>Barbería</strong>
+                    Miraflores, Lima
+                </p>
+            </div>
+            <h1 class="display d-xl rise" style="--i: 1">Barbería Don Lucho</h1>
+            <p class="s-hero-desc rise" style="--i: 2">
+                Cortes clásicos y modernos desde 1998. Fades, barba con toalla caliente y buena conversa.
+            </p>
+            <div class="rise" style="--i: 3">
+                <span class="chip chip-photo"><span class="dot-live"></span>Abierto · hasta las 9:00 p. m.</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="facts" aria-label="Datos del salón">
+        <span class="chip"><svg class="ic"><use href="#i-wallet" /></svg>Seña 30&nbsp;% por Yape o Plin</span>
+        <span class="chip"><svg class="ic"><use href="#i-map-pin" /></svg>Av. José Larco 345</span>
+        <span class="chip"><svg class="ic"><use href="#i-instagram" /></svg>@barberiadonlucho</span>
+    </div>
+
+    <div class="wrap s-layout">
+        <main class="s-main">
+            <!-- Servicios -->
+            <section id="sec-servicios" aria-labelledby="t-servicios" class="rise" style="--i: 4">
+                <div class="s-section-head">
+                    <div>
+                        <p class="eyebrow">La carta</p>
+                        <h2 id="t-servicios" class="display d-md">Servicios</h2>
+                    </div>
+                    <span class="s-count">5 servicios</span>
+                </div>
+                <div class="card svc-card">
+                    <p class="svc-group">Cortes</p>
+                    <a href="reserva.html" class="svc">
+                        <div>
+                            <p class="svc-name">Corte clásico</p>
+                            <p class="svc-meta">
+                                <span class="svc-price num">S/ 35.00</span><span class="sep"></span
+                                ><span class="num">30 min</span>
+                            </p>
+                        </div>
+                        <span class="svc-go" aria-label="Reservar Corte clásico"
+                            ><svg class="ic"><use href="#i-chevron-right" /></svg
+                        ></span>
+                    </a>
+                    <a href="reserva.html" class="svc">
+                        <div>
+                            <p class="svc-name">Degradado con diseño</p>
+                            <p class="svc-meta">
+                                <span class="svc-price num">S/ 45.00</span><span class="sep"></span
+                                ><span class="num">45 min</span>
+                            </p>
+                        </div>
+                        <span class="svc-go" aria-label="Reservar Degradado con diseño"
+                            ><svg class="ic"><use href="#i-chevron-right" /></svg
+                        ></span>
+                    </a>
+                    <p class="svc-group">Barba</p>
+                    <a href="reserva.html" class="svc">
+                        <div>
+                            <p class="svc-name">Perfilado de barba</p>
+                            <p class="svc-meta">
+                                <span class="svc-price num">S/ 20.00</span><span class="sep"></span
+                                ><span class="num">20 min</span>
+                            </p>
+                        </div>
+                        <span class="svc-go" aria-label="Reservar Perfilado de barba"
+                            ><svg class="ic"><use href="#i-chevron-right" /></svg
+                        ></span>
+                    </a>
+                    <a href="reserva.html" class="svc">
+                        <div>
+                            <p class="svc-name">Afeitado con toalla caliente</p>
+                            <p class="svc-meta">
+                                <span class="svc-price num">S/ 30.00</span><span class="sep"></span
+                                ><span class="num">30 min</span>
+                            </p>
+                        </div>
+                        <span class="svc-go" aria-label="Reservar Afeitado con toalla caliente"
+                            ><svg class="ic"><use href="#i-chevron-right" /></svg
+                        ></span>
+                    </a>
+                    <p class="svc-group">Combos</p>
+                    <a href="reserva.html" class="svc">
+                        <div>
+                            <p class="svc-name">Corte + barba</p>
+                            <p class="svc-meta">
+                                <span class="svc-price num">S/ 50.00</span><span class="sep"></span
+                                ><span class="num">50 min</span>
+                            </p>
+                        </div>
+                        <span class="svc-go" aria-label="Reservar Corte + barba"
+                            ><svg class="ic"><use href="#i-chevron-right" /></svg
+                        ></span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Equipo -->
+            <section id="sec-equipo" aria-labelledby="t-equipo">
+                <div class="s-section-head">
+                    <div>
+                        <p class="eyebrow">Quién te atiende</p>
+                        <h2 id="t-equipo" class="display d-md">El equipo</h2>
+                    </div>
+                </div>
+                <div class="team">
+                    <article class="pro card">
+                        <div class="photo r-4-5 grain">
+                            <img src="../../../../database/seeders/images/pexels-897265-square.jpg" alt="Pedro Barbero" />
+                            <div class="pro-veil"></div>
+                            <p class="pro-name"><span class="display">Pedro Barbero</span><span>Fades y barba</span></p>
+                        </div>
+                        <a href="reserva.html" class="pro-cta">Reservar con Pedro <svg class="ic ic-sm"><use href="#i-arrow-right" /></svg></a>
+                    </article>
+                    <article class="pro card">
+                        <div class="photo r-4-5 grain">
+                            <img src="../../../../database/seeders/images/pexels-1836983-square.jpg" alt="Martín Soto" />
+                            <div class="pro-veil"></div>
+                            <p class="pro-name"><span class="display">Martín Soto</span><span>Barbero clásico</span></p>
+                        </div>
+                        <a href="reserva.html" class="pro-cta">Reservar con Martín <svg class="ic ic-sm"><use href="#i-arrow-right" /></svg></a>
+                    </article>
+                    <article class="pro card">
+                        <div class="photo r-4-5 grain">
+                            <img src="../../../../database/seeders/images/pexels-18483774-square.jpg" alt="Kevin Aprendiz" />
+                            <div class="pro-veil"></div>
+                            <p class="pro-name"><span class="display">Kevin Aprendiz</span><span></span></p>
+                        </div>
+                        <a href="reserva.html" class="pro-cta">Reservar con Kevin <svg class="ic ic-sm"><use href="#i-arrow-right" /></svg></a>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Galería -->
+            <section id="sec-galeria" aria-labelledby="t-galeria">
+                <div class="s-section-head">
+                    <div>
+                        <p class="eyebrow">Trabajos recientes</p>
+                        <h2 id="t-galeria" class="display d-md">Galería</h2>
+                    </div>
+                    <span class="s-count">6 fotos</span>
+                </div>
+                <div class="gallery">
+                    <figure class="photo grain">
+                        <img src="../../../../database/seeders/images/pexels-4625648.jpg" alt="" />
+                        <div class="pro-veil"></div>
+                        <figcaption>Corte con tijera</figcaption>
+                    </figure>
+                    <figure class="photo grain">
+                        <img src="../../../../database/seeders/images/pexels-1319462.jpg" alt="" />
+                        <div class="pro-veil"></div>
+                        <figcaption>Degradado</figcaption>
+                    </figure>
+                    <figure class="photo grain">
+                        <img src="../../../../database/seeders/images/pexels-3998417.jpg" alt="" />
+                        <div class="pro-veil"></div>
+                        <figcaption>Perfilado de barba</figcaption>
+                    </figure>
+                    <figure class="photo grain">
+                        <img src="../../../../database/seeders/images/pexels-2076932.jpg" alt="" />
+                        <div class="pro-veil"></div>
+                        <figcaption>Corte clásico a máquina</figcaption>
+                    </figure>
+                    <figure class="photo grain">
+                        <img src="../../../../database/seeders/images/pexels-897265.jpg" alt="" />
+                        <div class="pro-veil"></div>
+                        <figcaption>Barba con navaja</figcaption>
+                    </figure>
+                    <figure class="photo grain">
+                        <img src="../../../../database/seeders/images/pexels-7518728.jpg" alt="" />
+                        <div class="pro-veil"></div>
+                        <figcaption>Nuestro local</figcaption>
+                    </figure>
+                </div>
+            </section>
+
+            <!-- Horario y ubicación -->
+            <section id="sec-visita" aria-labelledby="t-visita">
+                <div class="s-section-head">
+                    <div>
+                        <p class="eyebrow">Visítanos</p>
+                        <h2 id="t-visita" class="display d-md">Horario y ubicación</h2>
+                    </div>
+                </div>
+                <div class="info-grid">
+                    <div class="card hours">
+                        <div class="hours-row"><span>Lunes</span><span class="num">10:00 a. m. – 9:00 p. m.</span></div>
+                        <div class="hours-row"><span>Martes</span><span class="num">10:00 a. m. – 9:00 p. m.</span></div>
+                        <div class="hours-row is-today">
+                            <span>Miércoles <em class="tag" style="font-style: normal">Hoy</em></span
+                            ><span class="num">10:00 a. m. – 9:00 p. m.</span>
+                        </div>
+                        <div class="hours-row"><span>Jueves</span><span class="num">10:00 a. m. – 9:00 p. m.</span></div>
+                        <div class="hours-row"><span>Viernes</span><span class="num">10:00 a. m. – 10:00 p. m.</span></div>
+                        <div class="hours-row"><span>Sábado</span><span class="num">9:00 a. m. – 10:00 p. m.</span></div>
+                        <div class="hours-row"><span>Domingo</span><span class="muted">Cerrado</span></div>
+                    </div>
+                    <div class="card" style="overflow: hidden">
+                        <div class="map" role="img" aria-label="Mapa: Av. José Larco 345, Miraflores">
+                            <span class="map-pin"><svg class="ic"><use href="#i-scissors" /></svg></span>
+                        </div>
+                        <div class="loc-body">
+                            <p class="loc-addr">
+                                <strong>Av. José Larco 345</strong>
+                                <span class="muted">Miraflores, Lima</span>
+                            </p>
+                            <a href="#" class="btn btn-quiet btn-sm">
+                                <svg class="ic"><use href="#i-map-pin" /></svg>Abrir en Google Maps
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="s-footer">
+                Página hecha con peluWeb · <a href="index.html">¿Tienes un salón?</a>
+            </footer>
+        </main>
+
+        <!-- Escritorio: tarjeta de reserva que sube sobre la portada -->
+        <aside class="card card-raised card-brand book-card" aria-label="Reservar en Barbería Don Lucho">
+            <div class="book-head">
+                <div class="mono" aria-hidden="true">DL</div>
+                <div>
+                    <p class="display" style="font-size: 30px">Reserva tu cita</p>
+                    <p class="muted" style="font-size: 14px">Elige servicio, barbero y hora</p>
+                </div>
+            </div>
+            <span class="chip" style="align-self: start"><span class="dot-live"></span>Abierto · hasta las 9:00 p. m.</span>
+            <a href="reserva.html" class="btn btn-brand btn-block">Reservar cita</a>
+            <a href="#" class="btn btn-quiet btn-block btn-sm"><svg class="ic"><use href="#i-message" /></svg>Escribir por WhatsApp</a>
+            <hr class="divider" />
+            <ul class="book-list">
+                <li><svg class="ic"><use href="#i-wallet" /></svg>Seña del 30&nbsp;% por Yape o Plin</li>
+                <li><svg class="ic"><use href="#i-scissors" /></svg>Servicios desde <strong class="num" style="color: var(--text)">S/ 20.00</strong></li>
+                <li><svg class="ic"><use href="#i-map-pin" /></svg>Av. José Larco 345, Miraflores</li>
+            </ul>
+        </aside>
+    </div>
+
+    <!-- Móvil: acción fija bajo el pulgar -->
+    <div class="dock">
+        <div class="dock-inner">
+            <a href="#" class="btn btn-quiet btn-icon dock-wa" aria-label="Escribir por WhatsApp">
+                <svg class="ic"><use href="#i-message" /></svg>
+            </a>
+            <a href="reserva.html" class="btn btn-brand">Reservar cita</a>
+        </div>
+    </div>
+</body>
+</html>

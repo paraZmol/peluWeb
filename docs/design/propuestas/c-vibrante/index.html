@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>peluWeb · Reservas en línea para tu salón</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="vibrante.css">
+<script src="vibrante.js"></script>
+<style>
+    /* ---- Navegación + hero ---- */
+    .nav { display: flex; align-items: center; justify-content: space-between; padding-block: 16px; }
+    .wordmark { font: 800 24px/1 var(--font-display); letter-spacing: -0.03em; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .wordmark i, .wordmark .icon { width: 30px; height: 30px; padding: 5px; border-radius: 50%; background: var(--pop); color: var(--pop-ink); border: var(--bw) solid var(--hard); }
+    .nav__link { font-weight: 600; text-underline-offset: 4px; min-height: 44px; display: inline-flex; align-items: center; }
+
+    .hero { padding-bottom: 72px; }
+    .hero__grid { display: grid; gap: 40px; padding-top: 20px; }
+    .hero__title { font-size: clamp(30px, 9vw, 37px); margin-top: 20px; }
+    .mark { display: inline-block; padding: 0 0.12em; margin-inline: -0.04em; background: var(--pop); color: var(--pop-ink); border-radius: 0.14em; transform: rotate(-2deg); }
+    .hero__lead { margin-top: 20px; font-size: 18px; line-height: 1.5; font-weight: 500; max-width: 34ch; }
+    .hero__ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 28px; }
+    .hero__ctas .text-link { font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; text-underline-offset: 4px; }
+    .hero__fine { margin-top: 18px; font-size: 15px; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+    .hero__fine span { display: inline-flex; align-items: center; gap: 6px; }
+
+    .collage { position: relative; height: 420px; }
+    .collage .c1 { position: absolute; left: 0; top: 0; width: 60%; height: 88%; }
+    .collage .c2 { position: absolute; right: 0; top: 0; width: 44%; height: auto; }
+    .collage .c3 { position: absolute; right: 2%; top: 49%; width: 36%; height: auto; aspect-ratio: 4 / 5; }
+    .collage .sticker { position: absolute; right: 30%; top: 12px; --tilt: 6deg; z-index: 2; }
+    .notif { position: absolute; left: 4%; bottom: 0; width: min(300px, 82%); z-index: 3; display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 14px; }
+    .notif__icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); }
+    .notif__kicker { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .notif__what { font-weight: 700; margin-top: 2px; }
+    .notif__meta { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+    /* ---- Para quién ---- */
+    .who { padding-top: 48px; }
+    .who__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .tile { position: relative; overflow: hidden; aspect-ratio: 1; border: var(--bw) solid var(--hard); }
+    .tile:first-child { grid-column: span 2; aspect-ratio: 16 / 9; }
+    .tile:nth-child(1) { border-radius: var(--r-asym); }
+    .tile:nth-child(2) { border-radius: var(--r-arch); }
+    .tile:nth-child(3) { border-radius: var(--r-leaf); }
+    .tile img { width: 100%; height: 100%; object-fit: cover; }
+    .tile::after { content: ''; position: absolute; inset: 0; background: var(--veil); }
+    .tile span { position: absolute; z-index: 1; left: 12px; right: 8px; bottom: 12px; color: var(--on-photo); font: 800 22px/1.05 var(--font-display); letter-spacing: -0.02em; }
+
+    /* ---- Así se ve ---- */
+    .look { padding-top: 88px; }
+    .look__grid { display: grid; gap: 36px; }
+    .look__list { display: grid; gap: 14px; margin-top: 24px; }
+    .look__list li { display: flex; gap: 12px; align-items: flex-start; font-size: 16px; }
+    .tick { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 50%; background: var(--brand); color: var(--brand-ink); }
+    .tick .icon { width: 16px; height: 16px; stroke-width: 2.5; }
+    .swatches { display: flex; align-items: center; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+    .swatches span.sw { width: 36px; height: 36px; border-radius: 50%; border: var(--bw) solid var(--hard); }
+    .swatches span.sw.on { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink); }
+    .phones { position: relative; display: flex; justify-content: center; gap: 24px; padding: 8px 0 12px; }
+    .phone { --s: 0.66; position: relative; padding: 9px; border-radius: 44px; background: var(--ink); border: var(--bw) solid var(--hard); box-shadow: 8px 8px 0 0 var(--brand), var(--shadow-soft); }
+    .phone__screen { width: calc(390px * var(--s)); height: calc(800px * var(--s)); overflow: hidden; border-radius: 35px; background: var(--bg); }
+    .phone iframe { width: 390px; height: 800px; border: 0; transform: scale(var(--s)); transform-origin: 0 0; pointer-events: none; }
+    .phone--alt { display: none; box-shadow: 8px 8px 0 0 var(--swatch-2), var(--shadow-soft); }
+    .phones .sticker { position: absolute; z-index: 2; left: 4px; top: -8px; --tilt: -5deg; }
+
+    /* ---- Pasos ---- */
+    .steps { padding-top: 88px; }
+    .steps__grid { display: grid; gap: 20px; margin-top: 28px; }
+    .step { padding: 22px; display: grid; gap: 10px; align-content: start; }
+    .step__n { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); border: var(--bw) solid var(--hard); font: 800 22px/1 var(--font-body); margin-bottom: 6px; }
+    .step h3 { font: 800 24px/1.05 var(--font-display); letter-spacing: -0.02em; }
+    .step p { color: var(--muted); }
+    .step__demo { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: var(--r-pill); background: var(--surface-2); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .pill .icon { width: 16px; height: 16px; color: var(--brand-text); }
+
+    /* ---- Precio ---- */
+    .pricing { padding-top: 88px; }
+    .pricing__grid { display: grid; gap: 32px; }
+    .price-card { position: relative; padding: 28px 24px 24px; }
+    .price-card .sticker { position: absolute; right: 18px; top: -16px; --tilt: 5deg; }
+    .price-big { display: flex; align-items: baseline; gap: 10px; margin: 2px 0 4px; white-space: nowrap; }
+    .price-from { margin-top: 14px; font-size: 15px; font-weight: 600; color: var(--muted); }
+    .price-big small { font-size: 16px; font-weight: 600; color: var(--muted); }
+    .price-big b { font: 800 64px/1 var(--font-body); letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+    .price-card ul { display: grid; gap: 12px; margin: 22px 0 26px; padding-top: 22px; border-top: 1px solid var(--line-soft); }
+    .price-card li { display: flex; gap: 12px; align-items: flex-start; }
+    .price-card .fine { margin-top: 14px; font-size: 14px; color: var(--muted); text-align: center; }
+
+    /* ---- Cierre ---- */
+    .closing { margin-top: 96px; padding: 80px 0 72px; text-align: center; }
+    .closing h2 { font-size: 36px; max-width: 14ch; margin-inline: auto; }
+    .closing p { margin: 16px auto 28px; font-size: 18px; font-weight: 500; max-width: 32ch; }
+    .foot { padding: 28px 0 40px; display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
+    .foot .wordmark { font-size: 20px; color: var(--ink); }
+    .foot .wordmark .icon { width: 26px; height: 26px; }
+
+    @media (min-width: 1024px) {
+        .hero { padding-bottom: 112px; }
+        .hero__grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); align-items: center; gap: 56px; padding-top: 40px; }
+        .hero__title { font-size: 54px; }
+        .hero__lead { font-size: 20px; }
+        .collage { height: 580px; }
+        .who__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+        .tile, .tile:first-child { grid-column: auto; aspect-ratio: 4 / 3; }
+        .tile span { font-size: 28px; left: 24px; bottom: 22px; }
+        .look__grid { grid-template-columns: 0.9fr 1.1fr; align-items: center; gap: 64px; }
+        .phone { --s: 0.8; }
+        .phone--alt { display: block; transform: translateY(48px) rotate(3deg); }
+        .phones .sticker { left: -12px; }
+        .steps__grid { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+        .pricing__grid { grid-template-columns: 1fr 460px; align-items: center; gap: 64px; }
+        .closing h2 { font-size: 64px; }
+    }
+</style>
+</head>
+<body>
+
+<header class="brand-block hero">
+    <div class="wrap">
+        <nav class="nav">
+            <a class="wordmark" href="#"><i data-i="sparkles"></i>peluWeb</a>
+            <a class="nav__link" href="#">Entrar</a>
+        </nav>
+
+        <div class="hero__grid">
+            <div class="rise">
+                <span class="sticker sticker-pop" style="--tilt:-3deg">Barberías · salones · uñas</span>
+                <h1 class="display hero__title">Tu agenda se llena <span class="mark">sola</span>, sin WhatsApp a medianoche.</h1>
+                <p class="hero__lead">Tu página con servicios, precios y equipo. Tus clientes reservan a cualquier hora, sin cruces, y la seña llega por Yape o Plin.</p>
+                <div class="hero__ctas">
+                    <a class="btn btn-surface" href="#">Crea tu salón gratis <i data-i="arrow-right"></i></a>
+                    <a class="text-link" href="salon.html">Mira un salón de ejemplo</a>
+                </div>
+                <p class="hero__fine"><span><i data-i="check"></i>14 días gratis</span><span><i data-i="phone"></i>Lo armas desde el celular</span></p>
+            </div>
+
+            <div class="collage rise" style="--i:2">
+                <img class="ph shape-arch c1" src="../../../../database/seeders/images/pexels-3993311.jpg" alt="Clienta con color aplicado frente a espejos con luces">
+                <img class="ph shape-circle c2" src="../../../../database/seeders/images/pexels-18483774-square.jpg" alt="Barbero junto a su sillón">
+                <img class="ph shape-leaf c3" src="../../../../database/seeders/images/pexels-16363470.jpg" alt="Manicura brillante">
+                <span class="sticker sticker-surface">Yape · Plin</span>
+                <div class="card-hard notif">
+                    <span class="notif__icon"><i data-i="bell"></i></span>
+                    <div>
+                        <p class="notif__kicker"><span class="dot"></span>Nueva reserva · hace 1 min</p>
+                        <p class="notif__what">Corte + barba con Renzo</p>
+                        <p class="notif__meta">Hoy 4:30 p. m. · S/ 55.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="wave"></div>
+</header>
+
+<main>
+    <section class="wrap who">
+        <p class="label">Hecho para negocios como el tuyo</p>
+        <div class="who__grid">
+            <div class="tile"><img src="../../../../database/seeders/images/pexels-1813272.jpg" alt=""><span>Barberías</span></div>
+            <div class="tile"><img src="../../../../database/seeders/images/pexels-705255.jpg" alt=""><span>Salones</span></div>
+            <div class="tile"><img src="../../../../database/seeders/images/pexels-3422099.jpg" alt=""><span>Uñas</span></div>
+        </div>
+    </section>
+
+    <section class="wrap look">
+        <div class="look__grid">
+            <div>
+                <p class="label">Así se ve tu página</p>
+                <h2 class="display h2" style="margin-top:10px">Tu color, tus fotos, tu enlace.</h2>
+                <ul class="look__list">
+                    <li><span class="tick"><i data-i="check"></i></span>Servicios con precio y duración, sin "¿cuánto cuesta?" por chat.</li>
+                    <li><span class="tick"><i data-i="check"></i></span>Tu equipo con foto, para que elijan quién les atiende.</li>
+                    <li><span class="tick"><i data-i="check"></i></span>Botón de reservar siempre a mano, y WhatsApp al lado.</li>
+                </ul>
+                <div class="swatches" aria-label="Colores de ejemplo">
+                    <span class="sw on" style="background:var(--swatch-1)"></span>
+                    <span class="sw" style="background:var(--swatch-2)"></span>
+                    <span class="sw" style="background:var(--swatch-3)"></span>
+                    <span class="sw" style="background:var(--swatch-4)"></span>
+                    <span class="sw" style="background:var(--swatch-5)"></span>
+                    <span class="muted" style="font-size:14px">Elige el color de tu marca</span>
+                </div>
+            </div>
+            <div class="phones">
+                <span class="sticker sticker-ink">Corte &amp; Color Surco</span>
+                <div class="phone"><div class="phone__screen"><iframe src="salon.html?embed=1" title="Página de ejemplo de Corte & Color Surco" loading="eager" tabindex="-1"></iframe></div></div>
+                <div class="phone phone--alt"><div class="phone__screen"><iframe src="salon.html?embed=1&brand=FF6B1A" title="La misma página con otro color de marca" loading="eager" tabindex="-1"></iframe></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="wrap steps">
+        <p class="label">Tres pasos</p>
+        <h2 class="display h2" style="margin-top:10px">Hoy lo creas, hoy recibes reservas.</h2>
+        <div class="steps__grid">
+            <article class="card step">
+                <span class="step__n">1</span>
+                <h3>Crea tu salón</h3>
+                <p>Servicios, precios, horario y equipo. Unos 10 minutos desde el celular.</p>
+                <div class="step__demo"><span class="pill">Corte · S/ 40.00</span><span class="pill">Color · desde S/ 110.00</span></div>
+            </article>
+            <article class="card step">
+                <span class="step__n">2</span>
+                <h3>Comparte tu enlace</h3>
+                <p>En tu Instagram, en tus estados de WhatsApp y en un QR junto al espejo.</p>
+                <div class="step__demo"><span class="pill"><i data-i="link"></i>peluweb.pe/corte-color-surco</span></div>
+            </article>
+            <article class="card step">
+                <span class="step__n">3</span>
+                <h3>Recibe reservas</h3>
+                <p>Cada profesional con su agenda, sin cruces de horario. La seña del 30 % llega por Yape o Plin.</p>
+                <div class="step__demo"><span class="pill"><i data-i="calendar"></i>Hoy 4:30 p. m. · Renzo</span></div>
+            </article>
+        </div>
+    </section>
+
+    <section class="wrap pricing">
+        <div class="pricing__grid">
+            <div>
+                <p class="label">Precio</p>
+                <h2 class="display h2" style="margin-top:10px">Un precio claro, en soles.</h2>
+                <p class="muted" style="margin-top:14px;font-size:17px;max-width:40ch">Pruebas todo durante 14 días. Si te sirve, sigues; si no, no pagas nada.</p>
+            </div>
+            <div class="card price-card">
+                <span class="sticker sticker-pop">14 días gratis</span>
+                <p class="label">Plan Salón</p>
+                <p class="price-from">Desde</p>
+                <p class="price-big"><b>S/ 49</b><small>al mes</small></p>
+                <ul>
+                    <li><span class="tick"><i data-i="check"></i></span>Página de tu salón con tu color y tus fotos</li>
+                    <li><span class="tick"><i data-i="check"></i></span>Reservas en línea a cualquier hora</li>
+                    <li><span class="tick"><i data-i="check"></i></span>Agenda por profesional, sin cruces</li>
+                    <li><span class="tick"><i data-i="check"></i></span>Seña por Yape o Plin</li>
+                </ul>
+                <a class="btn btn-brand btn-block" href="#">Crea tu salón gratis <i data-i="arrow-right"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <section class="brand-block closing">
+        <div class="wave wave--top"></div>
+        <div class="wrap">
+            <h2 class="display">Tu enlace de reservas, listo hoy.</h2>
+            <p>Barbería, salón o uñas: tu página con tu color en 10 minutos.</p>
+            <a class="btn btn-surface" href="#">Crea tu salón gratis <i data-i="arrow-right"></i></a>
+        </div>
+    </section>
+</main>
+
+<footer class="wrap foot">
+    <a class="wordmark" href="#"><i data-i="sparkles"></i>peluWeb</a>
+    <span>Hecho en Lima, Perú</span>
+</footer>
+
+</body>
+</html>

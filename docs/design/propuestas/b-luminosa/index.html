@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Propuesta B · Salón luminoso · peluWeb</title>
+<script>
+  // Query params drive the captures: ?only=portada|salon|reserva &theme=dark &brand=0F9D7A &ink=1f1b18 &embed=1
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var root = document.documentElement;
+    if (q.get('theme') === 'dark') root.classList.add('dark');
+    if (q.get('only')) root.dataset.only = q.get('only');
+    if (q.get('embed')) root.dataset.embed = '1';
+    if (q.get('full')) root.dataset.full = '1'; // full-page capture: sticky bars rest at the end
+    if (q.get('brand')) root.style.setProperty('--brand', '#' + q.get('brand'));
+    if (q.get('ink')) root.style.setProperty('--brand-ink', '#' + q.get('ink'));
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style type="text/tailwindcss">
+  @custom-variant dark (&:where(.dark, .dark *));
+  @theme inline {
+    --font-display: "DM Serif Display", ui-serif, Georgia, serif;
+    --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    --color-page: var(--bg);
+    --color-soft: var(--bg-soft);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-ink: var(--ink);
+    --color-ink-2: var(--ink-2);
+    --color-edge: var(--edge);
+    --color-brand: var(--brand);
+    --color-brand-2: var(--brand-2);
+    --color-brand-ink: var(--brand-ink);
+    --color-brand-soft: var(--brand-soft);
+    --color-brand-text: var(--brand-text);
+    --color-ok: var(--ok);
+    --color-ok-text: var(--ok-text);
+    --color-on-photo: var(--on-photo);
+  }
+</style>
+<style>
+  /* Same layer order Tailwind uses, declared first so our components sit under the utilities. */
+  @layer theme, base, components, utilities;
+  /* ---------- Tokens: light ---------- */
+  :root {
+    --bg: #FFFFFF;
+    --bg-soft: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F1F3F7;
+    --ink: #111318;
+    --ink-2: #5A6172;
+    --edge: rgb(17 19 24 / 0.07);
+    --ok: #12B76A;
+    --ok-text: #047857;
+    --brand: #D6336C;          /* set by each salon (server: BrandColor) */
+    --brand-ink: #FFFFFF;      /* white or near-black, from the server */
+    --on-photo: #FFFFFF;
+    --veil: rgb(10 11 15 / 0.84);
+    --glass: rgb(255 255 255 / 0.16);
+    --glass-edge: rgb(255 255 255 / 0.30);
+    --bar: rgb(255 255 255 / 0.84);
+    --halo-strength: 30%;
+    --shadow-1: 0 1px 2px rgb(16 24 40 / 0.06), 0 6px 16px -4px rgb(16 24 40 / 0.08);
+    --shadow-2: 0 2px 6px rgb(16 24 40 / 0.06), 0 18px 36px -10px rgb(16 24 40 / 0.18);
+    --shadow-3: 0 4px 10px rgb(16 24 40 / 0.06), 0 36px 72px -18px rgb(16 24 40 / 0.28);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --r-card: 24px;
+    --r-photo: 18px;
+    --r-xl: 32px;
+  }
+  /* ---------- Tokens: dark (anthracite, same gradients dimmed) ---------- */
+  .dark {
+    --bg: #111318;
+    --bg-soft: #161920;
+    --surface: #1A1D24;
+    --surface-2: #232731;
+    --ink: #F3F4F7;
+    --ink-2: #A6ADBB;
+    --edge: rgb(255 255 255 / 0.07);
+    --ok: #32D583;
+    --ok-text: #6CE9A6;
+    --bar: rgb(26 29 36 / 0.86);
+    --halo-strength: 20%;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.40), 0 8px 20px -6px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --shadow-2: 0 2px 6px rgb(0 0 0 / 0.40), 0 20px 40px -12px rgb(0 0 0 / 0.60), inset 0 1px 0 rgb(255 255 255 / 0.05);
+    --shadow-3: 0 4px 10px rgb(0 0 0 / 0.40), 0 40px 80px -20px rgb(0 0 0 / 0.70), inset 0 1px 0 rgb(255 255 255 / 0.05);
+  }
+  /* ---------- Derived from --brand (re-declared wherever --brand changes) ---------- */
+  :root, [data-brand] {
+    --brand-2: oklch(from var(--brand) calc(l + 0.05) c calc(h - 40));
+    --brand-soft: color-mix(in oklch, var(--brand) 11%, var(--surface));
+    --brand-text: color-mix(in oklch, var(--brand) 80%, var(--ink));
+    --halo-a: color-mix(in oklch, var(--brand) var(--halo-strength), transparent);
+    --halo-b: color-mix(in oklch, var(--brand-2) var(--halo-strength), transparent);
+    --shadow-brand: 0 2px 6px color-mix(in oklch, var(--brand) 28%, transparent), 0 14px 30px -10px color-mix(in oklch, var(--brand) 60%, transparent);
+  }
+  @supports not (color: oklch(from red l c h)) {
+    :root, [data-brand] { --brand-2: color-mix(in oklch, var(--brand), white 35%); }
+  }
+
+  /* ---------- Unlayered: capture switches ---------- */
+  html, body { overflow-x: clip; }
+  html[data-full] .sticky-bar { position: relative; }
+
+  @layer components {
+  /* ---------- Base ---------- */
+  html { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  body { font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; }
+  .num { font-variant-numeric: tabular-nums; }
+  .display { font-family: "DM Serif Display", ui-serif, Georgia, serif; font-weight: 400; letter-spacing: -0.01em; text-wrap: balance; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  [data-lucide], svg.lucide { width: 20px; height: 20px; flex: none; }
+  .ic-sm svg.lucide, svg.lucide.ic-sm { width: 16px; height: 16px; }
+  .ic-lg svg.lucide { width: 24px; height: 24px; }
+
+  }
+  /* Screen switch for captures (unlayered: must win) */
+  html[data-only] .screen-label { display: none; }
+  html[data-only="portada"] [data-screen]:not([data-screen="portada"]),
+  html[data-only="salon"] [data-screen]:not([data-screen="salon"]),
+  html[data-only="reserva"] [data-screen]:not([data-screen="reserva"]) { display: none; }
+  html[data-embed] { scrollbar-width: none; }
+  html[data-embed]::-webkit-scrollbar { display: none; }
+
+  @layer components {
+
+  .screen-label { font: 600 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-2); background: var(--surface-2); border-block: 1px dashed var(--edge); padding: 14px 20px; letter-spacing: 0.04em; }
+
+  /* ---------- Surfaces ---------- */
+  .card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow-1); border: 1px solid var(--edge); }
+  .card-2 { box-shadow: var(--shadow-2); }
+  .card-3 { box-shadow: var(--shadow-3); }
+  .wash {
+    background:
+      radial-gradient(55% 60% at 92% 0%, var(--halo-a), transparent 72%),
+      radial-gradient(50% 55% at 0% 95%, var(--halo-b), transparent 72%),
+      var(--bg);
+  }
+  @media (min-width: 768px) {
+    .wash-md { background: radial-gradient(45% 70% at 95% 10%, var(--halo-a), transparent 72%), radial-gradient(40% 60% at 0% 90%, var(--halo-b), transparent 72%), var(--bg); }
+  }
+  .halo { position: relative; isolation: isolate; }
+  .halo::before {
+    content: ""; position: absolute; inset: -14px -8px -22px; z-index: -1; border-radius: 40px;
+    background: linear-gradient(120deg, var(--halo-a), var(--halo-b)); filter: blur(26px);
+  }
+  .gradient-text { background: linear-gradient(100deg, var(--brand-text), var(--brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand-fill { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: var(--brand-ink); }
+
+  /* Photos: fixed ratio, cover, rounded; veil whenever text sits on top */
+  .photo { position: relative; overflow: hidden; border-radius: var(--r-photo); background: var(--surface-2); }
+  .photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .veil::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, var(--veil) 0%, rgb(10 11 15 / 0.35) 45%, transparent 72%); pointer-events: none; }
+  .veil-top::before { content: ""; position: absolute; inset: 0 0 auto; height: 35%; z-index: 1; background: linear-gradient(to bottom, rgb(10 11 15 / 0.45), transparent); pointer-events: none; }
+  .veil-brand::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, color-mix(in oklch, var(--brand) 88%, black) 0%, color-mix(in oklch, var(--brand) 40%, transparent) 42%, transparent 70%); }
+
+  /* ---------- Controls ---------- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 16px; white-space: nowrap; transition: transform 150ms var(--ease), box-shadow 150ms var(--ease); }
+  .btn:active { transform: scale(0.97); }
+  .btn:focus-visible, .chip:focus-visible, .day:focus-visible { outline: 3px solid color-mix(in oklch, var(--brand) 55%, transparent); outline-offset: 3px; }
+  .btn-primary { color: var(--brand-ink); background: linear-gradient(180deg, color-mix(in oklch, var(--brand), white 10%), var(--brand)); box-shadow: var(--shadow-brand), inset 0 1px 0 rgb(255 255 255 / 0.22); }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-soft { color: var(--ink); background: var(--surface); border: 1px solid var(--edge); box-shadow: var(--shadow-1); }
+  .btn-tint { color: var(--brand-text); background: var(--brand-soft); }
+  .btn-glass { color: var(--on-photo); background: var(--glass); border: 1px solid var(--glass-edge); backdrop-filter: blur(14px) saturate(150%); }
+  .icon-btn { width: 48px; height: 48px; padding: 0; flex: none; }
+
+  .sticker { position: absolute; left: 12px; top: 12px; z-index: 2; display: inline-flex; flex-direction: column; align-items: flex-start; padding: 7px 13px 8px; border-radius: 16px; background: var(--surface); color: var(--brand-text); font-weight: 800; font-size: 15px; line-height: 1.05; box-shadow: var(--shadow-2); transform: rotate(-4deg); font-variant-numeric: tabular-nums; }
+  .sticker .from { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .tag-glass { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--on-photo); background: var(--glass); border: 1px solid var(--glass-edge); backdrop-filter: blur(12px); }
+
+  .chip { min-height: 48px; border-radius: 999px; background: var(--surface); border: 1px solid var(--edge); box-shadow: var(--shadow-1); font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; transition: transform 150ms var(--ease); }
+  .chip:active { transform: scale(0.96); }
+  .chip[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: transparent; box-shadow: var(--shadow-brand); }
+  .tab { min-height: 44px; padding: 0 18px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--ink-2); background: var(--surface-2); }
+  .tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+  .day { width: 66px; height: 84px; flex: none; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; background: var(--surface); border: 1px solid var(--edge); box-shadow: var(--shadow-1); scroll-snap-align: start; transition: transform 250ms var(--ease); }
+  .day[aria-pressed="true"] { background: linear-gradient(160deg, var(--brand), color-mix(in oklch, var(--brand) 72%, var(--brand-2))); color: var(--brand-ink); border-color: transparent; box-shadow: var(--shadow-brand); transform: translateY(-4px); }
+  .day[aria-disabled="true"] { background: var(--surface-2); box-shadow: none; color: var(--ink-2); }
+
+  /* ---------- Motion: short, staggered, transform/opacity only ---------- */
+  .lift { transition: transform 150ms var(--ease), box-shadow 150ms var(--ease); }
+  .lift:hover, .lift:active { transform: translateY(-4px); box-shadow: var(--shadow-2); }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .rise { animation: rise 250ms var(--ease) both; animation-delay: calc(var(--i, 0) * 60ms); }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.8); } }
+  .live-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--ok); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ok) 30%, transparent); animation: pulse-dot 1.8s ease-in-out 2; }
+  @media (prefers-reduced-motion: reduce) {
+    .rise, .live-dot { animation: none; }
+    .lift:hover, .lift:active, .btn-primary:hover { transform: none; }
+  }
+
+  /* ---------- Phone mockup (embeds the real salon screen) ---------- */
+  .phone { --s: 0.66; padding: 10px; border-radius: 46px; background: #0B0C10; box-shadow: var(--shadow-3), inset 0 0 0 1.5px rgb(255 255 255 / 0.10); }
+  .phone-screen { position: relative; width: calc(390px * var(--s)); height: calc(844px * var(--s)); overflow: hidden; border-radius: 36px; background: var(--bg); }
+  .phone-screen iframe { width: 390px; height: 844px; border: 0; transform: scale(var(--s)); transform-origin: 0 0; }
+  .map { background-color: var(--surface-2); background-image: repeating-linear-gradient(0deg, var(--edge) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, var(--edge) 0 1px, transparent 1px 28px), linear-gradient(115deg, transparent 46%, var(--surface) 46% 52%, transparent 52%), linear-gradient(25deg, transparent 60%, var(--surface) 60% 64%, transparent 64%); }
+  .strip { scrollbar-width: none; scroll-snap-type: x mandatory; }
+  .strip::-webkit-scrollbar { display: none; }
+  }
+</style>
+</head>
+<body class="bg-page text-ink">
+
+<!-- ======================================================================
+     01 · PORTADA DE LA PLATAFORMA (dueños)
+     ====================================================================== -->
+<div class="screen-label">01 · Portada de la plataforma (para dueños) · peluWeb</div>
+<section data-screen="portada" class="relative">
+  <div class="wash">
+    <header class="mx-auto flex max-w-[1200px] items-center justify-between px-4 py-4 md:px-8 md:py-6">
+      <a href="#" class="flex items-center gap-2.5">
+        <span class="brand-fill grid size-10 place-items-center rounded-[14px] shadow-[var(--shadow-brand)]"><span class="display text-[22px] leading-none">p</span></span>
+        <span class="display text-[24px] leading-none">peluWeb</span>
+      </a>
+      <nav class="hidden items-center gap-8 text-[15px] font-semibold text-ink-2 md:flex">
+        <a href="#como">Cómo funciona</a><a href="#ejemplo">Ejemplo</a><a href="#precio">Precio</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <a href="#" class="btn px-4 text-[15px] text-ink">Ingresar</a>
+        <a href="#" class="btn btn-soft hidden text-[15px] md:inline-flex">Crea tu salón</a>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <div class="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 px-4 pt-4 pb-16 md:grid-cols-[1.05fr_1fr] md:gap-16 md:px-8 md:pt-10 md:pb-24">
+      <div>
+        <p class="rise inline-flex items-center gap-2 rounded-full bg-surface/80 px-3.5 py-2 text-[13px] font-semibold text-ink-2 shadow-[var(--shadow-1)] ring-1 ring-edge backdrop-blur" style="--i:0">
+          <i data-lucide="sparkles" class="!size-4 text-brand-text"></i> Para peluquerías, barberías y salones de uñas
+        </p>
+        <h1 class="display rise mt-5 text-[42px] leading-[1.02] md:text-[76px] md:leading-[0.98]" style="--i:1">
+          Tu agenda <em class="gradient-text pr-0.5">se llena sola,</em> sin contestar WhatsApp a medianoche.
+        </h1>
+        <p class="rise mt-5 max-w-[34rem] text-[17px] leading-relaxed text-ink-2 md:text-[19px]" style="--i:2">
+          Crea la página de tu salón con fotos y precios. Tus clientes eligen servicio, quien les atiende y hora en un minuto; tú recibes la seña por Yape o Plin.
+        </p>
+        <div class="rise mt-8 flex flex-col gap-3 sm:flex-row" style="--i:3">
+          <a href="#" class="btn btn-primary h-14 text-[17px]">Crea tu salón gratis <i data-lucide="arrow-right"></i></a>
+          <a href="#ejemplo" class="btn btn-soft h-14 text-[17px]">Mira un salón de ejemplo</a>
+        </div>
+        <p class="rise mt-4 text-[14px] font-medium text-ink-2" style="--i:4">14 días gratis · luego desde <span class="num font-bold text-ink">S/ 49</span> al mes</p>
+      </div>
+
+      <!-- Hero visual: real photo + floating notifications (elevated plane) -->
+      <div class="rise relative mx-2 md:mx-0" style="--i:2">
+        <div class="halo">
+          <div class="photo aspect-[4/5] !rounded-[var(--r-xl)] shadow-[var(--shadow-3)] md:aspect-[5/6]">
+            <img src="../../../../database/seeders/images/pexels-1813272.jpg" alt="Dos barberos atendiendo en una barbería amplia">
+          </div>
+        </div>
+        <div class="card card-3 lift absolute -top-5 -left-3 flex items-center gap-3 p-3 pr-5 whitespace-nowrap md:-left-12 md:top-10">
+          <span class="brand-fill grid size-11 flex-none place-items-center rounded-2xl"><i data-lucide="calendar-check"></i></span>
+          <div class="min-w-0">
+            <p class="text-[14px] font-bold">Nueva reserva · Balayage</p>
+            <p class="num text-[13px] text-ink-2">vie 9 oct · 10:30 a. m.</p>
+          </div>
+        </div>
+        <div class="card card-3 lift absolute -right-2 -bottom-6 flex items-center gap-3 p-3 pr-5 md:-right-8 md:bottom-16">
+          <span class="grid size-11 flex-none place-items-center rounded-2xl bg-ok/15 text-ok-text"><i data-lucide="badge-check"></i></span>
+          <div>
+            <p class="text-[13px] text-ink-2">Seña confirmada · Yape</p>
+            <p class="num text-[20px] font-extrabold leading-tight">S/ 84.00</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- For every kind of business: each salon brings its own color -->
+  <div class="mx-auto max-w-[1200px] px-4 pb-16 md:px-8 md:pb-24">
+    <p class="eyebrow text-center text-ink-2">Hecho para negocios como el tuyo</p>
+    <div class="mt-6 grid grid-cols-3 gap-3 md:gap-6">
+      <figure data-brand style="--brand:#1F2937;--brand-ink:#FFFFFF" class="lift rounded-[var(--r-card)]">
+        <div class="photo veil-brand aspect-[3/4] !rounded-[20px] md:aspect-[4/3] md:!rounded-[var(--r-card)]">
+          <img src="../../../../database/seeders/images/pexels-7518728.jpg" alt="Interior de una barbería con sillones negros">
+          <span class="absolute bottom-3 left-3 z-[1] hidden text-[13px] font-bold text-on-photo md:block">Su color: grafito</span>
+        </div>
+        <figcaption class="mt-3"><p class="text-[14px] font-bold leading-tight md:text-[16px]">Barbería Don Lucho</p><p class="text-[14px] text-ink-2">Barbería</p></figcaption>
+      </figure>
+      <figure data-brand style="--brand:#D6336C;--brand-ink:#FFFFFF" class="lift rounded-[var(--r-card)]">
+        <div class="photo veil-brand aspect-[3/4] !rounded-[20px] md:aspect-[4/3] md:!rounded-[var(--r-card)]">
+          <img src="../../../../database/seeders/images/pexels-705255.jpg" alt="Salón de belleza luminoso">
+          <span class="absolute bottom-3 left-3 z-[1] hidden text-[13px] font-bold text-on-photo md:block">Su color: frambuesa</span>
+        </div>
+        <figcaption class="mt-3"><p class="text-[14px] font-bold leading-tight md:text-[16px]">Studio Bella</p><p class="text-[14px] text-ink-2">Salón de belleza</p></figcaption>
+      </figure>
+      <figure data-brand style="--brand:#C47E09;--brand-ink:#1F1B18" class="lift rounded-[var(--r-card)]">
+        <div class="photo veil-brand aspect-[3/4] !rounded-[20px] md:aspect-[4/3] md:!rounded-[var(--r-card)]">
+          <img src="../../../../database/seeders/images/pexels-16363470.jpg" alt="Manos con manicura brillante">
+          <span class="absolute bottom-3 left-3 z-[1] hidden text-[13px] font-bold text-on-photo md:block">Su color: ámbar</span>
+        </div>
+        <figcaption class="mt-3"><p class="text-[14px] font-bold leading-tight md:text-[16px]">Nails Spa Barranco</p><p class="text-[14px] text-ink-2">Uñas</p></figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <!-- Así se ve tu página -->
+  <div id="ejemplo" class="bg-soft">
+    <div class="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-10 px-4 py-16 md:grid-cols-[minmax(0,1fr)_auto] md:gap-20 md:px-8 md:py-24">
+      <div>
+        <p class="eyebrow text-brand-text">Así se ve tu página</p>
+        <h2 class="display mt-3 text-[34px] leading-[1.05] md:text-[52px]">Una página que da ganas de reservar.</h2>
+        <p class="mt-4 max-w-[30rem] text-[16px] leading-relaxed text-ink-2 md:text-[18px]">Esta es Studio Bella, un salón de la demo. La tuya se arma con tus fotos, tus precios y tu color.</p>
+        <ul class="mt-8 grid gap-3 sm:grid-cols-2">
+          <li class="card lift flex items-start gap-3 p-4"><span class="grid size-10 flex-none place-items-center rounded-xl bg-brand-soft text-brand-text"><i data-lucide="image"></i></span><div><p class="font-bold">Portada con tus fotos</p><p class="text-[14px] text-ink-2">Y si estás abierto ahora.</p></div></li>
+          <li class="card lift flex items-start gap-3 p-4"><span class="grid size-10 flex-none place-items-center rounded-xl bg-brand-soft text-brand-text"><i data-lucide="tag"></i></span><div><p class="font-bold">Precios claros</p><p class="text-[14px] text-ink-2">Con duración de cada servicio.</p></div></li>
+          <li class="card lift flex items-start gap-3 p-4"><span class="grid size-10 flex-none place-items-center rounded-xl bg-brand-soft text-brand-text"><i data-lucide="hand"></i></span><div><p class="font-bold">Reserva en un toque</p><p class="text-[14px] text-ink-2">Las 24 horas, sin llamar.</p></div></li>
+          <li class="card lift flex items-start gap-3 p-4"><span class="grid size-10 flex-none place-items-center rounded-xl bg-brand-soft text-brand-text"><i data-lucide="wallet"></i></span><div><p class="font-bold">Seña por Yape o Plin</p><p class="text-[14px] text-ink-2">Menos citas perdidas.</p></div></li>
+        </ul>
+      </div>
+      <div class="halo mx-auto">
+        <div class="phone md:[--s:0.78]">
+          <div class="phone-screen">
+            <iframe data-src="index.html?only=salon&amp;embed=1" title="Página pública de Studio Bella" tabindex="-1"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 pasos -->
+  <div id="como" class="mx-auto max-w-[1200px] px-4 py-16 md:px-8 md:py-24">
+    <p class="eyebrow text-brand-text">Cómo funciona</p>
+    <h2 class="display mt-3 text-[34px] leading-[1.05] md:text-[52px]">Lista en una tarde, en 3 pasos.</h2>
+    <ol class="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
+      <li class="card card-2 lift relative overflow-hidden p-6">
+        <span class="display gradient-text text-[64px] leading-none">1</span>
+        <h3 class="mt-3 text-[19px] font-bold">Crea tu salón</h3>
+        <p class="mt-1.5 text-[15px] leading-relaxed text-ink-2">Sube servicios, precios, horario y fotos desde el celular. Unos 10 minutos.</p>
+      </li>
+      <li class="card card-2 lift relative overflow-hidden p-6">
+        <span class="display gradient-text text-[64px] leading-none">2</span>
+        <h3 class="mt-3 text-[19px] font-bold">Comparte tu enlace</h3>
+        <p class="mt-1.5 text-[15px] leading-relaxed text-ink-2">Ponlo en tu bio de Instagram y en tu estado de WhatsApp.</p>
+        <p class="num mt-4 inline-flex items-center gap-2 rounded-full bg-surface-2 px-3.5 py-2 text-[14px] font-semibold"><i data-lucide="link" class="!size-4 text-brand-text"></i>peluweb.pe/s/studio-bella</p>
+      </li>
+      <li class="card card-2 lift relative overflow-hidden p-6">
+        <span class="display gradient-text text-[64px] leading-none">3</span>
+        <h3 class="mt-3 text-[19px] font-bold">Recibe reservas</h3>
+        <p class="mt-1.5 text-[15px] leading-relaxed text-ink-2">Cada reserva llega a tu agenda y a la de quien atiende, con la seña confirmada.</p>
+      </li>
+    </ol>
+  </div>
+
+  <!-- Precio -->
+  <div id="precio" class="wash">
+    <div class="mx-auto max-w-[1200px] px-4 py-16 md:px-8 md:py-24">
+      <div class="halo mx-auto max-w-[880px]">
+        <div class="card card-3 grid gap-8 overflow-hidden p-6 md:grid-cols-[1fr_1.1fr] md:p-10">
+          <div>
+            <p class="eyebrow text-brand-text">Plan Salón</p>
+            <p class="mt-4 flex items-baseline gap-2"><span class="text-[16px] font-semibold text-ink-2">desde</span><span class="display num text-[64px] leading-none md:text-[80px]">S/ 49</span><span class="text-[16px] font-semibold text-ink-2">al mes</span></p>
+            <p class="mt-3 inline-flex items-center gap-2 rounded-full bg-brand-soft px-3.5 py-2 text-[14px] font-bold text-brand-text"><i data-lucide="gift" class="!size-4"></i>14 días gratis para probar</p>
+            <a href="#" class="btn btn-primary mt-8 hidden h-14 w-full text-[17px] md:flex">Crea tu salón gratis <i data-lucide="arrow-right"></i></a>
+          </div>
+          <ul class="grid content-start gap-3.5 text-[16px]">
+            <li class="flex items-start gap-3"><span class="brand-fill mt-0.5 grid size-6 flex-none place-items-center rounded-full"><i data-lucide="check" class="!size-3.5"></i></span>Tu página con fotos, servicios y precios</li>
+            <li class="flex items-start gap-3"><span class="brand-fill mt-0.5 grid size-6 flex-none place-items-center rounded-full"><i data-lucide="check" class="!size-3.5"></i></span>Reservas en línea las 24 horas</li>
+            <li class="flex items-start gap-3"><span class="brand-fill mt-0.5 grid size-6 flex-none place-items-center rounded-full"><i data-lucide="check" class="!size-3.5"></i></span>Agenda para ti y tu equipo</li>
+            <li class="flex items-start gap-3"><span class="brand-fill mt-0.5 grid size-6 flex-none place-items-center rounded-full"><i data-lucide="check" class="!size-3.5"></i></span>Seña por Yape o Plin</li>
+            <li class="flex items-start gap-3"><span class="brand-fill mt-0.5 grid size-6 flex-none place-items-center rounded-full"><i data-lucide="check" class="!size-3.5"></i></span>Se instala en el celular como una app</li>
+          </ul>
+          <a href="#" class="btn btn-primary h-14 w-full text-[17px] md:hidden">Crea tu salón gratis <i data-lucide="arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cierre -->
+  <div class="mx-auto max-w-[1200px] px-4 pb-10 md:px-8 md:pb-16">
+    <div class="brand-fill relative overflow-hidden rounded-[var(--r-xl)] px-6 py-12 text-center shadow-[var(--shadow-brand)] md:py-16">
+      <div class="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-white/15 blur-2xl"></div>
+      <h2 class="display relative mx-auto max-w-[18ch] text-[34px] leading-[1.05] md:text-[52px]">Tu próxima reserva puede llegar esta noche.</h2>
+      <a href="#" class="btn relative mt-8 h-14 bg-surface px-7 text-[17px] text-brand-text shadow-[var(--shadow-2)]">Crea tu salón gratis <i data-lucide="arrow-right"></i></a>
+    </div>
+    <footer class="mt-10 flex flex-col items-center justify-between gap-3 text-[14px] text-ink-2 md:flex-row">
+      <span class="flex items-center gap-2"><span class="display text-[18px] text-ink">peluWeb</span> · Hecho en Lima</span>
+      <span>Términos · Privacidad · Ayuda</span>
+    </footer>
+  </div>
+</section>
+
+<!-- ======================================================================
+     02 · PÁGINA PÚBLICA DEL SALÓN
+     ====================================================================== -->
+<div class="screen-label">02 · Página pública del salón · Studio Bella</div>
+<section data-screen="salon" class="relative bg-page">
+  <div class="wash-md md:pb-4">
+    <!-- Cover: full-bleed on mobile, inset rounded card on desktop -->
+    <div class="mx-auto max-w-[1200px] md:px-8 md:pt-6">
+      <div class="photo veil veil-top rise h-[468px] !rounded-none md:h-[540px] md:!rounded-[var(--r-xl)] md:shadow-[var(--shadow-3)]">
+        <img src="../../../../database/seeders/images/pexels-705255.jpg" alt="Interior luminoso de Studio Bella">
+        <div class="absolute inset-x-0 top-0 z-[2] flex items-center justify-between p-4 md:p-6">
+          <span class="brand-fill grid size-12 place-items-center rounded-2xl shadow-[var(--shadow-2)]"><span class="display text-[20px] leading-none">SB</span></span>
+          <div class="flex gap-2">
+            <a href="#" class="btn btn-glass icon-btn" aria-label="Instagram de Studio Bella"><i data-lucide="instagram"></i></a>
+            <a href="#" class="btn btn-glass icon-btn" aria-label="Compartir"><i data-lucide="share-2"></i></a>
+          </div>
+        </div>
+        <div class="absolute inset-x-0 bottom-0 z-[2] p-5 pb-14 md:max-w-[62%] md:p-10">
+          <span class="tag-glass"><span class="live-dot"></span>Abierto · hasta las 8:00 p. m.</span>
+          <h1 class="display mt-3 text-[48px] leading-[0.95] text-on-photo md:text-[84px]">Studio Bella</h1>
+          <p class="mt-2 text-[16px] font-medium text-on-photo/90 md:text-[18px]">Salón de belleza · Miraflores, Lima</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mx-auto grid max-w-[1200px] grid-cols-1 gap-10 px-4 md:grid-cols-[minmax(0,1fr)_360px] md:gap-12 md:px-8">
+    <!-- Aside: quick info card overlapping the cover (mobile: secondary actions only; desktop: the single primary) -->
+    <aside class="relative z-[3] -mt-10 md:order-2 md:-mt-40">
+      <div class="grid gap-5 md:sticky md:top-6">
+        <div class="halo rise" style="--i:1">
+          <div class="card card-3 p-5 md:p-6">
+            <p class="hidden display text-[28px] leading-tight md:block">Reserva en un minuto</p>
+            <p class="text-[15px] leading-relaxed text-ink-2 md:mt-2">Especialistas en color, balayage y keratina. Asesoría de imagen sin costo.</p>
+            <a href="#" class="btn btn-primary mt-5 hidden h-14 w-full text-[17px] md:flex">Reservar cita <i data-lucide="arrow-right"></i></a>
+            <div class="mt-4 grid grid-cols-2 gap-2.5">
+              <a href="#" class="btn btn-tint text-[15px]"><i data-lucide="message-circle"></i>WhatsApp</a>
+              <a href="#" class="btn btn-tint text-[15px]"><i data-lucide="navigation"></i>Cómo llegar</a>
+            </div>
+            <p class="mt-4 flex items-center gap-2.5 rounded-2xl bg-surface-2 px-3.5 py-3 text-[14px] font-medium"><i data-lucide="wallet" class="text-brand-text"></i>Seña de 30 % por Yape o Plin al reservar</p>
+          </div>
+        </div>
+
+        <!-- Horario -->
+        <div class="card hidden p-6 md:block" data-hours>
+          <h2 class="display text-[24px]">Horario</h2>
+          <ul class="num mt-3 grid gap-0.5 text-[15px]">
+            <li class="flex justify-between px-3 py-2"><span class="text-ink-2">Lunes</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2"><span class="text-ink-2">Martes</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2"><span class="text-ink-2">Miércoles</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between rounded-xl bg-brand-soft px-3 py-2 font-bold text-brand-text"><span>Jueves · hoy</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2"><span class="text-ink-2">Viernes</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2"><span class="text-ink-2">Sábado</span><span>9:00 a. m. – 6:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2"><span class="text-ink-2">Domingo</span><span class="text-ink-2">Cerrado</span></li>
+          </ul>
+        </div>
+
+        <!-- Ubicación (desktop) -->
+        <div class="card hidden overflow-hidden md:block">
+          <div class="map relative h-36">
+            <span class="brand-fill absolute top-1/2 left-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full shadow-[var(--shadow-brand)] ring-4 ring-surface"><i data-lucide="map-pin"></i></span>
+          </div>
+          <div class="flex items-center justify-between gap-3 p-4">
+            <div class="min-w-0"><p class="font-bold">Calle Los Laureles 120</p><p class="text-[14px] text-ink-2">Miraflores, Lima</p></div>
+            <a href="#" class="btn btn-soft flex-none px-4 text-[15px]">Abrir mapa</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="grid min-w-0 grid-cols-1 gap-14 md:order-1 md:pt-12">
+      <!-- Servicios -->
+      <section>
+        <div class="flex items-end justify-between gap-4">
+          <h2 class="display text-[34px] leading-none md:text-[44px]">Servicios</h2>
+          <p class="text-[14px] font-medium text-ink-2">5 servicios</p>
+        </div>
+        <div class="strip -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0" role="tablist">
+          <button class="tab" role="tab" aria-selected="true">Todos</button>
+          <button class="tab" role="tab">Cortes</button>
+          <button class="tab" role="tab">Color</button>
+          <button class="tab" role="tab">Tratamientos</button>
+          <button class="tab" role="tab">Peinados</button>
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+          <!-- Featured (first) service spans wide -->
+          <article class="card lift rise col-span-2 p-2 md:flex md:flex-col" style="--i:2">
+            <div class="photo veil aspect-[16/10] md:aspect-auto md:min-h-[300px] md:flex-1">
+              <img src="../../../../database/seeders/images/pexels-3993311.jpg" alt="Clienta con color aplicado frente al espejo">
+              <span class="sticker"><span class="num">S/ 280.00</span></span>
+              <span class="tag-glass num absolute top-3 right-3 z-[2]"><i data-lucide="clock" class="!size-4"></i>2 h 30 min</span>
+              <div class="absolute inset-x-0 bottom-0 z-[2] flex items-end justify-between gap-3 p-4">
+                <div><h3 class="display text-[30px] leading-none text-on-photo md:text-[36px]">Balayage</h3><p class="mt-1.5 text-[14px] text-on-photo/90">Iluminación a mano alzada, a tu medida.</p></div>
+                <a href="#" class="btn btn-glass flex-none text-[15px]">Reservar</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="card lift rise p-2" style="--i:3">
+            <div class="photo aspect-[4/5]"><img src="../../../../database/seeders/images/pexels-3356170.jpg" alt="Tijera y peine cortando cabello"><span class="sticker"><span class="num">S/ 60.00</span></span></div>
+            <div class="px-2 pt-3 pb-2"><h3 class="text-[16px] font-bold leading-tight">Corte y lavado</h3><p class="num mt-1 flex items-center gap-1.5 text-[14px] text-ink-2"><i data-lucide="clock" class="!size-4"></i>45 min</p></div>
+          </article>
+          <article class="card lift rise p-2" style="--i:4">
+            <div class="photo aspect-[4/5]"><img src="../../../../database/seeders/images/pexels-2799605.jpg" alt="Aplicación de tinte con brocha"><span class="sticker"><span class="from">desde</span><span class="num">S/ 120.00</span></span></div>
+            <div class="px-2 pt-3 pb-2"><h3 class="text-[16px] font-bold leading-tight">Tinte completo</h3><p class="num mt-1 flex items-center gap-1.5 text-[14px] text-ink-2"><i data-lucide="clock" class="!size-4"></i>1 h 30 min</p></div>
+          </article>
+          <article class="card lift rise p-2" style="--i:5">
+            <div class="photo aspect-[4/5]"><img src="../../../../database/seeders/images/pexels-6503329.jpg" alt="Cabello largo y liso recién peinado"><span class="sticker"><span class="num">S/ 180.00</span></span></div>
+            <div class="px-2 pt-3 pb-2"><h3 class="text-[16px] font-bold leading-tight">Keratina</h3><p class="num mt-1 flex items-center gap-1.5 text-[14px] text-ink-2"><i data-lucide="clock" class="!size-4"></i>1 h 30 min</p></div>
+          </article>
+          <article class="card lift rise p-2" style="--i:6">
+            <div class="photo aspect-[4/5]"><img src="../../../../database/seeders/images/pexels-3065171.jpg" alt="Peinado de fiesta con ondas"><span class="sticker"><span class="num">S/ 90.00</span></span></div>
+            <div class="px-2 pt-3 pb-2"><h3 class="text-[16px] font-bold leading-tight">Peinado de fiesta</h3><p class="num mt-1 flex items-center gap-1.5 text-[14px] text-ink-2"><i data-lucide="clock" class="!size-4"></i>1 h</p></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Equipo -->
+      <section>
+        <h2 class="display text-[34px] leading-none md:text-[44px]">Quién te atiende</h2>
+        <div class="mt-6 grid grid-cols-3 gap-3 md:gap-5">
+          <figure class="card lift p-2 text-center">
+            <div class="photo aspect-square"><img src="../../../../database/seeders/images/pexels-3993312-square.jpg" alt="Valeria Rojas"></div>
+            <figcaption class="px-1 pt-2.5 pb-1.5"><p class="text-[14px] font-bold leading-tight md:text-[16px]">Valeria Rojas</p><p class="mt-0.5 text-[14px] text-brand-text">Colorista</p></figcaption>
+          </figure>
+          <figure class="card lift p-2 text-center">
+            <div class="photo aspect-square"><img src="../../../../database/seeders/images/pexels-3992875-square.jpg" alt="Lucía Ramírez"></div>
+            <figcaption class="px-1 pt-2.5 pb-1.5"><p class="text-[14px] font-bold leading-tight md:text-[16px]">Lucía Ramírez</p><p class="mt-0.5 text-[14px] text-brand-text">Estilista</p></figcaption>
+          </figure>
+          <figure class="card lift p-2 text-center">
+            <div class="photo aspect-square"><img src="../../../../database/seeders/images/pexels-7440133-square.jpg" alt="Carla Mendoza"></div>
+            <figcaption class="px-1 pt-2.5 pb-1.5"><p class="text-[14px] font-bold leading-tight md:text-[16px]">Carla Mendoza</p><p class="mt-0.5 text-[14px] text-brand-text">Peinados</p></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- Galería -->
+      <section>
+        <h2 class="display text-[34px] leading-none md:text-[44px]">Galería</h2>
+        <div class="mt-6 grid aspect-square grid-cols-3 grid-rows-3 gap-2 md:aspect-[2/1] md:grid-cols-4 md:grid-rows-2 md:gap-3">
+          <div class="photo col-span-2 row-span-2 !rounded-[var(--r-card)]"><img src="../../../../database/seeders/images/pexels-3993133.jpg" alt="Salón con espejos iluminados"></div>
+          <div class="photo"><img src="../../../../database/seeders/images/pexels-3065170.jpg" alt="Recogido en proceso"></div>
+          <div class="photo"><img src="../../../../database/seeders/images/pexels-7440133.jpg" alt="Secado con secadora"></div>
+          <div class="photo"><img src="../../../../database/seeders/images/pexels-2799605.jpg" alt="Tinte con brocha"></div>
+          <div class="photo md:hidden"><img src="../../../../database/seeders/images/pexels-6503329.jpg" alt="Peinando cabello largo"></div>
+          <div class="photo veil"><img src="../../../../database/seeders/images/pexels-3356170.jpg" alt="Corte con tijera"><span class="absolute inset-0 z-[2] grid place-items-center text-[16px] font-bold text-on-photo">+12</span></div>
+        </div>
+      </section>
+
+      <!-- Horario (mobile) -->
+      <section class="md:hidden">
+        <h2 class="display text-[34px] leading-none">Horario</h2>
+        <div class="card mt-5 p-3">
+          <ul class="num grid gap-0.5 text-[15px]">
+            <li class="flex justify-between px-3 py-2.5"><span class="text-ink-2">Lunes</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2.5"><span class="text-ink-2">Martes</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2.5"><span class="text-ink-2">Miércoles</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between rounded-xl bg-brand-soft px-3 py-2.5 font-bold text-brand-text"><span>Jueves · hoy</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2.5"><span class="text-ink-2">Viernes</span><span>9:00 a. m. – 8:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2.5"><span class="text-ink-2">Sábado</span><span>9:00 a. m. – 6:00 p. m.</span></li>
+            <li class="flex justify-between px-3 py-2.5"><span class="text-ink-2">Domingo</span><span class="text-ink-2">Cerrado</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Ubicación + WhatsApp -->
+      <section class="grid gap-4">
+        <div class="card overflow-hidden md:hidden">
+          <div class="map relative h-40">
+            <span class="brand-fill absolute top-1/2 left-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full shadow-[var(--shadow-brand)] ring-4 ring-surface"><i data-lucide="map-pin"></i></span>
+          </div>
+          <div class="flex items-center justify-between gap-3 p-4">
+            <div class="min-w-0"><p class="font-bold">Calle Los Laureles 120</p><p class="text-[14px] text-ink-2">Miraflores, Lima</p></div>
+            <a href="#" class="btn btn-soft flex-none px-4 text-[15px]">Abrir mapa</a>
+          </div>
+        </div>
+        <div class="halo">
+          <div class="card relative h-full overflow-hidden p-6" style="background: linear-gradient(135deg, var(--brand-soft), var(--surface) 70%);">
+            <span class="brand-fill grid size-12 place-items-center rounded-2xl"><i data-lucide="message-circle"></i></span>
+            <h3 class="display mt-4 text-[26px] leading-tight">¿Dudas sobre tu color?</h3>
+            <p class="mt-1.5 text-[15px] text-ink-2">Escríbenos y te asesoramos antes de reservar.</p>
+            <a href="#" class="btn btn-soft mt-5 text-[15px]"><i data-lucide="message-circle"></i>Escribir por WhatsApp</a>
+          </div>
+        </div>
+      </section>
+
+      <footer class="pb-8 text-center text-[14px] text-ink-2">Hecho con <span class="display text-[16px] text-ink">peluWeb</span></footer>
+    </main>
+  </div>
+
+  <!-- Sticky booking bar (mobile): the single primary action, under the thumb -->
+  <div class="sticky-bar sticky bottom-0 z-20 border-t border-edge px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden" style="background: var(--bar); box-shadow: 0 -10px 30px -12px rgb(16 24 40 / 0.18);">
+    <div class="flex items-center gap-3">
+      <a href="#" class="btn btn-soft icon-btn !size-14" aria-label="Escribir por WhatsApp"><i data-lucide="message-circle"></i></a>
+      <a href="#" class="btn btn-primary h-14 flex-1 text-[17px]">Reservar cita <i data-lucide="arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================================
+     03 · RESERVA, PASO "¿CUÁNDO?"
+     ====================================================================== -->
+<div class="screen-label">03 · Reserva · paso 3 de 4 «¿Cuándo?»</div>
+<section data-screen="reserva" class="wash relative min-h-[844px]">
+  <div class="mx-auto max-w-[560px]">
+    <header class="flex items-center justify-between gap-3 px-4 pt-4">
+      <a href="#" class="btn btn-soft icon-btn" aria-label="Volver"><i data-lucide="arrow-left"></i></a>
+      <div class="flex items-center gap-2">
+        <span class="brand-fill grid size-8 place-items-center rounded-xl"><span class="display text-[14px] leading-none">SB</span></span>
+        <span class="display text-[19px]">Studio Bella</span>
+      </div>
+      <span class="num w-12 text-right text-[14px] font-semibold text-ink-2">3 de 4</span>
+    </header>
+
+    <div class="mt-4 grid grid-cols-4 gap-1.5 px-4" aria-label="Paso 3 de 4">
+      <span class="h-1.5 rounded-full bg-brand"></span>
+      <span class="h-1.5 rounded-full bg-brand"></span>
+      <span class="h-1.5 rounded-full" style="background: linear-gradient(90deg, var(--brand), var(--brand-2));"></span>
+      <span class="h-1.5 rounded-full bg-surface-2"></span>
+    </div>
+
+    <div class="px-4 pt-7">
+      <h1 class="display rise text-[44px] leading-none">¿Cuándo?</h1>
+      <p class="rise mt-2 text-[16px] text-ink-2" style="--i:1">Solo te mostramos horarios libres con Valeria.</p>
+    </div>
+
+    <!-- Resumen que se va construyendo -->
+    <div class="halo rise mx-4 mt-6" style="--i:2">
+      <div class="card card-2 flex items-center gap-3 p-3 pr-4">
+        <div class="photo size-16 flex-none !rounded-2xl"><img src="../../../../database/seeders/images/pexels-3993311.jpg" alt=""></div>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-[16px] font-bold">Balayage · Valeria</p>
+          <p class="num mt-0.5 text-[14px] text-ink-2">2 h 30 min</p>
+        </div>
+        <div class="text-right">
+          <p class="num text-[17px] font-extrabold">S/ 280.00</p>
+          <a href="#" class="text-[14px] font-semibold text-brand-text underline-offset-4 hover:underline">Cambiar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tira de días -->
+    <div class="mt-8 flex items-center justify-between px-4">
+      <p class="text-[16px] font-bold">Octubre</p>
+      <p class="text-[14px] text-ink-2">Desliza para ver más días</p>
+    </div>
+    <div class="strip mt-3 flex scroll-px-4 gap-2.5 overflow-x-auto px-4 pt-2 pb-4" role="listbox" aria-label="Día">
+      <button class="day" aria-pressed="false"><span class="text-[12px] font-bold text-brand-text">HOY</span><span class="num text-[24px] font-extrabold leading-none">8</span><span class="text-[13px] text-ink-2">jue</span></button>
+      <button class="day" aria-pressed="true"><span class="text-[12px] font-bold opacity-90">VIE</span><span class="num text-[24px] font-extrabold leading-none">9</span><span class="text-[13px] opacity-90">oct</span></button>
+      <button class="day" aria-pressed="false"><span class="text-[12px] font-bold text-ink-2">SÁB</span><span class="num text-[24px] font-extrabold leading-none">10</span><span class="text-[13px] text-ink-2">oct</span></button>
+      <button class="day" aria-disabled="true"><span class="text-[12px] font-bold">DOM</span><span class="num text-[24px] font-extrabold leading-none">11</span><span class="text-[12px]">cerrado</span></button>
+      <button class="day" aria-pressed="false"><span class="text-[12px] font-bold text-ink-2">LUN</span><span class="num text-[24px] font-extrabold leading-none">12</span><span class="text-[13px] text-ink-2">oct</span></button>
+      <button class="day" aria-pressed="false"><span class="text-[12px] font-bold text-ink-2">MAR</span><span class="num text-[24px] font-extrabold leading-none">13</span><span class="text-[13px] text-ink-2">oct</span></button>
+      <button class="day" aria-pressed="false"><span class="text-[12px] font-bold text-ink-2">MIÉ</span><span class="num text-[24px] font-extrabold leading-none">14</span><span class="text-[13px] text-ink-2">oct</span></button>
+    </div>
+
+    <!-- Horarios por franja -->
+    <div class="grid gap-7 px-4 pt-3 pb-10">
+      <div class="rise" style="--i:3">
+        <p class="flex items-center gap-2 text-[15px] font-bold"><i data-lucide="sunrise" class="text-brand-text"></i>Mañana</p>
+        <div class="mt-3 grid grid-cols-3 gap-2.5">
+          <button class="chip">9:00 a. m.</button>
+          <button class="chip">9:30 a. m.</button>
+          <button class="chip" aria-pressed="true">10:30 a. m.</button>
+          <button class="chip">11:00 a. m.</button>
+          <button class="chip">11:30 a. m.</button>
+        </div>
+      </div>
+      <div class="rise" style="--i:4">
+        <p class="flex items-center gap-2 text-[15px] font-bold"><i data-lucide="sun" class="text-brand-text"></i>Tarde</p>
+        <div class="mt-3 grid grid-cols-3 gap-2.5">
+          <button class="chip">12:00 p. m.</button>
+          <button class="chip">1:30 p. m.</button>
+          <button class="chip">2:00 p. m.</button>
+          <button class="chip">3:30 p. m.</button>
+          <button class="chip">4:00 p. m.</button>
+          <button class="chip">5:30 p. m.</button>
+        </div>
+      </div>
+      <div class="rise" style="--i:5">
+        <p class="flex items-center gap-2 text-[15px] font-bold"><i data-lucide="moon" class="text-brand-text"></i>Noche</p>
+        <p class="mt-3 rounded-2xl border border-dashed border-edge bg-surface-2/60 px-4 py-3.5 text-[14px] text-ink-2">Sin horarios: el balayage dura 2 h 30 min y el salón cierra a las 8:00 p. m.</p>
+      </div>
+    </div>
+
+    <!-- Barra fija -->
+    <div class="sticky-bar sticky bottom-0 z-20 border-t border-edge px-4 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-xl" style="background: var(--bar); box-shadow: 0 -10px 30px -12px rgb(16 24 40 / 0.18);">
+      <div class="flex items-center gap-3">
+        <div class="min-w-0 flex-1">
+          <p class="num truncate text-[16px] font-bold">vie 9 oct · 10:30 a. m.</p>
+          <p class="num truncate text-[14px] text-ink-2">Termina a la 1:00 p. m.</p>
+        </div>
+        <a href="#" class="btn btn-primary h-14 px-7 text-[17px]">Continuar</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
+  // The phone embeds this same file; only the top page loads it (avoids infinite nesting).
+  var only = document.documentElement.dataset.only;
+  if (!document.documentElement.dataset.embed && (!only || only === 'portada')) {
+    document.querySelectorAll('iframe[data-src]').forEach(function (frame) { frame.src = frame.dataset.src; });
+  }
+</script>
+</body>
+</html>

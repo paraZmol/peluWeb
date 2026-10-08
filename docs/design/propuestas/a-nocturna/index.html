@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Dirección A · Barbería nocturna · peluWeb</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    />
+    <link rel="stylesheet" href="nocturna.css" />
+    <script src="nocturna.js"></script>
+    <style>
+        body {
+            background:
+                radial-gradient(70% 40% at 0% 0%, var(--brand-soft), transparent 70%),
+                var(--bg);
+        }
+        .hub {
+            padding-block: 56px 72px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        .screens {
+            display: grid;
+            gap: 16px;
+        }
+        @media (min-width: 900px) {
+            .screens {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        .screen {
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--t-move) var(--ease);
+        }
+        .screen:hover {
+            transform: translateY(-4px);
+        }
+        .screen .photo {
+            height: 200px;
+        }
+        .screen .shade {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(180deg, transparent 30%, rgb(var(--veil) / 0.9));
+        }
+        .screen .num {
+            position: absolute;
+            z-index: 3;
+            left: 20px;
+            bottom: 12px;
+            font-family: var(--font-display);
+            font-size: 56px;
+            line-height: 1;
+            color: var(--brand-ui);
+        }
+        .screen-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .screen-body h2 {
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .screen-body p {
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+        .variants {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <main class="wrap hub">
+        <header class="rise" style="--i: 0; display: flex; flex-direction: column; gap: 14px">
+            <p class="eyebrow">peluWeb · Dirección A</p>
+            <h1 class="display d-lg">Barbería nocturna</h1>
+            <p class="lead">
+                Carbón azulado, un acento que brilla y fotos a sangre con velo. Tres pantallas con datos de la demo.
+                Prueba otro color con <code>?marca=E63946</code> y el modo claro con <code>?tema=claro</code>.
+            </p>
+        </header>
+        <div class="screens">
+            <a href="portada.html" class="card screen rise" style="--i: 1">
+                <div class="photo grain">
+                    <img src="../../../../database/seeders/images/pexels-3993133.jpg" alt="" />
+                    <div class="shade"></div>
+                    <span class="num">01</span>
+                </div>
+                <div class="screen-body">
+                    <h2>Portada para dueños</h2>
+                    <p>Titular con beneficio, así se ve tu página, tres pasos, precio y CTA.</p>
+                </div>
+            </a>
+            <a href="salon.html" class="card screen rise" style="--i: 2">
+                <div class="photo grain">
+                    <img src="../../../../database/seeders/images/pexels-1813272.jpg" alt="" />
+                    <div class="shade"></div>
+                    <span class="num">02</span>
+                </div>
+                <div class="screen-body">
+                    <h2>Página de Barbería Don Lucho</h2>
+                    <p>Portada, servicios, equipo, galería, horario y Reservar fijo.</p>
+                </div>
+            </a>
+            <a href="reserva.html" class="card screen rise" style="--i: 3">
+                <div class="photo grain">
+                    <img src="../../../../database/seeders/images/pexels-1319462.jpg" alt="" />
+                    <div class="shade"></div>
+                    <span class="num">03</span>
+                </div>
+                <div class="screen-body">
+                    <h2>Reserva · ¿Cuándo?</h2>
+                    <p>Tira de días, horarios por Mañana / Tarde / Noche, resumen y barra fija.</p>
+                </div>
+            </a>
+        </div>
+        <div class="variants rise" style="--i: 4">
+            <a class="chip" href="salon.html?tema=claro">Salón en modo claro</a>
+            <a class="chip" href="salon.html?marca=E63946">Salón con rojo barbero</a>
+            <a class="chip" href="salon.html?marca=1F2937">Salón con color oscuro</a>
+            <a class="chip" href="reserva.html?tema=claro">Reserva en modo claro</a>
+        </div>
+    </main>
+</body>
+</html>
