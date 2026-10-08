@@ -5,6 +5,7 @@ namespace App\Actions\Booking;
 use App\Enums\ClientLevel;
 use App\Models\Salon;
 use App\Models\SalonClient;
+use App\Models\Staff;
 use App\Models\User;
 use App\Support\PersonName;
 
@@ -34,14 +35,17 @@ class ResolveSalonClient
      * account that already has that phone is the same person. Records of
      * accounts are never matched by phone: the phone of an account is
      * whatever its owner typed, and matching it would hand them the
-     * bookings of whoever really has that number.
+     * bookings of whoever really has that number. With $onlyAttendedBy the
+     * match is limited to that professional's own clients, so typing a
+     * phone tells them nothing about a colleague's.
      */
-    public function walkIn(Salon $salon, string $name, ?string $phone): SalonClient
+    public function walkIn(Salon $salon, string $name, ?string $phone, ?Staff $onlyAttendedBy = null): SalonClient
     {
         $known = $phone === null ? null : SalonClient::withoutGlobalScope('salon')
             ->where('salon_id', $salon->id)
             ->whereNull('user_id')
             ->where('phone', $phone)
+            ->when($onlyAttendedBy !== null, fn ($query) => $query->whereHas('bookings', fn ($bookings) => $bookings->withoutGlobalScope('salon')->where('staff_id', $onlyAttendedBy?->id)))
             ->orderBy('id')
             ->first();
 

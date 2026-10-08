@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { BookingSummary } from '@/components/booking/booking-summary';
+import { STICKY_ACTION } from '@/components/booking/sticky-action';
 import type { BookableSalon, Quote } from '@/components/booking/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -30,6 +31,7 @@ export function StepClient({ salon, wizard, quote }: Props) {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const staff = salon.staff.find((person) => person.id === wizard.staffId);
     const { slot, date } = wizard;
+    const hasName = client.name.trim().length >= 2;
 
     if (!slot || !date) {
         return null;
@@ -56,8 +58,15 @@ export function StepClient({ salon, wizard, quote }: Props) {
                 onStart: () => setSending(true),
                 onFinish: () => setSending(false),
                 // The time was taken meanwhile: back to choosing one.
-                onSuccess: (page) => flashFailed(page) && wizard.goTo(2),
-                onError: setErrors,
+                onSuccess: (page) => flashFailed(page) && wizard.slotTaken(),
+                onError: (found) =>
+                    found.start ? wizard.slotTaken() : setErrors(found),
+                onNetworkError: () => {
+                    setErrors({
+                        network:
+                            'No hay conexión. Lo que elegiste sigue aquí: vuelve a tocar "Agendar cita".',
+                    });
+                },
             },
         );
 
@@ -93,15 +102,31 @@ export function StepClient({ salon, wizard, quote }: Props) {
                 totalPrefix={quote?.priceVaries ? 'desde' : undefined}
             />
 
-            <Button
-                size="lg"
-                className="h-12 rounded-full"
-                disabled={sending || client.name.trim().length < 2}
-                onClick={save}
-            >
-                {sending && <Spinner />}
-                Agendar cita
-            </Button>
+            {(errors.network ?? errors.services ?? errors.note) && (
+                <p
+                    role="alert"
+                    className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm"
+                >
+                    {errors.network ?? errors.services ?? errors.note}
+                </p>
+            )}
+
+            <div className={STICKY_ACTION}>
+                <Button
+                    size="lg"
+                    className="h-12 w-full rounded-full"
+                    disabled={sending || !hasName}
+                    onClick={save}
+                >
+                    {sending && <Spinner />}
+                    Agendar cita
+                </Button>
+                {!hasName && (
+                    <p className="mt-1 text-center text-sm text-muted-foreground">
+                        Escribe el nombre de tu cliente para agendar.
+                    </p>
+                )}
+            </div>
         </div>
     );
 }

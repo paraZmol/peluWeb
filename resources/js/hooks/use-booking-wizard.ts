@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { sumAmounts } from '@/lib/format';
+import { formatTime, sumAmounts } from '@/lib/format';
 import type {
     BookableSalon,
     BookableService,
@@ -19,7 +19,16 @@ type State = {
     date: string | null;
     slot: Slot | null;
     note: string;
+    /** Shown above the times, e.g. after the chosen one was taken. */
+    notice: string | null;
+    /** Bumped to ask for the free times again. */
+    refresh: number;
+    /** When it was last touched (ms), to drop stale saved choices. */
+    savedAt: number;
 };
+
+/** Saved choices older than this are not worth restoring. */
+const RESTORE_WINDOW_MS = 30 * 60 * 1000;
 
 const EMPTY: State = {
     step: 0,
@@ -28,6 +37,9 @@ const EMPTY: State = {
     date: null,
     slot: null,
     note: '',
+    notice: null,
+    refresh: 0,
+    savedAt: 0,
 };
 
 function storageKey(slug: string): string {
@@ -68,13 +80,15 @@ export function useBookingWizard({
         services.find((service) => service.id === id);
 
     const [state, setState] = useState<State>(() => {
-        const repeated = (repeat?.serviceIds ?? [])
-            .map(find)
-            .filter((service) => service !== undefined);
+        const repeated = (repeat?.selections ?? []).flatMap((selection) => {
+            const service = find(selection.serviceId);
+
+            return service ? [{ service, variantId: selection.variantId }] : [];
+        });
 
         if (repeated.length > 0) {
             // Straight to choosing a time when the same person still does it all.
-            const staffId = repeated.every((service) =>
+            const staffId = repeated.every(({ service }) =>
                 service.staffIds.includes(repeat?.staffId ?? 0),
             )
                 ? (repeat?.staffId ?? null)
@@ -82,9 +96,11 @@ export function useBookingWizard({
 
             return {
                 ...EMPTY,
-                selections: repeated.map((service) => ({
+                selections: repeated.map(({ service, variantId }) => ({
                     serviceId: service.id,
-                    variantId: service.variants[0]?.id ?? null,
+                    // The option booked then; a service that has options
+                    // always needs one.
+                    variantId: variantId ?? service.variants[0]?.id ?? null,
                 })),
                 staffId,
                 step: staffId === null ? 1 : 2,
@@ -105,12 +121,21 @@ export function useBookingWizard({
     const [direction, setDirection] = useState(1);
 
     // After mount, not in the initial state: the server render has no storage.
+    // Also without `resume`: the phone's back button leaves the wizard, and
+    // coming back should not mean starting over. A link that asks for
+    // something specific (a service, repeating a booking) wins.
     useEffect(() => {
-        const saved = resume ? restore(salon.slug) : null;
+        const asksForSomething =
+            preselectedServiceId !== null || repeat !== null;
+        const saved = persist && !asksForSomething ? restore(salon.slug) : null;
+        const isFresh =
+            saved !== null && Date.now() - saved.savedAt < RESTORE_WINDOW_MS;
 
-        if (saved) {
-            setState(saved);
+        if (saved && (resume || isFresh)) {
+            setState({ ...saved, notice: null });
         }
+        // Only on arrival.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resume, salon.slug]);
 
     useEffect(() => {
@@ -121,7 +146,7 @@ export function useBookingWizard({
         try {
             window.sessionStorage.setItem(
                 storageKey(salon.slug),
-                JSON.stringify(state),
+                JSON.stringify({ ...state, savedAt: Date.now() }),
             );
         } catch {
             // Private mode without storage: the wizard still works.
@@ -200,10 +225,23 @@ export function useBookingWizard({
             setDirection(1);
             patch({ staffId, slot: null, step: 2 });
         },
-        chooseDate: (date: string) => patch({ date, slot: null }),
+        chooseDate: (date: string) => patch({ date, slot: null, notice: null }),
+        /** The chosen time was taken meanwhile: back to the fresh list. */
+        slotTaken: () => {
+            setDirection(-1);
+            setState((current) => ({
+                ...current,
+                step: 2,
+                slot: null,
+                refresh: current.refresh + 1,
+                notice: current.slot
+                    ? `Alguien tomó las ${formatTime(current.slot.time)} mientras confirmabas. Elige otro horario.`
+                    : 'Ese horario se acaba de ocupar. Elige otro.',
+            }));
+        },
         chooseSlot: (slot: Slot) => {
             setDirection(1);
-            patch({ slot, step: 3 });
+            patch({ slot, step: 3, notice: null });
         },
         setNote: (note: string) => patch({ note }),
         clear: () => {

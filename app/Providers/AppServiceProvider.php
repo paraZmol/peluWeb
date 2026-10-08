@@ -39,6 +39,14 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureRateLimiting(): void
     {
+        // Guessing a password is slowed down per address and per account:
+        // changing address does not buy more tries against one email.
+        RateLimiter::for('api-login', fn (Request $request) => [
+            Limit::perMinute(5)->by('api-login-ip:'.$request->ip()),
+            Limit::perMinute(5)->by('api-login-account:'.sha1(mb_strtolower($request->string('email')->toString()))),
+            Limit::perHour(20)->by('api-login-account-hour:'.sha1(mb_strtolower($request->string('email')->toString()))),
+        ]);
+
         RateLimiter::for('invitations', fn (Request $request) => [
             Limit::perMinute(20)->by('user:'.$request->user()?->id),
             Limit::perDay(50)->by('salon:'.app(CurrentSalon::class)->id()),

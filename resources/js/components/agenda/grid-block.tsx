@@ -25,7 +25,7 @@ const THREE_LINES_PX = 56;
 
 /** The left edge carries the status, so it reads even on a one-line block. */
 const TONE: Record<string, string> = {
-    pending: 'border-warning/40 border-l-warning bg-warning/15',
+    pending: 'border-dashed border-warning/60 border-l-warning bg-warning/15',
     confirmed: 'border-primary/30 border-l-primary bg-primary/10',
     in_service: 'border-primary bg-primary text-primary-foreground',
     completed:

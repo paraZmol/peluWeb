@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import type { useAvailability } from '@/hooks/use-availability';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { DayStrip } from './day-strip';
@@ -33,8 +34,20 @@ export function StepTime({ days, wizard, availability }: Props) {
         );
     }
 
+    const nextOpen =
+        days.find((day) => !day.closed && date !== null && day.date > date)
+            ?.date ?? null;
+
     return (
         <div className="flex flex-col gap-5">
+            {wizard.notice && (
+                <p
+                    role="alert"
+                    className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm"
+                >
+                    {wizard.notice}
+                </p>
+            )}
             <DayStrip days={days} value={date} onChange={wizard.chooseDate} />
             <SlotGrid
                 slots={slots}
@@ -44,8 +57,19 @@ export function StepTime({ days, wizard, availability }: Props) {
                 onPick={wizard.chooseSlot}
                 empty={
                     <>
-                        No quedan horarios este día. Prueba con otro día
-                        {wizard.staffId !== null && ' o con otra persona'}.
+                        <span>
+                            No quedan horarios este día. Prueba con otro día
+                            {wizard.staffId !== null && ' o con otra persona'}.
+                        </span>
+                        {nextOpen && (
+                            <Button
+                                variant="outline"
+                                className="rounded-full"
+                                onClick={() => wizard.chooseDate(nextOpen)}
+                            >
+                                Ver el siguiente día
+                            </Button>
+                        )}
                     </>
                 }
             />

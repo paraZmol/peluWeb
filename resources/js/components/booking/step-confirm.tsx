@@ -7,11 +7,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { markBookingCelebration } from '@/lib/celebration';
-import { flashFailed } from '@/lib/flash';
+import { flashFailed, flashMessage } from '@/lib/flash';
 import { formatMinutes, formatPrice } from '@/lib/format';
 import { resume, store } from '@/routes/salons/booking';
 import { notice } from '@/routes/verification';
 import { BookingSummary } from './booking-summary';
+import { STICKY_ACTION } from './sticky-action';
 import type { BookableSalon, Quote, Viewer } from './types';
 
 type Props = {
@@ -23,6 +24,7 @@ type Props = {
 
 export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
     const [sending, setSending] = useState(false);
+    const [problem, setProblem] = useState<string>();
     const staff = salon.staff.find((person) => person.id === wizard.staffId);
     const { slot, date } = wizard;
 
@@ -44,19 +46,33 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
             },
             {
                 preserveState: true,
-                onStart: () => setSending(true),
+                onStart: () => {
+                    setSending(true);
+                    setProblem(undefined);
+                },
                 onFinish: () => setSending(false),
-                // The slot was taken meanwhile: back to choosing a time.
                 onSuccess: (page) => {
+                    // A business rule said no. Only "that time was taken"
+                    // sends back to the times; the rest is read right here.
                     if (flashFailed(page)) {
-                        return wizard.goTo(2);
+                        return flashMessage(page)?.includes('horario')
+                            ? wizard.slotTaken()
+                            : setProblem(flashMessage(page));
                     }
 
                     // Its page greets it with confetti, once.
                     markBookingCelebration(page.props.booking);
                     wizard.clear();
                 },
-                onError: () => wizard.goTo(2),
+                onError: (errors) =>
+                    errors.start
+                        ? wizard.slotTaken()
+                        : setProblem(Object.values(errors)[0]),
+                onNetworkError: () => {
+                    setProblem(
+                        'No hay conexión. Lo que elegiste sigue aquí: vuelve a tocar "Confirmar reserva".',
+                    );
+                },
             },
         );
 
@@ -108,16 +124,27 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                 />
             </div>
 
-            {viewer.state === 'ready' && (
-                <Button
-                    size="lg"
-                    className="h-12 rounded-full"
-                    disabled={sending}
-                    onClick={confirm}
+            {problem && (
+                <p
+                    role="alert"
+                    className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm"
                 >
-                    {sending && <Spinner />}
-                    Confirmar reserva
-                </Button>
+                    {problem}
+                </p>
+            )}
+
+            {viewer.state === 'ready' && (
+                <div className={STICKY_ACTION}>
+                    <Button
+                        size="lg"
+                        className="h-12 w-full rounded-full"
+                        disabled={sending}
+                        onClick={confirm}
+                    >
+                        {sending && <Spinner />}
+                        Confirmar reserva
+                    </Button>
+                </div>
             )}
             {viewer.state === 'guest' && (
                 <div className="flex flex-col gap-2">

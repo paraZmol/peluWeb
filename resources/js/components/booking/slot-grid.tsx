@@ -46,10 +46,10 @@ export function SlotGrid({
         <>
             {isLoading && (
                 <div
+                    role="status"
                     className="grid grid-cols-3 gap-2 sm:grid-cols-4"
-                    aria-busy
-                    aria-label="Cargando horarios"
                 >
+                    <span className="sr-only">Cargando horarios…</span>
                     {Array.from({ length: 9 }, (_, i) => (
                         <Skeleton key={i} className="h-12 rounded-full" />
                     ))}
@@ -69,10 +69,10 @@ export function SlotGrid({
             )}
 
             {slots?.length === 0 && (
-                <p className="flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
                     <CalendarX className="size-6" aria-hidden />
                     {empty}
-                </p>
+                </div>
             )}
 
             {slots &&

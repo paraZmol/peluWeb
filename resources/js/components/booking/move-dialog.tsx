@@ -29,6 +29,8 @@ type Props = {
     trigger: ReactNode;
     title: string;
     description: string;
+    /** "Mover" for the team, "Cambiar" for the client. */
+    confirmVerb?: string;
     days: BookingDay[];
     /** The day the booking is on now: where the picker opens. */
     date: string;
@@ -46,6 +48,7 @@ export function MoveDialog({
     trigger,
     title,
     description,
+    confirmVerb = 'Mover',
     days,
     date: currentDate,
     slotsUrl,
@@ -153,7 +156,7 @@ export function MoveDialog({
                         >
                             {sending && <Spinner />}
                             {slot
-                                ? `Mover a las ${formatTime(slot.time)}`
+                                ? `${confirmVerb} a las ${formatTime(slot.time)}`
                                 : 'Elige un horario'}
                         </Button>
                     </DialogFooter>

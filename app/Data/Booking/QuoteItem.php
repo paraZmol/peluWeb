@@ -15,5 +15,6 @@ final readonly class QuoteItem
         public int $activeMinutes,
         public int $idleMinutes,
         public int $finishMinutes,
+        public ?int $variantId = null,
     ) {}
 }

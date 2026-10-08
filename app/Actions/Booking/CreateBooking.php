@@ -121,7 +121,7 @@ class CreateBooking
      * empty record. Two first bookings of one
      * account at once share the record the first of them stored.
      */
-    private function client(NewBooking $data): SalonClient
+    private function client(NewBooking $data, CarbonImmutable $now): SalonClient
     {
         if ($data->client->exists) {
             return $data->client;
@@ -136,11 +136,17 @@ class CreateBooking
         } catch (UniqueConstraintViolationException) {
             // A locking read: a plain one would not see a row committed
             // after this transaction first read.
-            return SalonClient::withoutGlobalScope('salon')
+            $existing = SalonClient::withoutGlobalScope('salon')
                 ->where('salon_id', $client->salon_id)
                 ->where('user_id', $client->user_id)
-                ->sharedLock()
+                ->lockForUpdate()
                 ->firstOrFail();
+
+            // Another request of the same account got here first: the
+            // limits it skipped as a newcomer apply from the second on.
+            $this->ensureWithinLimitsOf($data, $existing, $now);
+
+            return $existing;
         }
 
         return $client;
@@ -148,7 +154,7 @@ class CreateBooking
 
     private function store(NewBooking $data, Staff $staff, BookingQuote $quote, CarbonImmutable $now): Booking
     {
-        $client = $this->client($data);
+        $client = $this->client($data, $now);
         $start = $data->startsAt->getTimestamp();
         $shape = $quote->shape();
         $deposit = $this->depositCents($data, $client, $quote->priceCents());
@@ -175,6 +181,7 @@ class CreateBooking
             $service = new BookingService;
             $service->booking_id = $booking->id;
             $service->service_id = $item->serviceId;
+            $service->service_variant_id = $item->variantId;
             $service->name = $item->name;
             $service->price_cents = $item->priceCents;
             $service->active_minutes = $item->activeMinutes;
@@ -218,8 +225,18 @@ class CreateBooking
             return;
         }
 
-        $client = $data->client;
-        SalonClient::withoutGlobalScope('salon')->lockForUpdate()->find($client->id);
+        SalonClient::withoutGlobalScope('salon')->lockForUpdate()->find($data->client->id);
+        $this->ensureWithinLimitsOf($data, $data->client, $now);
+    }
+
+    /**
+     * The counting itself, with the client's row already locked.
+     */
+    private function ensureWithinLimitsOf(NewBooking $data, SalonClient $client, CarbonImmutable $now): void
+    {
+        if ($data->source !== BookingSource::Client) {
+            return;
+        }
 
         $own = fn () => Booking::withoutGlobalScope('salon')
             ->where('salon_client_id', $client->id)

@@ -8,3 +8,10 @@ export function flashFailed(page: { flash?: unknown }): boolean {
 
     return flash?.toast?.type === 'error';
 }
+
+/** The text of the message a visit came back with, if any. */
+export function flashMessage(page: { flash?: unknown }): string | undefined {
+    const flash = page.flash as { toast?: { message?: string } } | undefined;
+
+    return flash?.toast?.message;
+}

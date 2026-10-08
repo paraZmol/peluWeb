@@ -28,6 +28,10 @@ class ClientBookings
             ->whereHas('client', fn (Builder $client) => $client->withoutGlobalScope('salon')->where('user_id', $user->id))
             // A deleted salon takes its bookings out of sight.
             ->whereHas('salon')
+            // How many times they moved it themselves (see RescheduleBooking).
+            ->withCount(['events as own_moves_count' => fn (Builder $events) => $events
+                ->where('changed_by', $user->id)
+                ->whereColumn('from_status', 'to_status')])
             ->with(['salon', 'services', 'client' => $unscoped, 'staff' => $unscoped]);
     }
 

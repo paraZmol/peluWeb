@@ -35,6 +35,9 @@ return [
 
     'guard' => [],
 
+    // No SPA cookie endpoint: this API is token only.
+    'routes' => false,
+
     /*
     |--------------------------------------------------------------------------
     | Expiration Minutes

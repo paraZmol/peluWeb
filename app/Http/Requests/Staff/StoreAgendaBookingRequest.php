@@ -8,6 +8,7 @@ use App\Concerns\ParsesBookingTime;
 use App\Concerns\SalonValidationRules;
 use App\Models\Salon;
 use App\Models\SalonClient;
+use App\Models\Staff;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
@@ -37,18 +38,21 @@ class StoreAgendaBookingRequest extends FormRequest
 
     /**
      * The chosen client of this salon, or the record for the name and
-     * phone typed in. `client_id` is looked up inside the salon only.
+     * phone typed in. `client_id` is looked up inside the salon only and,
+     * with $onlyAttendedBy, among that professional's own clients: the same
+     * people their search shows.
      */
-    public function clientIn(Salon $salon, ResolveSalonClient $clients): SalonClient
+    public function clientIn(Salon $salon, ResolveSalonClient $clients, ?Staff $onlyAttendedBy = null): SalonClient
     {
         if ($this->filled('client_id')) {
             return SalonClient::withoutGlobalScope('salon')
                 ->where('salon_id', $salon->id)
+                ->when($onlyAttendedBy !== null, fn ($query) => $query->whereHas('bookings', fn ($bookings) => $bookings->withoutGlobalScope('salon')->where('staff_id', $onlyAttendedBy?->id)))
                 ->find($this->integer('client_id'))
                 ?? throw ValidationException::withMessages(['client_id' => 'Ese cliente ya no está en la lista. Búscalo de nuevo.']);
         }
 
-        return $clients->walkIn($salon, $this->string('client_name')->trim()->toString(), $this->validated('client_phone'));
+        return $clients->walkIn($salon, $this->string('client_name')->trim()->toString(), $this->validated('client_phone'), $onlyAttendedBy);
     }
 
     /**

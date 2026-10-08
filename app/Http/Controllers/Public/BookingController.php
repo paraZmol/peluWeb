@@ -129,7 +129,7 @@ class BookingController extends Controller
      *
      * @param  Collection<int, Service>  $services  the salon's active services
      * @param  Collection<int, Staff>  $staff  the salon's active professionals
-     * @return array{serviceIds: list<int>, staffId: int|null}|null
+     * @return array{selections: list<array{serviceId: int, variantId: int|null}>, staffId: int|null}|null
      */
     private function repeat(Request $request, Salon $salon, Collection $services, Collection $staff): ?array
     {
@@ -151,19 +151,25 @@ class BookingController extends Controller
             return null;
         }
 
-        $serviceIds = [];
+        $selections = [];
 
         foreach ($booking->services as $booked) {
-            if ($booked->service_id !== null && $services->contains('id', $booked->service_id)) {
-                $serviceIds[] = $booked->service_id;
+            $service = $services->firstWhere('id', $booked->service_id);
+
+            if ($service !== null) {
+                // The option booked then, if the service still offers it.
+                $selections[] = [
+                    'serviceId' => $service->id,
+                    'variantId' => $service->variants->firstWhere('id', $booked->service_variant_id)?->id,
+                ];
             }
         }
 
-        if ($serviceIds === []) {
+        if ($selections === []) {
             return null;
         }
 
-        return ['serviceIds' => $serviceIds, 'staffId' => $staff->has($booking->staff_id) ? $booking->staff_id : null];
+        return ['selections' => $selections, 'staffId' => $staff->has($booking->staff_id) ? $booking->staff_id : null];
     }
 
     /**

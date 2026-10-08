@@ -114,7 +114,7 @@ class AgendaBookingController extends SalonAreaController
     {
         $salon = $this->bookingSalon();
         $staff = $this->staffFor($request, $salon, $request->staffIn($salon));
-        $client = $request->clientIn($salon, $this->clients);
+        $client = $request->clientIn($salon, $this->clients, $this->staffFor($request, $salon, null));
 
         // Never wrap this in a transaction: see Public\BookingController::store.
         $booking = $create->handle(new NewBooking(

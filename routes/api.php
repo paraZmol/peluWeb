@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('login', [AuthController::class, 'store'])
-    ->middleware('throttle:5,1,api-login')
+    ->middleware('throttle:api-login')
     ->name('api.v1.login');
 
 // Open to anyone, like the public booking wizard. A token is optional and

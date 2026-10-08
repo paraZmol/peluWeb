@@ -62,7 +62,7 @@ describe('repeating a booking', function () {
         $booking = extraBooking($this->customer);
 
         $this->actingAs($this->customer)->get(repeatUrl($booking->code))
-            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['serviceIds' => [$this->cut->id, $this->beard->id], 'staffId' => $this->pedro->id]));
+            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['selections' => [['serviceId' => $this->cut->id, 'variantId' => null], ['serviceId' => $this->beard->id, 'variantId' => null]], 'staffId' => $this->pedro->id]));
     });
 
     it('leaves out what no longer exists', function () {
@@ -71,7 +71,7 @@ describe('repeating a booking', function () {
         $this->pedro->forceFill(['is_active' => false])->save();
 
         $this->actingAs($this->customer)->get(repeatUrl($booking->code))
-            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['serviceIds' => [$this->cut->id], 'staffId' => null]));
+            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['selections' => [['serviceId' => $this->cut->id, 'variantId' => null]], 'staffId' => null]));
 
         $this->cut->delete();
         $this->actingAs($this->customer)->get(repeatUrl($booking->code))
@@ -159,6 +159,27 @@ describe('reference photo', function () {
         expect($this->booking->refresh()->reference_photo_path)->toBeNull();
         $this->actingAs($this->customer)->get(route('bookings.show', $this->booking->code))
             ->assertInertia(fn (Assert $page) => $page->where('booking.canAttachPhoto', false));
+    });
+
+    it('deletes the picture when the visit is called off or over', function () {
+        $this->actingAs($this->customer)->post(route('bookings.photo.store', $this->booking->code), ['image' => UploadedFile::fake()->image('a.jpg')]);
+        $path = $this->booking->refresh()->reference_photo_path;
+
+        $this->actingAs($this->customer)->post(route('bookings.cancel', $this->booking->code));
+
+        expect($this->booking->refresh()->reference_photo_path)->toBeNull();
+        Storage::disk('public')->assertMissing($path);
+    });
+
+    it('refuses a picture for a visit that already started or in a suspended salon', function () {
+        $this->travelTo(CarbonImmutable::parse('2026-10-08 10:05', 'America/Lima'));
+        $this->actingAs($this->customer)->post(route('bookings.photo.store', $this->booking->code), ['image' => UploadedFile::fake()->image('a.jpg')]);
+
+        $this->travelTo(CarbonImmutable::parse('2026-10-07 08:00', 'America/Lima'));
+        $this->salon->forceFill(['status' => 'suspended'])->save();
+        $this->actingAs($this->customer)->post(route('bookings.photo.store', $this->booking->code), ['image' => UploadedFile::fake()->image('a.jpg')]);
+
+        expect($this->booking->refresh()->reference_photo_path)->toBeNull();
     });
 
     it('is only for the client of the booking', function () {

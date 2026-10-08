@@ -31,6 +31,7 @@ class ChangeBookingStatus
     public function __construct(
         private readonly StaffAvailability $availability,
         private readonly AvailabilityCalculator $calculator,
+        private readonly UpdateReferencePhoto $photos,
     ) {}
 
     /**
@@ -132,7 +133,7 @@ class ChangeBookingStatus
      */
     private function change(Booking $booking, BookingStatus $to, ?User $by, ?Closure $apply = null, ?string $note = null): Booking
     {
-        return DB::transaction(function () use ($booking, $to, $by, $apply, $note): Booking {
+        $changed = DB::transaction(function () use ($booking, $to, $by, $apply, $note): Booking {
             Staff::withoutGlobalScope('salon')->withTrashed()->lockForUpdate()->find($booking->staff_id);
             $locked = Booking::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($booking->id);
             $now = CarbonImmutable::now();
@@ -165,6 +166,21 @@ class ChangeBookingStatus
 
             return $locked;
         }, self::DEADLOCK_ATTEMPTS);
+
+        $this->forgetReferencePhoto($changed);
+
+        return $changed;
+    }
+
+    /**
+     * Once a visit is over or called off nobody needs the client's
+     * reference picture, and it should not stay on a public address.
+     */
+    private function forgetReferencePhoto(Booking $booking): void
+    {
+        if ($booking->reference_photo_path !== null && $booking->status->isFinal()) {
+            $this->photos->remove($booking);
+        }
     }
 
     /**

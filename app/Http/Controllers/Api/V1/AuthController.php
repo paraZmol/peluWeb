@@ -16,25 +16,53 @@ use Illuminate\Validation\ValidationException;
  */
 class AuthController extends Controller
 {
+    /** Checked when the account does not exist, so both answers take as long. */
+    private const string DUMMY_HASH = '$2y$12$e1ccJgqG0vPJj6PiFLSrq.xeA4RGTSL4mGpeYMTgGk8JN83W0TjNG';
+
+    /** Old tokens removed per sign-in; far more than can pile up. */
+    private const int SWEEP = 1000;
+
     public function store(LoginRequest $request): JsonResponse
     {
         $user = User::query()->where('email', $request->string('email')->lower()->toString())->first();
+        $matches = Hash::check($request->string('password')->toString(), (string) ($user->password ?? self::DUMMY_HASH));
 
         // The same answer for an unknown account and a wrong password.
-        if ($user === null || ! Hash::check($request->string('password')->toString(), (string) $user->password)) {
+        if ($user === null || ! $matches) {
             throw ValidationException::withMessages(['email' => 'El correo o la contraseña no coinciden.']);
         }
 
-        // A second factor cannot be asked for here yet: those accounts
-        // sign in on the web, where it is.
-        if ($user->two_factor_confirmed_at !== null) {
-            throw ValidationException::withMessages(['email' => 'Tu cuenta usa verificación en dos pasos. Por ahora entra desde la web.']);
-        }
+        $this->ensureMayUseTheApp($user);
+
+        // The oldest devices make room: the list never grows without end.
+        $stale = $user->tokens()->orderByDesc('id')->skip(User::MAX_API_TOKENS - 1)->take(self::SWEEP)->pluck('id');
+        $user->tokens()->whereKey($stale)->delete();
 
         return response()->json([
             'token' => $user->createToken($request->string('device_name')->toString())->plainTextToken,
             'user' => $this->profile($user),
         ], 201);
+    }
+
+    /**
+     * Who gets no token even with the right password.
+     */
+    private function ensureMayUseTheApp(User $user): void
+    {
+        $reason = match (true) {
+            // Until the email is verified nobody has proved owning it: a
+            // token handed out now would outlive the real owner claiming it.
+            ! $user->hasVerifiedEmail() => 'Primero verifica tu correo desde la web.',
+            // A second factor cannot be asked for here yet.
+            $user->two_factor_confirmed_at !== null => 'Tu cuenta usa verificación en dos pasos. Por ahora entra desde la web.',
+            // The platform's own account has no business in the client app.
+            $user->is_platform_admin => 'Esta cuenta solo entra desde la web.',
+            default => null,
+        };
+
+        if ($reason !== null) {
+            throw ValidationException::withMessages(['email' => $reason]);
+        }
     }
 
     public function show(Request $request): JsonResponse

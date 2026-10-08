@@ -48,7 +48,10 @@ export type Viewer = {
 };
 
 /** Services and professional of an earlier booking, to start the wizard from. */
-export type RepeatBooking = { serviceIds: number[]; staffId: number | null };
+export type RepeatBooking = {
+    selections: { serviceId: number; variantId: number | null }[];
+    staffId: number | null;
+};
 
 export type Selection = { serviceId: number; variantId: number | null };
 

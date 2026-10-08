@@ -34,7 +34,6 @@
         "@vitejs/plugin-react": "^6.1.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "concurrently": "^10.0.3",
         "input-otp": "^1.4.2",
         "laravel-vite-plugin": "^3.0.0",
         "leaflet": "^1.9.4",
@@ -59,6 +58,7 @@
         "@types/node": "^22.13.5",
         "@types/qrcode": "^1.5.6",
         "babel-plugin-react-compiler": "^1.0.0",
+        "concurrently": "^10.0.3",
         "fontaine": "^0.8.2",
         "vite-plus": "0.3.0"
     },

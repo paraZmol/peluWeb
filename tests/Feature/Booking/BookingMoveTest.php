@@ -236,6 +236,18 @@ describe('the team books for a client', function () {
         expect($names->all())->toBe(['Rosa de Kevin']);
     });
 
+    it('lets a professional pick by id only a client they have attended', function () {
+        $pedros = movable('10:00');
+        $kevins = movable('11:00', staff: $this->kevin);
+        $payload = fn (int $clientId) => agendaPayload(['staff' => $this->kevin->id, 'client_id' => $clientId, 'client_name' => null, 'start' => moveAt('12:00', '2026-10-09')]);
+
+        $this->actingAs($this->member->user)->post(route('agenda.bookings.store'), $payload($pedros->salon_client_id))->assertSessionHasErrors('client_id');
+        $this->actingAs($this->member->user)->post(route('agenda.bookings.store'), $payload($kevins->salon_client_id));
+
+        expect(Booking::withoutGlobalScopes()->where('salon_client_id', $pedros->salon_client_id)->count())->toBe(1)
+            ->and(Booking::withoutGlobalScopes()->where('salon_client_id', $kevins->salon_client_id)->count())->toBe(2);
+    });
+
     it('never attaches a visit to the record of an account just because the phone matches', function () {
         $account = SalonClient::factory()->for($this->salon)->forUser($this->customer)->create(['phone' => '900111222']);
 

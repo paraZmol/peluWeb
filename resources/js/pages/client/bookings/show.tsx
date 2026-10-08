@@ -30,6 +30,9 @@ export default function BookingShow({ booking, days }: Props) {
                     {booking.status === 'confirmed' && booking.isUpcoming && (
                         <SuccessCheck celebrateKey={booking.code} />
                     )}
+                    <p role="status" className="sr-only">
+                        {`Tu reserva en ${salon.name}: ${booking.statusLabel}.`}
+                    </p>
                     <h1 className="font-display text-2xl font-semibold text-balance sm:text-3xl">
                         {salon.name}
                     </h1>
@@ -72,6 +75,7 @@ export default function BookingShow({ booking, days }: Props) {
                                 </Button>
                             }
                             title="Cambiar día u hora"
+                            confirmVerb="Cambiar"
                             description={`Con ${booking.staffName}. Los servicios y el precio no cambian.`}
                             days={days}
                             date={booking.date}
@@ -119,7 +123,7 @@ export default function BookingShow({ booking, days }: Props) {
                                     query: { repetir: booking.code },
                                 })}
                             >
-                                <Repeat aria-hidden /> Repetir esta cita
+                                <Repeat aria-hidden /> Repetir esta reserva
                             </Link>
                         </Button>
                     )}
@@ -146,7 +150,7 @@ export default function BookingShow({ booking, days }: Props) {
                                     ? 'Tu horario quedará libre y la seña que enviaste no se devuelve.'
                                     : 'Tu horario quedará libre para otra persona.'
                             }
-                            confirmLabel="Sí, cancelar"
+                            confirmLabel="Sí, cancelar mi reserva"
                             form={cancel.form(booking.code)}
                         />
                     </div>

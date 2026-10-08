@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import type { BookingDay } from './types';
 
@@ -21,23 +22,55 @@ type Props = {
     days: BookingDay[];
     value: string | null;
     onChange: (date: string) => void;
+    /** Read by screen readers: "Día de la reserva" for clients, "Día de la cita" for the team. */
+    label?: string;
 };
 
 /** Horizontal strip of days; closed days stay visible but cannot be picked. */
-export function DayStrip({ days, value, onChange }: Props) {
+export function DayStrip({
+    days,
+    value,
+    onChange,
+    label = 'Día de la reserva',
+}: Props) {
     const selected = useRef<HTMLButtonElement>(null);
+    // Set by the arrow keys, so focus follows the day they moved to.
+    const followFocus = useRef(false);
+    const open = days.filter((day) => !day.closed);
+    const tabStop = value ?? open[0]?.date;
+
+    /** Like a radio group: arrows walk the open days, one tab stop in all. */
+    const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+        const next =
+            step === undefined
+                ? undefined
+                : open[open.findIndex((day) => day.date === value) + step];
+
+        if (next) {
+            event.preventDefault();
+            followFocus.current = true;
+            onChange(next.date);
+        }
+    };
 
     useEffect(() => {
         selected.current?.scrollIntoView({
             block: 'nearest',
             inline: 'center',
         });
+
+        if (followFocus.current) {
+            followFocus.current = false;
+            selected.current?.focus();
+        }
     }, [value]);
 
     return (
         <div
             role="radiogroup"
-            aria-label="Día de la cita"
+            aria-label={label}
+            onKeyDown={onKeyDown}
             className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2"
         >
             {days.map((day, index) => {
@@ -51,6 +84,7 @@ export function DayStrip({ days, value, onChange }: Props) {
                         type="button"
                         role="radio"
                         aria-checked={isSelected}
+                        tabIndex={day.date === tabStop ? 0 : -1}
                         aria-label={`${fullFormat.format(date)}${day.closed ? ', cerrado' : ''}`}
                         disabled={day.closed}
                         onClick={() => onChange(day.date)}

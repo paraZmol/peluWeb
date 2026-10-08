@@ -35,6 +35,7 @@ export default function BookingCreate({ salon, days }: Props) {
         url: availabilityRoute.url(),
         selections: wizard.selections,
         staffId: wizard.staffId,
+        refresh: wizard.refresh,
         // Nothing to ask until a professional was chosen.
         date: wizard.step >= 2 ? (wizard.date ?? firstOpenDay) : null,
     });

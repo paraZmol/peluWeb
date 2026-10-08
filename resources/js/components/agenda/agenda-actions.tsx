@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import { CalendarClock, Check, MessageCircle, Play } from 'lucide-react';
 import { MoveDialog } from '@/components/booking/move-dialog';
 import type {
@@ -8,7 +9,9 @@ import type {
 } from '@/components/booking/types';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
+import { formatPrice } from '@/lib/format';
 import {
     cancel,
     complete,
@@ -35,33 +38,57 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
     const { currentSalon } = useCurrentSalon();
     const can = (action: AgendaBooking['actions'][number]) =>
         booking.actions.includes(action);
+    // One tap, one request: a second tap on a slow connection would act
+    // on whatever button takes this one's place.
+    const [busy, setBusy] = useState(false);
     const post = (route: { url: string }) =>
-        router.post(route.url, {}, { preserveScroll: true });
+        router.post(
+            route.url,
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setBusy(true),
+                onFinish: () => setBusy(false),
+            },
+        );
 
     return (
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center [&_a]:h-11 sm:[&_a]:h-9 [&_button]:h-11 sm:[&_button]:h-9">
             {can('confirm') && (
-                <Button
-                    className={PRIMARY}
-                    onClick={() => post(confirm(booking.id))}
-                >
-                    <Check /> Seña recibida
-                </Button>
+                <ConfirmRemoveDialog
+                    tone="default"
+                    trigger={
+                        <Button className={PRIMARY}>
+                            <Check /> Seña recibida
+                        </Button>
+                    }
+                    triggerLabel="Seña recibida"
+                    title={
+                        booking.deposit
+                            ? `¿Recibiste ${formatPrice(booking.deposit.amount)} de ${booking.client.name}?`
+                            : `¿Confirmar la cita de ${booking.client.name}?`
+                    }
+                    description="La cita quedará confirmada y la seña anotada como recibida."
+                    confirmLabel="Sí, la recibí"
+                    form={confirm.form(booking.id)}
+                />
             )}
             {can('start') && (
                 <Button
                     className={PRIMARY}
+                    disabled={busy}
                     onClick={() => post(start(booking.id))}
                 >
-                    <Play /> Llegó
+                    {busy ? <Spinner /> : <Play />} Llegó
                 </Button>
             )}
             {can('complete') && (
                 <Button
                     className={PRIMARY}
+                    disabled={busy}
                     onClick={() => post(complete(booking.id))}
                 >
-                    <Check /> Terminé
+                    {busy ? <Spinner /> : <Check />} Terminé
                 </Button>
             )}
             {booking.client.whatsappUrl && (
@@ -99,7 +126,7 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
             {can('noShow') && (
                 <ConfirmRemoveDialog
                     triggerLabel="No vino"
-                    title={`¿${booking.client.name} no vino?`}
+                    title={`¿Marcar que ${booking.client.name} no vino?`}
                     description="Quedará anotado en su ficha y el horario se libera."
                     confirmLabel="Sí, no vino"
                     form={noShow.form(booking.id)}
@@ -107,10 +134,10 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
             )}
             {can('cancel') && (
                 <ConfirmRemoveDialog
-                    triggerLabel="Cancelar"
+                    triggerLabel="Cancelar cita"
                     title="¿Cancelar esta cita?"
-                    description="El horario quedará libre. Avísale a tu cliente."
-                    confirmLabel="Sí, cancelar"
+                    description="El horario quedará libre. Escribe a tu cliente para avisarle."
+                    confirmLabel="Sí, cancelar la cita"
                     form={cancel.form(booking.id)}
                 />
             )}

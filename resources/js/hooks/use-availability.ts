@@ -7,13 +7,19 @@ type Query = {
     selections: Selection[];
     staffId: number | null;
     date: string | null;
+    /** Change it to ask again for the same day. */
+    refresh?: number;
 };
 
 export const SLOTS_FAILURE =
     'No pudimos cargar los horarios. Revisa tu conexión.';
 
-function queryString({ selections, staffId, date }: Query): string {
+function queryString({ selections, staffId, date, refresh }: Query): string {
     const params = new URLSearchParams({ date: date ?? '' });
+
+    if (refresh) {
+        params.set('r', String(refresh));
+    }
 
     selections.forEach((selection, index) => {
         params.set(`services[${index}][id]`, String(selection.serviceId));

@@ -58,6 +58,7 @@ export default function Booking({
         url: availabilityRoute.url(salon.slug),
         selections: wizard.selections,
         staffId: wizard.staffId,
+        refresh: wizard.refresh,
         // Nothing to ask until a professional was chosen.
         date: wizard.step >= 2 ? (wizard.date ?? firstOpenDay) : null,
     });

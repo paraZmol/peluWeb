@@ -110,6 +110,7 @@ class QuoteBooking
             activeMinutes: max(self::MIN_ACTIVE_MINUTES, $active),
             idleMinutes: $service->idle_minutes,
             finishMinutes: $service->finish_minutes,
+            variantId: $variant?->id,
         );
     }
 

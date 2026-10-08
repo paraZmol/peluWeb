@@ -5,6 +5,7 @@ namespace App\Actions\Booking;
 use App\Enums\BookingStatus;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
+use App\Models\Salon;
 use App\Support\Images\ImageStore;
 use Illuminate\Http\UploadedFile;
 
@@ -24,7 +25,9 @@ class UpdateReferencePhoto
      */
     public function handle(Booking $booking, UploadedFile $file): void
     {
-        if (! in_array($booking->effectiveStatus(), [BookingStatus::Pending, BookingStatus::Confirmed], true)) {
+        $isOpen = in_array($booking->effectiveStatus(), [BookingStatus::Pending, BookingStatus::Confirmed], true);
+
+        if (! $isOpen || $booking->starts_at->isPast() || ! Salon::query()->findOrFail($booking->salon_id)->isWritable()) {
             throw BookingException::cannotChange($booking->effectiveStatus()->label());
         }
 

@@ -2,6 +2,7 @@
 
 use App\Exceptions\BusinessRuleException;
 use App\Http\Middleware\EnsureSalonMember;
+use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveCurrentSalon;
@@ -43,6 +44,10 @@ return Application::configure(basePath: dirname(__DIR__))
             at: fn () => [(string) parse_url((string) config('app.url'), PHP_URL_HOST)],
             subdomains: false,
         );
+
+        // The API always answers JSON (also "verify your email" and "sign
+        // in"), whatever the Accept header says.
+        $middleware->api(prepend: [SecurityHeaders::class, ForceJsonResponse::class]);
 
         $middleware->web(append: [
             SecurityHeaders::class,

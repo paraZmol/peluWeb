@@ -46,6 +46,26 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
+    /** Devices that may stay signed in to the API at once; the oldest goes first. */
+    public const int MAX_API_TOKENS = 10;
+
+    /**
+     * An API token stands for a password that was right at the time. Once
+     * the password changes (reset, changed in settings, or replaced when
+     * Google proves who owns the email) or a second factor is turned on,
+     * every token handed out before is void.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (User $user): void {
+            $secondFactorTurnedOn = $user->wasChanged('two_factor_confirmed_at') && $user->two_factor_confirmed_at !== null;
+
+            if ($user->wasChanged('password') || $secondFactorTurnedOn) {
+                $user->tokens()->delete();
+            }
+        });
+    }
+
     /**
      * Mirrors the column defaults so a freshly created instance is never
      * missing these attributes (strict mode would throw on access).

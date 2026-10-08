@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Actions\Booking\RescheduleBooking;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
@@ -17,7 +18,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * A booking as its client sees it. Dates and times are sent already on the
  * salon's clock, so the browser's timezone never moves an appointment.
- * Expects `salon`, `staff` and `services` loaded.
+ * Expects `salon`, `staff` and `services` loaded, and `own_moves_count`
+ * (ClientBookings adds it).
  *
  * @mixin Booking
  */
@@ -68,7 +70,8 @@ class ClientBookingResource extends JsonResource
             'canAttachPhoto' => $isOpen,
             'canCancel' => $isOpen,
             // Moving needs the same notice the salon asks for a cancellation.
-            'canMove' => $isOpen && $hasNotice && $salon->isWritable() && $salon->accepts_online_bookings,
+            'canMove' => $isOpen && $hasNotice && $salon->isWritable() && $salon->accepts_online_bookings
+                && (int) $this->getAttribute('own_moves_count') < RescheduleBooking::MAX_BY_CLIENT,
             // Cancelling now would forfeit the deposit already paid.
             'cancelForfeitsDeposit' => $this->deposit_paid_at !== null && ! $hasNotice,
             'cancelWindowHours' => $salon->cancel_window_hours,

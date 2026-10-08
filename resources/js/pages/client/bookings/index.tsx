@@ -82,7 +82,7 @@ export default function BookingsIndex({ bookings }: Props) {
                         <p className="font-medium">Aún no tienes reservas</p>
                         <p className="max-w-xs text-sm text-balance text-muted-foreground">
                             Abre la página de tu salón y toca "Reservar". Tus
-                            citas aparecerán aquí.
+                            reservas aparecerán aquí.
                         </p>
                     </div>
                 )}
@@ -102,7 +102,7 @@ export default function BookingsIndex({ bookings }: Props) {
                         </span>
                         <span className="min-w-0 flex-1">
                             <span className="block font-medium">
-                                Repetir mi última cita
+                                Repetir mi última reserva
                             </span>
                             <span className="block truncate text-sm text-muted-foreground">
                                 {last.services

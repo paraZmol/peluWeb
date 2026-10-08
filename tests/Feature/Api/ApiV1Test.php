@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Fortify\ResetUserPassword;
 use App\Enums\BookingStatus;
 use App\Enums\ScheduleAccess;
 use App\Models\Booking;
@@ -74,6 +75,59 @@ describe('tokens', function () {
         expect(PersonalAccessToken::query()->count())->toBe(0);
     });
 
+    it('gives no token to an unverified account nor to the platform admin', function () {
+        User::factory()->unverified()->create(['email' => 'nueva@example.com', 'password' => 'clave-segura-123']);
+        User::factory()->create(['email' => 'admin@example.com', 'password' => 'clave-segura-123'])->forceFill(['is_platform_admin' => true])->save();
+
+        $this->postJson('/api/v1/login', ['email' => 'nueva@example.com', 'password' => 'clave-segura-123', 'device_name' => 'x'])->assertJsonValidationErrors('email');
+        $this->postJson('/api/v1/login', ['email' => 'admin@example.com', 'password' => 'clave-segura-123', 'device_name' => 'x'])->assertJsonValidationErrors('email');
+
+        expect(PersonalAccessToken::query()->count())->toBe(0);
+    });
+
+    it('voids every token when the password changes or a second factor is turned on', function () {
+        $this->customer->createToken('Teléfono');
+        $this->customer->createToken('Tablet');
+
+        $this->customer->forceFill(['name' => 'Ana C.'])->save();
+        expect(PersonalAccessToken::query()->count())->toBe(2);
+
+        $this->customer->forceFill(['password' => 'otra-clave-segura-456'])->save();
+        expect(PersonalAccessToken::query()->count())->toBe(0);
+
+        $this->customer->createToken('Teléfono');
+        $this->customer->forceFill(['two_factor_secret' => encrypt('s'), 'two_factor_confirmed_at' => now()])->save();
+        expect(PersonalAccessToken::query()->count())->toBe(0);
+    });
+
+    it('voids the tokens of whoever held an email once its owner resets the password', function () {
+        $token = $this->customer->createToken('Atacante')->plainTextToken;
+
+        app(ResetUserPassword::class)->reset($this->customer, ['password' => 'Nueva-clave-segura-789', 'password_confirmation' => 'Nueva-clave-segura-789']);
+
+        $this->withToken($token)->getJson('/api/v1/me')->assertUnauthorized();
+    });
+
+    it('keeps at most ten devices signed in', function () {
+        foreach (range(1, 12) as $device) {
+            $this->app['cache']->clear();
+            $this->postJson('/api/v1/login', ['email' => 'ana@example.com', 'password' => 'clave-segura-123', 'device_name' => "Equipo {$device}"])->assertCreated();
+        }
+
+        expect(PersonalAccessToken::query()->count())->toBe(10)
+            ->and(PersonalAccessToken::query()->pluck('name'))->not->toContain('Equipo 1')->toContain('Equipo 12');
+    });
+
+    it('slows down guessing one account from many addresses', function () {
+        foreach (range(1, 5) as $attempt) {
+            $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$attempt}"])
+                ->postJson('/api/v1/login', ['email' => 'ana@example.com', 'password' => 'mal', 'device_name' => 'x'])->assertStatus(422);
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.99'])
+            ->postJson('/api/v1/login', ['email' => 'Ana@Example.com', 'password' => 'clave-segura-123', 'device_name' => 'x'])->assertStatus(429);
+    });
+
     it('validates the request and slows down guessing', function () {
         $this->postJson('/api/v1/login', [])->assertStatus(422)->assertJsonValidationErrors(['email', 'password', 'device_name']);
 
@@ -102,6 +156,7 @@ describe('tokens', function () {
         $this->getJson('/api/v1/bookings')->assertUnauthorized();
         $this->postJson('/api/v1/salons/barberia-lucho/bookings', apiBookingPayload())->assertUnauthorized();
         $this->get('/api/v1/bookings')->assertUnauthorized();
+        $this->get('/api/v1/me')->assertUnauthorized()->assertHeader('X-Content-Type-Options', 'nosniff');
 
         $this->actingAs($this->customer, 'web')->getJson('/api/v1/bookings')->assertUnauthorized();
     });
