@@ -360,7 +360,8 @@ describe('weekly schedule', function () {
         $props = $this->get('/s/qa-tres')->inertiaProps();
         $json = json_encode($props, JSON_UNESCAPED_UNICODE);
 
-        expect($props['salon']['team'])->toBe([['name' => 'Visible Ñandú 💈', 'title' => 'Colorista', 'photoUrl' => null]])
+        // The owner's own profile is listed too; the new one is complete and nothing else travels.
+        expect(collect($props['salon']['team'])->firstWhere('name', 'Visible Ñandú 💈'))->toBe(['name' => 'Visible Ñandú 💈', 'title' => 'Colorista', 'photoUrl' => null])
             ->and($json)->not->toContain('Pausada Secreta')->not->toContain($this->owner->email)->not->toContain('access');
     });
 });

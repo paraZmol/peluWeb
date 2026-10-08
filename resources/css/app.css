@@ -322,6 +322,7 @@
         0 40px 80px -24px rgb(11 15 20 / 0.4);
     --dock-shadow: 0 -10px 30px -18px rgb(11 15 20 / 0.25);
     --card-fill: linear-gradient(180deg, var(--surface-2), var(--card));
+    --card-edge: 1px solid var(--border);
     --chip-fill: linear-gradient(180deg, var(--muted), var(--surface-2));
     --chip-edge: 1px solid var(--border);
     --chip-shadow:
@@ -426,6 +427,7 @@
         0 4px 10px rgb(16 24 40 / 0.06), 0 36px 72px -18px rgb(16 24 40 / 0.28);
     --dock-shadow: 0 -10px 30px -18px rgb(16 24 40 / 0.22);
     --card-fill: var(--card);
+    --card-edge: 1px solid var(--border);
     --chip-fill: var(--muted);
     --chip-edge: 1px solid transparent;
     --chip-shadow: none;

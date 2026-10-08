@@ -26,7 +26,7 @@
             }
 
             html.dark {
-                background-color: #121110;
+                background-color: #0b0f14;
             }
         </style>
 

@@ -12,13 +12,32 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
+            // Platform fonts are preloaded. Template fonts (ui-system §3) are
+            // only declared: a browser downloads a @font-face file the first
+            // time some text uses it, so a salon page fetches its own pair.
             fonts: [
                 bunny('Inter', {
-                    weights: [400, 500, 600],
+                    weights: [400, 500, 600, 700, 800],
+                    preload: [{ weight: 400 }, { weight: 500 }, { weight: 600 }],
                 }),
                 bunny('Fraunces', {
                     weights: [500, 600],
                 }),
+                bunny('Bebas Neue', { weights: [400], preload: false }),
+                bunny('Manrope', {
+                    weights: [400, 500, 600, 700, 800],
+                    preload: false,
+                }),
+                bunny('DM Serif Display', {
+                    weights: [400],
+                    styles: ['normal', 'italic'],
+                    preload: false,
+                }),
+                bunny('Plus Jakarta Sans', {
+                    weights: [400, 500, 600, 700, 800],
+                    preload: false,
+                }),
+                bunny('Syne', { weights: [700, 800], preload: false }),
             ],
         }),
         inertia(),
