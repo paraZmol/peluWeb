@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Actions\Salon\ManageSalonPhotos;
 use App\Actions\Salon\UpdateSalonBranding;
 use App\Actions\Staff\UpdateStaffPhoto;
+use App\Enums\BusinessType;
+use App\Enums\Clientele;
 use App\Enums\ServiceCategory;
 use App\Models\Salon;
 use App\Models\SalonMember;
@@ -59,6 +61,8 @@ class E2eSeeder extends Seeder
         $salon = Salon::factory()->ownedBy($owner)->create([
             'name' => 'Estudio Ñusta Barber & Spa',
             'slug' => 'estudio-vitrina',
+            'business_type' => BusinessType::Unisex,
+            'clientele' => Clientele::Everyone,
             'brand_color' => '#1F6F64',
             'description' => 'Cortes, color y cuidado de barba en el corazón de Miraflores. Atención con cita.',
             'address' => 'Av. Larco 1234, int. 2',

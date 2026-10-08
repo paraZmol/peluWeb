@@ -8,6 +8,7 @@ use App\Domain\Schedule\TimeRange;
 use App\Enums\SalonStatus;
 use App\Enums\SalonTheme;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Resources\PublicSalonResource;
 use App\Models\Salon;
 use App\Models\SalonHoliday;
@@ -48,8 +49,15 @@ class SalonPageController extends Controller
             openingHours: $this->openingHours($salon),
         );
 
+        $preview = $this->preview($request, $salon);
+
+        // "Mi salón" shows the preview inside a frame of this same site.
+        if ($preview !== null) {
+            $request->attributes->set(SecurityHeaders::FRAMEABLE_BY_SELF, true);
+        }
+
         return Inertia::render('public/salon', [
-            'salon' => new PublicSalonResource($salon, $content, $this->preview($request, $salon)),
+            'salon' => new PublicSalonResource($salon, $content, $preview),
         ])->withViewData(['meta' => $this->meta($salon)]);
     }
 

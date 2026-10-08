@@ -89,6 +89,16 @@ describe('the public page', function () {
         expect($this->salon->refresh()->theme)->toBe(SalonTheme::Nocturna);
     });
 
+    it('may be framed by this site only while it is a preview', function () {
+        $this->get('/s/estudio-luz')->assertHeader('X-Frame-Options', 'DENY')->assertHeader('Content-Security-Policy', "frame-ancestors 'none'");
+        $this->get(route('salons.show', ['salon' => 'estudio-luz', 'diseno' => 'luminosa']))->assertHeader('X-Frame-Options', 'DENY');
+
+        $this->actingAs($this->owner)->get(route('salons.show', ['salon' => 'estudio-luz', 'diseno' => 'luminosa']))
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('Content-Security-Policy', "frame-ancestors 'self'");
+        $this->actingAs($this->owner)->get('/s/estudio-luz')->assertHeader('X-Frame-Options', 'DENY');
+    });
+
     it('keeps the salon\'s own photos in a preview and ignores an unknown template', function () {
         $photo = new SalonPhoto;
         $photo->forceFill(['salon_id' => $this->salon->id, 'path' => 'salons/x/propia.webp', 'position' => 0])->save();
