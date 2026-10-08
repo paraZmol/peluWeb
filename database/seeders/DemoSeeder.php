@@ -16,11 +16,9 @@ use App\Models\SalonMember;
 use App\Models\Service;
 use App\Models\User;
 use App\Support\CurrentSalon;
+use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 
 /**
  * Realistic demo data for trying the app locally (password: "password").
@@ -34,7 +32,7 @@ class DemoSeeder extends Seeder
     public const string PASSWORD = 'password';
 
     /**
-     * @var list<array{owner: array{name: string, email: string}, salon: array<string, mixed>, color: string, prices: array<string, int>}>
+     * @var list<array{owner: array{name: string, email: string}, salon: array<string, mixed>, color: string, prices: array<string, int>, photos: array{cover: int, gallery: list<array{int, string}>}}>
      */
     private const array SALONS = [
         [
@@ -48,6 +46,7 @@ class DemoSeeder extends Seeder
             ],
             'color' => '#1f1b18',
             'prices' => ['Degradado medio' => 3500, 'Degradado a piel' => 4000, 'Perfilado de barba' => 2000, 'Combo corte + barba' => 5000],
+            'photos' => ['cover' => 1813272, 'gallery' => [[1836983, 'Degradado con diseño'], [2076932, 'Corte clásico a máquina'], [4625648, 'Corte con tijera'], [3998417, 'Perfilado de barba'], [897265, 'Barba con navaja'], [7518728, 'Nuestro local']]],
         ],
         [
             'owner' => ['name' => 'Valeria Rojas', 'email' => 'salon@peluweb.test'],
@@ -60,6 +59,7 @@ class DemoSeeder extends Seeder
             ],
             'color' => '#c2185b',
             'prices' => ['Balayage' => 42000, 'Tinte de raíz' => 9500, 'Corte en capas' => 7000],
+            'photos' => ['cover' => 3993133, 'gallery' => [[3993311, 'Color y brillo'], [2799605, 'Tinte completo'], [6503329, 'Alisado'], [7440133, 'Secado y peinado'], [3065171, 'Ondas para fiesta'], [705255, 'Nuestro salón']]],
         ],
         [
             'owner' => ['name' => 'Jorge Huamán', 'email' => 'unisex@peluweb.test'],
@@ -72,6 +72,7 @@ class DemoSeeder extends Seeder
             ],
             'color' => '#0f766e',
             'prices' => [],
+            'photos' => ['cover' => 705255, 'gallery' => [[7518731, 'Corte de caballero'], [3065170, 'Recogido'], [3356170, 'Corte con tijera'], [1319462, 'Degradado'], [3993312, 'Color'], [2076932, 'Corte a máquina']]],
         ],
         [
             'owner' => ['name' => 'Camila Torres', 'email' => 'unas@peluweb.test'],
@@ -84,6 +85,7 @@ class DemoSeeder extends Seeder
             ],
             'color' => '#6d28d9',
             'prices' => ['Manicure semipermanente' => 4500, 'Pedicure spa' => 7000],
+            'photos' => ['cover' => 3422099, 'gallery' => [[22668324, 'Esmaltado en gel'], [16363470, 'Manicura brillante'], [14267564, 'Limado y forma'], [17056221, 'Pedicura spa'], [19239100, 'Manicura clásica'], [7990099, 'Cuidado de cutículas']]],
         ],
     ];
 
@@ -115,7 +117,7 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * @param  array{owner: array{name: string, email: string}, salon: array<string, mixed>, color: string, prices: array<string, int>}  $demo
+     * @param  array{owner: array{name: string, email: string}, salon: array<string, mixed>, color: string, prices: array<string, int>, photos: array{cover: int, gallery: list<array{int, string}>}}  $demo
      */
     private function salon(array $demo): Salon
     {
@@ -129,11 +131,11 @@ class DemoSeeder extends Seeder
             'description', 'instagram', 'address', 'district', 'city', 'latitude', 'longitude',
         ])->all());
         $this->branding->setColor($salon, $demo['color']);
-        $this->branding->setLogo($salon, $this->image('logo.png', 512, 512, $demo['color']));
-        $this->branding->setCover($salon, $this->image('portada.png', 1600, 900, $demo['color']));
+        $this->branding->setLogo($salon, DemoImages::monogram($data['name'], $demo['color']));
+        $this->branding->setCover($salon, DemoImages::photo($demo['photos']['cover']));
 
-        foreach (range(1, 4) as $number) {
-            $this->photos->add($salon, $this->image("trabajo-{$number}.png", 1200, 1200, $demo['color'], $number), "Trabajo {$number}");
+        foreach ($demo['photos']['gallery'] as [$photoId, $caption]) {
+            $this->photos->add($salon, DemoImages::photo($photoId), $caption);
         }
 
         foreach ($demo['prices'] as $name => $cents) {
@@ -189,31 +191,6 @@ class DemoSeeder extends Seeder
             'phone' => $phone,
             'password' => self::PASSWORD,
         ]);
-    }
-
-    /**
-     * A simple branded placeholder image (diagonal stripes in the salon
-     * color) so pages look like a real salon without bundling photos.
-     */
-    private function image(string $name, int $width, int $height, string $color, int $variant = 0): UploadedFile
-    {
-        $image = (new ImageManager(new Driver))->create($width, $height)->fill('#f4f0eb');
-        $stripe = (int) ($width / 6);
-
-        for ($x = -$height + ($variant * 37) % $stripe; $x < $width; $x += $stripe * 2) {
-            $image->drawPolygon(function ($polygon) use ($x, $height, $stripe, $color): void {
-                $polygon->point($x, $height);
-                $polygon->point($x + $stripe, $height);
-                $polygon->point($x + $stripe + $height, 0);
-                $polygon->point($x + $height, 0);
-                $polygon->background($color);
-            });
-        }
-
-        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'peluweb-demo-'.Str::random(12).'.png';
-        $image->save($path);
-
-        return new UploadedFile($path, $name, 'image/png', null, true);
     }
 
     private function printAccounts(): void

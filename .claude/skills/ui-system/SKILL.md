@@ -5,6 +5,13 @@ description: Sistema de diseño de peluWeb — tokens de color claro/oscuro, mar
 
 # Sistema de diseño
 
+> **En revisión (2026-10-08, paso 4.12 del plan):** la dirección "salón editorial" de abajo
+> (hueso + cobre + Fraunces) queda **descartada para lo público**: el usuario la ve plana y
+> parecida al chat de Claude. Hay tres direcciones nuevas maquetadas en `docs/design/propuestas/`;
+> cuando elija una, `design-director` reescribe esta skill entera. Hasta entonces, para pantallas
+> públicas manda la skill `design-craft` y la maqueta elegida; los tokens de abajo siguen siendo
+> los que existen en `app.css` para los paneles internos.
+
 ## Dirección visual
 "Salón editorial": limpio, cálido y con aire premium, sin recargar. Mucho espacio en blanco,
 fotos del salón como protagonistas, un único color de acento que **pone cada salón**.

@@ -9,6 +9,7 @@ use App\Actions\Staff\AddTimeOff;
 use App\Actions\Staff\LinkStaffProfile;
 use App\Actions\Staff\ReplaceWeeklySchedule;
 use App\Actions\Staff\SaveStaff;
+use App\Actions\Staff\UpdateStaffPhoto;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\ScheduleAccess;
@@ -19,6 +20,7 @@ use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
 use App\Support\CurrentSalon;
+use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
 
 /**
@@ -33,8 +35,17 @@ class DemoScheduleSeeder extends Seeder
 
     private const int SATURDAY = 6;
 
+    /** The portrait of each demo owner's own professional profile, by salon slug. */
+    private const array OWNER_PORTRAITS = [
+        'barberia-don-lucho' => 1836983,
+        'studio-bella' => 3993312,
+        'corte-color-surco' => 7518731,
+        'nails-spa-barranco' => 3422099,
+    ];
+
     public function __construct(
         private readonly SaveStaff $saveStaff,
+        private readonly UpdateStaffPhoto $staffPhoto,
         private readonly LinkStaffProfile $linkStaffProfile,
         private readonly ReplaceWeeklySchedule $replaceSchedule,
         private readonly AddTimeOff $addTimeOff,
@@ -52,6 +63,7 @@ class DemoScheduleSeeder extends Seeder
             // The owner's profile was created together with the salon.
             foreach (Staff::query()->get() as $owner) {
                 $this->schedule($owner, self::MONDAY_TO_SATURDAY, [['09:00', '13:00'], ['15:00', '20:00']]);
+                $this->staffPhoto->handle($owner, DemoImages::portrait(self::OWNER_PORTRAITS[$salon->slug] ?? 7518731));
             }
 
             $this->addHoliday->handle($salon, $salon->localNow()->month(12)->day(25)->toDateString(), 'Navidad');
@@ -73,6 +85,7 @@ class DemoScheduleSeeder extends Seeder
 
         $pedro = $this->linkStaffProfile->handle($salon, User::where('email', 'personal@peluweb.test')->firstOrFail());
         $pedro->update(['title' => 'Fades y barba']);
+        $this->staffPhoto->handle($pedro, DemoImages::portrait(897265));
         $this->schedule($pedro, self::TUESDAY_TO_SATURDAY, [['10:00', '19:00']], [
             ['weekday' => self::SATURDAY, 'start' => '19:00', 'end' => '21:00', 'access' => ScheduleAccess::Vip],
         ]);
@@ -82,9 +95,11 @@ class DemoScheduleSeeder extends Seeder
 
         $kevin = $this->linkStaffProfile->handle($salon, User::where('email', 'aprendiz@peluweb.test')->firstOrFail());
         $kevin->update(['title' => 'Aprendiz']);
+        $this->staffPhoto->handle($kevin, DemoImages::portrait(4625648));
         $this->schedule($kevin, [1, 2, 3, 4, 5], [['14:00', '20:00']]);
 
         $martin = $this->saveStaff->handle($salon, null, ['name' => 'Martín Soto', 'title' => 'Barbero clásico']);
+        $this->staffPhoto->handle($martin, DemoImages::portrait(18483774));
         $this->schedule($martin, [1, 3, 5, self::SATURDAY], [['09:00', '17:00']]);
     }
 

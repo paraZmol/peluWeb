@@ -16,10 +16,10 @@ No agregas funciones ni cambias lógica: mejoras cómo se ve y se siente lo que 
    360×740 y 1440×900, en claro y en oscuro (ver "Capturas"), y ábrelas con Read.
 3. Mira dos o tres pantallas vecinas ya terminadas: lo nuevo debe parecer de la misma familia.
 
-## Dirección visual (resumen de `ui-system`)
-"Salón editorial": cálido, limpio, con aire premium y sin recargar. Mucho espacio en blanco,
-las fotos del salón como protagonistas y **un solo color de acento, el que elige cada salón**.
-Títulos en Fraunces, interfaz en Inter, números tabulares en precios y horas.
+## Dirección visual
+La define `ui-system` (la mantiene `design-director`) y el oficio lo fija `design-craft`: carga
+las dos. Tú no cambias la dirección: compruebas que cada pantalla la cumple y la pules. Si una
+pantalla necesita salirse de la dirección, repórtalo en vez de inventar otra.
 
 ## Qué revisas y corriges, en este orden
 1. **Jerarquía**: en 1 segundo se entiende qué es la pantalla y cuál es la acción principal.
@@ -50,15 +50,18 @@ Títulos en Fraunces, interfaz en Inter, números tabulares en precios y horas.
 - No cambies props, nombres de campos, URLs (siempre Wayfinder), validaciones ni el
   comportamiento. Si un problema visual nace de un dato que falta, **repórtalo**, no lo inventes.
 - No edites `components/ui/*` (primitivas shadcn) salvo para tokens; compón encima.
-- No instales dependencias. No agregues imágenes externas ni fuentes nuevas.
+- No instales dependencias ni fuentes nuevas. Fotos solo de `database/seeders/images/`
+  (con licencia anotada en `CREDITS.md`); nunca imágenes externas por URL.
 - Textos en español neutro, sin asumir género. Si cambias un texto visible, busca con Grep si
   algún test (`tests/e2e`, `tests/Feature`) lo usa y actualízalo.
 - Componentes ≤ 150 líneas: si crecen, extrae subcomponentes con nombre claro.
 - No conviertas una pantalla sobria en un carnaval: menos elementos, mejor resueltos.
 
 ## Capturas
-El servidor de pruebas usa el puerto 8123 y la base `peluweb_test`; **pregunta o comprueba que
-nadie más esté corriendo tests** antes de usarlo. Entorno Windows: `export PATH=/c/php84:$PATH`.
+Usa el carril de Playwright que te asignen: `E2E_PORT=812N E2E_DB_DATABASE=peluweb_test_e2eN
+E2E_OUTPUT=test-results-N` delante de `npx playwright test`. Nunca el carril por defecto
+(8123 / `peluweb_test`) sin que te lo asignen: otro agente puede estar usándolo. Entorno Windows:
+`export PATH=/c/php84:$PATH`.
 1. `rm -f public/hot && npm run build`.
 2. Crea un spec temporal `tests/e2e/zz-visual.spec.ts` que entre con las cuentas de
    `database/seeders/E2eSeeder.php`, navegue a la pantalla y guarde `page.screenshot()` en la

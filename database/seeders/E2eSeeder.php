@@ -2,12 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Salon\ManageSalonPhotos;
+use App\Actions\Salon\UpdateSalonBranding;
+use App\Actions\Staff\UpdateStaffPhoto;
 use App\Enums\ServiceCategory;
 use App\Models\Salon;
 use App\Models\SalonMember;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
+use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
 
 /**
@@ -69,7 +73,8 @@ class E2eSeeder extends Seeder
             ->create(['name' => 'José Antonio Fernández', 'title' => 'Barbero sénior']);
         $colorist = Staff::factory()->for($salon)->working($everyDay, '09:00', '20:00')
             ->create(['name' => 'Lucía Ramírez', 'title' => 'Colorista']);
-        Staff::factory()->for($salon)->linkedTo($owner)->create(['name' => 'Valeria Vitrina']);
+        $valeria = Staff::factory()->for($salon)->linkedTo($owner)->create(['name' => 'Valeria Vitrina']);
+        $this->showcasePhotos($salon, [$barber, 18483774], [$colorist, 3992875], [$valeria, 3993312]);
 
         $catalog = [
             [ServiceCategory::MenCut, 'Corte clásico', 3500, 30, [$barber, $colorist]],
@@ -112,5 +117,25 @@ class E2eSeeder extends Seeder
             'is_addon' => true,
         ]);
         $barber->services()->attach($wash->id);
+    }
+
+    /**
+     * Real photos, through the real image pipeline, so the showcase salon
+     * looks like a salon and not like a form.
+     *
+     * @param  array{Staff, int}  ...$portraits  professional and the id of their portrait
+     */
+    private function showcasePhotos(Salon $salon, array ...$portraits): void
+    {
+        app(UpdateSalonBranding::class)->setLogo($salon, DemoImages::monogram($salon->name, (string) $salon->brand_color));
+        app(UpdateSalonBranding::class)->setCover($salon, DemoImages::photo(7518728));
+
+        foreach ([[2076932, 'Corte clásico'], [3998417, 'Perfilado de barba'], [3993311, 'Color'], [3065171, 'Peinado']] as [$photoId, $caption]) {
+            app(ManageSalonPhotos::class)->add($salon, DemoImages::photo($photoId), $caption);
+        }
+
+        foreach ($portraits as [$person, $photoId]) {
+            app(UpdateStaffPhoto::class)->handle($person, DemoImages::portrait($photoId));
+        }
     }
 }
