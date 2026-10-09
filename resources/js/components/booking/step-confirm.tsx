@@ -115,7 +115,7 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                     id="booking-note"
                     className="min-h-20"
                     maxLength={255}
-                    placeholder="Ej. quiero un degradado bajo"
+                    placeholder="Ej. tengo el cuero cabelludo sensible"
                     value={wizard.note}
                     onChange={(e) => wizard.setNote(e.target.value)}
                 />

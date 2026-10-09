@@ -39,7 +39,7 @@ test.describe('Diseño de tu página (Mi salón)', () => {
         // The radio is visually hidden: people tap the card, so does the test.
         await section.getByText(otherLabel, { exact: true }).click();
         await expect(section.getByRole('status')).toContainText(
-            'Aún no lo guardas',
+            'Cambios sin guardar',
         );
         await section.getByRole('button', { name: 'Guardar diseño' }).click();
         await expect(page.getByText('Diseño guardado.')).toBeVisible();

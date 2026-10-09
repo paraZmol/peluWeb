@@ -41,7 +41,7 @@ export function ServiceOption({ service, wizard, disabled }: Props) {
                 aria-pressed={selected}
                 disabled={disabled}
                 onClick={() => wizard.toggleService(service)}
-                className="flex min-h-18 w-full items-center gap-3.5 rounded-xl p-4 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 disabled:opacity-50"
+                className="flex min-h-18 w-full items-center gap-3.5 rounded-xl p-4 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring disabled:opacity-50"
             >
                 <span
                     aria-hidden
@@ -99,7 +99,7 @@ export function ServiceOption({ service, wizard, disabled }: Props) {
                                 wizard.chooseVariant(service.id, variant.id)
                             }
                             className={cn(
-                                'min-h-11 rounded-full px-4 text-sm font-medium tabular-nums outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60',
+                                'min-h-11 rounded-full px-4 text-sm font-medium tabular-nums outline-none focus-visible:ring-[3px] focus-visible:ring-ring',
                                 variantId === variant.id
                                     ? 'skin-primary'
                                     : 'skin-chip',

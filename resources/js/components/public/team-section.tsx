@@ -2,8 +2,15 @@ import { useSalonTheme } from '@/components/salon/brand-theme';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from './section-heading';
 import { AvatarCard } from './staff-card/avatar-card';
+import { CaptionedPortraitCard } from './staff-card/captioned-portrait-card';
 import { PortraitCard } from './staff-card/portrait-card';
 import type { PublicTeamMember } from './types';
+
+const STAFF_CARDS = {
+    portrait: PortraitCard,
+    'captioned-portrait': CaptionedPortraitCard,
+    avatar: AvatarCard,
+};
 
 /** Up to this many fit side by side on a phone; more scroll sideways. */
 const SIDE_BY_SIDE = 3;
@@ -11,7 +18,7 @@ const SIDE_BY_SIDE = 3;
 /** "Quién te atiende": the active team, in the template's card. */
 export function TeamSection({ team }: { team: PublicTeamMember[] }) {
     const { layout } = useSalonTheme();
-    const Card = layout.staffCard === 'portrait' ? PortraitCard : AvatarCard;
+    const Card = STAFF_CARDS[layout.staffCard];
     const scrolls = team.length > SIDE_BY_SIDE;
 
     if (team.length === 0) {

@@ -36,7 +36,7 @@ export function ThemeSection({ salon, themes, businessTypes }: Props) {
         <SettingsSection
             id="diseno"
             title="Diseño de tu página"
-            description="Tu página, tus reservas y Mis reservas de tus clientes usan este diseño. Si aún no tienes fotos, la vista previa muestra fotos de muestra."
+            description="Así verán tu página quienes quieran reservar contigo. Si aún no tienes fotos, la vista previa usa fotos de muestra."
         >
             <Form
                 {...update.form()}
@@ -68,10 +68,23 @@ export function ThemeSection({ salon, themes, businessTypes }: Props) {
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                             <p
                                 role="status"
-                                className="text-sm text-muted-foreground empty:hidden"
+                                className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm empty:hidden"
                             >
-                                {selected !== salon.theme &&
-                                    'Aún no lo guardas: tus clientes siguen viendo el diseño anterior.'}
+                                {selected !== salon.theme && (
+                                    <>
+                                        <span
+                                            aria-hidden
+                                            className="mt-1.5 size-2 shrink-0 rounded-full bg-warning"
+                                        />
+                                        <span>
+                                            <strong className="font-semibold">
+                                                Cambios sin guardar.
+                                            </strong>{' '}
+                                            Tus clientes siguen viendo el diseño
+                                            anterior.
+                                        </span>
+                                    </>
+                                )}
                             </p>
                             <Button
                                 type="submit"

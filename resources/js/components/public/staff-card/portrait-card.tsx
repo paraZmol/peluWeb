@@ -3,8 +3,8 @@ import type { PublicTeamMember } from '../types';
 import { StaffPhoto } from './staff-photo';
 
 /**
- * Nocturna and Vibrante: a 4:5 portrait (an arch in Vibrante) with the name
- * in the display face on a veil, and the role under it.
+ * Nocturna: a 4:5 portrait with the name in the display face on a veil,
+ * and the role under it.
  */
 export function PortraitCard({ person }: { person: PublicTeamMember }) {
     return (

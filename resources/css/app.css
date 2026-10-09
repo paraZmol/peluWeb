@@ -722,6 +722,9 @@
 
     [data-theme='vibrante'] {
         --primary-shadow: 3px 3px 0 0 var(--hard);
+        /* Solid dock: over the brand block a see-through one turns the color
+           of the brand, and a very dark brand's button would sink into it. */
+        --dock-fill: var(--background);
     }
 
     :is(.dark [data-theme='vibrante'], [data-theme='vibrante'].dark) {

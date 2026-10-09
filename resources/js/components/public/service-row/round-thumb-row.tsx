@@ -7,11 +7,13 @@ import { ServiceExtras } from './service-extras';
 
 /**
  * Vibrante: each service is its own card, with a round thumbnail, the
- * duration, the price and a soft "Reservar" pill.
+ * duration, the price and a soft "Reservar" pill. The pill's link stretches
+ * over the whole card (one big target, one tab stop); the options toggle
+ * stays above it.
  */
 export function RoundThumbRow({ service, bookingUrl, group }: ServiceRowProps) {
     return (
-        <li className="flex flex-col gap-2 rounded-xl p-3 pr-4 skin-card">
+        <li className="relative flex flex-col gap-2 rounded-xl p-3 pr-4 skin-card">
             <div className="flex items-center gap-3.5">
                 <CategoryIcon group={group} />
                 <div className="min-w-0 flex-1">
@@ -35,7 +37,7 @@ export function RoundThumbRow({ service, bookingUrl, group }: ServiceRowProps) {
                     <ServiceBookLink
                         service={service}
                         bookingUrl={bookingUrl}
-                        className="inline-flex h-9 items-center gap-1 rounded-full bg-brand-soft px-3 text-sm font-semibold text-brand-text outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60"
+                        className="inline-flex h-11 items-center gap-1 rounded-full bg-brand-soft px-4 text-sm font-semibold text-brand-text outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring"
                     >
                         Reservar <ArrowRight className="size-4" aria-hidden />
                     </ServiceBookLink>
@@ -50,7 +52,9 @@ export function RoundThumbRow({ service, bookingUrl, group }: ServiceRowProps) {
                             {service.description}
                         </p>
                     )}
-                    <ServiceExtras service={service} />
+                    <div className="relative z-10 w-fit max-w-full empty:hidden">
+                        <ServiceExtras service={service} />
+                    </div>
                 </div>
             )}
         </li>

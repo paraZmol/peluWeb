@@ -25,7 +25,7 @@ export function ServiceExtras({ service }: { service: PublicService }) {
                 <>
                     <button
                         type="button"
-                        className="-ml-1 inline-flex h-11 w-fit items-center gap-1 rounded-full px-1 text-sm font-semibold text-brand-text outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60"
+                        className="-ml-1 inline-flex h-11 w-fit items-center gap-1 rounded-full px-1 text-sm font-semibold text-brand-text outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
                         aria-expanded={isOpen}
                         aria-controls={variantsId}
                         onClick={() => setIsOpen((open) => !open)}

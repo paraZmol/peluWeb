@@ -71,6 +71,8 @@ export function StepTime({ days, wizard, availability }: Props) {
                 isLoading={isLoading}
                 retry={retry}
                 onPick={wizard.chooseSlot}
+                // Back from the summary: the time picked stays marked.
+                selected={wizard.slot?.start ?? null}
                 empty={
                     <>
                         <span>

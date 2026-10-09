@@ -31,7 +31,7 @@ export function StepStaff({ wizard }: Props) {
             <button
                 type="button"
                 onClick={() => wizard.chooseStaff(staffId)}
-                className="flex min-h-22 w-full items-center gap-4 rounded-xl p-3 pr-4 text-left skin-card transition-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:scale-[0.98]"
+                className="flex min-h-22 w-full items-center gap-4 rounded-xl p-3 pr-4 text-left skin-card transition-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring active:scale-[0.98]"
             >
                 {portrait}
                 <span className="min-w-0 flex-1">

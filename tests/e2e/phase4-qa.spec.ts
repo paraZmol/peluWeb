@@ -32,7 +32,17 @@ async function wizardToLastStep(page: Page, time: string, dayIndex = 1) {
     await page.getByRole('button', { name: /Siempre Abierto/ }).click();
     await expect(page.getByRole('heading', { name: '¿Cuándo?' })).toBeVisible();
     await page.getByRole('radio').nth(dayIndex).click();
-    await page.getByRole('button', { name: time, exact: true }).click();
+    // Each period shows its first times; the rest are one tap away (when
+    // the afternoon is long enough to be folded).
+    const slot = page.getByRole('button', { name: time, exact: true });
+    const more = page.getByRole('button', {
+        name: 'Ver más horarios de la tarde',
+    });
+    await expect(slot.or(more).first()).toBeVisible();
+    if (!(await slot.isVisible())) {
+        await more.click();
+    }
+    await slot.click();
     await expect(
         page.getByRole('heading', { name: '¿Para quién?' }),
     ).toBeVisible();

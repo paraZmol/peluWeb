@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
-import type { SalonTheme } from '@/types';
+import type { BrandTokens, SalonTheme } from '@/types';
 import { useSalonTheme } from './brand-theme';
 import { ALWAYS_DARK_THEMES } from './salon-themes';
 
@@ -11,17 +11,13 @@ type PortalThemeProps = {
 };
 
 /**
- * Dialogs and sheets render in `body`, outside the page's BrandTheme, so
- * they would fall back to the platform's look (and, under a template that
- * is always dark, to light surfaces). React context does cross portals:
- * spread these props on the portal's own container (`DialogContent`) and it
- * wears the page's template, brand and forced dark mode — its background,
- * border and close button included. Mirrors what BrandTheme puts on its
- * container; merge `className` with `cn`.
+ * What BrandTheme puts on its container, as props for an element that
+ * lives outside it: template, brand and forced dark mode.
  */
-export function usePortalTheme(): PortalThemeProps {
-    const { brand, theme } = useSalonTheme();
-
+export function templateProps(
+    theme: SalonTheme,
+    brand: BrandTokens | null,
+): PortalThemeProps {
     return {
         'data-theme': theme,
         className: cn(
@@ -38,4 +34,18 @@ export function usePortalTheme(): PortalThemeProps {
               } as CSSProperties)
             : undefined,
     };
+}
+
+/**
+ * Dialogs and sheets render in `body`, outside the page's BrandTheme, so
+ * they would fall back to the platform's look (and, under a template that
+ * is always dark, to light surfaces). React context does cross portals:
+ * spread these props on the portal's own container (`DialogContent`) and it
+ * wears the page's template, brand and forced dark mode — its background,
+ * border and close button included. Merge `className` with `cn`.
+ */
+export function usePortalTheme(): PortalThemeProps {
+    const { brand, theme } = useSalonTheme();
+
+    return templateProps(theme, brand);
 }

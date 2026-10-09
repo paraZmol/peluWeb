@@ -36,18 +36,22 @@ test.describe('Plantillas por rol (4.12 d)', () => {
             await chooseTheme(page, theme);
             await page.reload();
             await expect(
-                page
-                    .locator('#diseno')
-                    .getByRole('radio', { name: new RegExp(`^${LABEL[theme]}`) }),
+                page.locator('#diseno').getByRole('radio', {
+                    name: new RegExp(`^${LABEL[theme]}`),
+                }),
             ).toBeChecked();
 
             // Visitor: the page uses it, and the query cannot change it.
             await page.context().clearCookies();
             await page.goto(`/s/${SLUG}`);
             await expectTemplate(page, theme);
-            await expect(page.getByRole('heading', { level: 1 })).toContainText('Estudio Ñusta');
+            await expect(page.getByRole('heading', { level: 1 })).toContainText(
+                'Estudio Ñusta',
+            );
             await expectNoHorizontalScroll(page);
-            await page.goto(`/s/${SLUG}?diseno=${theme === 'vibrante' ? 'luminosa' : 'vibrante'}&muestra=1`);
+            await page.goto(
+                `/s/${SLUG}?diseno=${theme === 'vibrante' ? 'luminosa' : 'vibrante'}&muestra=1`,
+            );
             await expectTemplate(page, theme);
             await expect(page.getByText('Vista previa')).toHaveCount(0);
 
@@ -61,7 +65,9 @@ test.describe('Plantillas por rol (4.12 d)', () => {
             await chooseUntilConfirm(page);
             await expectTemplate(page, theme);
             await expectNoHorizontalScroll(page);
-            const confirm = page.getByRole('button', { name: 'Confirmar reserva' });
+            const confirm = page.getByRole('button', {
+                name: 'Confirmar reserva',
+            });
             await expect(confirm).toBeInViewport();
             await expect(confirm).toBeEnabled();
             await page.screenshot({
@@ -79,10 +85,12 @@ test.describe('Plantillas por rol (4.12 d)', () => {
             });
 
             await page.goto('/mis-reservas');
-            await expect(page.getByText('Estudio Ñusta Barber & Spa').first()).toBeVisible();
+            await expect(page.getByText('Estudio Ñusta').first()).toBeVisible();
             const seen = await page
                 .locator('[data-theme]')
-                .evaluateAll((els) => els.map((el) => el.getAttribute('data-theme')));
+                .evaluateAll((els) =>
+                    els.map((el) => el.getAttribute('data-theme')),
+                );
             expect(seen, 'tarjetas de Mis reservas').toContain(theme);
             await expectNoHorizontalScroll(page);
             await page.screenshot({
@@ -92,12 +100,18 @@ test.describe('Plantillas por rol (4.12 d)', () => {
 
             // Cleanup: the dialog of cancelling also has to wear the template.
             await page.goto(`/mis-reservas/${code}`);
-            await page.getByRole('button', { name: 'Cancelar reserva' }).click();
-            const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
+            await page
+                .getByRole('button', { name: 'Cancelar reserva' })
+                .click();
+            const dialog = page
+                .getByRole('alertdialog')
+                .or(page.getByRole('dialog'));
             await expect(dialog.first()).toBeVisible();
             await expect(dialog.first()).toHaveAttribute('data-theme', theme);
             await page.getByRole('button', { name: 'Sí, cancelar' }).click();
-            await expect(page.getByText('Cancelada', { exact: true })).toBeVisible();
+            await expect(
+                page.getByText('Cancelada', { exact: true }),
+            ).toBeVisible();
             assertNoErrors();
             void isMobile;
         });
@@ -122,33 +136,53 @@ test.describe('Nocturna siempre oscura; las demás siguen al visitante', () => {
             await page.goto('/s/salon-uno/reservar');
             await page.evaluate(() => window.sessionStorage.clear());
             await page.goto('/s/salon-uno/reservar');
-            await chooseUntilConfirm(page, /Corte de prueba/, /Siempre Abierto/, 3);
-            expect(await lightSurfaces(page), 'reserva (confirmar)').toEqual([]);
+            await chooseUntilConfirm(
+                page,
+                /Corte de prueba/,
+                /Siempre Abierto/,
+                3,
+            );
+            expect(await lightSurfaces(page), 'reserva (confirmar)').toEqual(
+                [],
+            );
 
             await login(page, client.email, client.password);
             await expect(page).toHaveURL(/dashboard$/);
             await page.goto('/s/salon-uno/reservar');
             await page.evaluate(() => window.sessionStorage.clear());
             await page.goto('/s/salon-uno/reservar');
-            await chooseUntilConfirm(page, /Corte de prueba/, /Siempre Abierto/, 3);
-            await page.getByRole('button', { name: 'Confirmar reserva' }).click();
+            await chooseUntilConfirm(
+                page,
+                /Corte de prueba/,
+                /Siempre Abierto/,
+                3,
+            );
+            await page
+                .getByRole('button', { name: 'Confirmar reserva' })
+                .click();
             await expect(page).toHaveURL(/\/mis-reservas\/[A-Z0-9]{8}$/);
             const code = page.url().split('/').pop();
             await page.waitForLoadState('networkidle');
             expect(await isDark(page), 'detalle oscuro').toBe(true);
-            expect(await lightSurfaces(page), 'Mis reservas (detalle)').toEqual([]);
+            expect(await lightSurfaces(page), 'Mis reservas (detalle)').toEqual(
+                [],
+            );
             await page.screenshot({
                 path: `storage/app/shots/qa/nocturna-detalle-${scheme}-${testInfo.project.name}.png`,
                 fullPage: true,
             });
 
             // Dialog: change day/time.
-            await page.getByRole('button', { name: 'Cambiar día u hora' }).click();
+            await page
+                .getByRole('button', { name: 'Cambiar día u hora' })
+                .click();
             const move = page.getByRole('dialog');
             await expect(move).toBeVisible();
             await expect(move).toHaveAttribute('data-theme', 'nocturna');
             await page.waitForTimeout(600);
-            expect(await lightSurfaces(page, move), 'diálogo de mover').toEqual([]);
+            expect(await lightSurfaces(page, move), 'diálogo de mover').toEqual(
+                [],
+            );
             await page.screenshot({
                 path: `storage/app/shots/qa/nocturna-mover-${scheme}-${testInfo.project.name}.png`,
             });
@@ -164,20 +198,31 @@ test.describe('Nocturna siempre oscura; las demás siguen al visitante', () => {
                     'base64',
                 ),
             });
-            await expect(page.getByAltText('Foto de referencia de tu estilo')).toBeVisible();
+            await expect(
+                page.getByAltText('Foto de referencia de tu estilo'),
+            ).toBeVisible();
             expect(await lightSurfaces(page), 'foto de referencia').toEqual([]);
 
             // Dialog: cancel.
-            await page.getByRole('button', { name: 'Cancelar reserva' }).click();
-            const cancel = page.getByRole('alertdialog').or(page.getByRole('dialog'));
+            await page
+                .getByRole('button', { name: 'Cancelar reserva' })
+                .click();
+            const cancel = page
+                .getByRole('alertdialog')
+                .or(page.getByRole('dialog'));
             await expect(cancel.first()).toBeVisible();
             await page.waitForTimeout(400);
-            expect(await lightSurfaces(page, cancel.first()), 'diálogo de cancelar').toEqual([]);
+            expect(
+                await lightSurfaces(page, cancel.first()),
+                'diálogo de cancelar',
+            ).toEqual([]);
             await page.screenshot({
                 path: `storage/app/shots/qa/nocturna-cancelar-${scheme}-${testInfo.project.name}.png`,
             });
             await page.getByRole('button', { name: 'Sí, cancelar' }).click();
-            await expect(page.getByText('Cancelada', { exact: true })).toBeVisible();
+            await expect(
+                page.getByText('Cancelada', { exact: true }),
+            ).toBeVisible();
 
             // The list: the card is dark even though the page around it is the platform's.
             await page.goto('/mis-reservas');

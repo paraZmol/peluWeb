@@ -14,7 +14,12 @@ export const LABEL: Record<Theme, string> = {
     vibrante: 'Vibrante',
 };
 // Nocturna goes last: it is the salon's original template.
-export const THEMES: Theme[] = ['vibrante', 'luminosa', 'editorial', 'nocturna'];
+export const THEMES: Theme[] = [
+    'vibrante',
+    'luminosa',
+    'editorial',
+    'nocturna',
+];
 
 export async function chooseTheme(page: Page, theme: Theme) {
     await page.goto('/mi-salon');
@@ -33,7 +38,9 @@ export async function chooseTheme(page: Page, theme: Theme) {
 
 /** Every element that declares a template wears the expected one. */
 export async function expectTemplate(page: Page, theme: Theme) {
-    await expect(page.locator(`[data-theme="${theme}"]`).first()).toBeAttached();
+    await expect(
+        page.locator(`[data-theme="${theme}"]`).first(),
+    ).toBeAttached();
     // The signed-in shell (app layout) wraps the page in the platform's look:
     // an element that contains the salon's template is that wrapper, not a leak.
     const foreign = await page
@@ -44,7 +51,9 @@ export async function expectTemplate(page: Page, theme: Theme) {
                     .filter(
                         (element) =>
                             element.getAttribute('data-theme') !== expected &&
-                            element.querySelector(`[data-theme="${expected}"]`) === null,
+                            element.querySelector(
+                                `[data-theme="${expected}"]`,
+                            ) === null,
                     )
                     .map((element) => element.getAttribute('data-theme')),
             theme,
@@ -66,7 +75,10 @@ export async function expectNoHorizontalScroll(page: Page) {
  * light" inside a page that must be dark. Images, frames (the Google map is
  * light by decision) and tiny dots are ignored.
  */
-export async function lightSurfaces(page: Page, scope?: Locator): Promise<string[]> {
+export async function lightSurfaces(
+    page: Page,
+    scope?: Locator,
+): Promise<string[]> {
     const handle = await (
         scope ?? page.locator('[data-theme="nocturna"]').first()
     ).elementHandle();
@@ -77,7 +89,10 @@ export async function lightSurfaces(page: Page, scope?: Locator): Promise<string
             if (!match) {
                 return null;
             }
-            const [r, g, b, a = 1] = match[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+            const [r, g, b, a = 1] = match[1]
+                .split(/[ ,/]+/)
+                .filter(Boolean)
+                .map(Number);
             if (a < 0.6) {
                 return null;
             }
@@ -85,13 +100,19 @@ export async function lightSurfaces(page: Page, scope?: Locator): Promise<string
                 const c = value / 255;
                 return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
             };
-            return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+            return (
+                0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+            );
         };
         const found: string[] = [];
         const base = (root as Element | null) ?? document.documentElement;
         const all = [base, ...Array.from(base.querySelectorAll('*'))];
         for (const element of all) {
-            if (element.closest('iframe, img, svg, video, canvas, [aria-hidden="true"]')) {
+            if (
+                element.closest(
+                    'iframe, img, svg, video, canvas, [aria-hidden="true"]',
+                )
+            ) {
                 continue;
             }
             const rect = element.getBoundingClientRect();
@@ -106,8 +127,13 @@ export async function lightSurfaces(page: Page, scope?: Locator): Promise<string
             }
             const light = luminance(style.backgroundColor);
             if (light !== null && light > 0.6) {
-                const classes = (element.getAttribute('class') ?? '').slice(0, 70);
-                found.push(`${element.tagName.toLowerCase()}.${classes} ${style.backgroundColor}`);
+                const classes = (element.getAttribute('class') ?? '').slice(
+                    0,
+                    70,
+                );
+                found.push(
+                    `${element.tagName.toLowerCase()}.${classes} ${style.backgroundColor}`,
+                );
             }
         }
         return found;

@@ -203,7 +203,8 @@ app). Ojo: la variante `dark:` es `&:is(.dark *)`, así que no se aplica al prop
 | `serviceRow` | `list` | filas en una `skin-card` por grupo: nombre, precio `tabular-nums`, duración y botón circular "Reservar" | nocturna, editorial |
 | | `photo-card` | tarjetas 4:5 con foto, sticker de precio y duración; la primera del grupo destacada a 16:10 a todo el ancho; chips de filtro por grupo arriba | luminosa |
 | | `round-thumb` | tarjeta `skin-card` con miniatura redonda 48 px, nombre, duración, precio y "Reservar" en píldora `bg-brand-soft` | vibrante |
-| `staffCard` | `portrait` | retrato 4:5 (`rounded-portrait`) con nombre display; Nocturna con velo y nombre encima, Vibrante en arco con nombre debajo | nocturna, vibrante |
+| `staffCard` | `portrait` | retrato 4:5 (`rounded-portrait`) con velo y nombre display encima | nocturna |
+| | `captioned-portrait` | retrato en arco con nombre (`font-sans` 16 px negrita) y cargo debajo de la foto | vibrante |
 | | `avatar` | foto 1:1 (`rounded-portrait`) en tarjeta con nombre y cargo debajo | luminosa, editorial |
 | `highlight` | `outline` | "Hoy"/elegido con `border-brand-line` + `bg-brand-soft` | nocturna |
 | | `soft` | `bg-brand-soft` + `text-brand-text` | luminosa, editorial |

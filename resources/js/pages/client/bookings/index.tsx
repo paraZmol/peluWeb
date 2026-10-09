@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { CalendarDays, ChevronRight, Repeat } from 'lucide-react';
+import { BookAgainLink } from '@/components/booking/book-again-link';
 import { ClientBookingCard } from '@/components/booking/client-booking-card';
 import type { ClientBooking } from '@/components/booking/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
@@ -8,12 +9,17 @@ import { create as bookAgain } from '@/routes/salons/booking';
 
 type Props = { bookings: ClientBooking[] };
 
+/** With this few bookings the list offers the way to book another one. */
+const FEW_BOOKINGS = 3;
+/** Salons offered for it: the most recent ones. */
+const SALONS_TO_OFFER = 2;
+
 const SECTION_TITLE =
     'font-sans text-xs font-bold tracking-[.16em] text-muted-foreground uppercase';
 
 function BookingList({ bookings }: Props) {
     return (
-        <ul className="grid gap-3 lg:grid-cols-2">
+        <ul className="grid gap-4 lg:grid-cols-2 lg:gap-5">
             {bookings.map((booking) => (
                 <li key={booking.code} className="min-w-0">
                     <ClientBookingCard booking={booking} />
@@ -31,7 +37,7 @@ function RepeatLast({ booking }: { booking: ClientBooking }) {
                 href={bookAgain(booking.salon.slug, {
                     query: { repetir: booking.code },
                 })}
-                className="flex min-h-18 items-center gap-4 rounded-xl p-4 skin-raised transition-transform duration-150 outline-none hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-ring/60"
+                className="flex min-h-18 items-center gap-4 rounded-xl p-4 skin-raised transition-transform duration-150 outline-none hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-ring"
             >
                 <span
                     aria-hidden
@@ -67,6 +73,11 @@ export default function BookingsIndex({ bookings }: Props) {
     const past = bookings.filter((booking) => !isActive(booking));
     // The newest visit that actually happened.
     const last = past.find((booking) => booking.status === 'completed');
+    const salons = [
+        ...new Map(
+            bookings.map((booking) => [booking.salon.slug, booking.salon]),
+        ).values(),
+    ].slice(0, SALONS_TO_OFFER);
 
     return (
         <>
@@ -109,6 +120,16 @@ export default function BookingsIndex({ bookings }: Props) {
                         <h2 className={SECTION_TITLE}>Anteriores</h2>
                         <BookingList bookings={past} />
                     </section>
+                )}
+
+                {bookings.length > 0 && bookings.length <= FEW_BOOKINGS && (
+                    <ul className="grid gap-3 lg:grid-cols-2 lg:gap-5">
+                        {salons.map((salon) => (
+                            <li key={salon.slug} className="min-w-0">
+                                <BookAgainLink salon={salon} />
+                            </li>
+                        ))}
+                    </ul>
                 )}
             </div>
         </>

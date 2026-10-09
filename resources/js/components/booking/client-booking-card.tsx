@@ -18,7 +18,7 @@ export function ClientBookingCard({ booking }: { booking: ClientBooking }) {
         <BrandTheme brand={salon.brand} theme={salon.theme} className="h-full">
             <Link
                 href={show(booking.code)}
-                className="flex h-full items-start gap-4 rounded-xl p-4 skin-card transition-transform duration-150 outline-none hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-ring/60 sm:p-5"
+                className="flex h-full items-start gap-4 rounded-xl p-4 skin-card transition-transform duration-150 outline-none hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-ring sm:p-5"
             >
                 {/* The payload has no logo yet: the salon's initials on its color. */}
                 <SalonMark name={salon.name} logoUrl={null} />

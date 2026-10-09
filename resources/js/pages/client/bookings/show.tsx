@@ -8,6 +8,7 @@ import { ReferencePhoto } from '@/components/booking/reference-photo';
 import type { BookingDay, ClientBooking } from '@/components/booking/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
+import { usePageTemplate } from '@/hooks/use-page-template';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { cancel, index } from '@/routes/bookings';
 
@@ -22,6 +23,8 @@ export default function BookingShow({ booking, days }: Props) {
     const isActive =
         booking.isUpcoming &&
         (booking.status === 'confirmed' || booking.status === 'pending');
+
+    usePageTemplate(salon);
 
     return (
         <BrandTheme

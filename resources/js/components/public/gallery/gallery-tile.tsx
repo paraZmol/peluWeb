@@ -14,7 +14,7 @@ export function GalleryTile({ photo, alt, more, onOpen }: Props) {
         <button
             type="button"
             onClick={onOpen}
-            className="group block size-full rounded-[inherit] text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60"
+            className="group block size-full rounded-[inherit] text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
             aria-label={
                 more > 0 ? `Ver las ${more} fotos más` : `Ampliar: ${alt}`
             }

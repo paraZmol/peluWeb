@@ -59,12 +59,12 @@ class E2eSeeder extends Seeder
     {
         $owner = User::factory()->create(['name' => 'Valeria Vitrina', 'email' => 'vitrina@example.com']);
         $salon = Salon::factory()->ownedBy($owner)->create([
-            'name' => 'Estudio Ñusta Barber & Spa',
+            'name' => 'Estudio Ñusta',
             'slug' => 'estudio-vitrina',
             'business_type' => BusinessType::Unisex,
             'clientele' => Clientele::Everyone,
             'brand_color' => '#1F6F64',
-            'description' => 'Cortes, color y cuidado de barba en el corazón de Miraflores. Atención con cita.',
+            'description' => 'Cortes, color y peinados para todo público en el corazón de Miraflores. Atención con cita.',
             'address' => 'Av. Larco 1234, int. 2',
             'district' => 'Miraflores',
             'city' => 'Lima',
@@ -73,7 +73,7 @@ class E2eSeeder extends Seeder
         ]);
 
         $everyDay = [1, 2, 3, 4, 5, 6, 7];
-        $barber = Staff::factory()->for($salon)->working($everyDay, '00:00', '23:55')
+        $barber = Staff::factory()->for($salon)->working($everyDay, '09:00', '20:00')
             ->create(['name' => 'José Antonio Fernández', 'title' => 'Barbero sénior']);
         $colorist = Staff::factory()->for($salon)->working($everyDay, '09:00', '20:00')
             ->create(['name' => 'Lucía Ramírez', 'title' => 'Colorista']);
@@ -132,9 +132,9 @@ class E2eSeeder extends Seeder
     private function showcasePhotos(Salon $salon, array ...$portraits): void
     {
         app(UpdateSalonBranding::class)->setLogo($salon, DemoImages::monogram($salon->name, (string) $salon->brand_color));
-        app(UpdateSalonBranding::class)->setCover($salon, DemoImages::photo(7518728));
+        app(UpdateSalonBranding::class)->setCover($salon, DemoImages::photo(705255));
 
-        foreach ([[2076932, 'Corte clásico'], [3998417, 'Perfilado de barba'], [3993311, 'Color'], [3065171, 'Peinado']] as [$photoId, $caption]) {
+        foreach ([[3356170, 'Corte a tijera'], [2799605, 'Color'], [1319462, 'Degradado'], [3065171, 'Peinado']] as [$photoId, $caption]) {
             app(ManageSalonPhotos::class)->add($salon, DemoImages::photo($photoId), $caption);
         }
 

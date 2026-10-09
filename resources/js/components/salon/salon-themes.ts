@@ -11,7 +11,7 @@ export type SalonThemeLayout = {
     /** One service in the public list. */
     serviceRow: 'list' | 'photo-card' | 'round-thumb';
     /** One professional in "Quién te atiende" and in the staff step. */
-    staffCard: 'portrait' | 'avatar';
+    staffCard: 'portrait' | 'captioned-portrait' | 'avatar';
     /** How "today", the chosen day and the open status stand out. */
     highlight: 'outline' | 'soft' | 'solid';
 };
@@ -56,7 +56,7 @@ export const SALON_THEMES: Record<SalonTheme, SalonThemeOption> = {
         layout: {
             hero: 'color-block',
             serviceRow: 'round-thumb',
-            staffCard: 'portrait',
+            staffCard: 'captioned-portrait',
             highlight: 'solid',
         },
     },

@@ -1,19 +1,29 @@
 import { CalendarX, Moon, RotateCw, Sun, Sunrise } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatTime } from '@/lib/format';
 import { CHIP_ACTION } from '@/lib/skin-actions';
-import { cn } from '@/lib/utils';
+import { NextSlot } from './next-slot';
+import { SLOT_GRID, SlotPeriod } from './slot-period';
+import type { Period } from './slot-period';
 import type { Slot } from './types';
 
-const PERIODS = [
-    { label: 'Mañana', icon: Sunrise, from: 0, to: 12 },
-    { label: 'Tarde', icon: Sun, from: 12, to: 18 },
-    { label: 'Noche', icon: Moon, from: 18, to: 24 },
+const PERIODS: Period[] = [
+    {
+        label: 'Mañana',
+        ofLabel: 'de la mañana',
+        icon: Sunrise,
+        from: 0,
+        to: 12,
+    },
+    { label: 'Tarde', ofLabel: 'de la tarde', icon: Sun, from: 12, to: 18 },
+    { label: 'Noche', ofLabel: 'de la noche', icon: Moon, from: 18, to: 24 },
 ];
 
-const GRID = 'grid grid-cols-3 gap-2.5 sm:grid-cols-4';
+function isInside(slot: Slot, period: Period): boolean {
+    const hour = Number(slot.time.slice(0, 2));
+
+    return hour >= period.from && hour < period.to;
+}
 
 type Props = {
     /** null while they load. */
@@ -27,7 +37,11 @@ type Props = {
     empty: ReactNode;
 };
 
-/** The free times of a day as chips, grouped by morning, afternoon and night. */
+/**
+ * The free times of a day: the earliest one on its own, then chips grouped
+ * by morning, afternoon and night. A day may bring ninety of them, so each
+ * period shows a few and unfolds; the one with the earliest time starts open.
+ */
 export function SlotGrid({
     slots,
     error,
@@ -37,20 +51,13 @@ export function SlotGrid({
     selected = null,
     empty,
 }: Props) {
-    const reduceMotion = useReducedMotion();
-    const inPeriod = (slot: Slot, from: number, to: number) => {
-        const hour = Number(slot.time.slice(0, 2));
-
-        return hour >= from && hour < to;
-    };
-
     return (
         <>
             {isLoading && (
                 <div role="status" className="flex flex-col gap-3">
                     <span className="sr-only">Cargando horarios…</span>
                     <Skeleton className="h-5 w-24 rounded-full" />
-                    <div className={GRID}>
+                    <div className={SLOT_GRID}>
                         {Array.from({ length: 9 }, (_, i) => (
                             <Skeleton key={i} className="h-12 rounded-full" />
                         ))}
@@ -81,62 +88,26 @@ export function SlotGrid({
                 </div>
             )}
 
+            {slots && slots.length > 1 && (
+                <NextSlot slot={slots[0]} selected={selected} onPick={onPick} />
+            )}
+
             {slots &&
                 PERIODS.map((period) => {
                     const inside = slots.filter((slot) =>
-                        inPeriod(slot, period.from, period.to),
+                        isInside(slot, period),
                     );
 
                     return inside.length === 0 ? null : (
-                        <section
-                            key={period.label}
-                            className="flex flex-col gap-2.5"
-                        >
-                            <h2 className="flex items-center gap-2 font-sans text-sm font-bold">
-                                <period.icon
-                                    className="size-4.5 text-brand-text"
-                                    aria-hidden
-                                />
-                                {period.label}
-                                <span className="ml-auto text-sm font-medium text-muted-foreground tabular-nums">
-                                    {inside.length === 1
-                                        ? '1 horario'
-                                        : `${inside.length} horarios`}
-                                </span>
-                            </h2>
-                            <div className={GRID}>
-                                {inside.map((slot, index) => (
-                                    <motion.button
-                                        key={slot.start}
-                                        type="button"
-                                        aria-pressed={
-                                            selected === null
-                                                ? undefined
-                                                : selected === slot.start
-                                        }
-                                        initial={
-                                            reduceMotion
-                                                ? false
-                                                : { opacity: 0, y: 6 }
-                                        }
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{
-                                            duration: 0.15,
-                                            delay: Math.min(index, 8) * 0.02,
-                                        }}
-                                        onClick={() => onPick(slot)}
-                                        className={cn(
-                                            'h-12 rounded-full text-sm font-bold tabular-nums transition-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:scale-[0.97]',
-                                            selected === slot.start
-                                                ? 'skin-primary'
-                                                : 'skin-chip',
-                                        )}
-                                    >
-                                        {formatTime(slot.time)}
-                                    </motion.button>
-                                ))}
-                            </div>
-                        </section>
+                        <SlotPeriod
+                            // A new day starts over: folded, earliest open.
+                            key={`${period.label}-${slots[0].start}`}
+                            period={period}
+                            slots={inside}
+                            selected={selected}
+                            onPick={onPick}
+                            defaultOpen={isInside(slots[0], period)}
+                        />
                     );
                 })}
         </>

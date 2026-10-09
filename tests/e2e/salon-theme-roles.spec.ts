@@ -172,7 +172,10 @@ test.describe('Color de marca oscuro neutro en Nocturna', () => {
                     };
                 });
                 const parse = (value: string) =>
-                    value.match(/\d+(\.\d+)?/g)!.slice(0, 3).map(Number);
+                    value
+                        .match(/\d+(\.\d+)?/g)!
+                        .slice(0, 3)
+                        .map(Number);
                 const luminance = ([r, g, b]: number[]) => {
                     const channel = (v: number) => {
                         const c = v / 255;
@@ -218,9 +221,8 @@ test.describe('Color de marca oscuro neutro en Nocturna', () => {
 });
 
 test.describe('Avisos en Nocturna', () => {
-    // KNOWN BUG (4.12 d): the global toast follows the browser's mode, not the
-    // page's template, so Nocturna shows a white toast over a dark page.
-    test.fail('el aviso "¡Reserva confirmada!" es oscuro en Nocturna con el navegador en claro', async ({
+    // The global toast follows the page's template, not the browser's mode.
+    test('el aviso "¡Reserva confirmada!" es oscuro en Nocturna con el navegador en claro', async ({
         page,
     }, testInfo) => {
         test.skip(
@@ -244,7 +246,10 @@ test.describe('Avisos en Nocturna', () => {
         const background = await toast.evaluate(
             (element) => getComputedStyle(element).backgroundColor,
         );
-        const [r, g, b] = background.match(/\d+(\.\d+)?/g)!.slice(0, 3).map(Number);
+        const [r, g, b] = background
+            .match(/\d+(\.\d+)?/g)!
+            .slice(0, 3)
+            .map(Number);
 
         await page.getByRole('button', { name: 'Cancelar reserva' }).click();
         await page.getByRole('button', { name: 'Sí, cancelar' }).click();
@@ -252,9 +257,8 @@ test.describe('Avisos en Nocturna', () => {
             page.getByText('Cancelada', { exact: true }),
         ).toBeVisible();
 
-        expect(
-            (r + g + b) / 3,
-            `fondo del aviso ${background}`,
-        ).toBeLessThan(90);
+        expect((r + g + b) / 3, `fondo del aviso ${background}`).toBeLessThan(
+            90,
+        );
     });
 });

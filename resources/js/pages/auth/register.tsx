@@ -1,6 +1,7 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import { GoogleButton } from '@/components/auth/google-button';
 import InputError from '@/components/input-error';
+import { TRIAL_DAYS } from '@/components/landing/content';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,11 @@ import { store } from '@/routes/register';
 
 type Props = {
     passwordRules: string;
+};
+
+const INVITED_HEADING = {
+    title: 'Crea tu cuenta',
+    description: 'Con ella entras al equipo que te invitó.',
 };
 
 /** Prefill when arriving from a team invitation (?email=...). */
@@ -26,6 +32,14 @@ function invitedEmail(): string | undefined {
 }
 
 export default function Register({ passwordRules }: Props) {
+    const email = invitedEmail();
+    const isInvited = email !== undefined;
+
+    // Someone joining a team is not opening a salon: no trial pitch for them.
+    if (isInvited) {
+        setLayoutProps(INVITED_HEADING);
+    }
+
     return (
         <>
             <Head title="Registro" />
@@ -68,7 +82,7 @@ export default function Register({ passwordRules }: Props) {
                                     tabIndex={2}
                                     autoComplete="email"
                                     name="email"
-                                    defaultValue={invitedEmail()}
+                                    defaultValue={email}
                                     placeholder="correo@ejemplo.com"
                                 />
                                 <InputError message={errors.email} />
@@ -113,7 +127,9 @@ export default function Register({ passwordRules }: Props) {
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
-                                Crear cuenta
+                                {isInvited
+                                    ? 'Crear mi cuenta'
+                                    : 'Crear mi cuenta gratis'}
                             </Button>
                         </div>
 
@@ -131,6 +147,6 @@ export default function Register({ passwordRules }: Props) {
 }
 
 Register.layout = {
-    title: 'Crea una cuenta',
-    description: 'Ingresa tus datos para crear tu cuenta',
+    title: 'Crea tu cuenta y tu salón',
+    description: `${TRIAL_DAYS} días gratis, sin tarjeta. En 3 pasos tienes tu página lista para recibir reservas.`,
 };

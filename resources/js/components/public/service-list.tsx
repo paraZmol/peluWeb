@@ -94,7 +94,7 @@ export function ServiceList({
                                 aria-pressed={filter === label}
                                 onClick={() => setFilter(label)}
                                 className={cn(
-                                    'h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60',
+                                    'h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring',
                                     filter === label
                                         ? 'bg-foreground text-background'
                                         : 'skin-chip',

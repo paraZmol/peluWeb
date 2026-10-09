@@ -13,6 +13,7 @@ import { TeamSection } from '@/components/public/team-section';
 import type { PublicSalon } from '@/components/public/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { useFramedPreview } from '@/hooks/use-framed-preview';
+import { usePageTemplate } from '@/hooks/use-page-template';
 import { ThemeBackdrop } from '@/components/salon/theme-backdrop';
 
 type Props = {
@@ -27,6 +28,8 @@ type Props = {
 export default function Salon({ salon }: Props) {
     const hasLocation = salon.location !== null || salon.address !== null;
     const isFramed = useFramedPreview(salon.isPreview);
+
+    usePageTemplate(salon);
 
     return (
         <BrandTheme

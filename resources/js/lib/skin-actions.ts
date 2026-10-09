@@ -4,7 +4,7 @@
  * not be mixed with `bg-*`, `border-*` or `shadow-*` on the same element.
  */
 const ACTION_BASE =
-    'inline-flex min-w-0 items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-transform duration-150 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-5 [&_svg]:shrink-0';
+    'inline-flex min-w-0 items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap transition-transform duration-150 outline-none focus-visible:ring-[3px] focus-visible:ring-ring active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-5 [&_svg]:shrink-0';
 
 /** The one main action of a view (Reservar cita, Confirmar reserva). */
 export const PRIMARY_ACTION = `${ACTION_BASE} skin-primary h-13 px-6 text-base`;

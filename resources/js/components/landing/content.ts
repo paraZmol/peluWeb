@@ -52,10 +52,12 @@ export type Faq = { question: string; answer: string };
 
 export const BRAND_NAME = 'peluWeb';
 
+/** Length of the free trial: every text that mentions it reads it from here. */
+export const TRIAL_DAYS = 30;
+
 export const PAGE_TITLE = 'Reservas y gestión para tu salón';
 
-export const META_DESCRIPTION =
-    'peluWeb: reservas online 24/7 sin choques, señas por WhatsApp y Yape/Plin, caja y reportes, y una página con la marca de tu salón. Prueba gratis 30 días.';
+export const META_DESCRIPTION = `peluWeb: reservas online 24/7 sin choques, señas por WhatsApp y Yape/Plin, caja y reportes, y una página con la marca de tu salón. Prueba gratis ${TRIAL_DAYS} días.`;
 
 export const NAV_ITEMS: NavItem[] = [
     { label: 'Para quién', href: '#para-quien' },
@@ -83,7 +85,7 @@ export const HERO = {
     title: 'Tu agenda llena, sin contestar WhatsApp a medianoche',
     subtitle:
         'Tus clientes reservan solos desde tu enlace, a cualquier hora y sin choques de horario. Cobras la seña con Yape o Plin y te olvidas del cuaderno.',
-    primaryCta: 'Prueba gratis 30 días',
+    primaryCta: `Prueba gratis ${TRIAL_DAYS} días`,
     secondaryCta: 'Ver cómo queda tu página',
     secondaryHref: '#tu-pagina',
     trust: ['Sin tarjeta', 'Cancela cuando quieras', 'Hecho en Perú'],
@@ -328,7 +330,7 @@ export const SHOWCASE_SALON: MiniSalon = {
 export const PRICING = {
     eyebrow: 'Precios',
     title: 'Un precio fijo, sin comisión por cliente',
-    trialNote: '30 días gratis en cualquier plan, sin tarjeta',
+    trialNote: `${TRIAL_DAYS} días gratis en cualquier plan, sin tarjeta`,
     cta: 'Empezar prueba gratis',
     perMonth: '/mes',
     featuredLabel: 'Más elegido',
@@ -384,7 +386,7 @@ export const FAQ_HEADING = {
 export const FAQS: Faq[] = [
     {
         question: '¿Necesito tarjeta para probar?',
-        answer: 'No. Tienes 30 días gratis con todas las funciones del plan Equipo y no te pedimos tarjeta. Si te convence, eliges un plan y pagas por Yape o transferencia.',
+        answer: `No. Tienes ${TRIAL_DAYS} días gratis con todas las funciones del plan Equipo y no te pedimos tarjeta. Si te convence, eliges un plan y pagas por Yape o transferencia.`,
     },
     {
         question: '¿Mis clientes tienen que descargar algo?',

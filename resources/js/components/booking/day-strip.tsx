@@ -90,7 +90,7 @@ export function DayStrip({
                         disabled={day.closed}
                         onClick={() => onChange(day.date)}
                         className={cn(
-                            'relative flex h-21 w-16 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg text-sm transition-transform duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60',
+                            'relative flex h-21 w-16 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg text-sm transition-transform duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring',
                             isSelected
                                 ? '-translate-y-0.5 skin-primary'
                                 : 'skin-chip',
