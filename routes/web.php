@@ -28,18 +28,37 @@ use App\Http\Controllers\Staff\ScheduleController;
 use App\Http\Controllers\Staff\StaffPhotoController;
 use App\Http\Controllers\Staff\StaffServiceController;
 use App\Http\Controllers\Staff\TimeOffController;
+use App\Http\Middleware\HandleAppearance;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ResolveCurrentSalon;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::inertia('/', 'welcome')->name('home');
 
-// Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
-// Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
-// Bundled sample photos for previews and the landing page.
+// Bundled sample photos for previews and the landing page. Without the
+// session: a response cached as public must never carry a session cookie.
 Route::get('img/muestra/{file}', [SamplePhotoController::class, 'show'])
     ->where('file', '[a-z0-9.-]+')
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleAppearance::class,
+        ResolveCurrentSalon::class,
+        HandleInertiaRequests::class,
+    ])
     ->middleware('throttle:300,1,samples')
     ->name('samples.show');
 
+// Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
+// Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
 Route::get('s/{salon:slug}', [SalonPageController::class, 'show'])
     ->middleware('throttle:120,1,salon-page')
     ->name('salons.show');

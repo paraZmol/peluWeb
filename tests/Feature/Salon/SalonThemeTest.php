@@ -112,7 +112,10 @@ describe('the public page', function () {
     });
 
     it('serves only the bundled sample photos', function () {
-        $this->get(route('samples.show', 'pexels-1813272.jpg'))->assertOk()->assertHeader('Content-Type', 'image/jpeg');
+        $photo = $this->get(route('samples.show', 'pexels-1813272.jpg'))->assertOk()->assertHeader('Content-Type', 'image/jpeg');
+        // Cached as public for a month: it must not hand out a session.
+        expect($photo->headers->getCookies())->toBeEmpty();
+        $photo->assertHeader('X-Content-Type-Options', 'nosniff');
         $this->get('/img/muestra/pexels-897265-square.jpg')->assertOk();
 
         $this->get('/img/muestra/CREDITS.md')->assertNotFound();

@@ -18,7 +18,7 @@ class SamplePhotoController extends Controller
     {
         $path = SamplePhotos::directory().DIRECTORY_SEPARATOR.$file;
 
-        abort_unless(preg_match('/^'.SamplePhotos::FILE_PATTERN.'$/', $file) === 1 && is_file($path), 404);
+        abort_unless(preg_match('/\A'.SamplePhotos::FILE_PATTERN.'\z/', $file) === 1 && is_file($path), 404);
 
         return response()->file($path, [
             'Content-Type' => 'image/jpeg',
