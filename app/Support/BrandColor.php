@@ -13,6 +13,9 @@ use InvalidArgumentException;
  * - The color itself must stand out from the page background (≥ 3:1, the
  *   WCAG minimum for UI components); too light colors are darkened for
  *   light mode and too dark ones lightened for dark mode.
+ * - A dark color with almost no hue (charcoal, graphite) would lighten into a
+ *   dull mid gray on a dark page: it becomes a near-white button with dark
+ *   text instead, the usual primary of dark interfaces.
  */
 final class BrandColor
 {
@@ -28,6 +31,12 @@ final class BrandColor
 
     private const float TEXT_CONTRAST = 4.5;
 
+    /** Largest gap between RGB channels (0-255) still read as a neutral. */
+    private const int NEUTRAL_CHANNEL_SPREAD = 32;
+
+    /** How far a dark neutral goes toward white in dark mode. */
+    private const float NEUTRAL_ON_DARK_MIX = 0.88;
+
     /**
      * @return array{light: array{primary: string, foreground: string}, dark: array{primary: string, foreground: string}, adjusted: bool}
      */
@@ -37,6 +46,10 @@ final class BrandColor
 
         $light = self::adjustFor($base, self::LIGHT_BACKGROUND, towardWhite: false);
         $dark = self::adjustFor($base, self::DARK_BACKGROUND, towardWhite: true);
+
+        if ($dark !== $base && self::isNeutral($base)) {
+            $dark = self::mix($base, '#ffffff', self::NEUTRAL_ON_DARK_MIX);
+        }
 
         return [
             'light' => ['primary' => $light, 'foreground' => self::foregroundFor($light)],
@@ -66,6 +79,13 @@ final class BrandColor
         $lb = self::luminance($b);
 
         return (max($la, $lb) + 0.05) / (min($la, $lb) + 0.05);
+    }
+
+    private static function isNeutral(string $color): bool
+    {
+        $channels = self::rgb($color);
+
+        return max($channels) - min($channels) <= self::NEUTRAL_CHANNEL_SPREAD;
     }
 
     private static function foregroundFor(string $color): string

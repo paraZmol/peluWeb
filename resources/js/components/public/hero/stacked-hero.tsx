@@ -34,6 +34,11 @@ export function StackedHero({ salon }: HeroProps) {
                             aria-hidden
                             className="absolute inset-0 bg-linear-to-t from-background via-background/10 to-transparent"
                         />
+                        {/* Keeps the glass buttons readable on a bright photo. */}
+                        <div
+                            aria-hidden
+                            className="absolute inset-0 photo-veil-top"
+                        />
                     </>
                 )}
             </div>

@@ -81,7 +81,7 @@ describe('the public page', function () {
             ->where('salon.theme', 'luminosa')
             ->where('salon.isPreview', true)
             ->where('salon.usesSamplePhotos', true)
-            ->where('salon.coverUrl', route('samples.show', 'pexels-3993133.jpg'))
+            ->where('salon.coverUrl', route('samples.show', 'pexels-705255.jpg'))
             ->has('salon.photos', 4)
             ->where('salon.team.0.photoUrl', route('samples.show', 'pexels-3992875-square.jpg')));
 

@@ -24,8 +24,8 @@ final class SamplePhotos
             'portraits' => ['pexels-897265-square.jpg', 'pexels-18483774-square.jpg', 'pexels-4625648-square.jpg'],
         ],
         'beauty_salon' => [
-            'cover' => 'pexels-3993133.jpg',
-            'gallery' => ['pexels-3993311.jpg', 'pexels-2799605.jpg', 'pexels-3065171.jpg', 'pexels-705255.jpg'],
+            'cover' => 'pexels-705255.jpg',
+            'gallery' => ['pexels-3993311.jpg', 'pexels-2799605.jpg', 'pexels-3065171.jpg', 'pexels-3993133.jpg'],
             'portraits' => ['pexels-3992875-square.jpg', 'pexels-3993312-square.jpg', 'pexels-7440133-square.jpg'],
         ],
         'nails' => [

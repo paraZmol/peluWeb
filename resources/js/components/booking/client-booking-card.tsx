@@ -23,16 +23,16 @@ export function ClientBookingCard({ booking }: { booking: ClientBooking }) {
                 {/* The payload has no logo yet: the salon's initials on its color. */}
                 <SalonMark name={salon.name} logoUrl={null} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <div className="flex items-start justify-between gap-3">
-                        <p className="min-w-0 display-type text-xl break-words">
-                            {salon.name}
-                        </p>
-                        <StatusBadge
-                            status={booking.status}
-                            label={booking.statusLabel}
-                            className="mt-0.5 shrink-0"
-                        />
-                    </div>
+                    {/* Above the name, not beside it: a wide display font
+                        (Syne, Bebas) needs the whole line on a phone. */}
+                    <StatusBadge
+                        status={booking.status}
+                        label={booking.statusLabel}
+                        className="self-start"
+                    />
+                    <p className="display-type text-xl [overflow-wrap:normal]">
+                        {salon.name}
+                    </p>
                     <p className="text-lg leading-tight font-extrabold tabular-nums first-letter:uppercase">
                         {formatDate(booking.date)} · {formatTime(booking.time)}
                     </p>

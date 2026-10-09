@@ -39,3 +39,14 @@ it('accepts short hex and rejects garbage', function () {
     expect(fn () => BrandColor::normalize('rojo'))->toThrow(InvalidArgumentException::class);
     expect(fn () => BrandColor::normalize('#12345g'))->toThrow(InvalidArgumentException::class);
 });
+
+it('turns a dark neutral into a light button with dark text for dark mode', function (string $color) {
+    $dark = BrandColor::tokens($color)['dark'];
+
+    expect($dark['foreground'])->toBe('#1f1b18')
+        ->and(BrandColor::contrast($dark['primary'], BrandColor::DARK_BACKGROUND))->toBeGreaterThanOrEqual(10.0);
+})->with(['#1f1b18', '#1f2937', '#000000']);
+
+it('keeps the hue of a dark saturated color in dark mode', function () {
+    expect(BrandColor::tokens('#1d4ed8')['dark'])->toBe(['primary' => '#2857da', 'foreground' => '#ffffff']);
+});

@@ -15,7 +15,7 @@ function BookingList({ bookings }: Props) {
     return (
         <ul className="grid gap-3 lg:grid-cols-2">
             {bookings.map((booking) => (
-                <li key={booking.code}>
+                <li key={booking.code} className="min-w-0">
                     <ClientBookingCard booking={booking} />
                 </li>
             ))}

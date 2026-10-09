@@ -59,7 +59,7 @@ class DemoSeeder extends Seeder
             ],
             'color' => '#c2185b',
             'prices' => ['Balayage' => 42000, 'Tinte de raíz' => 9500, 'Corte en capas' => 7000],
-            'photos' => ['cover' => 3993133, 'gallery' => [[3993311, 'Color y brillo'], [2799605, 'Tinte completo'], [6503329, 'Alisado'], [7440133, 'Secado y peinado'], [3065171, 'Ondas para fiesta'], [705255, 'Nuestro salón']]],
+            'photos' => ['cover' => 3065171, 'gallery' => [[3993311, 'Color y brillo'], [2799605, 'Tinte completo'], [6503329, 'Alisado'], [7440133, 'Secado y peinado'], [3993133, 'Nuestro tocador'], [705255, 'Nuestro salón']]],
         ],
         [
             'owner' => ['name' => 'Jorge Huamán', 'email' => 'unisex@peluweb.test'],

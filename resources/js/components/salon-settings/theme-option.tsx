@@ -34,8 +34,9 @@ export function ThemeOption({
     const id = `theme-${choice.value}`;
 
     return (
-        <div className="flex flex-col gap-1">
-            <label className="group relative flex cursor-pointer flex-col gap-3 rounded-2xl border bg-background p-2 transition-colors hover:border-border-strong has-checked:border-primary has-checked:bg-brand-soft has-focus-visible:ring-2 has-focus-visible:ring-ring">
+        <div className="flex h-full flex-col gap-1">
+            {/* Fills the row: the four cards end level and so do their links. */}
+            <label className="group relative flex flex-1 cursor-pointer flex-col gap-3 rounded-2xl border bg-background p-2 transition-colors hover:border-border-strong has-checked:border-primary has-checked:bg-brand-soft has-focus-visible:ring-2 has-focus-visible:ring-ring">
                 <input
                     type="radio"
                     name="theme"
