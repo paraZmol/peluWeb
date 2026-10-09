@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-} from '@/components/ui/dialog';
+    MAX_TILES,
+    galleryGridClass,
+    galleryTileClass,
+} from './gallery/gallery-layout';
+import { GalleryTile } from './gallery/gallery-tile';
+import { PhotoViewer } from './gallery/photo-viewer';
+import { SectionHeading } from './section-heading';
 import type { PublicPhoto } from './types';
 
 type Props = {
@@ -12,64 +14,53 @@ type Props = {
     photos: PublicPhoto[];
 };
 
+/** The salon's work as a mosaic; every photo opens in the viewer. */
 export function PhotoGallery({ salonName, photos }: Props) {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
+    const tiles = photos.slice(0, MAX_TILES);
     const altFor = (index: number): string =>
-        photos[index].caption ?? `${salonName} — foto ${index + 1}`;
-    const current = openIndex === null ? null : photos[openIndex];
+        photos[index].caption ?? `${salonName}: foto ${index + 1}`;
 
     return (
-        <div className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl font-semibold">Fotos</h2>
+        <section
+            aria-labelledby="galeria-titulo"
+            className="flex flex-col gap-6"
+        >
+            <SectionHeading
+                id="galeria-titulo"
+                eyebrow="Trabajos recientes"
+                title="Galería"
+                aside={
+                    photos.length === 1 ? '1 foto' : `${photos.length} fotos`
+                }
+            />
 
-            <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
-                {photos.map((photo, index) => (
+            <ul className={galleryGridClass(tiles.length)}>
+                {tiles.map((photo, index) => (
                     <li
                         key={photo.url}
-                        className="w-64 shrink-0 snap-start md:w-auto"
+                        className={galleryTileClass(index, tiles.length)}
                     >
-                        <button
-                            type="button"
-                            onClick={() => setOpenIndex(index)}
-                            className="block aspect-square w-full overflow-hidden rounded-xl bg-muted outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                            aria-label={`Ampliar: ${altFor(index)}`}
-                        >
-                            <img
-                                src={photo.url}
-                                alt={altFor(index)}
-                                loading="lazy"
-                                className="size-full object-cover transition-transform duration-300 motion-safe:hover:scale-105"
-                            />
-                        </button>
+                        <GalleryTile
+                            photo={photo}
+                            alt={altFor(index)}
+                            more={
+                                index === tiles.length - 1
+                                    ? photos.length - tiles.length
+                                    : 0
+                            }
+                            onOpen={() => setOpenIndex(index)}
+                        />
                     </li>
                 ))}
             </ul>
 
-            <Dialog
-                open={current !== null}
-                onOpenChange={(open) => !open && setOpenIndex(null)}
-            >
-                <DialogContent className="max-w-[calc(100%-2rem)] gap-3 p-3 sm:max-w-3xl">
-                    {current && openIndex !== null && (
-                        <>
-                            <DialogTitle className="sr-only">
-                                {altFor(openIndex)}
-                            </DialogTitle>
-                            <img
-                                src={current.url}
-                                alt={altFor(openIndex)}
-                                className="max-h-[75svh] w-full rounded-lg object-contain"
-                            />
-                            <DialogDescription
-                                className={current.caption ? 'px-1' : 'sr-only'}
-                            >
-                                {current.caption ??
-                                    `Foto ${openIndex + 1} de ${photos.length}`}
-                            </DialogDescription>
-                        </>
-                    )}
-                </DialogContent>
-            </Dialog>
-        </div>
+            <PhotoViewer
+                photos={photos}
+                altFor={altFor}
+                index={openIndex}
+                onIndexChange={setOpenIndex}
+            />
+        </section>
     );
 }

@@ -363,6 +363,10 @@ test.describe('Cierre de la Fase 4: Mis reservas', () => {
         baseURL,
     }, testInfo) => {
         test.skip(testInfo.project.name !== 'movil', 'modifica datos una vez');
+        // Two browsers and some thirty round trips to a single-threaded
+        // server: it runs right at the default 30 s (33-37 s with a second
+        // lane busy on the same machine, also on a clean checkout).
+        test.slow();
         const assertNoErrors = watchForErrors(page);
 
         // The client books three days ahead (always inside the notice window).

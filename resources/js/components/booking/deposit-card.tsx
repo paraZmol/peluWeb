@@ -1,7 +1,7 @@
 import { MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/lib/format';
+import { PRIMARY_ACTION } from '@/lib/skin-actions';
 import type { ClientBooking } from './types';
 
 type Props = { deposit: NonNullable<ClientBooking['deposit']> };
@@ -37,7 +37,7 @@ export function DepositCard({ deposit }: Props) {
 
     if (deposit.isPaid) {
         return (
-            <p className="rounded-xl border bg-card p-4 text-sm">
+            <p className="rounded-xl p-4 text-sm skin-card">
                 Seña recibida:{' '}
                 <strong className="tabular-nums">
                     {formatPrice(deposit.amount)}
@@ -57,9 +57,9 @@ export function DepositCard({ deposit }: Props) {
     return (
         <section
             aria-labelledby="deposit-title"
-            className="flex flex-col gap-3 rounded-xl border border-primary/40 bg-primary/5 p-5"
+            className="flex flex-col gap-3 rounded-xl border border-brand-line bg-brand-soft p-5"
         >
-            <h2 id="deposit-title" className="text-lg font-semibold">
+            <h2 id="deposit-title" className="font-sans text-lg font-bold">
                 Falta la seña de{' '}
                 <span className="tabular-nums">
                     {formatPrice(deposit.amount)}
@@ -74,21 +74,20 @@ export function DepositCard({ deposit }: Props) {
                 reserva.
             </p>
             {deposit.instructions && (
-                <p className="rounded-lg border bg-background p-3 text-sm break-words whitespace-pre-line">
+                <p className="rounded-lg bg-card p-3 text-sm break-words whitespace-pre-line">
                     {deposit.instructions}
                 </p>
             )}
             {deposit.whatsappUrl && (
-                <Button asChild size="lg" className="h-12 rounded-full">
-                    <a
-                        href={deposit.whatsappUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <MessageCircle aria-hidden /> Enviar comprobante por
-                        WhatsApp
-                    </a>
-                </Button>
+                <a
+                    href={deposit.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={PRIMARY_ACTION}
+                >
+                    <MessageCircle aria-hidden /> Enviar comprobante por
+                    WhatsApp
+                </a>
             )}
         </section>
     );

@@ -1,18 +1,15 @@
-import { Link, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { Wallet } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { markBookingCelebration } from '@/lib/celebration';
 import { flashFailed, flashMessage } from '@/lib/flash';
 import { formatMinutes, formatPrice } from '@/lib/format';
-import { resume, store } from '@/routes/salons/booking';
-import { notice } from '@/routes/verification';
+import { store } from '@/routes/salons/booking';
 import { BookingSummary } from './booking-summary';
-import { STICKY_ACTION } from './sticky-action';
+import { ConfirmAction } from './confirm-action';
 import type { BookableSalon, Quote, Viewer } from './types';
 
 type Props = {
@@ -94,9 +91,9 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
             />
 
             {quote && quote.depositPercent > 0 && (
-                <p className="flex items-start gap-3 rounded-xl bg-primary/10 p-4 text-sm">
+                <p className="flex items-start gap-3 rounded-xl border border-brand-line bg-brand-soft p-4 text-sm">
                     <Wallet
-                        className="mt-0.5 size-5 shrink-0 text-primary"
+                        className="mt-0.5 size-5 shrink-0 text-brand-text"
                         aria-hidden
                     />
                     <span>
@@ -133,40 +130,12 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                 </p>
             )}
 
-            {viewer.state === 'ready' && (
-                <div className={STICKY_ACTION}>
-                    <Button
-                        size="lg"
-                        className="h-12 w-full rounded-full"
-                        disabled={sending}
-                        onClick={confirm}
-                    >
-                        {sending && <Spinner />}
-                        Confirmar reserva
-                    </Button>
-                </div>
-            )}
-            {viewer.state === 'guest' && (
-                <div className="flex flex-col gap-2">
-                    <Button asChild size="lg" className="h-12 rounded-full">
-                        {/* A full page load: the server sends guests to sign in and back. */}
-                        <a href={resume.url(salon.slug)}>
-                            Entrar para confirmar
-                        </a>
-                    </Button>
-                    <p className="text-center text-sm text-muted-foreground">
-                        Si no tienes cuenta, podrás crearla ahí mismo. Guardamos
-                        lo que elegiste.
-                    </p>
-                </div>
-            )}
-            {viewer.state === 'unverified' && (
-                <Button asChild size="lg" className="h-12 rounded-full">
-                    <Link href={notice()}>
-                        Verifica tu correo para confirmar
-                    </Link>
-                </Button>
-            )}
+            <ConfirmAction
+                viewer={viewer}
+                salonSlug={salon.slug}
+                sending={sending}
+                onConfirm={confirm}
+            />
         </div>
     );
 }

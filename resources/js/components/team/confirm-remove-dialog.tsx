@@ -1,5 +1,6 @@
 import { Form } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { usePortalTheme } from '@/components/salon/portal-theme';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,6 +13,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { SHEET_ON_PHONE } from '@/lib/sheet';
+import { cn } from '@/lib/utils';
 import type { RouteFormDefinition } from '@/wayfinder';
 
 type Props = {
@@ -24,6 +26,8 @@ type Props = {
     trigger?: ReactNode;
     /** "default" for confirmations that destroy nothing (e.g. money received). */
     tone?: 'destructive' | 'default';
+    /** Inside a salon's template (client pages): the dialog wears it too. */
+    themed?: boolean;
 };
 
 /**
@@ -39,7 +43,34 @@ export function ConfirmRemoveDialog({
     form,
     trigger,
     tone = 'destructive',
+    themed = false,
 }: Props) {
+    const portalTheme = usePortalTheme();
+    const content = (
+        <>
+            <DialogHeader>
+                <DialogTitle>{title}</DialogTitle>
+                <DialogDescription>{description}</DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+                {({ processing }) => (
+                    <DialogFooter className="gap-2 [&_button]:h-11 sm:[&_button]:h-9">
+                        <DialogClose asChild>
+                            <Button variant="outline">Volver</Button>
+                        </DialogClose>
+                        <Button
+                            type="submit"
+                            variant={tone}
+                            disabled={processing}
+                        >
+                            {confirmLabel}
+                        </Button>
+                    </DialogFooter>
+                )}
+            </Form>
+        </>
+    );
+
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -53,28 +84,18 @@ export function ConfirmRemoveDialog({
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className={SHEET_ON_PHONE}>
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>{description}</DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                    {({ processing }) => (
-                        <DialogFooter className="gap-2 [&_button]:h-11 sm:[&_button]:h-9">
-                            <DialogClose asChild>
-                                <Button variant="outline">Volver</Button>
-                            </DialogClose>
-                            <Button
-                                type="submit"
-                                variant={tone}
-                                disabled={processing}
-                            >
-                                {confirmLabel}
-                            </Button>
-                        </DialogFooter>
-                    )}
-                </Form>
-            </DialogContent>
+            {themed ? (
+                <DialogContent
+                    {...portalTheme}
+                    className={cn(portalTheme.className, SHEET_ON_PHONE)}
+                >
+                    {content}
+                </DialogContent>
+            ) : (
+                <DialogContent className={SHEET_ON_PHONE}>
+                    {content}
+                </DialogContent>
+            )}
         </Dialog>
     );
 }

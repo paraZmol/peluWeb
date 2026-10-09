@@ -1,9 +1,9 @@
-import { CalendarX, Moon, Sun, Sunrise } from 'lucide-react';
+import { CalendarX, Moon, RotateCw, Sun, Sunrise } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatTime } from '@/lib/format';
+import { CHIP_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import type { Slot } from './types';
 
@@ -12,6 +12,8 @@ const PERIODS = [
     { label: 'Tarde', icon: Sun, from: 12, to: 18 },
     { label: 'Noche', icon: Moon, from: 18, to: 24 },
 ];
+
+const GRID = 'grid grid-cols-3 gap-2.5 sm:grid-cols-4';
 
 type Props = {
     /** null while they load. */
@@ -45,32 +47,36 @@ export function SlotGrid({
     return (
         <>
             {isLoading && (
-                <div
-                    role="status"
-                    className="grid grid-cols-3 gap-2 sm:grid-cols-4"
-                >
+                <div role="status" className="flex flex-col gap-3">
                     <span className="sr-only">Cargando horarios…</span>
-                    {Array.from({ length: 9 }, (_, i) => (
-                        <Skeleton key={i} className="h-12 rounded-full" />
-                    ))}
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                    <div className={GRID}>
+                        {Array.from({ length: 9 }, (_, i) => (
+                            <Skeleton key={i} className="h-12 rounded-full" />
+                        ))}
+                    </div>
                 </div>
             )}
 
             {error && (
                 <div
                     role="alert"
-                    className="flex flex-col items-center gap-3 rounded-xl border p-6 text-center"
+                    className="flex flex-col items-center gap-3 rounded-xl p-6 text-center skin-card"
                 >
                     <p className="text-sm text-muted-foreground">{error}</p>
-                    <Button variant="outline" onClick={retry}>
-                        Reintentar
-                    </Button>
+                    <button
+                        type="button"
+                        className={CHIP_ACTION}
+                        onClick={retry}
+                    >
+                        <RotateCw aria-hidden /> Reintentar
+                    </button>
                 </div>
             )}
 
             {slots?.length === 0 && (
-                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                    <CalendarX className="size-6" aria-hidden />
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border-strong p-8 text-center text-muted-foreground">
+                    <CalendarX className="size-6 text-brand-text" aria-hidden />
                     {empty}
                 </div>
             )}
@@ -84,13 +90,21 @@ export function SlotGrid({
                     return inside.length === 0 ? null : (
                         <section
                             key={period.label}
-                            className="flex flex-col gap-2"
+                            className="flex flex-col gap-2.5"
                         >
-                            <h2 className="flex items-center gap-2 font-sans text-sm font-semibold text-muted-foreground">
-                                <period.icon className="size-4" aria-hidden />
+                            <h2 className="flex items-center gap-2 font-sans text-sm font-bold">
+                                <period.icon
+                                    className="size-4.5 text-brand-text"
+                                    aria-hidden
+                                />
                                 {period.label}
+                                <span className="ml-auto text-sm font-medium text-muted-foreground tabular-nums">
+                                    {inside.length === 1
+                                        ? '1 horario'
+                                        : `${inside.length} horarios`}
+                                </span>
                             </h2>
-                            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                            <div className={GRID}>
                                 {inside.map((slot, index) => (
                                     <motion.button
                                         key={slot.start}
@@ -112,10 +126,10 @@ export function SlotGrid({
                                         }}
                                         onClick={() => onPick(slot)}
                                         className={cn(
-                                            'h-12 rounded-full border text-sm font-medium tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-[0.97]',
+                                            'h-12 rounded-full text-sm font-bold tabular-nums transition-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:scale-[0.97]',
                                             selected === slot.start
-                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                : 'bg-card hover:border-primary hover:bg-primary/10',
+                                                ? 'skin-primary'
+                                                : 'skin-chip',
                                         )}
                                     >
                                         {formatTime(slot.time)}

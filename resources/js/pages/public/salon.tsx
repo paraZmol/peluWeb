@@ -1,82 +1,106 @@
 import { Head } from '@inertiajs/react';
+import { BookingCard } from '@/components/public/booking-card';
 import { OpeningHours } from '@/components/public/opening-hours';
 import { PhotoGallery } from '@/components/public/photo-gallery';
+import { PreviewBanner } from '@/components/public/preview-banner';
 import { Reveal } from '@/components/public/reveal';
+import { SalonFooter } from '@/components/public/salon-footer';
 import { SalonHero } from '@/components/public/salon-hero';
 import { SalonLocation } from '@/components/public/salon-location';
 import { ServiceList } from '@/components/public/service-list';
 import { StickyActions } from '@/components/public/sticky-actions';
+import { TeamSection } from '@/components/public/team-section';
 import type { PublicSalon } from '@/components/public/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
+import { useFramedPreview } from '@/hooks/use-framed-preview';
+import { ThemeBackdrop } from '@/components/salon/theme-backdrop';
 
 type Props = {
     salon: PublicSalon;
 };
 
-const SECTION_CLASS = 'mx-auto w-full max-w-3xl px-4';
-
+/**
+ * The salon's public page in its own template (ui-system §4). Phones: one
+ * column and the dock. Desktop: services, team and gallery on the left; the
+ * booking card, hours and map on the right.
+ */
 export default function Salon({ salon }: Props) {
-    const hasPhotos = salon.photos.length > 0;
     const hasLocation = salon.location !== null || salon.address !== null;
+    const isFramed = useFramedPreview(salon.isPreview);
 
     return (
         <BrandTheme
             brand={salon.brand}
+            theme={salon.theme}
             className="min-h-svh overflow-x-clip bg-background text-foreground"
         >
             <Head title={salon.name} />
-
-            <main className="flex flex-col gap-10 pb-8">
-                <Reveal order={0}>
-                    <SalonHero salon={salon} />
-                </Reveal>
-
-                {/* Not inside Reveal: a transformed ancestor would break `fixed` on mobile */}
-                <StickyActions
-                    salonName={salon.name}
-                    bookingUrl={salon.bookingUrl}
-                    whatsappUrl={salon.whatsappUrl}
-                    instagramUrl={salon.instagramUrl}
-                    directionsUrl={salon.location?.directionsUrl ?? null}
+            <ThemeBackdrop />
+            {salon.isPreview && (
+                <PreviewBanner
+                    theme={salon.theme}
+                    usesSamplePhotos={salon.usesSamplePhotos}
+                    isFramed={isFramed}
                 />
+            )}
 
-                <Reveal order={2} className={SECTION_CLASS}>
-                    <ServiceList
-                        groups={salon.serviceGroups}
-                        bookingUrl={salon.bookingUrl}
-                        whatsappUrl={salon.whatsappUrl}
-                    />
+            <Reveal order={0}>
+                <SalonHero salon={salon} />
+            </Reveal>
+
+            <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-x-12 gap-y-14 px-4 pt-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_1fr] lg:items-start lg:pt-14">
+                <Reveal order={1} className="lg:col-start-2 lg:row-start-1">
+                    <BookingCard salon={salon} />
                 </Reveal>
 
-                {hasPhotos && (
-                    <Reveal order={3} className={SECTION_CLASS}>
-                        <PhotoGallery
-                            salonName={salon.name}
+                <main className="flex min-w-0 flex-col gap-14 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:gap-16">
+                    <Reveal order={2}>
+                        <ServiceList
+                            groups={salon.serviceGroups}
+                            bookingUrl={salon.bookingUrl}
+                            whatsappUrl={salon.whatsappUrl}
                             photos={salon.photos}
                         />
                     </Reveal>
-                )}
+                    {salon.team.length > 0 && (
+                        <Reveal order={3}>
+                            <TeamSection team={salon.team} />
+                        </Reveal>
+                    )}
+                    {salon.photos.length > 0 && (
+                        <Reveal order={4}>
+                            <PhotoGallery
+                                salonName={salon.name}
+                                photos={salon.photos}
+                            />
+                        </Reveal>
+                    )}
+                </main>
 
-                {salon.openingHours && (
-                    <Reveal order={4} className={SECTION_CLASS}>
-                        <OpeningHours hours={salon.openingHours} />
-                    </Reveal>
-                )}
+                <aside className="flex min-w-0 flex-col gap-14 lg:col-start-2 lg:row-start-2 lg:gap-10">
+                    {salon.openingHours && (
+                        <Reveal order={5}>
+                            <OpeningHours hours={salon.openingHours} />
+                        </Reveal>
+                    )}
+                    {hasLocation && (
+                        <Reveal order={6}>
+                            <SalonLocation
+                                address={salon.address}
+                                location={salon.location}
+                            />
+                        </Reveal>
+                    )}
+                </aside>
+            </div>
 
-                {hasLocation && (
-                    <Reveal order={5} className={SECTION_CLASS}>
-                        <SalonLocation
-                            address={salon.address}
-                            location={salon.location}
-                        />
-                    </Reveal>
-                )}
-            </main>
-
-            {/* Bottom padding on mobile leaves room for the fixed action bar */}
-            <footer className="pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground md:pb-8">
-                Hecho con peluWeb
-            </footer>
+            <SalonFooter />
+            {/* Outside every Reveal: a transformed ancestor breaks `fixed`. */}
+            <StickyActions
+                bookingUrl={salon.bookingUrl}
+                whatsappUrl={salon.whatsappUrl}
+                directionsUrl={salon.location?.directionsUrl ?? null}
+            />
         </BrandTheme>
     );
 }

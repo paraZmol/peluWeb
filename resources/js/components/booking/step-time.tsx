@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import type { useAvailability } from '@/hooks/use-availability';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
-import { DayStrip } from './day-strip';
+import { CHIP_ACTION } from '@/lib/skin-actions';
+import { DayStrip, toDate } from './day-strip';
 import { SlotGrid } from './slot-grid';
 import type { BookingDay } from './types';
+
+const monthFormat = new Intl.DateTimeFormat('es-PE', { month: 'long' });
 
 type Props = {
     days: BookingDay[];
@@ -39,7 +41,7 @@ export function StepTime({ days, wizard, availability }: Props) {
             ?.date ?? null;
 
     return (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
             {wizard.notice && (
                 <p
                     role="alert"
@@ -48,7 +50,21 @@ export function StepTime({ days, wizard, availability }: Props) {
                     {wizard.notice}
                 </p>
             )}
-            <DayStrip days={days} value={date} onChange={wizard.chooseDate} />
+            <div className="flex flex-col gap-2">
+                <p className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="font-bold first-letter:uppercase">
+                        {monthFormat.format(toDate(date ?? firstOpen))}
+                    </span>
+                    <span className="text-muted-foreground sm:hidden">
+                        Desliza para ver más días
+                    </span>
+                </p>
+                <DayStrip
+                    days={days}
+                    value={date}
+                    onChange={wizard.chooseDate}
+                />
+            </div>
             <SlotGrid
                 slots={slots}
                 error={error}
@@ -62,13 +78,13 @@ export function StepTime({ days, wizard, availability }: Props) {
                             {wizard.staffId !== null && ' o con otra persona'}.
                         </span>
                         {nextOpen && (
-                            <Button
-                                variant="outline"
-                                className="rounded-full"
+                            <button
+                                type="button"
+                                className={CHIP_ACTION}
                                 onClick={() => wizard.chooseDate(nextOpen)}
                             >
                                 Ver el siguiente día
-                            </Button>
+                            </button>
                         )}
                     </>
                 }

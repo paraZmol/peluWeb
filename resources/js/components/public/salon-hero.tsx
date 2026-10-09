@@ -1,79 +1,22 @@
-import AppLogoIcon from '@/components/app-logo-icon';
-import { Badge } from '@/components/ui/badge';
-import { OpeningStatus } from './opening-hours';
-import type { PublicSalon } from './types';
+import { useSalonTheme } from '@/components/salon/brand-theme';
+import { CardOverCoverHero } from './hero/card-over-cover-hero';
+import { ColorBlockHero } from './hero/color-block-hero';
+import { effectiveHero } from './hero/cover';
+import type { HeroProps } from './hero/cover';
+import { FullBleedHero } from './hero/full-bleed-hero';
+import { StackedHero } from './hero/stacked-hero';
 
-type Props = {
-    salon: Pick<
-        PublicSalon,
-        | 'name'
-        | 'businessType'
-        | 'clientele'
-        | 'description'
-        | 'logoUrl'
-        | 'coverUrl'
-        | 'openingHours'
-    >;
+const HEROES = {
+    'full-bleed': FullBleedHero,
+    'card-over-cover': CardOverCoverHero,
+    'color-block': ColorBlockHero,
+    stacked: StackedHero,
 };
 
-export function SalonHero({ salon }: Props) {
-    return (
-        <header>
-            <div
-                className={
-                    salon.coverUrl
-                        ? 'relative aspect-video w-full overflow-hidden md:aspect-auto md:h-90'
-                        : 'relative h-24 w-full overflow-hidden'
-                }
-            >
-                {salon.coverUrl ? (
-                    <>
-                        <img
-                            src={salon.coverUrl}
-                            alt=""
-                            className="size-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-linear-to-t from-background via-background/20 to-transparent" />
-                    </>
-                ) : (
-                    <div className="size-full bg-primary/15" />
-                )}
-            </div>
+/** The salon's cover in the arrangement of its template (`layout.hero`). */
+export function SalonHero({ salon }: HeroProps) {
+    const { layout } = useSalonTheme();
+    const Hero = HEROES[effectiveHero(layout.hero, salon)];
 
-            <div className="relative mx-auto -mt-10 flex w-full max-w-3xl flex-col gap-3 px-4">
-                <div className="size-18 overflow-hidden rounded-2xl bg-card ring-4 ring-background">
-                    {salon.logoUrl ? (
-                        <img
-                            src={salon.logoUrl}
-                            alt={`Logo de ${salon.name}`}
-                            className="size-full object-cover"
-                        />
-                    ) : (
-                        <div className="flex size-full items-center justify-center bg-primary text-primary-foreground">
-                            <AppLogoIcon className="size-9" />
-                        </div>
-                    )}
-                </div>
-
-                <h1 className="font-display text-3xl font-semibold text-balance break-words">
-                    {salon.name}
-                </h1>
-
-                <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{salon.businessType}</Badge>
-                    <Badge variant="outline">{salon.clientele}</Badge>
-                </div>
-
-                {salon.openingHours && (
-                    <OpeningStatus hours={salon.openingHours} />
-                )}
-
-                {salon.description && (
-                    <p className="text-base whitespace-pre-line text-muted-foreground">
-                        {salon.description}
-                    </p>
-                )}
-            </div>
-        </header>
-    );
+    return <Hero salon={salon} />;
 }

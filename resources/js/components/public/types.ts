@@ -1,4 +1,4 @@
-import type { BrandTokens } from '@/types';
+import type { BrandTokens, SalonTheme } from '@/types';
 
 export type PublicServiceVariant = {
     label: string;
@@ -48,6 +48,13 @@ export type PublicOpeningHours = {
     };
 };
 
+/** Who attends, as clients see them in "Quién te atiende". */
+export type PublicTeamMember = {
+    name: string;
+    title: string | null;
+    photoUrl: string | null;
+};
+
 export type PublicSalon = {
     name: string;
     slug: string;
@@ -57,6 +64,12 @@ export type PublicSalon = {
     logoUrl: string | null;
     coverUrl: string | null;
     brand: BrandTokens | null;
+    theme: SalonTheme;
+    /** Its manager is looking at another template (`?diseno=`). */
+    isPreview: boolean;
+    /** Some photos are samples standing in for the salon's own (preview only). */
+    usesSamplePhotos: boolean;
+    team: PublicTeamMember[];
     whatsappUrl: string | null;
     /** Online booking wizard; null when the salon cannot take bookings yet. */
     bookingUrl: string | null;

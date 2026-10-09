@@ -90,6 +90,19 @@ test.describe('Diseño de tu página (Mi salón)', () => {
         );
         await expect(dialog.getByText('Cargando vista previa…')).toBeHidden();
 
+        // Inside the phone the page goes nowhere: no way back, dead links.
+        await expect(
+            preview.getByRole('link', { name: 'Volver a Mi salón' }),
+        ).toHaveCount(0);
+        await preview
+            .getByRole('link', { name: 'Reservar cita', exact: true })
+            .last()
+            // The frame is scaled to 75 %: a real pointer misses the target.
+            .dispatchEvent('click');
+        await expect(preview.getByRole('heading', { level: 1 })).toContainText(
+            'Estudio Ñusta',
+        );
+
         await dialog
             .getByRole('button', { name: 'Elegir este diseño' })
             .click();

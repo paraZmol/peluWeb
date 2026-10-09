@@ -1,20 +1,22 @@
-import { Head, Link } from '@inertiajs/react';
-import { CalendarClock, MessageCircle, Navigation, Repeat } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { BookingActions } from '@/components/booking/booking-actions';
+import { BookingHero } from '@/components/booking/booking-hero';
+import { BookingMapCard } from '@/components/booking/booking-map-card';
 import { BookingSummary } from '@/components/booking/booking-summary';
 import { DepositCard } from '@/components/booking/deposit-card';
-import { MoveDialog } from '@/components/booking/move-dialog';
 import { ReferencePhoto } from '@/components/booking/reference-photo';
-import { StatusBadge } from '@/components/booking/status-badge';
-import { SuccessCheck } from '@/components/booking/success-check';
 import type { BookingDay, ClientBooking } from '@/components/booking/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
-import { Button } from '@/components/ui/button';
-import { cancel, index, move, slots } from '@/routes/bookings';
-import { create as bookAgain } from '@/routes/salons/booking';
+import { CHIP_ACTION } from '@/lib/skin-actions';
+import { cancel, index } from '@/routes/bookings';
 
 type Props = { booking: ClientBooking; days: BookingDay[] };
 
+/**
+ * A booking in its salon's template. Phones: one column. Desktop: the
+ * booking on the left, the map on the right.
+ */
 export default function BookingShow({ booking, days }: Props) {
     const { salon } = booking;
     const isActive =
@@ -22,139 +24,85 @@ export default function BookingShow({ booking, days }: Props) {
         (booking.status === 'confirmed' || booking.status === 'pending');
 
     return (
-        <BrandTheme brand={salon.brand}>
+        <BrandTheme
+            brand={salon.brand}
+            theme={salon.theme}
+            className="flex-1 bg-background text-foreground"
+        >
             <Head title={`Reserva en ${salon.name}`} />
 
-            <div className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
-                <header className="flex flex-col items-center gap-3 text-center">
-                    {booking.status === 'confirmed' && booking.isUpcoming && (
-                        <SuccessCheck celebrateKey={booking.code} />
+            <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_auto_1fr] lg:gap-x-8 lg:py-8">
+                <BookingHero booking={booking} className="lg:col-span-2" />
+
+                <div className="flex min-w-0 flex-col gap-5 lg:col-start-1">
+                    {booking.deposit && (
+                        <DepositCard deposit={booking.deposit} />
                     )}
-                    <p role="status" className="sr-only">
-                        {`Tu reserva en ${salon.name}: ${booking.statusLabel}.`}
-                    </p>
-                    <h1 className="font-display text-2xl font-semibold text-balance sm:text-3xl">
-                        {salon.name}
-                    </h1>
-                    <StatusBadge
-                        status={booking.status}
-                        label={booking.statusLabel}
+                    <BookingSummary
+                        date={booking.date}
+                        time={booking.time}
+                        endTime={booking.endTime}
+                        staffName={booking.staffName}
+                        address={salon.address}
+                        items={booking.services}
+                        total={booking.price}
+                        footer={
+                            <p className="text-xs text-muted-foreground">
+                                Código de reserva:{' '}
+                                <span className="font-semibold tracking-widest text-foreground">
+                                    {booking.code}
+                                </span>
+                            </p>
+                        }
                     />
-                </header>
-
-                {booking.deposit && <DepositCard deposit={booking.deposit} />}
-
-                <BookingSummary
-                    date={booking.date}
-                    time={booking.time}
-                    endTime={booking.endTime}
-                    staffName={booking.staffName}
-                    address={salon.address}
-                    items={booking.services}
-                    total={booking.price}
-                    footer={
-                        <p className="text-xs text-muted-foreground">
-                            Código de reserva:{' '}
-                            <span className="font-medium tracking-widest text-foreground">
-                                {booking.code}
-                            </span>
-                        </p>
-                    }
-                />
-
-                <div className="grid gap-2 sm:flex sm:flex-wrap">
-                    {booking.canMove && (
-                        <MoveDialog
-                            trigger={
-                                <Button
-                                    variant="outline"
-                                    className="rounded-full"
-                                >
-                                    <CalendarClock aria-hidden /> Cambiar día u
-                                    hora
-                                </Button>
-                            }
-                            title="Cambiar día u hora"
-                            confirmVerb="Cambiar"
-                            description={`Con ${booking.staffName}. Los servicios y el precio no cambian.`}
-                            days={days}
-                            date={booking.date}
-                            brand={salon.brand}
-                            slotsUrl={(date) =>
-                                slots.url(booking.code, { query: { date } })
-                            }
-                            moveUrl={move.url(booking.code)}
-                        />
-                    )}
-                    {isActive && salon.directionsUrl && (
-                        <Button
-                            asChild
-                            variant="outline"
-                            className="rounded-full"
-                        >
-                            <a
-                                href={salon.directionsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <Navigation aria-hidden /> Cómo llegar
-                            </a>
-                        </Button>
-                    )}
-                    {salon.whatsappUrl && (
-                        <Button
-                            asChild
-                            variant="outline"
-                            className="rounded-full"
-                        >
-                            <a
-                                href={salon.whatsappUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <MessageCircle aria-hidden /> Escribir al salón
-                            </a>
-                        </Button>
-                    )}
-                    {!isActive && (
-                        <Button asChild className="rounded-full">
-                            <Link
-                                href={bookAgain(salon.slug, {
-                                    query: { repetir: booking.code },
-                                })}
-                            >
-                                <Repeat aria-hidden /> Repetir esta reserva
-                            </Link>
-                        </Button>
-                    )}
+                    <BookingActions
+                        booking={booking}
+                        days={days}
+                        isActive={isActive}
+                    />
                 </div>
 
-                <ReferencePhoto
-                    code={booking.code}
-                    url={booking.referencePhotoUrl}
-                    canChange={booking.canAttachPhoto}
+                <BookingMapCard
+                    salon={salon}
+                    className="lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:self-start"
                 />
 
-                {booking.canCancel && (
-                    <div className="flex items-center justify-between gap-3 border-t pt-4 [&_button]:h-11 sm:[&_button]:h-9">
-                        <p className="text-sm text-balance text-muted-foreground">
-                            {booking.cancelForfeitsDeposit
-                                ? `Faltan menos de ${booking.cancelWindowHours} h: si cancelas, la seña no se devuelve.`
-                                : '¿No podrás ir? Avisa con tiempo.'}
-                        </p>
-                        <ConfirmRemoveDialog
-                            triggerLabel="Cancelar reserva"
-                            title="¿Cancelar esta reserva?"
-                            description={
-                                booking.cancelForfeitsDeposit
-                                    ? 'Tu horario quedará libre y la seña que enviaste no se devuelve.'
-                                    : 'Tu horario quedará libre para otra persona.'
-                            }
-                            confirmLabel="Sí, cancelar mi reserva"
-                            form={cancel.form(booking.code)}
-                        />
-                    </div>
-                )}
+                <div className="flex min-w-0 flex-col gap-5 lg:col-start-1">
+                    <ReferencePhoto
+                        code={booking.code}
+                        url={booking.referencePhotoUrl}
+                        canChange={booking.canAttachPhoto}
+                    />
+                    {booking.canCancel && (
+                        <div className="flex items-center justify-between gap-3 border-t pt-5">
+                            <p className="text-sm text-balance text-muted-foreground">
+                                {booking.cancelForfeitsDeposit
+                                    ? `Faltan menos de ${booking.cancelWindowHours} h: si cancelas, la seña no se devuelve.`
+                                    : '¿No podrás ir? Avisa con tiempo.'}
+                            </p>
+                            <ConfirmRemoveDialog
+                                themed
+                                triggerLabel="Cancelar reserva"
+                                trigger={
+                                    <button
+                                        type="button"
+                                        className={CHIP_ACTION}
+                                    >
+                                        Cancelar reserva
+                                    </button>
+                                }
+                                title="¿Cancelar esta reserva?"
+                                description={
+                                    booking.cancelForfeitsDeposit
+                                        ? 'Tu horario quedará libre y la seña que enviaste no se devuelve.'
+                                        : 'Tu horario quedará libre para otra persona.'
+                                }
+                                confirmLabel="Sí, cancelar mi reserva"
+                                form={cancel.form(booking.code)}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </BrandTheme>
     );

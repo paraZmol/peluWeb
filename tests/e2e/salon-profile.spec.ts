@@ -29,9 +29,14 @@ test.describe('Perfil y página pública del salón', () => {
         await expect(page.getByText('Datos del salón guardados')).toBeVisible();
 
         await page.goto('/s/salon-uno');
-        const cta = page.getByRole('link', { name: 'Reservar', exact: true });
+        const cta = page.getByRole('link', {
+            name: 'Reservar cita',
+            exact: true,
+        });
         await expect(cta).toBeVisible();
-        await expect(cta).toHaveCSS('background-color', 'rgb(29, 78, 216)');
+        // Salón Uno uses Nocturna, which is always dark: the button takes
+        // the variant of #1d4ed8 the server computes for dark backgrounds.
+        await expect(cta).toHaveCSS('background-color', 'rgb(40, 87, 218)');
         await expect(
             page.getByText('Cortes clásicos y modernos.'),
         ).toBeVisible();

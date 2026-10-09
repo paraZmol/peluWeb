@@ -1,4 +1,4 @@
-import type { BrandTokens } from '@/types';
+import type { BrandTokens, SalonTheme } from '@/types';
 
 export type BookableVariant = {
     id: number;
@@ -32,6 +32,7 @@ export type BookableSalon = {
     slug: string;
     logoUrl: string | null;
     brand: BrandTokens | null;
+    theme: SalonTheme;
     staff: BookableStaff[];
     serviceGroups: { label: string; services: BookableService[] }[];
 };
@@ -123,6 +124,7 @@ export type ClientBooking = {
         name: string;
         slug: string;
         brand: BrandTokens | null;
+        theme: SalonTheme;
         address: string | null;
         directionsUrl: string | null;
         whatsappUrl: string | null;

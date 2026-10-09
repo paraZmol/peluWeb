@@ -1,11 +1,12 @@
 import { Head } from '@inertiajs/react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { SelectionBar } from '@/components/booking/selection-bar';
 import { SelectionRecap } from '@/components/booking/selection-recap';
 import { StepConfirm } from '@/components/booking/step-confirm';
+import { StepFrame } from '@/components/booking/step-frame';
 import { StepServices } from '@/components/booking/step-services';
 import { StepStaff } from '@/components/booking/step-staff';
 import { StepTime } from '@/components/booking/step-time';
+import { STEP_TITLES, stepSubtitle } from '@/components/booking/step-texts';
 import type {
     BookableSalon,
     BookingDay,
@@ -14,6 +15,7 @@ import type {
 } from '@/components/booking/types';
 import { WizardHeader } from '@/components/booking/wizard-header';
 import { BrandTheme } from '@/components/salon/brand-theme';
+import { ThemeBackdrop } from '@/components/salon/theme-backdrop';
 import { useAvailability } from '@/hooks/use-availability';
 import { STEPS, useBookingWizard } from '@/hooks/use-booking-wizard';
 import { show as salonPage } from '@/routes/salons';
@@ -28,13 +30,6 @@ type Props = {
     repeat: RepeatBooking | null;
 };
 
-const TITLES = [
-    '¿Qué te quieres hacer?',
-    '¿Con quién?',
-    '¿Cuándo?',
-    'Revisa y confirma',
-];
-
 export default function Booking({
     salon,
     days,
@@ -43,7 +38,6 @@ export default function Booking({
     preselectedServiceId,
     repeat,
 }: Props) {
-    const reduceMotion = useReducedMotion();
     const resume =
         typeof window !== 'undefined' &&
         new URLSearchParams(window.location.search).has('continuar');
@@ -62,19 +56,25 @@ export default function Booking({
         // Nothing to ask until a professional was chosen.
         date: wizard.step >= 2 ? (wizard.date ?? firstOpenDay) : null,
     });
-    const staffName =
-        salon.staff.find((person) => person.id === wizard.staffId)?.name ??
-        null;
-    const offset = reduceMotion ? 0 : 32 * wizard.direction;
+    const staff =
+        wizard.step === 2
+            ? salon.staff.find((person) => person.id === wizard.staffId)
+            : undefined;
+    // Choosing who and when: what was picked stays at hand.
+    const hasRecap = wizard.step === 1 || wizard.step === 2;
 
     return (
         <BrandTheme
             brand={salon.brand}
+            theme={salon.theme}
             className="min-h-svh bg-background text-foreground"
         >
             <Head title={`Reservar en ${salon.name}`} />
+            <ThemeBackdrop />
             <WizardHeader
                 title={salon.name}
+                logoUrl={salon.logoUrl}
+                wide
                 exit={{
                     href: salonPage(salon.slug),
                     label: `Volver a ${salon.name}`,
@@ -84,62 +84,57 @@ export default function Booking({
                 onBack={() => wizard.goTo(wizard.step - 1)}
             />
 
-            <main className="mx-auto w-full max-w-2xl overflow-x-clip px-4 pt-6 pb-32 sm:pt-8">
+            <main className="mx-auto w-full max-w-5xl overflow-x-clip px-4 pt-6 pb-32 sm:pt-10">
                 {!isOpen ? (
                     <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
                         Este salón no está recibiendo reservas en línea por
                         ahora.
                     </p>
                 ) : (
-                    <AnimatePresence mode="wait" initial={false}>
-                        <motion.div
-                            key={wizard.step}
-                            initial={{ opacity: 0, x: offset }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -offset }}
-                            transition={{
-                                duration: 0.25,
-                                ease: [0.22, 1, 0.36, 1],
-                            }}
-                            className="flex flex-col gap-5"
-                        >
-                            <h1 className="font-display text-2xl font-semibold text-balance sm:text-3xl">
-                                {TITLES[wizard.step]}
-                            </h1>
-                            {(wizard.step === 1 || wizard.step === 2) && (
+                    <StepFrame
+                        step={wizard.step}
+                        direction={wizard.direction}
+                        title={STEP_TITLES[wizard.step]}
+                        subtitle={stepSubtitle(
+                            wizard.step,
+                            staff?.name ?? null,
+                        )}
+                        narrow={wizard.step === 3}
+                        recap={
+                            hasRecap && (
                                 <SelectionRecap
                                     wizard={wizard}
-                                    staffName={
-                                        wizard.step === 2 ? staffName : null
-                                    }
+                                    staffName={staff?.name ?? null}
+                                    staffPhotoUrl={staff?.photoUrl}
                                 />
-                            )}
-                            {wizard.step === 0 && (
-                                <StepServices salon={salon} wizard={wizard} />
-                            )}
-                            {wizard.step === 1 && <StepStaff wizard={wizard} />}
-                            {wizard.step === 2 && (
-                                <StepTime
-                                    days={days}
-                                    wizard={wizard}
-                                    availability={availability}
-                                />
-                            )}
-                            {wizard.step === 3 && (
-                                <StepConfirm
-                                    salon={salon}
-                                    wizard={wizard}
-                                    quote={availability.quote}
-                                    viewer={viewer}
-                                />
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
+                            )
+                        }
+                    >
+                        {wizard.step === 0 && (
+                            <StepServices salon={salon} wizard={wizard} />
+                        )}
+                        {wizard.step === 1 && <StepStaff wizard={wizard} />}
+                        {wizard.step === 2 && (
+                            <StepTime
+                                days={days}
+                                wizard={wizard}
+                                availability={availability}
+                            />
+                        )}
+                        {wizard.step === 3 && (
+                            <StepConfirm
+                                salon={salon}
+                                wizard={wizard}
+                                quote={availability.quote}
+                                viewer={viewer}
+                            />
+                        )}
+                    </StepFrame>
                 )}
             </main>
 
             {isOpen && wizard.step === 0 && wizard.chosen.length > 0 && (
-                <SelectionBar wizard={wizard} />
+                <SelectionBar wizard={wizard} wide />
             )}
         </BrandTheme>
     );

@@ -12,7 +12,7 @@ const fullFormat = new Intl.DateTimeFormat('es-PE', {
 });
 
 /** Built from parts so the browser's timezone never shifts the day. */
-function toDate(date: string): Date {
+export function toDate(date: string): Date {
     const [year, month, day] = date.split('-').map(Number);
 
     return new Date(year, month - 1, day);
@@ -71,11 +71,12 @@ export function DayStrip({
             role="radiogroup"
             aria-label={label}
             onKeyDown={onKeyDown}
-            className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2"
+            className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pt-1 pb-3"
         >
             {days.map((day, index) => {
                 const date = toDate(day.date);
                 const isSelected = day.date === value;
+                const isToday = index === 0;
 
                 return (
                     <button
@@ -89,24 +90,32 @@ export function DayStrip({
                         disabled={day.closed}
                         onClick={() => onChange(day.date)}
                         className={cn(
-                            'flex h-20 w-16 shrink-0 snap-start flex-col items-center justify-center rounded-2xl border text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                            'relative flex h-21 w-16 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg text-sm transition-transform duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60',
                             isSelected
-                                ? 'border-primary bg-primary text-primary-foreground'
-                                : 'bg-card hover:border-foreground/20 hover:bg-accent',
-                            day.closed && 'opacity-40',
+                                ? '-translate-y-0.5 skin-primary'
+                                : 'skin-chip',
+                            day.closed && 'opacity-50',
                         )}
                     >
                         <span
                             className={cn(
-                                'text-xs capitalize',
-                                !isSelected && 'text-muted-foreground',
+                                'text-xs font-bold tracking-wide uppercase',
+                                !isSelected && isToday && 'text-brand-text',
+                                !isSelected &&
+                                    !isToday &&
+                                    'text-muted-foreground',
                             )}
                         >
-                            {index === 0
+                            {isToday
                                 ? 'Hoy'
                                 : weekdayFormat.format(date).replace('.', '')}
                         </span>
-                        <span className="text-xl leading-7 font-semibold tabular-nums">
+                        <span
+                            className={cn(
+                                'text-2xl leading-7 font-extrabold tabular-nums',
+                                day.closed && 'line-through',
+                            )}
+                        >
                             {date.getDate()}
                         </span>
                         <span
@@ -115,8 +124,16 @@ export function DayStrip({
                                 !isSelected && 'text-muted-foreground',
                             )}
                         >
-                            {monthFormat.format(date).replace('.', '')}
+                            {day.closed
+                                ? 'cerrado'
+                                : monthFormat.format(date).replace('.', '')}
                         </span>
+                        {isToday && !isSelected && (
+                            <span
+                                aria-hidden
+                                className="absolute bottom-1.5 size-1 rounded-full bg-primary"
+                            />
+                        )}
                     </button>
                 );
             })}

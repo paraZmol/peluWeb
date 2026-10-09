@@ -1,144 +1,72 @@
 import { Link } from '@inertiajs/react';
-import {
-    CalendarCheck,
-    Instagram,
-    MessageCircle,
-    Navigation,
-    Share2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { ArrowRight, MessageCircle, Navigation } from 'lucide-react';
+import { CHIP_ICON, PRIMARY_ACTION } from '@/lib/skin-actions';
+import { cn } from '@/lib/utils';
 
 type Props = {
-    salonName: string;
     bookingUrl: string | null;
     whatsappUrl: string | null;
-    instagramUrl: string | null;
     directionsUrl: string | null;
 };
 
-async function share(salonName: string): Promise<void> {
-    const url = window.location.href;
+const MAIN = cn(PRIMARY_ACTION, 'flex-1');
 
-    if (typeof navigator.share === 'function') {
-        try {
-            await navigator.share({ title: salonName, url });
-        } catch {
-            // Closing the share sheet rejects too; there is nothing to report.
-        }
-
-        return;
-    }
-
-    try {
-        await navigator.clipboard.writeText(url);
-        toast.success('Enlace copiado');
-    } catch {
-        toast.error('No pudimos copiar el enlace');
-    }
-}
-
-/** Fixed to the bottom (thumb zone) on mobile, inline on desktop. */
+/**
+ * The dock: fixed in the thumb zone on phones and tablets; on desktop the
+ * booking card in the cover does its job. Without online booking the main
+ * action is WhatsApp, and without that, the way to get there.
+ */
 export function StickyActions({
-    salonName,
     bookingUrl,
     whatsappUrl,
-    instagramUrl,
     directionsUrl,
 }: Props) {
+    if (!bookingUrl && !whatsappUrl && !directionsUrl) {
+        return null;
+    }
+
     return (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background pb-[env(safe-area-inset-bottom)] backdrop-blur md:static md:border-0 md:bg-transparent md:pb-0 md:backdrop-blur-none">
-            <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-4 py-3 md:py-0">
-                {bookingUrl && (
-                    <Button
-                        asChild
-                        size="lg"
-                        className="h-12 min-w-0 flex-1 rounded-full md:h-11 md:flex-none"
-                    >
-                        <Link href={bookingUrl}>
-                            <CalendarCheck aria-hidden />
-                            <span className="truncate">Reservar</span>
-                        </Link>
-                    </Button>
-                )}
+        <div className="fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] skin-dock lg:hidden">
+            <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
                 {bookingUrl && whatsappUrl && (
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="icon"
-                        className="size-12 shrink-0 rounded-full md:size-11"
+                    <a
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Escribir por WhatsApp"
+                        className={CHIP_ICON}
                     >
-                        <a
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Escribir por WhatsApp"
-                        >
-                            <MessageCircle aria-hidden />
-                        </a>
-                    </Button>
+                        <MessageCircle aria-hidden />
+                    </a>
+                )}
+                {bookingUrl && (
+                    <Link href={bookingUrl} className={MAIN}>
+                        <span className="truncate">Reservar cita</span>
+                        <ArrowRight aria-hidden />
+                    </Link>
                 )}
                 {!bookingUrl && whatsappUrl && (
-                    <Button
-                        asChild
-                        size="lg"
-                        className="h-12 min-w-0 flex-1 rounded-full md:h-11 md:flex-none"
+                    <a
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={MAIN}
                     >
-                        <a
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <MessageCircle aria-hidden />
-                            <span className="truncate">
-                                Reservar por WhatsApp
-                            </span>
-                        </a>
-                    </Button>
+                        <MessageCircle aria-hidden />
+                        <span className="truncate">Reservar por WhatsApp</span>
+                    </a>
                 )}
-                {/* Without WhatsApp the page still needs a clear next step. */}
                 {!bookingUrl && !whatsappUrl && directionsUrl && (
-                    <Button
-                        asChild
-                        size="lg"
-                        className="h-12 min-w-0 flex-1 rounded-full md:h-11 md:flex-none"
+                    <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={MAIN}
                     >
-                        <a
-                            href={directionsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <Navigation aria-hidden />
-                            <span className="truncate">Cómo llegar</span>
-                        </a>
-                    </Button>
+                        <Navigation aria-hidden />
+                        <span className="truncate">Cómo llegar</span>
+                    </a>
                 )}
-                {instagramUrl && (
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="icon"
-                        className="size-12 shrink-0 rounded-full md:size-11"
-                    >
-                        <a
-                            href={instagramUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Ver en Instagram"
-                        >
-                            <Instagram aria-hidden />
-                        </a>
-                    </Button>
-                )}
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="size-12 shrink-0 rounded-full md:size-11"
-                    aria-label="Compartir"
-                    onClick={() => void share(salonName)}
-                >
-                    <Share2 aria-hidden />
-                </Button>
             </div>
         </div>
     );

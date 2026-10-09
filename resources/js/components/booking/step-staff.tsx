@@ -1,10 +1,12 @@
 import { ChevronRight, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { useInitials } from '@/hooks/use-initials';
 
 type Props = { wizard: BookingWizard };
+
+const PORTRAIT =
+    'flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-portrait bg-brand-soft text-brand-text';
 
 export function StepStaff({ wizard }: Props) {
     const getInitials = useInitials();
@@ -21,7 +23,7 @@ export function StepStaff({ wizard }: Props) {
     const option = (
         key: string,
         staffId: number | null,
-        avatar: ReactNode,
+        portrait: ReactNode,
         name: string,
         detail: string | null,
     ) => (
@@ -29,11 +31,11 @@ export function StepStaff({ wizard }: Props) {
             <button
                 type="button"
                 onClick={() => wizard.chooseStaff(staffId)}
-                className="flex min-h-18 w-full items-center gap-4 rounded-xl border bg-card p-4 text-left transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="flex min-h-22 w-full items-center gap-4 rounded-xl p-3 pr-4 text-left skin-card transition-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:scale-[0.98]"
             >
-                {avatar}
+                {portrait}
                 <span className="min-w-0 flex-1">
-                    <span className="block font-medium break-words">
+                    <span className="block font-semibold break-words">
                         {name}
                     </span>
                     {detail && (
@@ -43,7 +45,7 @@ export function StepStaff({ wizard }: Props) {
                     )}
                 </span>
                 <ChevronRight
-                    className="size-5 shrink-0 text-muted-foreground"
+                    className="size-5 shrink-0 text-brand-text"
                     aria-hidden
                 />
             </button>
@@ -51,34 +53,41 @@ export function StepStaff({ wizard }: Props) {
     );
 
     return (
-        <ul className="flex flex-col gap-2">
-            {wizard.eligibleStaff.length > 1 &&
-                option(
-                    'anyone',
-                    null,
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                        <Users className="size-5" aria-hidden />
-                    </span>,
-                    'Quien esté disponible',
-                    'Verás más horarios para elegir',
+        // Two columns only where the column itself is wide (public desktop).
+        <div className="@container">
+            <ul className="grid gap-2.5 @2xl:grid-cols-2">
+                {wizard.eligibleStaff.length > 1 &&
+                    option(
+                        'anyone',
+                        null,
+                        <span aria-hidden className={PORTRAIT}>
+                            <Users className="size-6" />
+                        </span>,
+                        'Quien esté disponible',
+                        'Verás más horarios para elegir',
+                    )}
+                {wizard.eligibleStaff.map((person) =>
+                    option(
+                        String(person.id),
+                        person.id,
+                        <span aria-hidden className={PORTRAIT}>
+                            {person.photoUrl ? (
+                                <img
+                                    src={person.photoUrl}
+                                    alt=""
+                                    className="size-full object-cover"
+                                />
+                            ) : (
+                                <span className="display-type text-xl">
+                                    {getInitials(person.name)}
+                                </span>
+                            )}
+                        </span>,
+                        person.name,
+                        person.title,
+                    ),
                 )}
-            {wizard.eligibleStaff.map((person) =>
-                option(
-                    String(person.id),
-                    person.id,
-                    <Avatar className="size-12">
-                        <AvatarImage
-                            src={person.photoUrl ?? undefined}
-                            alt=""
-                        />
-                        <AvatarFallback>
-                            {getInitials(person.name)}
-                        </AvatarFallback>
-                    </Avatar>,
-                    person.name,
-                    person.title,
-                ),
-            )}
-        </ul>
+            </ul>
+        </div>
     );
 }

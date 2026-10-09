@@ -1,0 +1,58 @@
+import { ArrowRight, Clock } from 'lucide-react';
+import { formatMinutes, formatPrice } from '@/lib/format';
+import { CategoryIcon } from './category-icon';
+import type { ServiceRowProps } from './row-props';
+import { ServiceBookLink } from './service-book-link';
+import { ServiceExtras } from './service-extras';
+
+/**
+ * Vibrante: each service is its own card, with a round thumbnail, the
+ * duration, the price and a soft "Reservar" pill.
+ */
+export function RoundThumbRow({ service, bookingUrl, group }: ServiceRowProps) {
+    return (
+        <li className="flex flex-col gap-2 rounded-xl p-3 pr-4 skin-card">
+            <div className="flex items-center gap-3.5">
+                <CategoryIcon group={group} />
+                <div className="min-w-0 flex-1">
+                    <h4 className="font-semibold break-words">
+                        {service.name}
+                    </h4>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground tabular-nums">
+                        <Clock className="size-4" aria-hidden />
+                        {formatMinutes(service.minutes)}
+                    </p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    <p className="font-bold whitespace-nowrap tabular-nums">
+                        {service.hasVariants && (
+                            <span className="mr-1 text-xs font-medium text-muted-foreground">
+                                desde
+                            </span>
+                        )}
+                        {formatPrice(service.priceFrom)}
+                    </p>
+                    <ServiceBookLink
+                        service={service}
+                        bookingUrl={bookingUrl}
+                        className="inline-flex h-9 items-center gap-1 rounded-full bg-brand-soft px-3 text-sm font-semibold text-brand-text outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60"
+                    >
+                        Reservar <ArrowRight className="size-4" aria-hidden />
+                    </ServiceBookLink>
+                </div>
+            </div>
+            {(service.description ||
+                service.requiresEvaluation ||
+                service.hasVariants) && (
+                <div className="pl-15.5">
+                    {service.description && (
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                            {service.description}
+                        </p>
+                    )}
+                    <ServiceExtras service={service} />
+                </div>
+            )}
+        </li>
+    );
+}

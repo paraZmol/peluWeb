@@ -10,7 +10,6 @@ import type {
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { formatPrice } from '@/lib/format';
 import {
     cancel,
@@ -35,7 +34,6 @@ const PRIMARY = 'col-span-2';
 
 /** What the viewer may do with a booking; the server decides the list. */
 export function AgendaActions({ booking, days, staffOptions }: Props) {
-    const { currentSalon } = useCurrentSalon();
     const can = (action: AgendaBooking['actions'][number]) =>
         booking.actions.includes(action);
     // One tap, one request: a second tap on a slow connection would act
@@ -112,7 +110,6 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
                     }
                     title="Mover cita"
                     description={`De ${booking.client.name}. Los servicios y el precio no cambian.`}
-                    brand={currentSalon?.brand ?? null}
                     days={days}
                     date={booking.date}
                     staffOptions={staffOptions}

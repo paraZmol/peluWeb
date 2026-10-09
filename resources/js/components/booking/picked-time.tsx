@@ -19,7 +19,7 @@ export function PickedTime({ children }: { children: ReactNode }) {
         <span className="relative inline-block">
             <motion.span
                 aria-hidden
-                className="absolute -inset-x-3 -inset-y-1 rounded-full border border-primary bg-primary/15"
+                className="absolute -inset-x-3 -inset-y-1 rounded-full border border-brand-line bg-brand-soft"
                 initial={{ opacity: 1, scale: 0.92 }}
                 animate={{ opacity: 0, scale: 1.06 }}
                 transition={{ duration: 0.6, delay: 0.2, ease: EASE }}

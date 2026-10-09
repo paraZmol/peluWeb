@@ -53,7 +53,7 @@ export function BookingSummary({
     const row = (icon: ReactNode, label: string, value: ReactNode) => (
         <div className="flex items-start gap-3">
             <span
-                className="mt-0.5 flex w-12 shrink-0 justify-center text-muted-foreground [&_svg]:size-5"
+                className="mt-0.5 flex w-13 shrink-0 justify-center text-brand-text [&_svg]:size-5"
                 aria-hidden
             >
                 {icon}
@@ -66,8 +66,8 @@ export function BookingSummary({
     );
 
     return (
-        <dl className="overflow-hidden rounded-xl border bg-card">
-            <div className="flex items-center gap-3 border-b bg-muted/40 p-4 sm:px-5">
+        <dl className="overflow-hidden rounded-xl skin-raised">
+            <div className="flex items-center gap-3.5 border-b p-4 sm:px-5">
                 <DateTile date={date} />
                 <div className="min-w-0">
                     <dt className="sr-only">Día y hora</dt>
@@ -75,7 +75,7 @@ export function BookingSummary({
                         <span className="block text-sm text-muted-foreground first-letter:uppercase">
                             {formatLongDate(date)}
                         </span>
-                        <span className="block text-lg font-semibold tabular-nums">
+                        <span className="block text-xl font-extrabold tabular-nums">
                             {timeJustPicked ? (
                                 <PickedTime>{formatTime(time)}</PickedTime>
                             ) : (
@@ -115,7 +115,7 @@ export function BookingSummary({
                 {total !== null && (
                     <div className="flex items-baseline justify-between border-t border-dashed pt-3">
                         <dt className="font-medium">Total</dt>
-                        <dd className="text-xl font-semibold tabular-nums">
+                        <dd className="text-xl font-extrabold tabular-nums">
                             {totalPrefix && (
                                 <span className="text-sm font-normal text-muted-foreground">
                                     {totalPrefix}{' '}

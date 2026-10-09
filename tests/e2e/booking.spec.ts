@@ -36,7 +36,9 @@ test.describe('Reservar en línea', () => {
         await login(page, client.email, client.password);
         await expect(page).toHaveURL(/dashboard$/);
         await page.goto('/s/salon-uno');
-        await page.getByRole('link', { name: 'Reservar', exact: true }).click();
+        await page
+            .getByRole('link', { name: 'Reservar cita', exact: true })
+            .click();
         await expect(page).toHaveURL(/\/s\/salon-uno\/reservar/);
 
         await chooseUntilConfirm(page);

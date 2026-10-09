@@ -1,7 +1,7 @@
 import { motion, useReducedMotion } from 'motion/react';
 import type { ReactNode } from 'react';
 
-const STAGGER_SECONDS = 0.08;
+const STAGGER_SECONDS = 0.06;
 
 type Props = {
     order: number;
@@ -9,12 +9,16 @@ type Props = {
     children: ReactNode;
 };
 
-/** Section entrance: fade + 12px rise, staggered by `order`; only a short fade with reduced motion. */
+/**
+ * Section entrance: fade + 12px rise, staggered by `order`; only a short
+ * fade with reduced motion. Never wrap something `fixed` in it: a
+ * transformed ancestor breaks `fixed` on phones.
+ */
 export function Reveal({ order, className, children }: Props) {
     const reduceMotion = useReducedMotion();
 
     return (
-        <motion.section
+        <motion.div
             initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
@@ -25,6 +29,6 @@ export function Reveal({ order, className, children }: Props) {
             className={className}
         >
             {children}
-        </motion.section>
+        </motion.div>
     );
 }

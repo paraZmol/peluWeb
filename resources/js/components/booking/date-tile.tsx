@@ -9,8 +9,8 @@ type Props = {
 };
 
 /**
- * A small calendar leaf (month over day). Decorative: the date is always
- * written out next to it.
+ * A small calendar leaf (month over day) in the brand's tint. Decorative:
+ * the date is always written out next to it.
  */
 export function DateTile({ date, className }: Props) {
     // Built from parts so the browser's timezone never shifts the day.
@@ -20,16 +20,16 @@ export function DateTile({ date, className }: Props) {
         <span
             aria-hidden
             className={cn(
-                'flex size-12 shrink-0 flex-col items-center justify-center rounded-xl border bg-background',
+                'flex size-13 shrink-0 flex-col items-center justify-center rounded-lg bg-brand-soft',
                 className,
             )}
         >
-            <span className="text-xs leading-4 text-muted-foreground uppercase">
+            <span className="text-[0.6875rem] leading-4 font-bold tracking-wider text-brand-text uppercase">
                 {monthFormat
                     .format(new Date(year, month - 1, day))
                     .replace('.', '')}
             </span>
-            <span className="text-lg leading-5 font-semibold tabular-nums">
+            <span className="text-xl leading-6 font-extrabold tabular-nums">
                 {day}
             </span>
         </span>

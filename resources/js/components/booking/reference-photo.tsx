@@ -19,12 +19,12 @@ export function ReferencePhoto({ code, url, canChange }: Props) {
     return (
         <section
             aria-labelledby="reference-photo-title"
-            className="flex flex-col gap-3 rounded-xl border bg-card p-4"
+            className="flex flex-col gap-3 rounded-xl p-4 skin-card sm:p-5"
         >
             <div>
                 <h2
                     id="reference-photo-title"
-                    className="font-sans text-base font-semibold"
+                    className="font-sans text-base font-bold"
                 >
                     Mi estilo
                 </h2>
@@ -39,7 +39,7 @@ export function ReferencePhoto({ code, url, canChange }: Props) {
                 <img
                     src={url}
                     alt="Foto de referencia de tu estilo"
-                    className="max-h-80 w-full rounded-lg bg-muted object-contain"
+                    className="max-h-80 w-full rounded-2xl bg-muted object-contain"
                 />
             )}
 

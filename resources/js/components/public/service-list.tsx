@@ -1,61 +1,120 @@
-import { MessageCircle, Scissors } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ServiceRow } from './service-row';
-import type { PublicServiceGroup } from './types';
+import { MessageCircle, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { useSalonTheme } from '@/components/salon/brand-theme';
+import { PRIMARY_ACTION } from '@/lib/skin-actions';
+import { cn } from '@/lib/utils';
+import { SectionHeading } from './section-heading';
+import { ServiceGroup } from './service-group';
+import type { PublicPhoto, PublicServiceGroup } from './types';
 
 type Props = {
     groups: PublicServiceGroup[];
     bookingUrl: string | null;
     whatsappUrl: string | null;
+    /** The salon's photos, lent to the first card of each group (photo-card). */
+    photos: PublicPhoto[];
 };
 
-export function ServiceList({ groups, bookingUrl, whatsappUrl }: Props) {
+export function ServiceList({
+    groups,
+    bookingUrl,
+    whatsappUrl,
+    photos,
+}: Props) {
+    const { layout } = useSalonTheme();
+    const [filter, setFilter] = useState<string | null>(null);
     const visibleGroups = groups.filter((group) => group.services.length > 0);
+    const total = visibleGroups.reduce(
+        (count, group) => count + group.services.length,
+        0,
+    );
+    // Photo cards take room: there, the groups are filtered with chips.
+    const hasFilter =
+        layout.serviceRow === 'photo-card' && visibleGroups.length > 1;
+    const shownGroups =
+        hasFilter && filter !== null
+            ? visibleGroups.filter((group) => group.label === filter)
+            : visibleGroups;
+    const photoFor = (group: PublicServiceGroup): string | null =>
+        photos.length === 0
+            ? null
+            : photos[visibleGroups.indexOf(group) % photos.length].url;
 
     return (
-        <div className="flex flex-col gap-6">
-            <h2 className="font-display text-2xl font-semibold">Servicios</h2>
+        <section
+            aria-labelledby="servicios-titulo"
+            className="flex flex-col gap-6"
+        >
+            <SectionHeading
+                id="servicios-titulo"
+                eyebrow="La carta"
+                title="Servicios"
+                aside={
+                    total > 0
+                        ? `${total} ${total === 1 ? 'servicio' : 'servicios'}`
+                        : undefined
+                }
+            />
 
-            {visibleGroups.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 rounded-xl border bg-card p-6 text-center">
-                    <Scissors className="size-6 text-primary" aria-hidden />
-                    <p className="font-medium">
+            {visibleGroups.length === 0 && (
+                <div className="flex flex-col items-center gap-3 rounded-xl p-8 text-center skin-card">
+                    <span className="flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand-text">
+                        <Sparkles className="size-6" aria-hidden />
+                    </span>
+                    <p className="font-semibold">
                         Pronto verás aquí los servicios
                     </p>
                     <p className="text-sm text-muted-foreground">
                         Mientras tanto, escríbenos y te contamos qué ofrecemos.
                     </p>
                     {whatsappUrl && (
-                        <Button asChild className="mt-2 rounded-full">
-                            <a
-                                href={whatsappUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <MessageCircle aria-hidden /> Escribir por
-                                WhatsApp
-                            </a>
-                        </Button>
+                        <a
+                            href={whatsappUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(PRIMARY_ACTION, 'mt-2')}
+                        >
+                            <MessageCircle aria-hidden /> Escribir por WhatsApp
+                        </a>
                     )}
                 </div>
-            ) : (
-                visibleGroups.map((group) => (
-                    <div key={group.label} className="flex flex-col gap-3">
-                        <h3 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                            {group.label}
-                        </h3>
-                        <ul className="divide-y rounded-xl border bg-card">
-                            {group.services.map((service) => (
-                                <ServiceRow
-                                    key={service.id}
-                                    service={service}
-                                    bookingUrl={bookingUrl}
-                                />
-                            ))}
-                        </ul>
-                    </div>
-                ))
             )}
-        </div>
+
+            {hasFilter && (
+                <div
+                    role="group"
+                    aria-label="Filtrar servicios"
+                    className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:px-0"
+                >
+                    {[null, ...visibleGroups.map((group) => group.label)].map(
+                        (label) => (
+                            <button
+                                key={label ?? 'todos'}
+                                type="button"
+                                aria-pressed={filter === label}
+                                onClick={() => setFilter(label)}
+                                className={cn(
+                                    'h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60',
+                                    filter === label
+                                        ? 'bg-foreground text-background'
+                                        : 'skin-chip',
+                                )}
+                            >
+                                {label ?? 'Todos'}
+                            </button>
+                        ),
+                    )}
+                </div>
+            )}
+
+            {shownGroups.map((group) => (
+                <ServiceGroup
+                    key={group.label}
+                    group={group}
+                    bookingUrl={bookingUrl}
+                    photoUrl={photoFor(group)}
+                />
+            ))}
+        </section>
     );
 }
