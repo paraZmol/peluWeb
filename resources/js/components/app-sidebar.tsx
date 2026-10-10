@@ -6,6 +6,7 @@ import {
     Contact,
     Ticket,
     LayoutGrid,
+    ReceiptText,
     Scissors,
     Store,
     Users,
@@ -28,6 +29,7 @@ import { dashboard } from '@/routes';
 import { index as agenda } from '@/routes/agenda';
 import { index as myBookings } from '@/routes/bookings';
 import { index as clients } from '@/routes/clients';
+import { index as expenses } from '@/routes/expenses';
 import { edit as editSalon } from '@/routes/salon';
 import { index as services } from '@/routes/services';
 import { index as staff } from '@/routes/staff';
@@ -60,6 +62,9 @@ export function AppSidebar() {
             : []),
         ...(can('manage_vip_clients')
             ? [{ title: 'Clientes', href: clients(), icon: BookHeart }]
+            : []),
+        ...(can('manage_cash')
+            ? [{ title: 'Gastos', href: expenses(), icon: ReceiptText }]
             : []),
         ...(isOwner
             ? [

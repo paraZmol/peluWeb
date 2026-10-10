@@ -55,3 +55,16 @@ export function sumAmounts(amounts: string[]): string {
 export function formatCents(cents: number): string {
     return formatPrice(fromCents(cents));
 }
+
+const monthFormat = new Intl.DateTimeFormat('es-PE', {
+    month: 'long',
+    year: 'numeric',
+});
+
+/** "2026-10" → "Octubre de 2026". */
+export function formatMonth(month: string): string {
+    const [year, monthNumber] = month.split('-').map(Number);
+    const text = monthFormat.format(new Date(year, monthNumber - 1, 1));
+
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
