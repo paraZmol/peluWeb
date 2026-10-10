@@ -44,6 +44,13 @@ export function formatDate(date: string): string {
         .toLowerCase();
 }
 
+/** "2026-10-07 15:30" → "mié 7 oct, 3:30 p. m." (already on the salon's clock). */
+export function formatDateTime(dateTime: string): string {
+    const [date, time] = dateTime.split(' ');
+
+    return `${formatDate(date)}, ${formatTime(time)}`;
+}
+
 /** Adds amounts sent as text ("35.50") in whole céntimos, never as floats. */
 export function sumAmounts(amounts: string[]): string {
     return fromCents(

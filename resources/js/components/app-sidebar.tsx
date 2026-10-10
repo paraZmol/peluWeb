@@ -10,6 +10,7 @@ import {
     Scissors,
     Store,
     Users,
+    Wallet,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -28,6 +29,7 @@ import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { dashboard } from '@/routes';
 import { index as agenda } from '@/routes/agenda';
 import { index as myBookings } from '@/routes/bookings';
+import { index as cash } from '@/routes/cash';
 import { index as clients } from '@/routes/clients';
 import { index as expenses } from '@/routes/expenses';
 import { edit as editSalon } from '@/routes/salon';
@@ -64,7 +66,10 @@ export function AppSidebar() {
             ? [{ title: 'Clientes', href: clients(), icon: BookHeart }]
             : []),
         ...(can('manage_cash')
-            ? [{ title: 'Gastos', href: expenses(), icon: ReceiptText }]
+            ? [
+                  { title: 'Caja', href: cash(), icon: Wallet },
+                  { title: 'Gastos', href: expenses(), icon: ReceiptText },
+              ]
             : []),
         ...(isOwner
             ? [
