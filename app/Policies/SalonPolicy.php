@@ -40,6 +40,11 @@ class SalonPolicy
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageCash) ?? false;
     }
 
+    public function viewReports(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->hasPermission(SalonPermission::ViewReports) ?? false;
+    }
+
     public function update(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageSalonProfile) ?? false;

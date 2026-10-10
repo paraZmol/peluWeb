@@ -13,6 +13,7 @@ use App\Http\Controllers\Owner\ExpenseController;
 use App\Http\Controllers\Owner\HolidayController;
 use App\Http\Controllers\Owner\InvitationController;
 use App\Http\Controllers\Owner\MemberController;
+use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\SalonBrandingController;
 use App\Http\Controllers\Owner\SalonController;
 use App\Http\Controllers\Owner\SalonPhotoController;
@@ -156,6 +157,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('comisiones', [CommissionController::class, 'index'])->name('commissions.index');
         Route::post('comisiones/{staff}/liquidar', [CommissionController::class, 'settle'])->name('commissions.settle');
         Route::put('comisiones/{staff}/reglas', [CommissionController::class, 'updateRules'])->name('commissions.rules.update');
+
+        Route::get('reportes', [ReportController::class, 'index'])->name('reports.index');
 
         Route::get('gastos', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::post('gastos', [ExpenseController::class, 'store'])->middleware('throttle:60,1,expenses')->name('expenses.store');

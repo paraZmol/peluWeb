@@ -36,6 +36,19 @@ final readonly class Period
         return new self($start, $end);
     }
 
+    /**
+     * The same number of days, ending the day before this one starts.
+     */
+    public function previous(): self
+    {
+        return new self($this->from->subDays($this->days()), $this->from->subDay());
+    }
+
+    public function days(): int
+    {
+        return (int) $this->from->diffInDays($this->to) + 1;
+    }
+
     public function startsAtUtc(): CarbonImmutable
     {
         return $this->from->utc();
