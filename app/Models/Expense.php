@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property int $id
  * @property int $salon_id
+ * @property int|null $cash_session_id The session open when it was paid; null for another day's expense.
  * @property int|null $expense_category_id
  * @property int $amount_cents
  * @property PaymentMethod $method

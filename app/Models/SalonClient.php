@@ -61,11 +61,19 @@ class SalonClient extends Model
     ];
 
     /**
+     * Health data never leaves in a serialized client: whoever shows it
+     * asks for it by name, after SalonClientPolicy::viewCare.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['care_notes', 'care_consent_at', 'care_consent_by'];
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
-        return ['is_vip' => 'boolean', 'care_consent_at' => 'datetime'];
+        return ['is_vip' => 'boolean', 'care_notes' => 'encrypted', 'care_consent_at' => 'datetime'];
     }
 
     /**

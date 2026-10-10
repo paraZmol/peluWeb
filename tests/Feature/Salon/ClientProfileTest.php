@@ -18,6 +18,7 @@ use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /*
@@ -198,4 +199,46 @@ it('keeps another salon, clients and visitors away from the file', function () {
 
     auth()->logout();
     $this->get(route('clients.show', $this->client))->assertRedirect(route('login'));
+});
+
+it('does not read a form without the health part as a withdrawal', function () {
+    $this->client->forceFill(['care_notes' => 'Alergia a la PPD', 'care_consent_at' => now(), 'care_consent_by' => $this->owner->id])->save();
+
+    $this->actingAs($this->owner)->put(route('clients.notes.update', $this->client), ['notes' => 'Prefiere las mañanas'])->assertSessionHasNoErrors();
+    $this->client->refresh();
+
+    expect($this->client->notes)->toBe('Prefiere las mañanas')
+        ->and($this->client->care_notes)->toBe('Alergia a la PPD')
+        ->and($this->client->care_consent_at)->not->toBeNull()
+        ->and(ClientConsent::withoutGlobalScope('salon')->count())->toBe(0);
+});
+
+it('gives no reason to read health data to a visit that never happened', function () {
+    $this->client->forceFill(['care_notes' => 'Alergia a la PPD', 'care_consent_at' => now(), 'care_consent_by' => $this->owner->id])->save();
+    $booking = fileBooking('2026-10-08 11:00');
+
+    $this->actingAs($this->ana->user)->get(route('clients.show', $this->client))
+        ->assertInertia(fn (Assert $page) => $page->where('canSeeCare', true)->where('client.careNotes', 'Alergia a la PPD'));
+
+    app(ChangeBookingStatus::class)->cancel($booking, $this->owner, byClient: false);
+
+    $this->actingAs($this->ana->user)->get(route('clients.show', $this->client))
+        ->assertInertia(fn (Assert $page) => $page->where('canSeeCare', false)->where('client.careNotes', null));
+});
+
+it('stores the care notes encrypted and never serializes them with the client', function () {
+    $this->client->forceFill(['care_notes' => 'Alergia a la PPD', 'care_consent_at' => now()])->save();
+
+    $stored = DB::table('salon_clients')->where('id', $this->client->id)->value('care_notes');
+
+    expect($stored)->not->toContain('Alergia')
+        ->and($this->client->refresh()->toArray())->not->toHaveKeys(['care_notes', 'care_consent_at', 'care_consent_by']);
+});
+
+it('keeps the consent records from being rewritten', function () {
+    $this->actingAs($this->owner)->put(route('clients.notes.update', $this->client), ['care_notes' => 'Alergia', 'care_consent' => true]);
+    $consent = ClientConsent::withoutGlobalScope('salon')->sole();
+
+    expect(fn () => $consent->delete())->toThrow(LogicException::class)
+        ->and(fn () => $consent->forceFill(['text_version' => '9'])->save())->toThrow(LogicException::class);
 });

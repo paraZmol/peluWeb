@@ -24,6 +24,9 @@ class SaveClientNotes
     public function handle(SalonClient $client, ClientNotes $notes, ?User $by, bool $withCare): SalonClient
     {
         return DB::transaction(function () use ($client, $notes, $by, $withCare): SalonClient {
+            // The row as it is now: two people saving at once must not leave
+            // care notes behind an authorization that was just withdrawn.
+            $client = SalonClient::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($client->id);
             $client->notes = $notes->notes;
             $client->formula_notes = $notes->formulaNotes;
 

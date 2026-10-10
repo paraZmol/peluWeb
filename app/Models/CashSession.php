@@ -38,6 +38,23 @@ class CashSession extends Model
         ];
     }
 
+    /**
+     * The salon's open session, for a movement about to be recorded.
+     *
+     * Locks the salon's row until the surrounding transaction ends, so a
+     * movement and a closing never cross: the closing either sees the
+     * movement or happens entirely before it. The salon is the last lock
+     * of every flow; take it after the professional and the booking.
+     */
+    public static function lockOpenIdFor(int $salonId): ?int
+    {
+        Salon::withoutGlobalScopes()->whereKey($salonId)->lockForUpdate()->value('id');
+
+        $id = self::withoutGlobalScope('salon')->where('salon_id', $salonId)->whereNull('closed_at')->value('id');
+
+        return $id === null ? null : (int) $id;
+    }
+
     public function isOpen(): bool
     {
         return $this->closed_at === null;

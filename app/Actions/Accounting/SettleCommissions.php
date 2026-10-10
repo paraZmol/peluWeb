@@ -7,6 +7,7 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Exceptions\PaymentException;
 use App\Models\Booking;
+use App\Models\CashSession;
 use App\Models\CommissionSettlement;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
@@ -86,6 +87,7 @@ class SettleCommissions
     {
         $expense = new Expense;
         $expense->salon_id = $staff->salon_id;
+        $expense->cash_session_id = CashSession::lockOpenIdFor($staff->salon_id);
         $expense->expense_category_id = ExpenseCategory::withoutGlobalScope('salon')
             ->where('salon_id', $staff->salon_id)->where('name', self::EXPENSE_CATEGORY)->value('id');
         $expense->amount_cents = $cents;

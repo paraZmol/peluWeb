@@ -2,10 +2,12 @@
 
 namespace App\Policies;
 
+use App\Enums\BookingStatus;
 use App\Enums\SalonPermission;
 use App\Models\Booking;
 use App\Models\SalonClient;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Who of the team may open a client's file: it holds their history and,
@@ -40,7 +42,7 @@ class SalonClientPolicy
     {
         $membership = $user->membershipIn($client->salon_id);
 
-        return $membership !== null && ($membership->isOwner() || $this->attends($user, $client));
+        return $membership !== null && ($membership->isOwner() || $this->attends($user, $client, onlyKept: true));
     }
 
     /**
@@ -54,13 +56,18 @@ class SalonClientPolicy
 
     /**
      * The professional attended this person or has them booked.
+     *
+     * @param  bool  $onlyKept  leave out visits that never happened: a cancelled or lapsed booking gives no reason to read health data
      */
-    private function attends(User $user, SalonClient $client): bool
+    private function attends(User $user, SalonClient $client, bool $onlyKept = false): bool
     {
         return Booking::withoutGlobalScope('salon')
             ->where('salon_id', $client->salon_id)
             ->where('salon_client_id', $client->id)
             ->whereRelation('staff', 'user_id', $user->id)
+            ->when($onlyKept, fn (Builder $bookings) => $bookings->where(fn (Builder $kept) => $kept
+                ->where('status', BookingStatus::Completed)
+                ->orWhere(fn (Builder $held) => $held->holdingSlot())))
             ->exists();
     }
 }

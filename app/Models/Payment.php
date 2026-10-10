@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property int $salon_id
+ * @property int|null $cash_session_id The session open when it was recorded.
  * @property int|null $booking_id
  * @property int|null $staff_id
  * @property PaymentKind $kind
@@ -57,6 +58,7 @@ class Payment extends Model
     {
         $payment = new self;
         $payment->salon_id = $booking->salon_id;
+        $payment->cash_session_id = CashSession::lockOpenIdFor($booking->salon_id);
         $payment->booking_id = $booking->id;
         $payment->staff_id = $booking->staff_id;
         $payment->kind = $kind;

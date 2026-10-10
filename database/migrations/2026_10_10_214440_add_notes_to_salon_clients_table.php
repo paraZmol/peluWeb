@@ -25,7 +25,8 @@ return new class extends Migration
         Schema::create('client_consents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('salon_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('salon_client_id')->constrained()->cascadeOnDelete();
+            // The proof is not lost with the file: whoever deletes a client decides first what to do with it.
+            $table->foreignId('salon_client_id')->constrained()->restrictOnDelete();
             $table->string('kind', 20);
             $table->string('action', 20);
             // How it was given: today only on paper, signed and kept by the salon.
@@ -40,10 +41,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists('client_consents');
         Schema::table('salon_clients', function (Blueprint $table) {
             $table->dropConstrainedForeignId('care_consent_by');
             $table->dropColumn(['notes', 'formula_notes', 'care_notes', 'care_consent_at']);
         });
-        Schema::dropIfExists('client_consents');
     }
 };

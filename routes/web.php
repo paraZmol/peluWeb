@@ -228,9 +228,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('clientes', [ClientController::class, 'index'])->name('clients.index');
         Route::patch('clientes/{client}/vip', [ClientController::class, 'updateVip'])->name('clients.vip.update');
-        Route::get('clientes/{client}', [ClientProfileController::class, 'show'])->name('clients.show');
+        Route::get('clientes/{client}', [ClientProfileController::class, 'show'])
+            ->middleware('throttle:60,1,client-file')
+            ->name('clients.show');
         Route::put('clientes/{client}/notas', [ClientProfileController::class, 'updateNotes'])
-            ->middleware('throttle:60,1')
+            ->middleware('throttle:60,1,client-notes')
             ->name('clients.notes.update');
 
         Route::post('feriados', [HolidayController::class, 'store'])

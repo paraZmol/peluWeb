@@ -3,12 +3,14 @@
 namespace App\Actions\Accounting;
 
 use App\Data\Accounting\ExpenseInput;
+use App\Models\CashSession;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Salon;
 use App\Models\User;
 use App\Support\Images\ImageStore;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -47,22 +49,24 @@ class SaveExpense
             : $this->images->storeFitted($input->receipt, "salons/{$salon->id}/receipts", self::RECEIPT_MAX_SIDE, self::RECEIPT_MAX_SIDE);
 
         try {
-            $expense->salon_id = $salon->id;
-            $expense->expense_category_id = $this->categoryOf($salon, $input->categoryId);
-            $expense->amount_cents = $input->amountCents;
-            $expense->method = $input->method;
-            // Correcting other fields must not move it to another moment.
-            if (! $expense->exists || $expense->paid_at->setTimezone($salon->timezone)->toDateString() !== $input->localDate) {
-                $expense->paid_at = $input->paidAt($salon->timezone, CarbonImmutable::now());
-            }
-            $expense->description = $input->description;
-            $expense->recorded_by ??= $by?->id;
+            DB::transaction(function () use ($salon, $input, $by, $expense, $newReceipt): void {
+                $expense->salon_id = $salon->id;
+                $expense->expense_category_id = $this->categoryOf($salon, $input->categoryId);
+                $expense->amount_cents = $input->amountCents;
+                $expense->method = $input->method;
+                // Correcting other fields must not move it to another moment.
+                if (! $expense->exists || $expense->paid_at->setTimezone($salon->timezone)->toDateString() !== $input->localDate) {
+                    $this->place($expense, $salon, $input);
+                }
+                $expense->description = $input->description;
+                $expense->recorded_by ??= $by?->id;
 
-            if ($newReceipt !== null || $input->removeReceipt) {
-                $expense->receipt_path = $newReceipt;
-            }
+                if ($newReceipt !== null || $input->removeReceipt) {
+                    $expense->receipt_path = $newReceipt;
+                }
 
-            $expense->save();
+                $expense->save();
+            });
         } catch (Throwable $exception) {
             $this->images->delete($newReceipt);
 
@@ -86,5 +90,16 @@ class SaveExpense
         }
 
         return ExpenseCategory::withoutGlobalScope('salon')->where('salon_id', $salon->id)->whereKey($categoryId)->value('id');
+    }
+
+    /**
+     * When it was paid and from which till: paid today it left the open
+     * one; an expense of another day touches no session.
+     */
+    private function place(Expense $expense, Salon $salon, ExpenseInput $input): void
+    {
+        $now = CarbonImmutable::now();
+        $expense->paid_at = $input->paidAt($salon->timezone, $now);
+        $expense->cash_session_id = $expense->paid_at->equalTo($now) ? CashSession::lockOpenIdFor($salon->id) : null;
     }
 }

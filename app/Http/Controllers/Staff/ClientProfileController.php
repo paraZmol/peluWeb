@@ -27,6 +27,8 @@ class ClientProfileController extends SalonAreaController
         $showsMoney = ($user?->can('manageCash', $salon) ?? false) || ($user?->can('viewReports', $salon) ?? false);
         $seesCare = $user?->can('viewCare', $client) ?? false;
         $client->load('careConsentBy:id,name');
+        // Health data must not come back with "Back" once the session is over.
+        Inertia::encryptHistory();
 
         return Inertia::render('staff/client', [
             'client' => [
@@ -58,7 +60,11 @@ class ClientProfileController extends SalonAreaController
     {
         $this->authorize('updateNotes', $client);
 
-        $save->handle($client, $request->notes(), $request->user(), $request->user()?->can('viewCare', $client) ?? false);
+        // The health part is only touched by who may see it and sent it on
+        // purpose: a partial or stale form must not read as a withdrawal.
+        $withCare = $request->has('care_consent') && ($request->user()?->can('viewCare', $client) ?? false);
+
+        $save->handle($client, $request->notes(), $request->user(), $withCare);
         $this->toast('Ficha actualizada.');
 
         return back();

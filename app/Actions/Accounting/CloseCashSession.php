@@ -19,6 +19,9 @@ class CloseCashSession
     public function handle(CashSession $session, int $countedCashCents, ?string $note, ?User $by): CashSession
     {
         return DB::transaction(function () use ($session, $countedCashCents, $note, $by): CashSession {
+            // The lock every movement takes before naming its session: the
+            // ones under way finish first, the rest find the till closed.
+            CashSession::lockOpenIdFor($session->salon_id);
             $locked = CashSession::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($session->id);
 
             if (! $locked->isOpen()) {

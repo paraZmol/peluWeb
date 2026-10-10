@@ -329,7 +329,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] 5.4 *(2026-10-10)* Reglas de comisión y liquidación por período.
 - [x] 5.5 *(2026-10-10)* Reportes de ganancias y pérdidas con gráficos (cargar skill `dataviz`), filtros y comparativa con el período anterior.
 - [x] 5.6 *(2026-10-10; CSV e impresión a PDF)* Exportar a Excel/CSV/PDF.
-- [ ] 5.7 **Cuadre de caja exacto bajo concurrencia** (deuda de la revisión de cierre, severidad media): cada movimiento (cobro, seña, devolución, gasto, liquidación) guarda la caja abierta en la que entró y el cierre espera a los que están a medias; hoy un cobro confirmado en el mismo instante del cierre, o en su mismo segundo, puede quedar fuera del esperado congelado de esa caja (no se pierde dinero ni cambian los reportes; solo ese cuadre). Hay dos tests omitidos que lo reproducen (`MoneyRaceTest`, `CheckoutBreakerTest`). También: `payments.staff_id` de la seña al pasar la cita a otro profesional. No bloquea la Fase 6.
+- [x] 5.7 *(2026-10-10)* **Cuadre de caja exacto bajo concurrencia**: cada movimiento (cobro, seña, devolución, gasto de hoy, liquidación) guarda la caja abierta en la que entró (`cash_session_id`) tomando antes la fila del salón, y el cierre toma la misma fila: nunca se cruzan y el esperado congelado es la suma exacta de sus movimientos. Queda de la revisión, severidad baja: `payments.staff_id` de la seña al pasar la cita a otro profesional.
 - *Cierre:* test de que los totales cuadran al céntimo + **security-auditor** (permisos de caja) + **qa-tester**.
 
 ### Fase 6 — Clientes, reseñas, notificaciones

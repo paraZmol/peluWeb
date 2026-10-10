@@ -8,6 +8,7 @@ use App\Enums\ConsentKind;
 use App\Enums\ConsentMethod;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
 
 /**
  * One authorization a client gave or withdrew. Rows are only ever added:
@@ -39,6 +40,14 @@ class ClientConsent extends Model
             'action' => ConsentAction::class,
             'method' => ConsentMethod::class,
         ];
+    }
+
+    protected static function booted(): void
+    {
+        $refuse = fn () => throw new LogicException('Consent records are only ever added.');
+
+        static::updating($refuse);
+        static::deleting($refuse);
     }
 
     public static function record(SalonClient $client, ConsentKind $kind, ConsentAction $action, ?User $by): self
