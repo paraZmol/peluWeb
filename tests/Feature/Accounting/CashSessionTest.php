@@ -82,8 +82,8 @@ it('expects the float plus cash in minus cash out, and leaves other methods asid
     $this->actingAs($this->owner)->post(route('cash.open'), ['amount' => '50']);
     $this->travelTo(CarbonImmutable::parse('2026-10-07 08:50', 'America/Lima'));
 
-    // Deposit 10.50 by Yape; balance 24.50 + tip 2.00 = 26.50: 20.00 cash + 6.50 Plin.
-    cashVisit('10:00', PaymentMethod::Yape, new Checkout(tipCents: 200, parts: ['cash' => 2000, 'plin' => 650]));
+    // Deposit 10.50 by Yape; balance 24.50: 20.00 cash + 4.50 Plin.
+    cashVisit('10:00', PaymentMethod::Yape, new Checkout(parts: ['cash' => 2000, 'plin' => 450]));
     // Deposit 10.50 in cash; balance 24.50 in cash.
     cashVisit('11:00', PaymentMethod::Cash, new Checkout(parts: ['cash' => 2450]));
     // Supplies paid in cash, and the rent by transfer.
@@ -96,7 +96,7 @@ it('expects the float plus cash in minus cash out, and leaves other methods asid
 
     // 50.00 + 20.00 + 10.50 + 24.50 − 12.30 = 92.70
     expect($count->expectedCashCents())->toBe(9270)
-        ->and([$count->inCents(PaymentMethod::Yape), $count->inCents(PaymentMethod::Plin), $count->outCents(PaymentMethod::Transfer)])->toBe([1050, 650, 90000])
+        ->and([$count->inCents(PaymentMethod::Yape), $count->inCents(PaymentMethod::Plin), $count->outCents(PaymentMethod::Transfer)])->toBe([1050, 450, 90000])
         ->and($count->netCents(PaymentMethod::Cash))->toBe(4270);
 
     $this->actingAs($this->owner)->get(route('cash.index'))->assertInertia(fn (Assert $page) => $page

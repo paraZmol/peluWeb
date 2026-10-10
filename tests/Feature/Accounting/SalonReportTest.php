@@ -26,7 +26,7 @@ use Carbon\CarbonImmutable;
 | on the salon's calendar (Lima), with a 30 % deposit on a S/ 35.00 cut:
 |
 |   Tue 6: Ana's first visit, paid in full in cash ............ income 35.00
-|   Wed 7: Ana again, S/ 5.00 off and S/ 3.00 tip, by Yape ..... income 30.00
+|   Wed 7: Ana again, S/ 5.00 off, by Yape ...................... income 30.00
 |          Beto's first visit, cut + beard (S/ 55.00), cash .... income 55.00
 |          Caro paid her deposit and did not show up ........... income 10.50 kept
 |          Dani paid his deposit; the salon cancelled, gave it back
@@ -47,7 +47,7 @@ beforeEach(function () {
 
     $ana = SalonClient::factory()->for($this->salon)->create();
     reportVisit('2026-10-06', '10:00', $ana, [$this->cut], new Checkout(parts: ['cash' => 2450]));
-    reportVisit('2026-10-07', '10:00', $ana, [$this->cut], new Checkout(discountCents: 500, tipCents: 300, parts: ['yape' => 2250]));
+    reportVisit('2026-10-07', '10:00', $ana, [$this->cut], new Checkout(discountCents: 500, parts: ['yape' => 1950]));
     reportVisit('2026-10-07', '11:00', SalonClient::factory()->for($this->salon)->create(), [$this->cut, $this->beard], new Checkout(parts: ['cash' => 3850]));
 
     $noShow = reportBooking('2026-10-07', '13:00', SalonClient::factory()->for($this->salon)->create(), [$this->cut]);
@@ -116,7 +116,6 @@ it('adds up income, expenses and profit for a day', function () {
         'keptDepositsCents' => 1050,
         'expensesCents' => 11230,
         'profitCents' => 9550 - 11230,
-        'tipsCents' => 300,
         'discountsCents' => 500,
         'visits' => 2,
     ])->and($report['previous']['incomeCents'])->toBe(3500)
@@ -136,17 +135,17 @@ it('breaks the same totals down without losing a céntimo', function () {
         ->and(array_sum(array_column($report['byCategory'], 'cents')))->toBe($totals['expensesCents'])
         ->and(array_sum(array_column($report['byStaff'], 'salesCents')))->toBe($totals['servicesCents'])
         // 40 % of 35.00, of 30.00 and of 55.00
-        ->and($report['byStaff'])->toBe([['name' => 'Pedro', 'visits' => 3, 'salesCents' => 12000, 'commissionCents' => 1400 + 1200 + 2200, 'tipsCents' => 300]])
+        ->and($report['byStaff'])->toBe([['name' => 'Pedro', 'visits' => 3, 'salesCents' => 12000, 'commissionCents' => 1400 + 1200 + 2200]])
         ->and($report['byService'])->toBe([['name' => 'Corte', 'count' => 3, 'cents' => 10500], ['name' => 'Barba', 'count' => 1, 'cents' => 2000]]);
 
-    // Every sol received: what the visits cost + tips + the kept deposit; the returned one nets to zero.
+    // Every sol received: what the visits cost + the kept deposit; the returned one nets to zero.
     // By the day the money changed hands: the first deposit arrived on Monday 5.
     $report = reportFor('2026-10-05', '2026-10-07');
 
     expect(array_sum(array_column($report['byMethod'], 'cents')))
-        ->toBe($totals['servicesCents'] + $totals['tipsCents'] + $totals['keptDepositsCents'])
+        ->toBe($totals['servicesCents'] + $totals['keptDepositsCents'])
         ->and(collect($report['byMethod'])->pluck('cents', 'value')->all())
-        ->toBe(['cash' => 2450 + 3850 + 1050 + 1050 + 1650, 'yape' => 2250, 'plin' => 1050]);
+        ->toBe(['cash' => 2450 + 3850 + 1050 + 1050 + 1650, 'yape' => 1950, 'plin' => 1050]);
 });
 
 it('counts what was lost and who is new', function () {

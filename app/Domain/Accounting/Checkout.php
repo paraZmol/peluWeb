@@ -9,7 +9,10 @@ use App\Exceptions\PaymentException;
  * How a visit is settled when it ends. Pure: céntimos in, céntimos out.
  *
  *   charged = price − discount
- *   due     = charged − deposit already paid + tip
+ *   due     = charged − deposit already paid
+ *
+ * Tips are not part of it: they are between the client and whoever
+ * attended, and the salon only collects what was agreed.
  *
  * The parts are what the client hands over, one per method, and must add
  * up to exactly `due`.
@@ -23,12 +26,11 @@ final readonly class Checkout
      */
     public function __construct(
         public int $discountCents = 0,
-        public int $tipCents = 0,
         public array $parts = [],
     ) {}
 
     /**
-     * Full price, no discount, no tip, all of it in one method.
+     * Full price, no discount, all of it in one method.
      */
     public static function inFull(PaymentMethod $method, int $priceCents, int $depositPaidCents): self
     {
@@ -42,7 +44,7 @@ final readonly class Checkout
 
     public function dueCents(int $priceCents, int $depositPaidCents): int
     {
-        return $this->chargedCents($priceCents) - $depositPaidCents + $this->tipCents;
+        return $this->chargedCents($priceCents) - $depositPaidCents;
     }
 
     /**
@@ -58,18 +60,13 @@ final readonly class Checkout
      */
     public function assertSettles(int $priceCents, int $depositPaidCents): void
     {
-        if ($this->discountCents < 0 || $this->tipCents < 0 || min([0, ...array_values($this->parts)]) < 0) {
+        if ($this->discountCents < 0 || min([0, ...array_values($this->parts)]) < 0) {
             throw PaymentException::negativeAmount();
         }
 
         // A deposit already taken cannot exceed what the visit ends up costing.
         if ($this->discountCents > $priceCents - $depositPaidCents) {
             throw PaymentException::discountTooLarge();
-        }
-
-        // A tip larger than the visit itself is a typo, or a way to inflate the till.
-        if ($this->tipCents > $priceCents) {
-            throw PaymentException::tipTooLarge();
         }
 
         if (count($this->receivedParts()) > self::MAX_PARTS) {

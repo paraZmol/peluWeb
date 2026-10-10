@@ -9,7 +9,6 @@ namespace App\Domain\Accounting;
  * The discount is spread over the services in proportion to their price
  * (to the céntimo, adding up to exactly the discount), and each service then pays its own
  * rule on what is left: a percent, or a fixed amount capped at that base.
- * The tip never enters: it already belongs to whoever attended.
  */
 final class CommissionCalculator
 {

@@ -81,25 +81,24 @@ it('records the deposit with its method when the team says it arrived', function
         ->and(Payment::withoutGlobalScope('salon')->sole()->staff_id)->toBe($this->staff->id);
 });
 
-it('collects the balance split in two methods, with discount and tip', function () {
+it('collects the balance split in two methods, with a discount', function () {
     $booking = payInService();
 
-    // 35.00 − 5.00 discount − 10.50 deposit + 3.00 tip = 22.50
+    // 35.00 − 5.00 discount − 10.50 deposit = 19.50
     $this->actingAs($this->owner)->post(route('agenda.bookings.complete', $booking), [
         'discount' => '5.00',
-        'tip' => '3',
-        'payments' => [['method' => 'cash', 'amount' => '20.00'], ['method' => 'plin', 'amount' => '2,50']],
+        'payments' => [['method' => 'cash', 'amount' => '17.00'], ['method' => 'plin', 'amount' => '2,50']],
     ])->assertRedirect();
 
     $booking->refresh();
 
     expect($booking->status)->toBe(BookingStatus::Completed)
-        ->and([$booking->charged_cents, $booking->discount_cents, $booking->tip_cents])->toBe([3000, 500, 300])
-        ->and(paymentsOf($booking))->toBe([['deposit', 'yape', 1050], ['charge', 'cash', 2000], ['charge', 'plin', 250]]);
+        ->and([$booking->charged_cents, $booking->discount_cents])->toBe([3000, 500])
+        ->and(paymentsOf($booking))->toBe([['deposit', 'yape', 1050], ['charge', 'cash', 1700], ['charge', 'plin', 250]]);
 
-    // Everything received for the visit = what it cost + the tip, to the céntimo.
+    // Everything received for the visit = what it cost, to the céntimo.
     expect(Payment::withoutGlobalScope('salon')->where('booking_id', $booking->id)->sum('amount_cents'))
-        ->toEqual($booking->charged_cents + $booking->tip_cents);
+        ->toEqual($booking->charged_cents);
 });
 
 it('charges in full when nothing is sent, and shows the agenda what is left to collect', function () {
@@ -156,7 +155,7 @@ it('lets whoever attends collect their own visit, but not a colleague\'s', funct
     expect($booking->refresh()->status)->toBe(BookingStatus::Completed);
 });
 
-it('keeps discounts for whoever handles cash and tips within the price', function () {
+it('keeps discounts for whoever handles cash, and tips out of the books', function () {
     $booking = payInService();
 
     // The barber attends it but has no cash permission: no discounts.
@@ -166,23 +165,21 @@ it('keeps discounts for whoever handles cash and tips within the price', functio
     $this->actingAs($this->barber->user)->get(route('agenda.index'))
         ->assertInertia(fn (Assert $page) => $page->where('bookings.0.canDiscount', false));
 
-    // Nobody records a tip larger than the visit: 24.50 + 35.01 = 59.51.
+    // A tip is between the client and the barber: money beyond the price is refused.
     $this->actingAs($this->owner)->post(route('agenda.bookings.complete', $booking), [
-        'tip' => '35.01', 'payments' => [['method' => 'cash', 'amount' => '59.51']],
+        'tip' => '5.00', 'payments' => [['method' => 'cash', 'amount' => '29.50']],
     ])->assertInertiaFlash('toast.type', 'error');
-    $this->actingAs($this->owner)->post(route('agenda.bookings.complete', $booking), [
-        'tip' => '999999.99', 'payments' => [['method' => 'cash', 'amount' => '999999.99']],
-    ]);
 
     expect($booking->refresh()->status)->toBe(BookingStatus::InService)
         ->and(paymentsOf($booking))->toHaveCount(1);
 
     $this->barber->forceFill(['permissions' => [SalonPermission::ManageCash]])->save();
     $this->actingAs($this->barber->user->fresh())->post(route('agenda.bookings.complete', $booking), [
-        'discount' => '4.50', 'tip' => '35.00', 'payments' => [['method' => 'cash', 'amount' => '55.00']],
+        'discount' => '4.50', 'payments' => [['method' => 'cash', 'amount' => '20.00']],
     ])->assertRedirect();
 
-    expect([$booking->refresh()->charged_cents, $booking->tip_cents])->toBe([3050, 3500]);
+    expect($booking->refresh()->charged_cents)->toBe(3050)
+        ->and(array_sum(array_column(paymentsOf($booking), 2)))->toBe(3050);
 });
 
 describe('giving a deposit back', function () {

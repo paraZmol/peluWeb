@@ -65,14 +65,13 @@ class AgendaBookingResource extends JsonResource
                 // Null until it is cancelled: false means the client lost it.
                 'isRefundable' => $this->deposit_refundable,
             ],
-            // What is left to collect when the visit ends, before discount and tip.
+            // What is left to collect when the visit ends, before any discount.
             'balance' => Money::toAmount($this->price_cents - $booking->depositPaidCents()),
             'depositPaid' => Money::toAmount($booking->depositPaidCents()),
             'canDiscount' => $request->user()?->can('confirmDeposit', $booking) ?? false,
             'charged' => $this->charged_cents === null ? null : [
                 'total' => Money::toAmount($this->charged_cents),
                 'discount' => Money::toAmount($this->discount_cents),
-                'tip' => Money::toAmount($this->tip_cents),
             ],
             'note' => $this->client_note,
             'referencePhotoUrl' => app(ImageStore::class)->url($this->reference_photo_path),

@@ -36,7 +36,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool|null $deposit_refundable
  * @property CarbonImmutable|null $deposit_refunded_at
  * @property int $discount_cents
- * @property int $tip_cents
  * @property int|null $charged_cents What the visit finally cost; null until it is completed.
  * @property int|null $commission_cents What whoever attended earns for it; frozen when it is completed.
  * @property int|null $commission_settlement_id Set once that commission was paid.
@@ -69,7 +68,6 @@ class Booking extends Model
         'deposit_refundable' => null,
         'deposit_refunded_at' => null,
         'discount_cents' => 0,
-        'tip_cents' => 0,
         'charged_cents' => null,
         'commission_cents' => null,
         'commission_settlement_id' => null,

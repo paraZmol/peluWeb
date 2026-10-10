@@ -19,11 +19,6 @@ class PaymentException extends BusinessRuleException
         return new self('El descuento no puede dejar la cita por debajo de la seña que ya se pagó.');
     }
 
-    public static function tipTooLarge(): self
-    {
-        return new self('La propina no puede ser mayor que el precio de la cita.');
-    }
-
     public static function tooManyParts(int $max): self
     {
         return new self("Un cobro se puede repartir en {$max} métodos de pago como máximo.");

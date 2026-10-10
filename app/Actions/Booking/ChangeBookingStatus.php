@@ -75,7 +75,7 @@ class ChangeBookingStatus
 
     /**
      * The visit ends and is paid for. Without a checkout it is charged in
-     * full, with no discount or tip.
+     * full, with no discount.
      */
     public function complete(Booking $booking, ?User $by, ?Checkout $checkout = null): Booking
     {
@@ -85,7 +85,6 @@ class ChangeBookingStatus
             $checkout->assertSettles($locked->price_cents, $depositPaid);
 
             $locked->discount_cents = $checkout->discountCents;
-            $locked->tip_cents = $checkout->tipCents;
             $locked->charged_cents = $checkout->chargedCents($locked->price_cents);
             $locked->commission_cents = $this->commissionFor($locked);
 

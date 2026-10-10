@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * Income is what completed visits ended up costing (price − discount) plus
  * the deposits kept from cancellations and no-shows; a visit counts on the
- * day it took place. Tips are shown apart: they belong to whoever attended.
+ * day it took place. Tips are not the salon's and are not recorded.
  * Expenses count on the day they were paid, commissions included.
  */
 class SalonReport
@@ -44,12 +44,12 @@ class SalonReport
     }
 
     /**
-     * @return array{incomeCents: int, servicesCents: int, keptDepositsCents: int, expensesCents: int, profitCents: int, tipsCents: int, discountsCents: int, visits: int}
+     * @return array{incomeCents: int, servicesCents: int, keptDepositsCents: int, expensesCents: int, profitCents: int, discountsCents: int, visits: int}
      */
     private function totals(Salon $salon, Period $period): array
     {
         $visits = $this->completed($salon, $period)
-            ->selectRaw('COUNT(*) as visits, COALESCE(SUM(charged_cents), 0) as services, COALESCE(SUM(tip_cents), 0) as tips, COALESCE(SUM(discount_cents), 0) as discounts')
+            ->selectRaw('COUNT(*) as visits, COALESCE(SUM(charged_cents), 0) as services, COALESCE(SUM(discount_cents), 0) as discounts')
             ->toBase()->first();
         $services = (int) ($visits->services ?? 0);
         $kept = (int) $this->keptDeposits($salon, $period)->sum('deposit_cents');
@@ -61,7 +61,6 @@ class SalonReport
             'keptDepositsCents' => $kept,
             'expensesCents' => $expenses,
             'profitCents' => $services + $kept - $expenses,
-            'tipsCents' => (int) ($visits->tips ?? 0),
             'discountsCents' => (int) ($visits->discounts ?? 0),
             'visits' => (int) ($visits->visits ?? 0),
         ];
@@ -116,20 +115,19 @@ class SalonReport
     }
 
     /**
-     * @return array<int, array{name: string, visits: int, salesCents: int, commissionCents: int, tipsCents: int}>
+     * @return array<int, array{name: string, visits: int, salesCents: int, commissionCents: int}>
      */
     private function byStaff(Salon $salon, Period $period): array
     {
         return $this->completed($salon, $period)
             ->join('staff', 'staff.id', '=', 'bookings.staff_id')
-            ->selectRaw('staff.name as name, COUNT(*) as visits, COALESCE(SUM(bookings.charged_cents), 0) as sales, COALESCE(SUM(bookings.commission_cents), 0) as commission, COALESCE(SUM(bookings.tip_cents), 0) as tips')
+            ->selectRaw('staff.name as name, COUNT(*) as visits, COALESCE(SUM(bookings.charged_cents), 0) as sales, COALESCE(SUM(bookings.commission_cents), 0) as commission')
             ->groupBy('staff.id', 'staff.name')->orderByDesc('sales')->toBase()->get()
             ->map(fn (object $row): array => [
                 'name' => (string) $row->name,
                 'visits' => (int) $row->visits,
                 'salesCents' => (int) $row->sales,
                 'commissionCents' => (int) $row->commission,
-                'tipsCents' => (int) $row->tips,
             ])
             ->values()->all();
     }
@@ -150,7 +148,7 @@ class SalonReport
     }
 
     /**
-     * Money that came in by method (deposits and charges, tips included),
+     * Money that came in by method (deposits and charges),
      * minus deposits given back. Counted when it changed hands.
      *
      * @return array<int, array{value: string, label: string, cents: int}>

@@ -25,7 +25,6 @@ class CompleteBookingRequest extends FormRequest
     {
         return [
             'discount' => ['nullable', 'string', self::AMOUNT],
-            'tip' => ['nullable', 'string', self::AMOUNT],
             'payments' => ['nullable', 'array', 'max:'.count(PaymentMethod::cases())],
             'payments.*.method' => ['required', 'distinct', Rule::enum(PaymentMethod::class)],
             'payments.*.amount' => ['required', 'string', self::AMOUNT],
@@ -37,7 +36,7 @@ class CompleteBookingRequest extends FormRequest
      */
     public function checkout(): ?Checkout
     {
-        if (! $this->hasAny(['payments', 'discount', 'tip'])) {
+        if (! $this->hasAny(['payments', 'discount'])) {
             return null;
         }
 
@@ -49,7 +48,6 @@ class CompleteBookingRequest extends FormRequest
 
         return new Checkout(
             discountCents: Money::toCents($this->string('discount')->toString() ?: '0'),
-            tipCents: Money::toCents($this->string('tip')->toString() ?: '0'),
             parts: $parts,
         );
     }
@@ -61,7 +59,6 @@ class CompleteBookingRequest extends FormRequest
     {
         return [
             'discount' => 'descuento',
-            'tip' => 'propina',
             'payments' => 'pagos',
             'payments.*.method' => 'método de pago',
             'payments.*.amount' => 'monto',
