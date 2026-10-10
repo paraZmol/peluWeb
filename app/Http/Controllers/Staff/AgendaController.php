@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Staff;
 use App\Actions\Booking\ListBookableDays;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
+use App\Enums\PaymentMethod;
 use App\Enums\SalonPermission;
 use App\Http\Controllers\Owner\SalonAreaController;
 use App\Http\Resources\AgendaBookingResource;
@@ -71,6 +72,7 @@ class AgendaController extends SalonAreaController
             // True when nobody asked for that professional: the week needs one and picked it.
             'staffIsDefault' => $seesEveryone && $staffId !== null && $team->doesntContain('id', $request->integer('profesional')),
             'hasProfile' => $own !== null,
+            'paymentMethods' => array_map(fn (PaymentMethod $method): array => ['value' => $method->value, 'label' => $method->label()], PaymentMethod::cases()),
             'seesEveryone' => $seesEveryone,
             'canBook' => $request->user()?->can('create', [Booking::class, $salon]) ?? false,
             // The days of the picker for moving a booking.

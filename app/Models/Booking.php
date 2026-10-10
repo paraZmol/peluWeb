@@ -34,6 +34,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $deposit_cents
  * @property CarbonImmutable|null $deposit_paid_at
  * @property bool|null $deposit_refundable
+ * @property CarbonImmutable|null $deposit_refunded_at
+ * @property int $discount_cents
+ * @property int $tip_cents
+ * @property int|null $charged_cents What the visit finally cost; null until it is completed.
  * @property CarbonImmutable|null $hold_expires_at
  * @property string|null $client_note
  * @property string|null $reference_photo_path
@@ -45,6 +49,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, BookingService> $services
  * @property-read Collection<int, BookingSegment> $segments
  * @property-read Collection<int, BookingEvent> $events
+ * @property-read Collection<int, Payment> $payments
  */
 class Booking extends Model
 {
@@ -60,6 +65,10 @@ class Booking extends Model
         'deposit_cents' => 0,
         'deposit_paid_at' => null,
         'deposit_refundable' => null,
+        'deposit_refunded_at' => null,
+        'discount_cents' => 0,
+        'tip_cents' => 0,
+        'charged_cents' => null,
         'hold_expires_at' => null,
         'client_note' => null,
         'reference_photo_path' => null,
@@ -77,6 +86,7 @@ class Booking extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'deposit_paid_at' => 'datetime',
+            'deposit_refunded_at' => 'datetime',
             'hold_expires_at' => 'datetime',
             'is_vip' => 'boolean',
             'deposit_refundable' => 'boolean',
@@ -121,6 +131,14 @@ class Booking extends Model
     public function events(): HasMany
     {
         return $this->hasMany(BookingEvent::class)->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->orderBy('id');
     }
 
     /**
@@ -181,5 +199,25 @@ class Booking extends Model
     public function needsDeposit(): bool
     {
         return $this->deposit_cents > 0 && $this->deposit_paid_at === null;
+    }
+
+    /**
+     * What the client already handed over as a deposit and still counts
+     * toward the visit.
+     */
+    public function depositPaidCents(): int
+    {
+        return $this->deposit_paid_at !== null && $this->deposit_refunded_at === null ? $this->deposit_cents : 0;
+    }
+
+    /**
+     * A paid deposit of a cancelled visit that the salon still owes back.
+     */
+    public function canRefundDeposit(): bool
+    {
+        return $this->status === BookingStatus::Cancelled
+            && $this->deposit_paid_at !== null
+            && $this->deposit_refundable === true
+            && $this->deposit_refunded_at === null;
     }
 }

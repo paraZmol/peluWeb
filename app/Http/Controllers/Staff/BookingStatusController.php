@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Actions\Accounting\RefundDeposit;
 use App\Actions\Booking\ChangeBookingStatus;
 use App\Http\Controllers\Owner\SalonAreaController;
+use App\Http\Requests\Staff\CompleteBookingRequest;
+use App\Http\Requests\Staff\PaymentMethodRequest;
 use App\Models\Booking;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,10 +20,10 @@ class BookingStatusController extends SalonAreaController
 {
     public function __construct(private readonly ChangeBookingStatus $status) {}
 
-    public function confirm(Request $request, Booking $booking): RedirectResponse
+    public function confirm(PaymentMethodRequest $request, Booking $booking): RedirectResponse
     {
         $this->authorize('confirmDeposit', $booking);
-        $this->status->confirm($booking, $request->user());
+        $this->status->confirm($booking, $request->user(), $request->paymentMethod());
 
         return $this->done('Reserva confirmada.');
     }
@@ -33,12 +36,12 @@ class BookingStatusController extends SalonAreaController
         return $this->done('Cita en atención.');
     }
 
-    public function complete(Request $request, Booking $booking): RedirectResponse
+    public function complete(CompleteBookingRequest $request, Booking $booking): RedirectResponse
     {
         $this->authorize('manage', $booking);
-        $this->status->complete($booking, $request->user());
+        $this->status->complete($booking, $request->user(), $request->checkout());
 
-        return $this->done('Cita completada.');
+        return $this->done('Cita completada y cobrada.');
     }
 
     public function noShow(Request $request, Booking $booking): RedirectResponse
@@ -56,6 +59,14 @@ class BookingStatusController extends SalonAreaController
         $this->status->cancel($booking, $request->user(), byClient: false);
 
         return $this->done('Reserva cancelada.');
+    }
+
+    public function refundDeposit(PaymentMethodRequest $request, Booking $booking, RefundDeposit $refund): RedirectResponse
+    {
+        $this->authorize('confirmDeposit', $booking);
+        $refund->handle($booking, $request->paymentMethod(), $request->user());
+
+        return $this->done('Seña devuelta.');
     }
 
     private function done(string $message): RedirectResponse

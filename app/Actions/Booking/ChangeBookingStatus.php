@@ -2,13 +2,17 @@
 
 namespace App\Actions\Booking;
 
+use App\Domain\Accounting\Checkout;
 use App\Domain\Booking\AvailabilityCalculator;
 use App\Domain\Booking\TimeSpan;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
+use App\Enums\PaymentKind;
+use App\Enums\PaymentMethod;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\BookingEvent;
+use App\Models\Payment;
 use App\Models\Salon;
 use App\Models\Staff;
 use App\Models\User;
@@ -37,9 +41,9 @@ class ChangeBookingStatus
     /**
      * The team confirms: the deposit arrived, or they waive it.
      */
-    public function confirm(Booking $booking, ?User $by): Booking
+    public function confirm(Booking $booking, ?User $by, PaymentMethod $depositMethod = PaymentMethod::Other): Booking
     {
-        return $this->change($booking, BookingStatus::Confirmed, $by, function (Booking $locked, CarbonImmutable $now): void {
+        return $this->change($booking, BookingStatus::Confirmed, $by, function (Booking $locked, CarbonImmutable $now) use ($by, $depositMethod): void {
             // An expired hold released the slot: it can only be confirmed
             // if nobody took that time in the meantime.
             if ($locked->isHoldExpired($now) && ! $this->slotStillFree($locked, $now)) {
@@ -48,6 +52,7 @@ class ChangeBookingStatus
 
             if ($locked->deposit_cents > 0) {
                 $locked->deposit_paid_at = $now;
+                Payment::record($locked, PaymentKind::Deposit, $depositMethod, $locked->deposit_cents, $now, $by);
             }
 
             $locked->hold_expires_at = null;
@@ -67,9 +72,25 @@ class ChangeBookingStatus
         });
     }
 
-    public function complete(Booking $booking, ?User $by): Booking
+    /**
+     * The visit ends and is paid for. Without a checkout it is charged in
+     * full, with no discount or tip.
+     */
+    public function complete(Booking $booking, ?User $by, ?Checkout $checkout = null): Booking
     {
-        return $this->change($booking, BookingStatus::Completed, $by);
+        return $this->change($booking, BookingStatus::Completed, $by, function (Booking $locked, CarbonImmutable $now) use ($by, $checkout): void {
+            $depositPaid = $locked->depositPaidCents();
+            $checkout ??= Checkout::inFull(PaymentMethod::Other, $locked->price_cents, $depositPaid);
+            $checkout->assertSettles($locked->price_cents, $depositPaid);
+
+            $locked->discount_cents = $checkout->discountCents;
+            $locked->tip_cents = $checkout->tipCents;
+            $locked->charged_cents = $checkout->chargedCents($locked->price_cents);
+
+            foreach ($checkout->receivedParts() as $method => $cents) {
+                Payment::record($locked, PaymentKind::Charge, PaymentMethod::from($method), $cents, $now, $by);
+            }
+        });
     }
 
     /**

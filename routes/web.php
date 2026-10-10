@@ -196,6 +196,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('agenda/{booking}/completar', [BookingStatusController::class, 'complete'])->name('agenda.bookings.complete');
         Route::post('agenda/{booking}/no-vino', [BookingStatusController::class, 'noShow'])->name('agenda.bookings.no-show');
         Route::post('agenda/{booking}/cancelar', [BookingStatusController::class, 'cancel'])->name('agenda.bookings.cancel');
+        Route::post('agenda/{booking}/devolver-sena', [BookingStatusController::class, 'refundDeposit'])->name('agenda.bookings.refund-deposit');
 
         Route::get('clientes', [ClientController::class, 'index'])->name('clients.index');
         Route::patch('clientes/{client}/vip', [ClientController::class, 'updateVip'])->name('clients.vip.update');

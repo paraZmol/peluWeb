@@ -33,6 +33,8 @@ class AgendaBookingResource extends JsonResource
     {
         $now = CarbonImmutable::now();
         $status = $this->effectiveStatus($now);
+        /** @var Booking $booking */
+        $booking = $this->resource;
         $start = $this->starts_at->setTimezone($this->timezone);
 
         return [
@@ -59,6 +61,15 @@ class AgendaBookingResource extends JsonResource
             'deposit' => $this->deposit_cents === 0 ? null : [
                 'amount' => Money::toAmount($this->deposit_cents),
                 'isPaid' => $this->deposit_paid_at !== null,
+                'isRefunded' => $this->deposit_refunded_at !== null,
+            ],
+            // What is left to collect when the visit ends, before discount and tip.
+            'balance' => Money::toAmount($this->price_cents - $booking->depositPaidCents()),
+            'depositPaid' => Money::toAmount($booking->depositPaidCents()),
+            'charged' => $this->charged_cents === null ? null : [
+                'total' => Money::toAmount($this->charged_cents),
+                'discount' => Money::toAmount($this->discount_cents),
+                'tip' => Money::toAmount($this->tip_cents),
             ],
             'note' => $this->client_note,
             'referencePhotoUrl' => app(ImageStore::class)->url($this->reference_photo_path),
@@ -87,6 +98,7 @@ class AgendaBookingResource extends JsonResource
             'noShow' => $status === BookingStatus::Confirmed && $hasStarted,
             'move' => $isOpen,
             'cancel' => $isOpen,
+            'refundDeposit' => $booking->canRefundDeposit() && ($request->user()?->can('confirmDeposit', $booking) ?? false),
         ]));
     }
 }
