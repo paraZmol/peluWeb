@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Accounting\ExportMovements;
 use App\Actions\Accounting\SalonReport;
 use App\Actions\Booking\ChangeBookingStatus;
 use App\Actions\Booking\CreateBooking;
@@ -172,4 +173,29 @@ it('shows the report only with the reports permission, and only this salon\'s nu
         ->and($theirs['totals']['expensesCents'])->toBe(0)
         ->and($theirs['byStaff'])->toBe([])
         ->and($theirs['byMethod'])->toBe([]);
+});
+
+it('exports the period\'s movements as a spreadsheet-safe CSV', function () {
+    $this->actingAs($this->owner)->post(route('expenses.store'), ['amount' => '7', 'method' => 'cash', 'date' => '2026-10-07', 'description' => '=SUM(A1:A9)']);
+
+    $response = $this->actingAs($this->owner)->get(route('reports.export', ['desde' => '2026-10-05', 'hasta' => '2026-10-07']))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/csv; charset=UTF-8')
+        ->assertDownload('movimientos-estudio-luz-2026-10-05-a-2026-10-07.csv');
+    $csv = $response->streamedContent();
+    $lines = array_values(array_filter(explode("\n", $csv)));
+
+    expect(str_starts_with($csv, "\xEF\xBB\xBF"))->toBeTrue()
+        ->and($lines[0])->toEndWith('Fecha;Hora;Tipo;Detalle;Método;Entrada;Salida')
+        // 5 deposits + 3 charges + 1 refund + 3 expenses
+        ->and($lines)->toHaveCount(1 + 12)
+        ->and($csv)->toContain('"Seña devuelta";')->toContain(';Yape;;10.50')
+        // No cell starts with typed text, and one that did would be defused.
+        ->and($csv)->toContain('"Sin categoría · =SUM(A1:A9)"')
+        ->and(ExportMovements::safeCell('=SUM(A1:A9)'))->toBe("'=SUM(A1:A9)")
+        ->and(ExportMovements::safeCell('-5'))->toBe("'-5")
+        ->and(ExportMovements::safeCell('Corte'))->toBe('Corte');
+
+    $member = SalonMember::factory()->for($this->salon)->create();
+    $this->actingAs($member->user)->get(route('reports.export'))->assertForbidden();
 });
