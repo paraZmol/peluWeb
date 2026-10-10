@@ -121,7 +121,7 @@ para cubrir recepcionistas o encargados sin crear más roles.
 - Ficha del cliente: historial, notas (alergias, fórmula de color, preferencias), fotos antes/después,
   cantidad de ausencias, VIP sí o no.
 - Botones de WhatsApp con mensajes armados: confirmar, recordar, "ya puedes venir", "gracias por venir".
-- Cobro rápido: método (efectivo, Yape, Plin, tarjeta, transferencia), propina y descuento.
+- Cobro rápido: método (efectivo, Yape, Plin, tarjeta, transferencia, otro) y descuento (con permiso de caja). Las propinas no se registran: son de quien atendió.
 
 ### 4.7 Caja y contabilidad
 - **Ingresos**: cada cobro de servicio, seña o producto queda como movimiento con método de pago.
@@ -166,15 +166,18 @@ para cubrir recepcionistas o encargados sin crear más roles.
   conexión básico (ver mis próximas reservas).
 - **Flutter** después del lanzamiento, contra la API `/api/v1` (que se diseña desde el inicio).
 
-### 4.13 Promociones
-- El dueño tiene una sección **Promociones** donde crea ofertas para llenar la agenda: por ejemplo
-  "vienen dos y pagan uno", un combo a precio cerrado, descuento en horas flojas o una campaña de
-  temporada con nombre y fechas (Halloween, Día de la Madre, Fiestas Patrias, Navidad).
-- Cada promoción tiene vigencia, servicios y profesionales incluidos, cupos y condiciones; el
-  cliente la ve en la página pública y en la reserva, y el salón la comparte con un enlace.
-- El precio con promoción se calcula y se congela en el servidor al reservar; caja, comisiones y
-  reportes muestran cuánto se vendió con cada promoción.
-- El alcance exacto y el orden los propone el agente `marketing-advisor` antes de construir.
+### 4.13 Promociones (detalle en [promociones.md](promociones.md))
+- El dueño tiene una sección **Promociones** con **opciones predeterminadas**: elige una tarjeta de
+  la lista, rellena dos o tres campos, ve cómo quedará y publica. Primera entrega: **Descuento**
+  ("20 % menos en corte"), **Servicio de regalo** ("rasurado gratis con tu corte"), **Horas
+  flojas** y **Campaña de temporada** (Halloween, Día de la Madre, Fiestas Patrias, Navidad).
+  Segunda entrega: primera visita, combo a precio cerrado y 2x1.
+- El sistema escribe el título, la línea y la letra chica (vigencia, servicios, cupos); el precio
+  normal sale del catálogo, nunca lo escribe el dueño. Sin códigos: la promoción se aplica sola al
+  reservar y hay una por reserva.
+- El cliente la ve en la página pública y en la reserva, y el salón la comparte con un enlace.
+- El precio con promoción se congela en la reserva; caja, comisiones (sobre lo cobrado) y reportes
+  muestran cuánto se vendió y cuánto se regaló con cada una, separado del descuento manual.
 
 ### 4.12 Legal (Perú)
 - Términos y condiciones y política de privacidad (Ley 29733 de Protección de Datos Personales):
@@ -324,7 +327,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 6.4 **PWA instalable** (adelantado desde 8.1): `manifest.webmanifest` con nombre, colores e íconos (192, 512 y maskable), service worker con caché de la app y página sin conexión, aviso "Instalar" en Android/escritorio, guía visual para iOS ("Compartir → Añadir a pantalla de inicio") y modo sin conexión básico (ver mis próximas reservas). Íconos y nombre propios por salón cuando se instala desde su página pública.
 - [ ] 6.5 Web Push (cliente y profesional); necesita el service worker de 6.4.
 - [ ] 6.6 Lista de espera con prioridad VIP; cola "sin cita" para barberías.
-- [ ] 6.7 **Promociones** (módulo 4.13): primero `marketing-advisor` propone y prioriza las opciones y la versión mínima; el usuario elige; después se construye la sección "Promociones" del dueño, cómo las ve el cliente en la página pública y la reserva, y su efecto en caja, comisiones y reportes.
+- [ ] 6.7 **Promociones** (módulo 4.13, spec en [promociones.md](promociones.md), decidida con `marketing-advisor`): (a) mecánicas Descuento y Servicio de regalo en cotización, reserva, seña, mover/cancelar, cupos bajo bloqueo, caja, comisión y reportes — con `booking-breaker`; (b) sección "Promociones" del dueño con las cuatro tarjetas, vista previa y compartir; (c) franja en la página pública, reserva con horarios marcados y Mis reservas; (d) segunda entrega: primera visita, combo y 2x1.
 - *Cierre:* **qa-tester** + **security-auditor** (reseñas: XSS, spam, rate limit).
 
 ### Fase 7 — SaaS
@@ -433,6 +436,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-10 | Tras la auditoría de la Fase 5: aplicar un **descuento** al cobrar exige el permiso de caja (cobrar sin descuento sigue pudiendo hacerlo quien atiende); la **propina** no puede superar el precio de la cita; los **comprobantes de gastos** se guardan en disco privado y solo los ve quien maneja la caja del salón; los seeders con contraseña conocida solo corren en local y en pruebas | security-auditor: un profesional sin permisos podía descuadrar la caja con un descuento o una propina inventada, y un comprobante (RUC, cuenta bancaria) quedaba visible para quien tuviera el enlace |
 | 2026-10-10 | **Las propinas quedan fuera del sistema**: no se cobran, no se registran, no entran en la caja ni en los reportes; al completar una cita se cobra el saldo acordado (precio − descuento − seña pagada) y nada más. Se elimina la columna `bookings.tip_cents` | Decisión del usuario: la propina es un acuerdo personal entre el cliente y quien lo atendió; el salón solo cobra lo acordado |
 | 2026-10-10 | Nuevo módulo **Promociones** (4.13, paso 6.7) y nuevo agente `marketing-advisor`, exclusivo para guiar qué promociones y funciones comerciales ofrecer | Pedido del usuario: que los salones puedan publicar ofertas como "vienen dos y pagan uno" o un peinado de Halloween, con un agente que oriente qué opciones agregar |
+| 2026-10-10 | **Promociones con opciones predeterminadas** (spec en `docs/promociones.md`): primera entrega con Descuento, Servicio de regalo, Horas flojas y Campaña de temporada; el sistema redacta el texto y la letra chica; sin códigos, una por reserva, máximo 3 activas, en todos los planes; comisión sobre lo cobrado y S/ 0 en el regalo; crear y editar es del dueño. 2x1 (un profesional, dos turnos seguidos), primera visita y combo en la segunda entrega. Se descartan paquetes prepagados, cupones, acumulables y texto legal libre | El usuario pidió que decida el agente de marketing lo más coherente y que el dueño del salón tenga opciones listas, incluidos un descuento y un servicio gratis |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de
