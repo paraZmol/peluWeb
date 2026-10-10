@@ -3,6 +3,7 @@ import { PeriodPicker } from '@/components/commissions/period-picker';
 import { DailyChart } from '@/components/reports/daily-chart';
 import { ClientMix, LostVisits } from '@/components/reports/lost-and-clients';
 import { MoneyReceived } from '@/components/reports/money-received';
+import { Occupancy } from '@/components/reports/occupancy';
 import {
     EmptyReport,
     PrintHeader,
@@ -81,6 +82,8 @@ export default function Reports({
                         </div>
 
                         <StaffSales staff={report.byStaff} />
+
+                        <Occupancy staff={report.occupancy} />
 
                         <div className="grid items-start gap-6 lg:grid-cols-2">
                             <TopServices services={report.byService} />

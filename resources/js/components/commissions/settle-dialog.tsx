@@ -115,7 +115,10 @@ function SettleForm({
                 Queda registrado como gasto en «Sueldos y comisiones»
                 {form.data.method === CASH_METHOD
                     ? ' y, al ser en efectivo, sale de la caja.'
-                    : '. No sale de la caja porque no es en efectivo.'}
+                    : '. No sale de la caja porque no es en efectivo.'}{' '}
+                <strong className="font-medium text-foreground">
+                    Una liquidación no se puede deshacer ni editar después.
+                </strong>
             </p>
 
             <DialogFooter className="gap-2 [&_button]:h-12 sm:[&_button]:h-10">

@@ -15,9 +15,11 @@ use App\Enums\PaymentMethod;
 use App\Enums\SalonPermission;
 use App\Models\Booking;
 use App\Models\SalonClient;
+use App\Models\SalonHoliday;
 use App\Models\SalonMember;
 use App\Models\Service;
 use App\Models\Staff;
+use App\Models\StaffTimeOff;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 
@@ -197,4 +199,28 @@ it('exports the period\'s movements as a spreadsheet-safe CSV', function () {
 
     $member = SalonMember::factory()->for($this->salon)->create();
     $this->actingAs($member->user)->get(route('reports.export'))->assertForbidden();
+});
+
+it('compares the time spent attending with the hours on duty', function () {
+    // Tue and Wed, 09:00–18:00 each; visits of 30, 30 and 45 minutes.
+    expect(reportFor('2026-10-06', '2026-10-07')['occupancy'])
+        ->toBe([['name' => 'Pedro', 'openMinutes' => 18 * 60, 'busyMinutes' => 105]]);
+});
+
+it('leaves salon holidays and time off out of the hours on duty', function () {
+    SalonHoliday::forceCreate(['salon_id' => $this->salon->id, 'date' => '2026-10-06', 'name' => 'Feriado']);
+    StaffTimeOff::factory()->for($this->salon)->for($this->pedro)->create([
+        'starts_at' => CarbonImmutable::parse('2026-10-07 09:00', 'America/Lima')->utc(),
+        'ends_at' => CarbonImmutable::parse('2026-10-07 12:00', 'America/Lima')->utc(),
+    ]);
+
+    expect(reportFor('2026-10-06', '2026-10-07')['occupancy'])
+        ->toBe([['name' => 'Pedro', 'openMinutes' => 6 * 60, 'busyMinutes' => 105]]);
+});
+
+it('does not count the hours of someone switched off, but keeps what they attended', function () {
+    $this->pedro->forceFill(['is_active' => false])->save();
+
+    expect(reportFor('2026-10-06', '2026-10-07')['occupancy'])
+        ->toBe([['name' => 'Pedro', 'openMinutes' => 0, 'busyMinutes' => 105]]);
 });

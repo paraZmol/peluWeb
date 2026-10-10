@@ -40,6 +40,13 @@ export type LostVisits = {
     noShowCents: number;
 };
 
+/** Minutes one professional spent attending, against the minutes on duty. */
+export type StaffOccupancy = {
+    name: string;
+    openMinutes: number;
+    busyMinutes: number;
+};
+
 export type ClientMix = { new: number; returning: number };
 
 export type Report = {
@@ -53,4 +60,5 @@ export type Report = {
     byMethod: MethodAmount[];
     lost: LostVisits;
     clients: ClientMix;
+    occupancy: StaffOccupancy[];
 };

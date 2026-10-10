@@ -323,11 +323,11 @@ Inicio previsto: **lunes 2026-10-05**.
   - [x] (d) *(2026-10-08)* QA + ux-reviewer + security-auditor sobre lo rehecho, hallazgos corregidos; 1016 tests Pest y 93 E2E en verde. Quedan para decidir o para después: foto del equipo en lo público (solo la puesta para el salón o también la del perfil), precio y días de prueba de la portada, registro de un cliente que llega desde una reserva (ve el texto de alta de salón), tope de horarios cuando el periodo abierto es muy largo, cabecera de Mis reservas con la portada del salón, fotos de muestra para spa.
 
 ### Fase 5 — Caja, contabilidad y reportes
-- [x] 5.1 *(2026-10-10)* `payments` desde el cobro de la cita (método, propina, descuento) y desde las señas.
+- [x] 5.1 *(2026-10-10)* `payments` desde el cobro de la cita (método y descuento; sin propinas: son de quien atiende) y desde las señas.
 - [x] 5.2 *(2026-10-10)* Gastos con categorías y foto del comprobante.
 - [x] 5.3 *(2026-10-10)* Apertura y cierre de caja con cuadre por método.
 - [x] 5.4 *(2026-10-10)* Reglas de comisión y liquidación por período.
-- [x] 5.5 *(2026-10-10; falta "horas ocupadas frente a disponibles")* Reportes de ganancias y pérdidas con gráficos (cargar skill `dataviz`), filtros y comparativa con el período anterior.
+- [x] 5.5 *(2026-10-10)* Reportes de ganancias y pérdidas con gráficos (cargar skill `dataviz`), filtros y comparativa con el período anterior.
 - [x] 5.6 *(2026-10-10; CSV e impresión a PDF)* Exportar a Excel/CSV/PDF.
 - *Cierre:* test de que los totales cuadran al céntimo + **security-auditor** (permisos de caja) + **qa-tester**.
 
@@ -451,6 +451,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-10 | **Promociones con opciones predeterminadas** (spec en `docs/promociones.md`): primera entrega con Descuento, Servicio de regalo, Horas flojas y Campaña de temporada; el sistema redacta el texto y la letra chica; sin códigos, una por reserva, máximo 3 activas, en todos los planes; comisión sobre lo cobrado y S/ 0 en el regalo; crear y editar es del dueño. 2x1 (un profesional, dos turnos seguidos), primera visita y combo en la segunda entrega. Se descartan paquetes prepagados, cupones, acumulables y texto legal libre | El usuario pidió que decida el agente de marketing lo más coherente y que el dueño del salón tenga opciones listas, incluidos un descuento y un servicio gratis |
 | 2026-10-10 | Lo legal se amplía (4.12, paso 9.4): términos y condiciones para salones y para clientes, política de privacidad, **cookies**, consentimientos, Libro de Reclamaciones y textos por defecto del salón; nuevo agente `legal-compliance`, exclusivo para esto. Se adelanta como requisito del piloto (8.5), no solo del lanzamiento | Pedido del usuario: tener términos y cookies en regla para no exponerse a denuncias; con datos de clientes reales en el piloto ya aplica la ley de datos personales |
 | 2026-10-10 | Primeros borradores legales (`docs/legal/`, sin revisar por abogado). No hace falta banner de cookies: solo hay cookies técnicas y de preferencia, **a condición de cargar el mapa de Google solo al pulsar "Ver mapa"**. Requisitos que bloquean el piloto (P1–P14): páginas legales en el pie, casilla de aceptación con versión y fecha guardadas, aceptación pendiente para altas con Google, Libro de Reclamaciones virtual, política de seña y cancelación visible al confirmar, borrado de cuenta completo. No se construye ningún envío promocional sin consentimiento aparte | Inventario de datos y cookies hecho por `legal-compliance` sobre el código real; varias normas quedaron sin verificar en fuente oficial y están listadas en `docs/legal/README.md` |
+| 2026-10-10 | **Horas ocupadas** en Reportes: tiempo atendiendo (tramos activos de citas completadas; el reposo de un tinte no cuenta) frente a las horas de trabajo del **horario actual** de cada profesional activo, sin feriados del salón ni ausencias. Puede pasar de 100 % si se atendió fuera de horario | No se guarda el historial de horarios; se avisa en pantalla que es "según su horario actual" |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

@@ -43,6 +43,7 @@ const emptyReport: Report = {
     byMethod: [],
     lost: { cancelled: 0, cancelledCents: 0, noShows: 0, noShowCents: 0 },
     clients: { new: 0, returning: 0 },
+    occupancy: [],
 };
 
 describe('grainFor', () => {
