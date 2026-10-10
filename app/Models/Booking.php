@@ -38,6 +38,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $discount_cents
  * @property int $tip_cents
  * @property int|null $charged_cents What the visit finally cost; null until it is completed.
+ * @property int|null $commission_cents What whoever attended earns for it; frozen when it is completed.
+ * @property int|null $commission_settlement_id Set once that commission was paid.
  * @property CarbonImmutable|null $hold_expires_at
  * @property string|null $client_note
  * @property string|null $reference_photo_path
@@ -69,6 +71,8 @@ class Booking extends Model
         'discount_cents' => 0,
         'tip_cents' => 0,
         'charged_cents' => null,
+        'commission_cents' => null,
+        'commission_settlement_id' => null,
         'hold_expires_at' => null,
         'client_note' => null,
         'reference_photo_path' => null,

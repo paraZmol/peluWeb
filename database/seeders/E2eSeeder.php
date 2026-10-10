@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Accounting\ManageExpenseCategories;
 use App\Actions\Salon\ManageSalonPhotos;
 use App\Actions\Salon\UpdateSalonBranding;
 use App\Actions\Staff\UpdateStaffPhoto;
@@ -47,7 +48,12 @@ class E2eSeeder extends Seeder
         SalonMember::factory()->for($second)->for($staff)->create();
         Staff::factory()->for($second)->linkedTo($staff)->create(['name' => 'Pedro Personal']);
 
-        $this->seedShowcaseSalon();
+        $showcase = $this->seedShowcaseSalon();
+
+        // Factories skip what CreateSalon gives every real salon.
+        foreach ([$first, $second, $showcase] as $salon) {
+            app(ManageExpenseCategories::class)->createDefaults($salon);
+        }
     }
 
     /**
@@ -55,7 +61,7 @@ class E2eSeeder extends Seeder
      * look at the screens with realistic content. Independent from the salons
      * above, so the flows that assert on them are not affected.
      */
-    private function seedShowcaseSalon(): void
+    private function seedShowcaseSalon(): Salon
     {
         $owner = User::factory()->create(['name' => 'Valeria Vitrina', 'email' => 'vitrina@example.com']);
         $salon = Salon::factory()->ownedBy($owner)->create([
@@ -121,6 +127,8 @@ class E2eSeeder extends Seeder
             'is_addon' => true,
         ]);
         $barber->services()->attach($wash->id);
+
+        return $salon;
     }
 
     /**

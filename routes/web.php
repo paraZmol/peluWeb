@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
 use App\Http\Controllers\Owner\CashController;
 use App\Http\Controllers\Owner\ClientController;
+use App\Http\Controllers\Owner\CommissionController;
 use App\Http\Controllers\Owner\ExpenseCategoryController;
 use App\Http\Controllers\Owner\ExpenseController;
 use App\Http\Controllers\Owner\HolidayController;
@@ -151,6 +152,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('caja', [CashController::class, 'index'])->name('cash.index');
         Route::post('caja/abrir', [CashController::class, 'open'])->name('cash.open');
         Route::post('caja/{session}/cerrar', [CashController::class, 'close'])->name('cash.close');
+
+        Route::get('comisiones', [CommissionController::class, 'index'])->name('commissions.index');
+        Route::post('comisiones/{staff}/liquidar', [CommissionController::class, 'settle'])->name('commissions.settle');
+        Route::put('comisiones/{staff}/reglas', [CommissionController::class, 'updateRules'])->name('commissions.rules.update');
 
         Route::get('gastos', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::post('gastos', [ExpenseController::class, 'store'])->middleware('throttle:60,1,expenses')->name('expenses.store');

@@ -44,6 +44,16 @@ class PaymentException extends BusinessRuleException
         return new self('Esta caja ya se cerró.');
     }
 
+    public static function nothingToSettle(): self
+    {
+        return new self('No hay comisiones pendientes en ese período.');
+    }
+
+    public static function expenseIsSettlement(): self
+    {
+        return new self('Este gasto es el pago de una liquidación de comisiones y no se puede cambiar desde aquí.');
+    }
+
     public static function nothingToRefund(): self
     {
         return new self('Esta reserva no tiene una seña por devolver.');
