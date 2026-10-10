@@ -184,6 +184,17 @@ para cubrir recepcionistas o encargados sin crear más roles.
   consentimiento explícito al registrarse y opción de borrar la cuenta.
 - Libro de Reclamaciones virtual de la plataforma (exigido por Indecopi).
 - El salón es responsable de los datos de sus clientes; la plataforma es encargada del tratamiento.
+- **Términos y condiciones** en dos versiones: para salones (suscripción, pagos, cancelación,
+  responsabilidad) y para clientes finales (reservas, señas, cancelaciones, promociones del salón).
+  Se aceptan de forma expresa al registrarse y se guarda qué versión se aceptó y cuándo.
+- **Cookies**: inventario de las que el producto usa de verdad, política de cookies y el aviso o
+  consentimiento que corresponda (un banner solo si hay cookies que no sean necesarias).
+- Consentimientos separados para mensajes comerciales, con baja en cada mensaje; exportar y
+  borrar los datos de una cuenta; plazos de conservación escritos.
+- Textos por defecto que cada salón muestra a sus clientes (privacidad, condiciones de
+  promociones, política de cancelación y de seña).
+- Todo lo redacta en borrador el agente `legal-compliance` y lo confirma un abogado colegiado en
+  Perú antes del lanzamiento: el agente no sustituye esa revisión.
 
 ---
 
@@ -354,7 +365,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 9.1 Dominio y hosting (cPanel con PHP 8.3 o VPS), HTTPS, cron, colas.
 - [ ] 9.2 Copias de seguridad diarias de la base y de las imágenes, con prueba de restauración.
 - [ ] 9.3 Monitoreo de errores (Sentry, plan gratis) y uptime.
-- [ ] 9.4 Términos, privacidad, Libro de Reclamaciones.
+- [ ] 9.4 **Legal** (módulo 4.12, con `legal-compliance`): (a) inventario de datos personales y de cookies del producto real; (b) borradores de términos para salones y para clientes, política de privacidad, política y aviso de cookies, Libro de Reclamaciones y textos por defecto del salón; (c) cambios de producto: casillas de aceptación con versión y fecha guardadas, consentimiento aparte para mensajes comerciales, exportar y borrar la cuenta, páginas legales enlazadas en el pie y en el registro; (d) revisión de un abogado peruano antes de publicar. **Bloquea el lanzamiento y el piloto con salones reales (8.5).**
 - [ ] 9.5 Restringir la clave de Google Maps por dominio; `APP_DEBUG=false`; cabeceras de seguridad.
 
 ### Fase 10 — Después del MVP (priorizar con datos del piloto)
@@ -378,6 +389,7 @@ Inicio previsto: **lunes 2026-10-05**.
 | `frontend-builder` | Con cada pantalla nueva o rehecha | Construye pantallas y componentes React según la dirección y la skill `design-craft`; componentes ≤150 líneas, Wayfinder, E2E en verde, en su propio carril de Playwright |
 | `ux-reviewer` | Cada pantalla | Intuitivo, 360 px, contraste, animaciones, lenguaje neutro |
 | `marketing-advisor` | Antes de diseñar o cambiar promociones, cupones, precios especiales, fidelización o textos de venta | Exclusivo de marketing y ventas: qué promociones convienen a un salón pequeño (2x1, combos, horas flojas, temporada, primera visita, referidos, cumpleaños, paquetes), en qué orden, con qué reglas, riesgos y textos. Solo propone; no escribe código |
+| `legal-compliance` | Antes de publicar o cambiar un texto legal, un formulario que recoja datos de personas, una cookie o rastreador, un mensaje comercial o una promoción con condiciones; obligatorio antes del piloto y del lanzamiento | Exclusivo de cumplimiento en Perú: términos y condiciones, privacidad (Ley 29733), cookies y consentimientos, Libro de Reclamaciones y consumidor (Ley 29571), publicidad. Hace el inventario de datos, redacta borradores y lista lo que debe confirmar un abogado. Solo propone |
 | `publish-guard` | **Antes de cada `git push`** y de unir una rama a `main` | Exclusivo para el repositorio público: que no salgan contraseñas, claves, `.env`, datos de personas reales, volcados, archivos de la máquina ni información de negocio por descuido. Solo lectura; responde APTO o BLOQUEADO |
 
 **Definición de terminado:** tests verdes, phpstan y lint limpios, agentes aplicables sin hallazgos
@@ -437,6 +449,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-10 | **Las propinas quedan fuera del sistema**: no se cobran, no se registran, no entran en la caja ni en los reportes; al completar una cita se cobra el saldo acordado (precio − descuento − seña pagada) y nada más. Se elimina la columna `bookings.tip_cents` | Decisión del usuario: la propina es un acuerdo personal entre el cliente y quien lo atendió; el salón solo cobra lo acordado |
 | 2026-10-10 | Nuevo módulo **Promociones** (4.13, paso 6.7) y nuevo agente `marketing-advisor`, exclusivo para guiar qué promociones y funciones comerciales ofrecer | Pedido del usuario: que los salones puedan publicar ofertas como "vienen dos y pagan uno" o un peinado de Halloween, con un agente que oriente qué opciones agregar |
 | 2026-10-10 | **Promociones con opciones predeterminadas** (spec en `docs/promociones.md`): primera entrega con Descuento, Servicio de regalo, Horas flojas y Campaña de temporada; el sistema redacta el texto y la letra chica; sin códigos, una por reserva, máximo 3 activas, en todos los planes; comisión sobre lo cobrado y S/ 0 en el regalo; crear y editar es del dueño. 2x1 (un profesional, dos turnos seguidos), primera visita y combo en la segunda entrega. Se descartan paquetes prepagados, cupones, acumulables y texto legal libre | El usuario pidió que decida el agente de marketing lo más coherente y que el dueño del salón tenga opciones listas, incluidos un descuento y un servicio gratis |
+| 2026-10-10 | Lo legal se amplía (4.12, paso 9.4): términos y condiciones para salones y para clientes, política de privacidad, **cookies**, consentimientos, Libro de Reclamaciones y textos por defecto del salón; nuevo agente `legal-compliance`, exclusivo para esto. Se adelanta como requisito del piloto (8.5), no solo del lanzamiento | Pedido del usuario: tener términos y cookies en regla para no exponerse a denuncias; con datos de clientes reales en el piloto ya aplica la ley de datos personales |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

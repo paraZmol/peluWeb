@@ -82,6 +82,9 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
   Si tocó auth, roles, subidas, dinero o consultas por salón → **security-auditor**.
   Si toca promociones, cupones, precios especiales, fidelización o textos de venta → primero
   **marketing-advisor** (solo propone y prioriza; el usuario elige antes de construir).
+  Si toca un texto legal, un formulario que recoge datos de personas, cookies o rastreadores,
+  mensajes comerciales o condiciones de una promoción → **legal-compliance** (redacta borradores
+  y señala riesgos según la ley peruana; no sustituye al abogado que debe confirmarlos).
   Si tocó una pantalla → **visual-designer** (mira capturas y corrige la presentación para que
   se vea profesional) y después **ux-reviewer** (solo opina).
 - Pantallas públicas y de alta del salón (portada, registro, página del salón, reserva, Mis
