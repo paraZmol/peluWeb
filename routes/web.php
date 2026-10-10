@@ -30,6 +30,7 @@ use App\Http\Controllers\Staff\AgendaBookingController;
 use App\Http\Controllers\Staff\AgendaController;
 use App\Http\Controllers\Staff\BookingMoveController;
 use App\Http\Controllers\Staff\BookingStatusController;
+use App\Http\Controllers\Staff\ClientPhotoController;
 use App\Http\Controllers\Staff\ClientProfileController;
 use App\Http\Controllers\Staff\ScheduleController;
 use App\Http\Controllers\Staff\StaffPhotoController;
@@ -234,6 +235,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('clientes/{client}/notas', [ClientProfileController::class, 'updateNotes'])
             ->middleware('throttle:60,1,client-notes')
             ->name('clients.notes.update');
+        Route::post('clientes/{client}/fotos', [ClientPhotoController::class, 'store'])
+            ->middleware('throttle:30,1,client-photos')
+            ->name('clients.photos.store');
+        Route::get('clientes/{client}/fotos/{photo}', [ClientPhotoController::class, 'show'])->name('clients.photos.show');
+        Route::delete('clientes/{client}/fotos/{photo}', [ClientPhotoController::class, 'destroy'])->name('clients.photos.destroy');
 
         Route::post('feriados', [HolidayController::class, 'store'])
             ->middleware('throttle:60,1')

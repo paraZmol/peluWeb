@@ -6,6 +6,7 @@ use App\Actions\Salon\ClientProfile;
 use App\Actions\Salon\SaveClientNotes;
 use App\Http\Controllers\Owner\SalonAreaController;
 use App\Http\Requests\Staff\ClientNotesRequest;
+use App\Models\ClientPhoto;
 use App\Models\SalonClient;
 use App\Support\WhatsApp;
 use Illuminate\Http\RedirectResponse;
@@ -50,6 +51,9 @@ class ClientProfileController extends SalonAreaController
             ],
             ...$profile->handle($salon, $client, $showsMoney),
             'canSeeCare' => $seesCare,
+            // Pictures of the person follow the same rule as their health notes.
+            'photos' => $seesCare ? $this->photos($client) : [],
+            'photosMax' => ClientPhoto::MAX_PER_CLIENT,
             'careConsentText' => $this->careConsentText($salon->name),
             'canManageVip' => $user?->can('manageVipClients', $salon) ?? false,
             'notesMaxLength' => SalonClient::NOTES_MAX_LENGTH,
@@ -68,6 +72,21 @@ class ClientProfileController extends SalonAreaController
         $this->toast('Ficha actualizada.');
 
         return back();
+    }
+
+    /**
+     * @return list<array{id: int, kind: string, kindLabel: string, date: string, url: string}>
+     */
+    private function photos(SalonClient $client): array
+    {
+        return array_values($client->photos()->orderByDesc('taken_on')->orderByDesc('id')->get()
+            ->map(fn (ClientPhoto $photo): array => [
+                'id' => $photo->id,
+                'kind' => $photo->kind->value,
+                'kindLabel' => $photo->kind->label(),
+                'date' => $photo->taken_on->format('Y-m-d'),
+                'url' => route('clients.photos.show', [$client, $photo]),
+            ])->all());
     }
 
     /**

@@ -95,6 +95,14 @@ class SalonClient extends Model
     }
 
     /**
+     * @return HasMany<ClientPhoto, $this>
+     */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(ClientPhoto::class);
+    }
+
+    /**
      * @return HasMany<Booking, $this>
      */
     public function bookings(): HasMany

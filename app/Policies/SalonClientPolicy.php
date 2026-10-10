@@ -46,6 +46,14 @@ class SalonClientPolicy
     }
 
     /**
+     * Pictures of a person: the same few who read their health notes.
+     */
+    public function managePhotos(User $user, SalonClient $client): bool
+    {
+        return $this->viewCare($user, $client);
+    }
+
+    /**
      * Whoever may read the file may write its notes: they are the ones
      * who learn, attending, what there is to write.
      */

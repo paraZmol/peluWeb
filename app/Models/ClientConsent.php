@@ -57,7 +57,7 @@ class ClientConsent extends Model
         $consent->salon_client_id = $client->id;
         $consent->kind = $kind;
         $consent->action = $action;
-        $consent->method = ConsentMethod::Paper;
+        $consent->method = $kind->method();
         $consent->text_version = $kind->textVersion();
         $consent->recorded_by = $by?->id;
         $consent->save();

@@ -11,4 +11,9 @@ class SalonException extends BusinessRuleException
     {
         return new self("Tu galería ya tiene {$max} fotos. Elimina alguna para subir otra.");
     }
+
+    public static function tooManyClientPhotos(int $max): self
+    {
+        return new self("Una ficha guarda {$max} fotos como máximo. Elimina alguna para subir otra.");
+    }
 }
