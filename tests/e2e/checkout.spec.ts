@@ -32,7 +32,7 @@ async function startVisitToday(page: Page, name: string) {
 }
 
 test.describe('Cobrar una cita', () => {
-    test('el cobro se divide entre dos métodos con descuento y propina, y no deja cobrar si no cuadra', async ({
+    test('el cobro se divide entre dos métodos con descuento, y no deja cobrar si no cuadra', async ({
         page,
     }) => {
         const assertNoErrors = watchForErrors(page);
@@ -54,9 +54,7 @@ test.describe('Cobrar una cita', () => {
         ).toBeEnabled();
 
         // A discount above what is owed blocks the charge.
-        await dialog
-            .getByRole('button', { name: 'Descuento o propina' })
-            .click();
+        await dialog.getByRole('button', { name: 'Descuento' }).click();
         await dialog.getByLabel('Descuento').fill('40');
         await expect(problem).toHaveText(
             'El descuento no puede pasar de S/ 35.00.',
@@ -66,32 +64,33 @@ test.describe('Cobrar una cita', () => {
         ).toBeDisabled();
 
         await dialog.getByLabel('Descuento').fill('5');
-        await dialog.getByLabel('Propina').fill('3,50');
-        await expect(total).toHaveText('S/ 33.50');
-        const charge = dialog.getByRole('button', { name: 'Cobrar S/ 33.50' });
+        await expect(total).toHaveText('S/ 30.00');
+        // The salon charges what was agreed: there is no tip to type.
+        await expect(dialog.getByText(/propina/i)).toHaveCount(0);
+        const charge = dialog.getByRole('button', { name: 'Cobrar S/ 30.00' });
         await expect(charge).toBeEnabled();
 
         // Split: nothing typed yet, so it cannot be charged.
         await dialog.getByRole('button', { name: 'Dividir el pago' }).click();
         await expect(charge).toBeDisabled();
         await dialog.getByLabel('Monto en Efectivo').fill('20');
-        await expect(dialog.getByLabel('Monto en Yape')).toHaveValue('13.50');
+        await expect(dialog.getByLabel('Monto en Yape')).toHaveValue('10.00');
         await expect(charge).toBeEnabled();
 
-        await dialog.getByLabel('Monto en Yape').fill('10');
+        await dialog.getByLabel('Monto en Yape').fill('5');
         await expect(problem).toHaveText(
-            'Faltan S/ 3.50 para llegar al total.',
+            'Faltan S/ 5.00 para llegar al total.',
         );
         await expect(charge).toBeDisabled();
         await dialog.getByLabel('Monto en Yape').fill('15');
         await expect(problem).toHaveText(
-            'Sobran S/ 1.50: los montos pasan del total.',
+            'Sobran S/ 5.00: los montos pasan del total.',
         );
         await expect(charge).toBeDisabled();
 
         // Typing the first amount again hands the rest to the last one.
         await dialog.getByLabel('Monto en Efectivo').fill('18.5');
-        await expect(dialog.getByLabel('Monto en Yape')).toHaveValue('15.00');
+        await expect(dialog.getByLabel('Monto en Yape')).toHaveValue('11.50');
         await expect(problem).toBeEmpty();
         const overflow = await page.evaluate(
             () =>
@@ -108,10 +107,9 @@ test.describe('Cobrar una cita', () => {
         await charge.click();
         expect((await sent).postDataJSON()).toEqual({
             discount: '5.00',
-            tip: '3.50',
             payments: [
                 { method: 'cash', amount: '18.50' },
-                { method: 'yape', amount: '15.00' },
+                { method: 'yape', amount: '11.50' },
             ],
         });
 
@@ -121,8 +119,9 @@ test.describe('Cobrar una cita', () => {
         await expect(dialog).toHaveCount(0);
         await expect(appointment).toContainText('Completada');
         await expect(appointment).toContainText(
-            'Cobrado S/ 30.00 · descuento S/ 5.00 · propina S/ 3.50',
+            'Cobrado S/ 30.00 · descuento S/ 5.00',
         );
+        await expect(appointment).not.toContainText(/propina/i);
         await expect(
             appointment.getByRole('button', { name: 'Cobrar' }),
         ).toHaveCount(0);

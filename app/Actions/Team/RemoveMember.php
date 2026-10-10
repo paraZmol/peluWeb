@@ -7,6 +7,7 @@ use App\Exceptions\TeamException;
 use App\Models\Salon;
 use App\Models\SalonInvitation;
 use App\Models\SalonMember;
+use App\Models\Staff;
 use Illuminate\Support\Facades\DB;
 
 class RemoveMember
@@ -16,6 +17,15 @@ class RemoveMember
     public function handle(SalonMember $member): void
     {
         DB::transaction(function () use ($member): void {
+            // The member's professional profile first, then the salon: the
+            // order bookings and charges take them in (their inserts read
+            // the salon's row). Detaching the profile below writes that row.
+            Staff::withoutGlobalScope('salon')
+                ->where('salon_id', $member->salon_id)
+                ->where('user_id', $member->user_id)
+                ->lockForUpdate()
+                ->get(['id']);
+
             // Lock the salon so two owners cannot remove each other at once.
             $salon = Salon::query()->lockForUpdate()->findOrFail($member->salon_id);
 
@@ -26,7 +36,7 @@ class RemoveMember
             $member->delete();
             $this->linkStaffProfile->unlink($member->salon_id, $member->user_id);
             $this->cancelInvitationsSentBy($member);
-        });
+        }, attempts: 3);
     }
 
     /**

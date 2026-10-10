@@ -2,6 +2,7 @@
 
 namespace App\Actions\Salon;
 
+use App\Actions\Accounting\ManageExpenseCategories;
 use App\Actions\Catalog\AddServicesFromTemplates;
 use App\Actions\Staff\SaveStaff;
 use App\Enums\BusinessType;
@@ -22,6 +23,7 @@ class CreateSalon
     public function __construct(
         private readonly AddServicesFromTemplates $addServices,
         private readonly SaveStaff $saveStaff,
+        private readonly ManageExpenseCategories $expenseCategories,
     ) {}
 
     /**
@@ -54,6 +56,7 @@ class CreateSalon
             $membership->save();
 
             $this->addStarterServices($salon);
+            $this->expenseCategories->createDefaults($salon);
 
             // Most owners of small salons also attend clients themselves.
             $this->saveStaff->handle($salon, null, ['name' => Staff::nameFrom($owner->name)], $owner->id);

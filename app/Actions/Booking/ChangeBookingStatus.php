@@ -3,6 +3,7 @@
 namespace App\Actions\Booking;
 
 use App\Domain\Accounting\Checkout;
+use App\Domain\Accounting\CommissionCalculator;
 use App\Domain\Booking\AvailabilityCalculator;
 use App\Domain\Booking\TimeSpan;
 use App\Enums\BookingStatus;
@@ -74,7 +75,7 @@ class ChangeBookingStatus
 
     /**
      * The visit ends and is paid for. Without a checkout it is charged in
-     * full, with no discount or tip.
+     * full, with no discount.
      */
     public function complete(Booking $booking, ?User $by, ?Checkout $checkout = null): Booking
     {
@@ -84,8 +85,8 @@ class ChangeBookingStatus
             $checkout->assertSettles($locked->price_cents, $depositPaid);
 
             $locked->discount_cents = $checkout->discountCents;
-            $locked->tip_cents = $checkout->tipCents;
             $locked->charged_cents = $checkout->chargedCents($locked->price_cents);
+            $locked->commission_cents = $this->commissionFor($locked);
 
             foreach ($checkout->receivedParts() as $method => $cents) {
                 Payment::record($locked, PaymentKind::Charge, PaymentMethod::from($method), $cents, $now, $by);
@@ -191,6 +192,30 @@ class ChangeBookingStatus
         $this->forgetReferencePhoto($changed);
 
         return $changed;
+    }
+
+    /**
+     * What the professional earns for this visit, with today's rules: their
+     * general percent, or what each service says for them. Frozen on the
+     * booking, so changing a rule later never rewrites past visits.
+     */
+    private function commissionFor(Booking $booking): int
+    {
+        $staff = Staff::withoutGlobalScope('salon')->withTrashed()->findOrFail($booking->staff_id);
+        $rules = DB::table('service_staff')->where('staff_id', $staff->id)->get(['service_id', 'commission_percent', 'commission_cents'])->keyBy('service_id');
+        $lines = [];
+
+        foreach ($booking->services()->get() as $service) {
+            $rule = $rules->get($service->service_id);
+
+            $lines[] = [
+                'priceCents' => $service->price_cents,
+                'percent' => (int) ($rule->commission_percent ?? $staff->commission_percent),
+                'fixedCents' => $rule?->commission_cents === null ? null : (int) $rule->commission_cents,
+            ];
+        }
+
+        return CommissionCalculator::forVisit($lines, $booking->discount_cents);
     }
 
     /**

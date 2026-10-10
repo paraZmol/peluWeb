@@ -5,17 +5,11 @@ import { toCents } from '@/lib/money';
 type Props = {
     booking: AgendaBooking;
     discountCents: number;
-    tipCents: number;
     totalCents: number;
 };
 
 /** How the amount to collect comes about, line by line, and the total. */
-export function CheckoutSummary({
-    booking,
-    discountCents,
-    tipCents,
-    totalCents,
-}: Props) {
+export function CheckoutSummary({ booking, discountCents, totalCents }: Props) {
     const lines = [
         {
             label: 'Seña ya pagada',
@@ -26,11 +20,6 @@ export function CheckoutSummary({
             label: 'Descuento',
             amount: `− ${formatCents(discountCents)}`,
             isShown: discountCents > 0,
-        },
-        {
-            label: 'Propina',
-            amount: `+ ${formatCents(tipCents)}`,
-            isShown: tipCents > 0,
         },
     ];
 

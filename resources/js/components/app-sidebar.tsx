@@ -3,12 +3,16 @@ import {
     BookHeart,
     CalendarClock,
     CalendarDays,
+    ChartColumn,
     Contact,
+    HandCoins,
     Ticket,
     LayoutGrid,
+    ReceiptText,
     Scissors,
     Store,
     Users,
+    Wallet,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -27,7 +31,11 @@ import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { dashboard } from '@/routes';
 import { index as agenda } from '@/routes/agenda';
 import { index as myBookings } from '@/routes/bookings';
+import { index as cash } from '@/routes/cash';
 import { index as clients } from '@/routes/clients';
+import { index as commissions } from '@/routes/commissions';
+import { index as expenses } from '@/routes/expenses';
+import { index as reports } from '@/routes/reports';
 import { edit as editSalon } from '@/routes/salon';
 import { index as services } from '@/routes/services';
 import { index as staff } from '@/routes/staff';
@@ -60,6 +68,20 @@ export function AppSidebar() {
             : []),
         ...(can('manage_vip_clients')
             ? [{ title: 'Clientes', href: clients(), icon: BookHeart }]
+            : []),
+        ...(can('manage_cash')
+            ? [
+                  { title: 'Caja', href: cash(), icon: Wallet },
+                  { title: 'Gastos', href: expenses(), icon: ReceiptText },
+                  {
+                      title: 'Comisiones',
+                      href: commissions(),
+                      icon: HandCoins,
+                  },
+              ]
+            : []),
+        ...(can('view_reports')
+            ? [{ title: 'Reportes', href: reports(), icon: ChartColumn }]
             : []),
         ...(isOwner
             ? [

@@ -47,3 +47,6 @@ yarn-error.log
 /test-results-*
 /public/propuestas
 /public/build-*
+
+# Per-machine Claude settings and session files
+/.claude/settings.local.json

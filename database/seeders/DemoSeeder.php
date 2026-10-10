@@ -19,6 +19,7 @@ use App\Support\CurrentSalon;
 use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
+use LogicException;
 
 /**
  * Realistic demo data for trying the app locally (password: "password").
@@ -99,6 +100,11 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
+        // Its accounts share a public password: never on a real server.
+        if (! app()->environment(['local', 'testing'])) {
+            throw new LogicException('DemoSeeder only runs in local and testing.');
+        }
+
         if (User::where('email', self::SALONS[0]['owner']['email'])->exists()) {
             $this->command->info('Los datos de ejemplo ya existen. Nada que hacer.');
 

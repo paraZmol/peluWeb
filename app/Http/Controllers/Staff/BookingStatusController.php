@@ -38,8 +38,10 @@ class BookingStatusController extends SalonAreaController
 
     public function complete(CompleteBookingRequest $request, Booking $booking): RedirectResponse
     {
-        $this->authorize('manage', $booking);
-        $this->status->complete($booking, $request->user(), $request->checkout());
+        $checkout = $request->checkout();
+        // Taking money off the price is deciding over the salon's income.
+        $this->authorize($checkout !== null && $checkout->discountCents > 0 ? 'confirmDeposit' : 'manage', $booking);
+        $this->status->complete($booking, $request->user(), $checkout);
 
         return $this->done('Cita completada y cobrada.');
     }

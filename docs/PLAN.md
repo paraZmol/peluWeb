@@ -121,7 +121,7 @@ para cubrir recepcionistas o encargados sin crear más roles.
 - Ficha del cliente: historial, notas (alergias, fórmula de color, preferencias), fotos antes/después,
   cantidad de ausencias, VIP sí o no.
 - Botones de WhatsApp con mensajes armados: confirmar, recordar, "ya puedes venir", "gracias por venir".
-- Cobro rápido: método (efectivo, Yape, Plin, tarjeta, transferencia), propina y descuento.
+- Cobro rápido: método (efectivo, Yape, Plin, tarjeta, transferencia, otro) y descuento (con permiso de caja). Las propinas no se registran: son de quien atendió.
 
 ### 4.7 Caja y contabilidad
 - **Ingresos**: cada cobro de servicio, seña o producto queda como movimiento con método de pago.
@@ -166,11 +166,35 @@ para cubrir recepcionistas o encargados sin crear más roles.
   conexión básico (ver mis próximas reservas).
 - **Flutter** después del lanzamiento, contra la API `/api/v1` (que se diseña desde el inicio).
 
+### 4.13 Promociones (detalle en [promociones.md](promociones.md))
+- El dueño tiene una sección **Promociones** con **opciones predeterminadas**: elige una tarjeta de
+  la lista, rellena dos o tres campos, ve cómo quedará y publica. Primera entrega: **Descuento**
+  ("20 % menos en corte"), **Servicio de regalo** ("rasurado gratis con tu corte"), **Horas
+  flojas** y **Campaña de temporada** (Halloween, Día de la Madre, Fiestas Patrias, Navidad).
+  Segunda entrega: primera visita, combo a precio cerrado y 2x1.
+- El sistema escribe el título, la línea y la letra chica (vigencia, servicios, cupos); el precio
+  normal sale del catálogo, nunca lo escribe el dueño. Sin códigos: la promoción se aplica sola al
+  reservar y hay una por reserva.
+- El cliente la ve en la página pública y en la reserva, y el salón la comparte con un enlace.
+- El precio con promoción se congela en la reserva; caja, comisiones (sobre lo cobrado) y reportes
+  muestran cuánto se vendió y cuánto se regaló con cada una, separado del descuento manual.
+
 ### 4.12 Legal (Perú)
 - Términos y condiciones y política de privacidad (Ley 29733 de Protección de Datos Personales):
   consentimiento explícito al registrarse y opción de borrar la cuenta.
 - Libro de Reclamaciones virtual de la plataforma (exigido por Indecopi).
 - El salón es responsable de los datos de sus clientes; la plataforma es encargada del tratamiento.
+- **Términos y condiciones** en dos versiones: para salones (suscripción, pagos, cancelación,
+  responsabilidad) y para clientes finales (reservas, señas, cancelaciones, promociones del salón).
+  Se aceptan de forma expresa al registrarse y se guarda qué versión se aceptó y cuándo.
+- **Cookies**: inventario de las que el producto usa de verdad, política de cookies y el aviso o
+  consentimiento que corresponda (un banner solo si hay cookies que no sean necesarias).
+- Consentimientos separados para mensajes comerciales, con baja en cada mensaje; exportar y
+  borrar los datos de una cuenta; plazos de conservación escritos.
+- Textos por defecto que cada salón muestra a sus clientes (privacidad, condiciones de
+  promociones, política de cancelación y de seña).
+- Todo lo redacta en borrador el agente `legal-compliance` y lo confirma un abogado colegiado en
+  Perú antes del lanzamiento: el agente no sustituye esa revisión.
 
 ---
 
@@ -299,12 +323,13 @@ Inicio previsto: **lunes 2026-10-05**.
   - [x] (d) *(2026-10-08)* QA + ux-reviewer + security-auditor sobre lo rehecho, hallazgos corregidos; 1016 tests Pest y 93 E2E en verde. Quedan para decidir o para después: foto del equipo en lo público (solo la puesta para el salón o también la del perfil), precio y días de prueba de la portada, registro de un cliente que llega desde una reserva (ve el texto de alta de salón), tope de horarios cuando el periodo abierto es muy largo, cabecera de Mis reservas con la portada del salón, fotos de muestra para spa.
 
 ### Fase 5 — Caja, contabilidad y reportes
-- [ ] 5.1 `payments` desde el cobro de la cita (método, propina, descuento) y desde las señas.
-- [ ] 5.2 Gastos con categorías y foto del comprobante.
-- [ ] 5.3 Apertura y cierre de caja con cuadre por método.
-- [ ] 5.4 Reglas de comisión y liquidación por período.
-- [ ] 5.5 Reportes de ganancias y pérdidas con gráficos (cargar skill `dataviz`), filtros y comparativa con el período anterior.
-- [ ] 5.6 Exportar a Excel/CSV/PDF.
+- [x] 5.1 *(2026-10-10)* `payments` desde el cobro de la cita (método y descuento; sin propinas: son de quien atiende) y desde las señas.
+- [x] 5.2 *(2026-10-10)* Gastos con categorías y foto del comprobante.
+- [x] 5.3 *(2026-10-10)* Apertura y cierre de caja con cuadre por método.
+- [x] 5.4 *(2026-10-10)* Reglas de comisión y liquidación por período.
+- [x] 5.5 *(2026-10-10)* Reportes de ganancias y pérdidas con gráficos (cargar skill `dataviz`), filtros y comparativa con el período anterior.
+- [x] 5.6 *(2026-10-10; CSV e impresión a PDF)* Exportar a Excel/CSV/PDF.
+- [ ] 5.7 **Cuadre de caja exacto bajo concurrencia** (deuda de la revisión de cierre, severidad media): cada movimiento (cobro, seña, devolución, gasto, liquidación) guarda la caja abierta en la que entró y el cierre espera a los que están a medias; hoy un cobro confirmado en el mismo instante del cierre, o en su mismo segundo, puede quedar fuera del esperado congelado de esa caja (no se pierde dinero ni cambian los reportes; solo ese cuadre). Hay dos tests omitidos que lo reproducen (`MoneyRaceTest`, `CheckoutBreakerTest`). También: `payments.staff_id` de la seña al pasar la cita a otro profesional. No bloquea la Fase 6.
 - *Cierre:* test de que los totales cuadran al céntimo + **security-auditor** (permisos de caja) + **qa-tester**.
 
 ### Fase 6 — Clientes, reseñas, notificaciones
@@ -314,6 +339,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 6.4 **PWA instalable** (adelantado desde 8.1): `manifest.webmanifest` con nombre, colores e íconos (192, 512 y maskable), service worker con caché de la app y página sin conexión, aviso "Instalar" en Android/escritorio, guía visual para iOS ("Compartir → Añadir a pantalla de inicio") y modo sin conexión básico (ver mis próximas reservas). Íconos y nombre propios por salón cuando se instala desde su página pública.
 - [ ] 6.5 Web Push (cliente y profesional); necesita el service worker de 6.4.
 - [ ] 6.6 Lista de espera con prioridad VIP; cola "sin cita" para barberías.
+- [ ] 6.7 **Promociones** (módulo 4.13, spec en [promociones.md](promociones.md), decidida con `marketing-advisor`): (a) mecánicas Descuento y Servicio de regalo en cotización, reserva, seña, mover/cancelar, cupos bajo bloqueo, caja, comisión y reportes — con `booking-breaker`; (b) sección "Promociones" del dueño con las cuatro tarjetas, vista previa y compartir; (c) franja en la página pública, reserva con horarios marcados y Mis reservas; (d) segunda entrega: primera visita, combo y 2x1.
 - *Cierre:* **qa-tester** + **security-auditor** (reseñas: XSS, spam, rate limit).
 
 ### Fase 7 — SaaS
@@ -340,7 +366,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 9.1 Dominio y hosting (cPanel con PHP 8.3 o VPS), HTTPS, cron, colas.
 - [ ] 9.2 Copias de seguridad diarias de la base y de las imágenes, con prueba de restauración.
 - [ ] 9.3 Monitoreo de errores (Sentry, plan gratis) y uptime.
-- [ ] 9.4 Términos, privacidad, Libro de Reclamaciones.
+- [ ] 9.4 **Legal** (módulo 4.12, con `legal-compliance`; borradores v0.1 del 2026-10-10 en [legal/](legal/README.md), requisitos numerados en [legal/requisitos-de-producto.md](legal/requisitos-de-producto.md): P1–P14 bloquean el piloto, L1–L20 el lanzamiento): (a) inventario de datos personales y de cookies del producto real; (b) borradores de términos para salones y para clientes, política de privacidad, política y aviso de cookies, Libro de Reclamaciones y textos por defecto del salón; (c) cambios de producto: casillas de aceptación con versión y fecha guardadas, consentimiento aparte para mensajes comerciales, exportar y borrar la cuenta, páginas legales enlazadas en el pie y en el registro; (d) revisión de un abogado peruano antes de publicar. **Bloquea el lanzamiento y el piloto con salones reales (8.5).**
 - [ ] 9.5 Restringir la clave de Google Maps por dominio; `APP_DEBUG=false`; cabeceras de seguridad.
 
 ### Fase 10 — Después del MVP (priorizar con datos del piloto)
@@ -363,6 +389,9 @@ Inicio previsto: **lunes 2026-10-05**.
 | `design-director` | Al empezar un rediseño o una pantalla pública nueva | Dirección visual: propone direcciones con maquetas y capturas reales, define tokens, tipografía y componentes base, y mantiene la skill `ui-system` (edita `app.css`, fuentes y `components/ui/*` solo para tokens) |
 | `frontend-builder` | Con cada pantalla nueva o rehecha | Construye pantallas y componentes React según la dirección y la skill `design-craft`; componentes ≤150 líneas, Wayfinder, E2E en verde, en su propio carril de Playwright |
 | `ux-reviewer` | Cada pantalla | Intuitivo, 360 px, contraste, animaciones, lenguaje neutro |
+| `marketing-advisor` | Antes de diseñar o cambiar promociones, cupones, precios especiales, fidelización o textos de venta | Exclusivo de marketing y ventas: qué promociones convienen a un salón pequeño (2x1, combos, horas flojas, temporada, primera visita, referidos, cumpleaños, paquetes), en qué orden, con qué reglas, riesgos y textos. Solo propone; no escribe código |
+| `legal-compliance` | Antes de publicar o cambiar un texto legal, un formulario que recoja datos de personas, una cookie o rastreador, un mensaje comercial o una promoción con condiciones; obligatorio antes del piloto y del lanzamiento | Exclusivo de cumplimiento en Perú: términos y condiciones, privacidad (Ley 29733), cookies y consentimientos, Libro de Reclamaciones y consumidor (Ley 29571), publicidad. Hace el inventario de datos, redacta borradores y lista lo que debe confirmar un abogado. Solo propone |
+| `publish-guard` | **Antes de cada `git push`** y de unir una rama a `main` | Exclusivo para el repositorio público: que no salgan contraseñas, claves, `.env`, datos de personas reales, volcados, archivos de la máquina ni información de negocio por descuido. Solo lectura; responde APTO o BLOQUEADO |
 
 **Definición de terminado:** tests verdes, phpstan y lint limpios, agentes aplicables sin hallazgos
 CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
@@ -386,7 +415,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | D3 | Precios finales de los planes | Fase 7 | Ver [mercado.md](mercado.md): S/ 39 / 89 / 169 |
 | D4 | ¿Hay un salón amigo para el piloto? | Fase 8 | Sí (el del proyecto anterior) |
 | D5 | ¿Se reutiliza algo del proyecto Flutter anterior (`StudioProjects/peluqueria`)? | Fase 10 | Solo las reglas de dominio, ya pasadas a `booking-domain` |
-| D6 | ¿Subir el código a un repositorio privado de GitHub? (activa el CI) | Fase 9 | Pendiente; el CI ya está listo para cuando exista |
+| D6 | ¿Subir el código a un repositorio de GitHub? (activa el CI) | Fase 9 | **Respondido 2026-10-10:** sí, en `github.com/paraZmol/peluWeb`, **público**. Se trabaja con ramas (ver §8) |
 
 ## 11. Registro de cambios del plan
 | Fecha | Cambio | Motivo |
@@ -412,6 +441,19 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-08 | El paso "¿Cuándo?" destaca el próximo horario libre y pliega los periodos con más de 12 horarios; el detalle de una reserva viste toda la app (cabecera, fondo, avisos) con la plantilla del salón; Vibrante pone el nombre del equipo debajo de la foto (variante `captioned-portrait`) y su barra fija es opaca; el registro repite la promesa de la portada; el salón vitrina de pruebas pasa a ser "Estudio Ñusta", unisex y con horario de 9 a 8 | Hallazgos de ux-reviewer y qa-tester al cerrar el 4.12 |
 | 2026-10-10 | Paso 5.1, cómo se cobra: al completar una cita se registra el cobro del saldo (precio − descuento − seña ya pagada + propina) repartido en uno o varios métodos (efectivo, Yape, Plin, tarjeta, transferencia, otro); el descuento no puede dejar el precio por debajo de la seña pagada; la propina se guarda aparte y no cuenta como ingreso del salón; "Seña recibida" pide el método; una seña devuelta se registra como movimiento de salida. Cobra quien atiende la cita (o quien ve toda la agenda); devolver una seña y lo demás de caja exige el permiso de caja | Sin método de pago por movimiento no hay cuadre de caja; en Perú es común pagar parte en efectivo y parte por Yape |
 | 2026-10-10 | La PWA (manifest, service worker, instalación en Android e iOS, modo sin conexión básico) se adelanta de la Fase 8 al paso 6.4, antes del Web Push | El usuario confirmó que quiere la app instalable; además el Web Push no funciona sin el service worker, así que el orden anterior estaba mal |
+| 2026-10-10 | El código vive en GitHub (`paraZmol/peluWeb`, público). `main` es lo estable; cada fase se trabaja en su rama (`fase-5-caja`, …) y se une a `main` al cerrar un paso con todo en verde; cada fase cerrada lleva una etiqueta (`fase-4-cerrada`) para poder volver. Antes de cada subida se revisa que no vaya ningún secreto. `DemoSeeder` se niega a correr en producción | Pedido del usuario: ver las mejoras por ramas y poder volver atrás en una emergencia; el repositorio es público |
+| 2026-10-10 | Nuevo agente `publish-guard`, exclusivo para revisar lo que se va a subir a GitHub antes de cada `git push`; sin su APTO no se sube | Pedido del usuario: el repositorio es público y no quiere divulgar información por descuido |
+| 2026-10-10 | Paso 5.4, cómo se calculan las comisiones: cada profesional tiene un porcentaje general y, por servicio, puede tener otro porcentaje o un monto fijo; la comisión se calcula y se congela al completar la cita, sobre el precio de cada servicio ya con el descuento repartido en proporción (la propina no entra: es de quien atendió); cambiar una regla no altera citas ya completadas. Liquidar un período marca esas citas como pagadas y registra el pago como gasto en "Sueldos y comisiones", para que caja y reportes cuadren. Las reglas las fija el dueño; liquidar exige el permiso de caja | Que el pasado no cambie al ajustar una regla, y que pagar comisiones no quede fuera de la contabilidad |
+| 2026-10-10 | Paso 5.3: abrir la caja no es obligatorio para cobrar; lo que se mueve con la caja cerrada no entra en ningún cuadre. Un gasto de hoy se guarda con la hora en que se registra (entra en la caja abierta); uno de otro día, a mediodía de ese día | No frenar la atención por un trámite; que el cuadre refleje lo que pasó mientras la caja estuvo abierta |
+| 2026-10-10 | Paso 5.6: la exportación es un **CSV** de movimientos que Excel y Google Sheets abren directo (UTF-8 con marca, separador `;`, celdas protegidas contra fórmulas) y el **PDF** sale de imprimir el reporte con una hoja de estilos de impresión. No se añade una librería para `.xlsx` ni para PDF | Costo cero y sin dependencias nuevas; el resultado para el dueño es el mismo: abrirlo en Excel o guardarlo como PDF |
+| 2026-10-10 | Tras la auditoría de la Fase 5: aplicar un **descuento** al cobrar exige el permiso de caja (cobrar sin descuento sigue pudiendo hacerlo quien atiende); la **propina** no puede superar el precio de la cita; los **comprobantes de gastos** se guardan en disco privado y solo los ve quien maneja la caja del salón; los seeders con contraseña conocida solo corren en local y en pruebas | security-auditor: un profesional sin permisos podía descuadrar la caja con un descuento o una propina inventada, y un comprobante (RUC, cuenta bancaria) quedaba visible para quien tuviera el enlace |
+| 2026-10-10 | **Las propinas quedan fuera del sistema**: no se cobran, no se registran, no entran en la caja ni en los reportes; al completar una cita se cobra el saldo acordado (precio − descuento − seña pagada) y nada más. Se elimina la columna `bookings.tip_cents` | Decisión del usuario: la propina es un acuerdo personal entre el cliente y quien lo atendió; el salón solo cobra lo acordado |
+| 2026-10-10 | Nuevo módulo **Promociones** (4.13, paso 6.7) y nuevo agente `marketing-advisor`, exclusivo para guiar qué promociones y funciones comerciales ofrecer | Pedido del usuario: que los salones puedan publicar ofertas como "vienen dos y pagan uno" o un peinado de Halloween, con un agente que oriente qué opciones agregar |
+| 2026-10-10 | **Promociones con opciones predeterminadas** (spec en `docs/promociones.md`): primera entrega con Descuento, Servicio de regalo, Horas flojas y Campaña de temporada; el sistema redacta el texto y la letra chica; sin códigos, una por reserva, máximo 3 activas, en todos los planes; comisión sobre lo cobrado y S/ 0 en el regalo; crear y editar es del dueño. 2x1 (un profesional, dos turnos seguidos), primera visita y combo en la segunda entrega. Se descartan paquetes prepagados, cupones, acumulables y texto legal libre | El usuario pidió que decida el agente de marketing lo más coherente y que el dueño del salón tenga opciones listas, incluidos un descuento y un servicio gratis |
+| 2026-10-10 | Lo legal se amplía (4.12, paso 9.4): términos y condiciones para salones y para clientes, política de privacidad, **cookies**, consentimientos, Libro de Reclamaciones y textos por defecto del salón; nuevo agente `legal-compliance`, exclusivo para esto. Se adelanta como requisito del piloto (8.5), no solo del lanzamiento | Pedido del usuario: tener términos y cookies en regla para no exponerse a denuncias; con datos de clientes reales en el piloto ya aplica la ley de datos personales |
+| 2026-10-10 | Primeros borradores legales (`docs/legal/`, sin revisar por abogado). No hace falta banner de cookies: solo hay cookies técnicas y de preferencia, **a condición de cargar el mapa de Google solo al pulsar "Ver mapa"**. Requisitos que bloquean el piloto (P1–P14): páginas legales en el pie, casilla de aceptación con versión y fecha guardadas, aceptación pendiente para altas con Google, Libro de Reclamaciones virtual, política de seña y cancelación visible al confirmar, borrado de cuenta completo. No se construye ningún envío promocional sin consentimiento aparte | Inventario de datos y cookies hecho por `legal-compliance` sobre el código real; varias normas quedaron sin verificar en fuente oficial y están listadas en `docs/legal/README.md` |
+| 2026-10-10 | **Horas ocupadas** en Reportes: tiempo atendiendo (tramos activos de citas completadas; el reposo de un tinte no cuenta) frente a las horas de trabajo del **horario actual** de cada profesional activo, sin feriados del salón ni ausencias. Puede pasar de 100 % si se atendió fuera de horario | No se guarda el historial de horarios; se avisa en pantalla que es "según su horario actual" |
+| 2026-10-10 | Cierre de Fase 5: liquidar comisiones envía el total visto y el servidor lo rechaza si ya cambió; `RefundDeposit` y `RemoveMember` toman primero al profesional (orden de bloqueos único: profesional → cliente → reserva → salón); el cuadre exacto de caja bajo concurrencia queda como paso 5.7 | `booking-breaker` encontró dos interbloqueos que daban error 500 y una liquidación que podía pagar más de lo mostrado |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

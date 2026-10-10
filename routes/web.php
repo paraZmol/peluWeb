@@ -5,10 +5,16 @@ use App\Http\Controllers\Client\BookingController as ClientBookingController;
 use App\Http\Controllers\CurrentSalonController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
+use App\Http\Controllers\Owner\CashController;
 use App\Http\Controllers\Owner\ClientController;
+use App\Http\Controllers\Owner\CommissionController;
+use App\Http\Controllers\Owner\ExpenseCategoryController;
+use App\Http\Controllers\Owner\ExpenseController;
 use App\Http\Controllers\Owner\HolidayController;
 use App\Http\Controllers\Owner\InvitationController;
 use App\Http\Controllers\Owner\MemberController;
+use App\Http\Controllers\Owner\ReportController;
+use App\Http\Controllers\Owner\ReportExportController;
 use App\Http\Controllers\Owner\SalonBrandingController;
 use App\Http\Controllers\Owner\SalonController;
 use App\Http\Controllers\Owner\SalonPhotoController;
@@ -144,6 +150,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('mi-salon/portada', [SalonBrandingController::class, 'destroyCover'])->name('salon.cover.destroy');
         Route::put('mi-salon/fotos/orden', [SalonPhotoController::class, 'reorder'])->name('salon.photos.reorder');
         Route::delete('mi-salon/fotos/{photo}', [SalonPhotoController::class, 'destroy'])->name('salon.photos.destroy');
+
+        Route::get('caja', [CashController::class, 'index'])->name('cash.index');
+        Route::post('caja/abrir', [CashController::class, 'open'])->name('cash.open');
+        Route::post('caja/{session}/cerrar', [CashController::class, 'close'])->name('cash.close');
+
+        Route::get('comisiones', [CommissionController::class, 'index'])->name('commissions.index');
+        Route::post('comisiones/{staff}/liquidar', [CommissionController::class, 'settle'])->name('commissions.settle');
+        Route::put('comisiones/{staff}/reglas', [CommissionController::class, 'updateRules'])->name('commissions.rules.update');
+
+        Route::get('reportes', [ReportController::class, 'index'])->middleware('throttle:30,1,reports')->name('reports.index');
+        Route::get('reportes/movimientos.csv', ReportExportController::class)->middleware('throttle:20,1,report-export')->name('reports.export');
+
+        Route::get('gastos', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::post('gastos', [ExpenseController::class, 'store'])->middleware('throttle:60,1,expenses')->name('expenses.store');
+        // POST: browsers cannot send a file in a PUT form.
+        Route::post('gastos/{expense}', [ExpenseController::class, 'update'])->middleware('throttle:60,1,expenses')->name('expenses.update');
+        Route::delete('gastos/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+        Route::get('gastos/{expense}/comprobante', [ExpenseController::class, 'receipt'])->name('expenses.receipt');
+        Route::post('gastos-categorias', [ExpenseCategoryController::class, 'store'])->name('expenses.categories.store');
+        Route::put('gastos-categorias/{category}', [ExpenseCategoryController::class, 'update'])->name('expenses.categories.update');
+        Route::delete('gastos-categorias/{category}', [ExpenseCategoryController::class, 'destroy'])->name('expenses.categories.destroy');
 
         Route::get('servicios', [ServiceController::class, 'index'])->name('services.index');
         Route::post('servicios', [ServiceController::class, 'store'])->name('services.store');

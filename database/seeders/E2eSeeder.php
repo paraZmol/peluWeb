@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Accounting\ManageExpenseCategories;
 use App\Actions\Salon\ManageSalonPhotos;
 use App\Actions\Salon\UpdateSalonBranding;
 use App\Actions\Staff\UpdateStaffPhoto;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
+use App\Enums\SalonPermission;
 use App\Enums\ServiceCategory;
 use App\Models\Salon;
 use App\Models\SalonMember;
@@ -15,6 +17,7 @@ use App\Models\Staff;
 use App\Models\User;
 use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
+use LogicException;
 
 /**
  * Known accounts for the Playwright end-to-end tests (tests/e2e).
@@ -26,6 +29,11 @@ class E2eSeeder extends Seeder
 
     public function run(): void
     {
+        // Its accounts share a public password: never on a real server.
+        if (! app()->environment(['local', 'testing'])) {
+            throw new LogicException('E2eSeeder only runs in local and testing.');
+        }
+
         User::factory()->create([
             'name' => 'Rosa Quispe',
             'email' => 'duena@example.com',
@@ -47,7 +55,38 @@ class E2eSeeder extends Seeder
         SalonMember::factory()->for($second)->for($staff)->create();
         Staff::factory()->for($second)->linkedTo($staff)->create(['name' => 'Pedro Personal']);
 
-        $this->seedShowcaseSalon();
+        $showcase = $this->seedShowcaseSalon();
+        $till = $this->seedTillSalon();
+
+        // Factories skip what CreateSalon gives every real salon.
+        foreach ([$first, $second, $showcase, $till] as $salon) {
+            app(ManageExpenseCategories::class)->createDefaults($salon);
+        }
+    }
+
+    /**
+     * A salon to try the money rules by role: a professional who attends
+     * visits but has no cash permission (no discounts, no cash screens) and
+     * one with the cash and reports permissions. Always-open agendas, so a
+     * visit can be booked for right now.
+     */
+    private function seedTillSalon(): Salon
+    {
+        $owner = User::factory()->create(['name' => 'Olga Obradora', 'email' => 'caja-duena@example.com']);
+        $salon = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Caja', 'slug' => 'salon-caja']);
+        $cut = Service::factory()->for($salon)->create(['name' => 'Corte de caja', 'price_cents' => 3500, 'active_minutes' => 30]);
+
+        $withoutCash = User::factory()->create(['name' => 'Sara Sin Caja', 'email' => 'sin-caja@example.com']);
+        SalonMember::factory()->for($salon)->for($withoutCash)->create();
+        $withCash = User::factory()->create(['name' => 'Cleo Con Caja', 'email' => 'con-caja@example.com']);
+        SalonMember::factory()->for($salon)->for($withCash)->withPermissions(SalonPermission::ManageCash, SalonPermission::ViewReports)->create();
+
+        foreach ([$withoutCash, $withCash] as $user) {
+            Staff::factory()->for($salon)->linkedTo($user)->working([1, 2, 3, 4, 5, 6, 7], '00:00', '23:55')
+                ->create(['name' => $user->name])->services()->attach($cut->id);
+        }
+
+        return $salon;
     }
 
     /**
@@ -55,7 +94,7 @@ class E2eSeeder extends Seeder
      * look at the screens with realistic content. Independent from the salons
      * above, so the flows that assert on them are not affected.
      */
-    private function seedShowcaseSalon(): void
+    private function seedShowcaseSalon(): Salon
     {
         $owner = User::factory()->create(['name' => 'Valeria Vitrina', 'email' => 'vitrina@example.com']);
         $salon = Salon::factory()->ownedBy($owner)->create([
@@ -121,6 +160,8 @@ class E2eSeeder extends Seeder
             'is_addon' => true,
         ]);
         $barber->services()->attach($wash->id);
+
+        return $salon;
     }
 
     /**

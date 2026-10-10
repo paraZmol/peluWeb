@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { AgendaBooking } from '@/components/booking/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useCheckout, usePaymentMethods } from '@/hooks/use-checkout';
 import { formatCents } from '@/lib/format';
 import { complete } from '@/routes/agenda/bookings';
-import { CheckoutExtras } from './checkout-extras';
+import { CheckoutDiscount } from './checkout-discount';
 import { CheckoutSummary } from './checkout-summary';
 import { PaymentMethodChips } from './payment-method-chips';
 import { SplitPayments } from './split-payments';
@@ -30,6 +30,7 @@ export function CheckoutForm({ booking }: Props) {
     const methods = usePaymentMethods();
     const checkout = useCheckout(booking.balance, methods);
     const [sending, setSending] = useState(false);
+    const problemId = useId();
     const nothingToPay = checkout.totalCents === 0;
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -58,15 +59,14 @@ export function CheckoutForm({ booking }: Props) {
             <CheckoutSummary
                 booking={booking}
                 discountCents={checkout.discountCents}
-                tipCents={checkout.tipCents}
                 totalCents={checkout.totalCents}
             />
-            <CheckoutExtras
-                discount={checkout.discount}
-                tip={checkout.tip}
-                onDiscount={checkout.setDiscount}
-                onTip={checkout.setTip}
-            />
+            {booking.canDiscount && (
+                <CheckoutDiscount
+                    discount={checkout.discount}
+                    onDiscount={checkout.setDiscount}
+                />
+            )}
 
             {!nothingToPay && !checkout.isSplit && (
                 <>
@@ -98,6 +98,7 @@ export function CheckoutForm({ booking }: Props) {
             )}
 
             <p
+                id={problemId}
                 role="status"
                 className="min-h-5 text-sm font-medium text-destructive-foreground"
             >
@@ -113,7 +114,9 @@ export function CheckoutForm({ booking }: Props) {
                 <Button
                     type="submit"
                     disabled={checkout.problem !== null || sending}
-                    className="tabular-nums sm:min-w-40"
+                    aria-describedby={problemId}
+                    // Switched off it must still read as a button, not as a gap.
+                    className="tabular-nums disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 sm:min-w-40"
                 >
                     {sending && <Spinner />}
                     {nothingToPay

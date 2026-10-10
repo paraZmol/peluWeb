@@ -19,7 +19,6 @@ export function usePaymentMethods(): Option[] {
  */
 export function useCheckout(balance: string, methods: Option[]) {
     const [discount, setDiscount] = useState('');
-    const [tip, setTip] = useState('');
     const [parts, setParts] = useState<PaymentPart[]>([
         { method: DEFAULT_METHOD, amount: '' },
     ]);
@@ -27,7 +26,6 @@ export function useCheckout(balance: string, methods: Option[]) {
     const state = resolveCheckout({
         balanceCents: toCents(balance) ?? 0,
         discount,
-        tip,
         parts,
         lastIsAuto,
     });
@@ -49,9 +47,7 @@ export function useCheckout(balance: string, methods: Option[]) {
     return {
         ...state,
         discount,
-        tip,
         setDiscount,
-        setTip,
         isSplit: parts.length > 1,
         canAddPart: parts.length < MAX_PAYMENT_PARTS && unused.length > 0,
         /** Rows as shown: the automatic one displays what it was given. */
@@ -90,7 +86,6 @@ export function useCheckout(balance: string, methods: Option[]) {
         /** What the server expects; nothing to pay means no payments. */
         payload: () => ({
             discount: fromCents(state.discountCents),
-            tip: fromCents(state.tipCents),
             payments:
                 state.totalCents === 0
                     ? []

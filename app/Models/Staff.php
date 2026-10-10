@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $photo_path
  * @property bool $is_active
  * @property int $position
+ * @property int $commission_percent Share of each service, unless the service sets its own rule.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
@@ -61,6 +62,7 @@ class Staff extends Model
         'photo_path' => null,
         'is_active' => true,
         'position' => 0,
+        'commission_percent' => 0,
     ];
 
     /**
@@ -110,7 +112,7 @@ class Staff extends Model
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class)
-            ->withPivot(['active_minutes', 'price_cents'])
+            ->withPivot(['active_minutes', 'price_cents', 'commission_percent', 'commission_cents'])
             ->withTimestamps();
     }
 

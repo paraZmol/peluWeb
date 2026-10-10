@@ -44,6 +44,13 @@ export function formatDate(date: string): string {
         .toLowerCase();
 }
 
+/** "2026-10-07 15:30" → "mié 7 oct, 3:30 p. m." (already on the salon's clock). */
+export function formatDateTime(dateTime: string): string {
+    const [date, time] = dateTime.split(' ');
+
+    return `${formatDate(date)}, ${formatTime(time)}`;
+}
+
 /** Adds amounts sent as text ("35.50") in whole céntimos, never as floats. */
 export function sumAmounts(amounts: string[]): string {
     return fromCents(
@@ -54,4 +61,17 @@ export function sumAmounts(amounts: string[]): string {
 /** 2450 → "S/ 24.50". */
 export function formatCents(cents: number): string {
     return formatPrice(fromCents(cents));
+}
+
+const monthFormat = new Intl.DateTimeFormat('es-PE', {
+    month: 'long',
+    year: 'numeric',
+});
+
+/** "2026-10" → "Octubre de 2026". */
+export function formatMonth(month: string): string {
+    const [year, monthNumber] = month.split('-').map(Number);
+    const text = monthFormat.format(new Date(year, monthNumber - 1, 1));
+
+    return text.charAt(0).toUpperCase() + text.slice(1);
 }

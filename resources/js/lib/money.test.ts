@@ -41,7 +41,6 @@ describe('resolveCheckout', () => {
     const base = {
         balanceCents: 2450,
         discount: '',
-        tip: '',
         lastIsAuto: true,
     };
     const cash = { method: 'cash', amount: '' };
@@ -54,16 +53,23 @@ describe('resolveCheckout', () => {
         expect(state.problem).toBeNull();
     });
 
-    it('takes the discount off and adds the tip', () => {
+    it('takes the discount off', () => {
         const state = resolveCheckout({
             ...base,
             discount: '4.50',
-            tip: '3',
             parts: [cash],
         });
 
-        expect(state.totalCents).toBe(2300);
-        expect(state.partCents).toEqual([2300]);
+        expect(state.discountCents).toBe(450);
+        expect(state.totalCents).toBe(2000);
+        expect(state.partCents).toEqual([2000]);
+    });
+
+    it('refuses a discount that is not an amount', () => {
+        expect(
+            resolveCheckout({ ...base, discount: 'cinco', parts: [cash] })
+                .problem,
+        ).toBe('Revisa los montos: usa números como 20 o 20.50.');
     });
 
     it('gives the rest to the last method of a split', () => {

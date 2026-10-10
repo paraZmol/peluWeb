@@ -12,10 +12,7 @@ export function AgendaMoneyNote({ booking }: Props) {
     const { charged, deposit, status } = booking;
 
     if (status === 'completed' && charged) {
-        const extras = [
-            { label: 'descuento', amount: charged.discount },
-            { label: 'propina', amount: charged.tip },
-        ].filter((extra) => toCents(extra.amount) !== 0);
+        const hasDiscount = toCents(charged.discount) !== 0;
 
         return (
             <p className="rounded-lg bg-muted p-3 text-sm">
@@ -23,12 +20,11 @@ export function AgendaMoneyNote({ booking }: Props) {
                 <strong className="tabular-nums">
                     {formatPrice(charged.total)}
                 </strong>
-                {extras.map((extra) => (
-                    <span key={extra.label} className="tabular-nums">
-                        {' · '}
-                        {extra.label} {formatPrice(extra.amount)}
+                {hasDiscount && (
+                    <span className="tabular-nums">
+                        {' · '}descuento {formatPrice(charged.discount)}
                     </span>
-                ))}
+                )}
             </p>
         );
     }
