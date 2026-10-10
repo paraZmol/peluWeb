@@ -1,6 +1,6 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarClock, MessageCircle, Play } from 'lucide-react';
+import { CalendarClock, MessageCircle, Play, UserRound } from 'lucide-react';
 import { CheckoutDialog } from '@/components/accounting/checkout-dialog';
 import {
     DepositReceivedDialog,
@@ -16,6 +16,7 @@ import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cancel, move, noShow, slots, start } from '@/routes/agenda/bookings';
+import { show as clientFile } from '@/routes/clients';
 
 type Props = {
     booking: AgendaBooking;
@@ -84,6 +85,14 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
                     </a>
                 </Button>
             )}
+            <Button asChild variant="outline">
+                <Link
+                    href={clientFile(booking.client.id)}
+                    aria-label={`Ver ficha de ${booking.client.name}`}
+                >
+                    <UserRound aria-hidden /> Ver ficha
+                </Link>
+            </Button>
             {can('move') && (
                 <MoveDialog
                     trigger={

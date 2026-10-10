@@ -1,9 +1,9 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Search, Star, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { index } from '@/routes/clients';
+import { index, show } from '@/routes/clients';
 import { update as updateVip } from '@/routes/clients/vip';
 
 type Client = {
@@ -70,7 +70,13 @@ export default function Clients({ clients, search, isTruncated }: Props) {
                             >
                                 <div className="min-w-0 flex-1">
                                     <p className="font-medium break-words">
-                                        {client.name}
+                                        <Link
+                                            href={show(client.id)}
+                                            aria-label={`Ver ficha de ${client.name}`}
+                                            className="inline-flex min-h-11 items-center rounded-sm underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:min-h-0"
+                                        >
+                                            {client.name}
+                                        </Link>
                                     </p>
                                     <p className="text-sm text-muted-foreground tabular-nums">
                                         {[

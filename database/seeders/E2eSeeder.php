@@ -3,18 +3,26 @@
 namespace Database\Seeders;
 
 use App\Actions\Accounting\ManageExpenseCategories;
+use App\Actions\Booking\ChangeBookingStatus;
+use App\Actions\Booking\CreateBooking;
 use App\Actions\Salon\ManageSalonPhotos;
 use App\Actions\Salon\UpdateSalonBranding;
 use App\Actions\Staff\UpdateStaffPhoto;
+use App\Data\Booking\NewBooking;
+use App\Domain\Accounting\Checkout;
+use App\Enums\BookingSource;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonPermission;
 use App\Enums\ServiceCategory;
+use App\Models\Booking;
 use App\Models\Salon;
+use App\Models\SalonClient;
 use App\Models\SalonMember;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
 use LogicException;
@@ -57,9 +65,10 @@ class E2eSeeder extends Seeder
 
         $showcase = $this->seedShowcaseSalon();
         $till = $this->seedTillSalon();
+        $files = $this->seedClientFileSalon();
 
         // Factories skip what CreateSalon gives every real salon.
-        foreach ([$first, $second, $showcase, $till] as $salon) {
+        foreach ([$first, $second, $showcase, $till, $files] as $salon) {
             app(ManageExpenseCategories::class)->createDefaults($salon);
         }
     }
@@ -84,6 +93,56 @@ class E2eSeeder extends Seeder
         foreach ([$withoutCash, $withCash] as $user) {
             Staff::factory()->for($salon)->linkedTo($user)->working([1, 2, 3, 4, 5, 6, 7], '00:00', '23:55')
                 ->create(['name' => $user->name])->services()->attach($cut->id);
+        }
+
+        return $salon;
+    }
+
+    /**
+     * A salon of its own for the client's file: one person per Playwright
+     * project (they share the database), each with a visit they missed, one
+     * charged yesterday and one coming tomorrow.
+     */
+    private function seedClientFileSalon(): Salon
+    {
+        $owner = User::factory()->create(['name' => 'Fabia Fichas', 'email' => 'ficha-duena@example.com']);
+        $salon = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Fichas', 'slug' => 'salon-fichas']);
+        $cut = Service::factory()->for($salon)->create(['name' => 'Corte de ficha', 'price_cents' => 3500, 'active_minutes' => 30]);
+        $staff = Staff::factory()->for($salon)->linkedTo($owner)->working([1, 2, 3, 4, 5, 6, 7], '00:00', '23:55')->create(['name' => 'Fabia Fichas']);
+        $staff->services()->attach($cut->id);
+
+        $today = $salon->localNow()->startOfDay();
+        $status = app(ChangeBookingStatus::class);
+
+        foreach (['Ficha Movil' => 10, 'Ficha Escritorio' => 12] as $name => $hour) {
+            $client = SalonClient::factory()->for($salon)->create(['name' => $name, 'phone' => '9876543'.$hour]);
+            // Booked an hour ahead, with the clock left at the visit's start.
+            $book = function (CarbonImmutable $at, ?string $note = null) use ($salon, $client, $cut, $staff, $owner): Booking {
+                CarbonImmutable::setTestNow($at->subHour());
+                $booking = app(CreateBooking::class)->handle(new NewBooking(
+                    salon: $salon,
+                    client: $client,
+                    selections: [['service_id' => $cut->id, 'variant_id' => null]],
+                    staff: $staff,
+                    startsAt: $at->utc(),
+                    source: BookingSource::Staff,
+                    actor: $owner,
+                    note: $note,
+                ));
+                CarbonImmutable::setTestNow($at);
+
+                return $booking;
+            };
+
+            // The past is written as it happened: with the clock on that day.
+            $status->markNoShow($book($today->subDays(2)->setTime($hour, 0)), $owner);
+            $visit = $book($today->subDay()->setTime($hour, 0), 'Como la última vez, sin máquina');
+            $status->start($visit, $owner);
+            $status->complete($visit, $owner, new Checkout(parts: ['cash' => 3500]));
+            CarbonImmutable::setTestNow();
+
+            $book($today->addDay()->setTime($hour, 0));
+            CarbonImmutable::setTestNow();
         }
 
         return $salon;

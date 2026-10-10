@@ -154,6 +154,7 @@ export type AgendaBooking = {
     statusLabel: string;
     isVip: boolean;
     client: {
+        id: number;
         name: string;
         phone: string | null;
         whatsappUrl: string | null;
