@@ -302,7 +302,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [x] 5.1 *(2026-10-10)* `payments` desde el cobro de la cita (método, propina, descuento) y desde las señas.
 - [x] 5.2 *(2026-10-10)* Gastos con categorías y foto del comprobante.
 - [x] 5.3 *(2026-10-10)* Apertura y cierre de caja con cuadre por método.
-- [ ] 5.4 Reglas de comisión y liquidación por período.
+- [x] 5.4 *(2026-10-10)* Reglas de comisión y liquidación por período.
 - [ ] 5.5 Reportes de ganancias y pérdidas con gráficos (cargar skill `dataviz`), filtros y comparativa con el período anterior.
 - [ ] 5.6 Exportar a Excel/CSV/PDF.
 - *Cierre:* test de que los totales cuadran al céntimo + **security-auditor** (permisos de caja) + **qa-tester**.

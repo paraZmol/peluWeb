@@ -29,7 +29,12 @@ final readonly class Period
         $end = $end->greaterThan($today) ? $today : $end;
         $start = self::day($from, $salon->timezone) ?? $end->startOfMonth();
 
-        if ($start->greaterThan($end) || $start->lessThan($end->subYear())) {
+        // Backwards: nothing was really chosen, so back to this month.
+        if ($start->greaterThan($end)) {
+            return new self($today->startOfMonth(), $today);
+        }
+
+        if ($start->lessThan($end->subYear())) {
             $start = $end->startOfMonth();
         }
 

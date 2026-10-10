@@ -4,6 +4,7 @@ import {
     CalendarClock,
     CalendarDays,
     Contact,
+    HandCoins,
     Ticket,
     LayoutGrid,
     ReceiptText,
@@ -31,6 +32,7 @@ import { index as agenda } from '@/routes/agenda';
 import { index as myBookings } from '@/routes/bookings';
 import { index as cash } from '@/routes/cash';
 import { index as clients } from '@/routes/clients';
+import { index as commissions } from '@/routes/commissions';
 import { index as expenses } from '@/routes/expenses';
 import { edit as editSalon } from '@/routes/salon';
 import { index as services } from '@/routes/services';
@@ -69,6 +71,11 @@ export function AppSidebar() {
             ? [
                   { title: 'Caja', href: cash(), icon: Wallet },
                   { title: 'Gastos', href: expenses(), icon: ReceiptText },
+                  {
+                      title: 'Comisiones',
+                      href: commissions(),
+                      icon: HandCoins,
+                  },
               ]
             : []),
         ...(isOwner
