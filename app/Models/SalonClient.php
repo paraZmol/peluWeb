@@ -24,9 +24,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $phone
  * @property bool $is_vip
  * @property int $no_show_count
+ * @property string|null $notes How the person likes to be attended.
+ * @property string|null $formula_notes Products, tones and times of their usual work.
+ * @property string|null $care_notes Allergies and reactions: health data, only with written consent on record.
+ * @property CarbonImmutable|null $care_consent_at
+ * @property int|null $care_consent_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read User|null $user
+ * @property-read User|null $careConsentBy
  */
 class SalonClient extends Model
 {
@@ -37,6 +43,8 @@ class SalonClient extends Model
 
     public const int NAME_MAX_LENGTH = 80;
 
+    public const int NOTES_MAX_LENGTH = 1000;
+
     /**
      * @var array<string, mixed>
      */
@@ -45,6 +53,11 @@ class SalonClient extends Model
         'phone' => null,
         'is_vip' => false,
         'no_show_count' => 0,
+        'notes' => null,
+        'formula_notes' => null,
+        'care_notes' => null,
+        'care_consent_at' => null,
+        'care_consent_by' => null,
     ];
 
     /**
@@ -52,7 +65,7 @@ class SalonClient extends Model
      */
     protected function casts(): array
     {
-        return ['is_vip' => 'boolean'];
+        return ['is_vip' => 'boolean', 'care_consent_at' => 'datetime'];
     }
 
     /**
@@ -61,6 +74,16 @@ class SalonClient extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Who recorded that the person authorized keeping their care notes.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function careConsentBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'care_consent_by');
     }
 
     /**

@@ -30,6 +30,7 @@ use App\Http\Controllers\Staff\AgendaBookingController;
 use App\Http\Controllers\Staff\AgendaController;
 use App\Http\Controllers\Staff\BookingMoveController;
 use App\Http\Controllers\Staff\BookingStatusController;
+use App\Http\Controllers\Staff\ClientProfileController;
 use App\Http\Controllers\Staff\ScheduleController;
 use App\Http\Controllers\Staff\StaffPhotoController;
 use App\Http\Controllers\Staff\StaffServiceController;
@@ -227,6 +228,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('clientes', [ClientController::class, 'index'])->name('clients.index');
         Route::patch('clientes/{client}/vip', [ClientController::class, 'updateVip'])->name('clients.vip.update');
+        Route::get('clientes/{client}', [ClientProfileController::class, 'show'])->name('clients.show');
+        Route::put('clientes/{client}/notas', [ClientProfileController::class, 'updateNotes'])
+            ->middleware('throttle:60,1')
+            ->name('clients.notes.update');
 
         Route::post('feriados', [HolidayController::class, 'store'])
             ->middleware('throttle:60,1')

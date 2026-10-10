@@ -49,6 +49,7 @@ class AgendaBookingResource extends JsonResource
             'statusLabel' => $status->label(),
             'isVip' => $this->is_vip,
             'client' => [
+                'id' => $this->client->id,
                 'name' => $this->client->name,
                 'phone' => $this->client->phone,
                 'whatsappUrl' => WhatsApp::link($this->client->phone, "Hola {$this->client->name}, te escribimos por tu cita de las {$start->format('g:i a')}."),
