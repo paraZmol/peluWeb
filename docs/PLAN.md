@@ -299,8 +299,8 @@ Inicio previsto: **lunes 2026-10-05**.
   - [x] (d) *(2026-10-08)* QA + ux-reviewer + security-auditor sobre lo rehecho, hallazgos corregidos; 1016 tests Pest y 93 E2E en verde. Quedan para decidir o para después: foto del equipo en lo público (solo la puesta para el salón o también la del perfil), precio y días de prueba de la portada, registro de un cliente que llega desde una reserva (ve el texto de alta de salón), tope de horarios cuando el periodo abierto es muy largo, cabecera de Mis reservas con la portada del salón, fotos de muestra para spa.
 
 ### Fase 5 — Caja, contabilidad y reportes
-- [ ] 5.1 `payments` desde el cobro de la cita (método, propina, descuento) y desde las señas.
-- [ ] 5.2 Gastos con categorías y foto del comprobante.
+- [x] 5.1 *(2026-10-10)* `payments` desde el cobro de la cita (método, propina, descuento) y desde las señas.
+- [x] 5.2 *(2026-10-10)* Gastos con categorías y foto del comprobante.
 - [ ] 5.3 Apertura y cierre de caja con cuadre por método.
 - [ ] 5.4 Reglas de comisión y liquidación por período.
 - [ ] 5.5 Reportes de ganancias y pérdidas con gráficos (cargar skill `dataviz`), filtros y comparativa con el período anterior.
