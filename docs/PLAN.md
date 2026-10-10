@@ -363,6 +363,7 @@ Inicio previsto: **lunes 2026-10-05**.
 | `design-director` | Al empezar un rediseño o una pantalla pública nueva | Dirección visual: propone direcciones con maquetas y capturas reales, define tokens, tipografía y componentes base, y mantiene la skill `ui-system` (edita `app.css`, fuentes y `components/ui/*` solo para tokens) |
 | `frontend-builder` | Con cada pantalla nueva o rehecha | Construye pantallas y componentes React según la dirección y la skill `design-craft`; componentes ≤150 líneas, Wayfinder, E2E en verde, en su propio carril de Playwright |
 | `ux-reviewer` | Cada pantalla | Intuitivo, 360 px, contraste, animaciones, lenguaje neutro |
+| `publish-guard` | **Antes de cada `git push`** y de unir una rama a `main` | Exclusivo para el repositorio público: que no salgan contraseñas, claves, `.env`, datos de personas reales, volcados, archivos de la máquina ni información de negocio por descuido. Solo lectura; responde APTO o BLOQUEADO |
 
 **Definición de terminado:** tests verdes, phpstan y lint limpios, agentes aplicables sin hallazgos
 CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
@@ -413,6 +414,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-10 | Paso 5.1, cómo se cobra: al completar una cita se registra el cobro del saldo (precio − descuento − seña ya pagada + propina) repartido en uno o varios métodos (efectivo, Yape, Plin, tarjeta, transferencia, otro); el descuento no puede dejar el precio por debajo de la seña pagada; la propina se guarda aparte y no cuenta como ingreso del salón; "Seña recibida" pide el método; una seña devuelta se registra como movimiento de salida. Cobra quien atiende la cita (o quien ve toda la agenda); devolver una seña y lo demás de caja exige el permiso de caja | Sin método de pago por movimiento no hay cuadre de caja; en Perú es común pagar parte en efectivo y parte por Yape |
 | 2026-10-10 | La PWA (manifest, service worker, instalación en Android e iOS, modo sin conexión básico) se adelanta de la Fase 8 al paso 6.4, antes del Web Push | El usuario confirmó que quiere la app instalable; además el Web Push no funciona sin el service worker, así que el orden anterior estaba mal |
 | 2026-10-10 | El código vive en GitHub (`paraZmol/peluWeb`, público). `main` es lo estable; cada fase se trabaja en su rama (`fase-5-caja`, …) y se une a `main` al cerrar un paso con todo en verde; cada fase cerrada lleva una etiqueta (`fase-4-cerrada`) para poder volver. Antes de cada subida se revisa que no vaya ningún secreto. `DemoSeeder` se niega a correr en producción | Pedido del usuario: ver las mejoras por ramas y poder volver atrás en una emergencia; el repositorio es público |
+| 2026-10-10 | Nuevo agente `publish-guard`, exclusivo para revisar lo que se va a subir a GitHub antes de cada `git push`; sin su APTO no se sube | Pedido del usuario: el repositorio es público y no quiere divulgar información por descuido |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

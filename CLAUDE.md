@@ -71,6 +71,9 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
   `main` (`git merge --no-ff`) solo con `composer ci:check` y los E2E en verde.
 - Cada fase cerrada lleva una etiqueta anotada (`fase-4-cerrada`) para poder volver en una emergencia.
 - Nunca `git push --force` sobre `main` ni reescribir historia ya subida.
+- **Antes de cada `git push`** (rama o etiqueta) y antes de unir a `main`: lanzar el agente
+  **publish-guard** sobre lo que se va a subir. Solo se sube con su respuesta `APTO`; con
+  `BLOQUEADO` se corrige y se vuelve a lanzar. Es su única función y no se omite por prisa.
 
 ## Calidad — antes de dar un paso por terminado
 - `composer ci:check` en verde (formato, lint, tipos TS, Pint, PHPStan nivel 7 y tests).
