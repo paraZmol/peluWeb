@@ -43,7 +43,9 @@ export function SplitPayments({
             </legend>
             {rows.map((row, index) => (
                 <div
-                    key={row.method}
+                    // By position: keyed by method, changing it would remount
+                    // the row and drop the keyboard focus.
+                    key={index}
                     className="grid grid-cols-[minmax(0,1fr)_7.5rem_2.75rem] gap-2"
                 >
                     <Select

@@ -35,32 +35,40 @@ export function ExpenseRow({ expense, onEdit }: Props) {
                 {expense.receiptUrl && (
                     <ReceiptViewer url={expense.receiptUrl} caption={caption} />
                 )}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Editar gasto: ${caption}`}
-                    onClick={() => onEdit(expense)}
-                >
-                    <Pencil aria-hidden />
-                </Button>
-                <ConfirmRemoveDialog
-                    triggerLabel="Eliminar"
-                    trigger={
+                {expense.isSettlement ? (
+                    <p className="py-3 text-sm text-muted-foreground">
+                        Pago de comisiones
+                    </p>
+                ) : (
+                    <>
                         <Button
                             variant="ghost"
                             size="icon"
-                            aria-label={`Eliminar gasto: ${caption}`}
-                            className="text-destructive-foreground"
+                            aria-label={`Editar gasto: ${caption}`}
+                            onClick={() => onEdit(expense)}
                         >
-                            <Trash2 aria-hidden />
+                            <Pencil aria-hidden />
                         </Button>
-                    }
-                    title="¿Eliminar este gasto?"
-                    description={`${caption}. Dejará de contar en el total del mes.`}
-                    confirmLabel="Sí, eliminar"
-                    themed
-                    form={destroy.form(expense.id)}
-                />
+                        <ConfirmRemoveDialog
+                            triggerLabel="Eliminar"
+                            trigger={
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Eliminar gasto: ${caption}`}
+                                    className="text-destructive-foreground"
+                                >
+                                    <Trash2 aria-hidden />
+                                </Button>
+                            }
+                            title="¿Eliminar este gasto?"
+                            description={`${caption}. Dejará de contar en el total del mes.`}
+                            confirmLabel="Sí, eliminar"
+                            themed
+                            form={destroy.form(expense.id)}
+                        />
+                    </>
+                )}
             </div>
         </li>
     );

@@ -20,12 +20,12 @@ export function StaffSales({ staff }: { staff: Sales[] }) {
                         <li
                             key={member.name}
                             aria-label={member.name}
-                            className="flex break-inside-avoid flex-col gap-2 py-3 first:pt-0 last:pb-0 lg:flex-row lg:items-center lg:justify-between lg:gap-4"
+                            className="flex break-inside-avoid flex-col gap-2 py-3 first:pt-0 last:pb-0 lg:flex-row lg:items-center lg:justify-between lg:gap-4 print:flex-row print:items-center print:justify-between print:gap-4"
                         >
                             <p className="min-w-0 font-medium break-words">
                                 {member.name}
                             </p>
-                            <dl className="grid grid-cols-3 gap-3 lg:w-[24rem] lg:shrink-0">
+                            <dl className="grid grid-cols-3 gap-3 lg:w-[24rem] lg:shrink-0 print:w-[24rem] print:shrink-0">
                                 <CashFigure label="Citas">
                                     {member.visits}
                                 </CashFigure>

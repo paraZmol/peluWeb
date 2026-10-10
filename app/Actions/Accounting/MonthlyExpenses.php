@@ -22,6 +22,7 @@ class MonthlyExpenses
 
         $expenses = Expense::query()
             ->with('category')
+            ->withExists('settlement')
             ->where('paid_at', '>=', $start->utc())
             ->where('paid_at', '<', $start->addMonth()->utc())
             ->orderByDesc('paid_at')

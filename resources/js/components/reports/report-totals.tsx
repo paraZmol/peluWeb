@@ -104,8 +104,10 @@ function Figure({
                 isHighlighted && 'border-brand-line',
             )}
         >
-            <div>
-                <p className="text-sm text-muted-foreground">{label}</p>
+            <div className="flex-1">
+                <p className="flex h-5 items-center text-sm text-muted-foreground">
+                    {label}
+                </p>
                 <p
                     data-testid={testId}
                     className="text-3xl font-semibold tracking-tight break-words tabular-nums lg:text-4xl"

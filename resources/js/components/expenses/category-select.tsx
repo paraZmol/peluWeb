@@ -28,7 +28,7 @@ export function CategorySelect({ id, categories, value, onChange }: Props) {
                 onChange(chosen === NO_CATEGORY ? '' : chosen)
             }
         >
-            <SelectTrigger id={id} className="h-11 w-full">
+            <SelectTrigger id={id} className="w-full data-[size=default]:h-11">
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>

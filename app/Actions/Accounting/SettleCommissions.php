@@ -25,9 +25,12 @@ class SettleCommissions
 {
     public const string EXPENSE_CATEGORY = 'Sueldos y comisiones';
 
-    public function handle(Staff $staff, Period $period, PaymentMethod $method, ?User $by): CommissionSettlement
+    /**
+     * @param  int|null  $expectedCents  the total the payer saw and agreed to; refused when it is no longer that
+     */
+    public function handle(Staff $staff, Period $period, PaymentMethod $method, ?User $by, ?int $expectedCents = null): CommissionSettlement
     {
-        return DB::transaction(function () use ($staff, $period, $method, $by): CommissionSettlement {
+        return DB::transaction(function () use ($staff, $period, $method, $by, $expectedCents): CommissionSettlement {
             // Same first lock as every booking change: a visit being
             // completed right now is either in this settlement or in the next.
             Staff::withoutGlobalScope('salon')->withTrashed()->lockForUpdate()->findOrFail($staff->id);
@@ -37,6 +40,10 @@ class SettleCommissions
 
             if ($total === 0) {
                 throw PaymentException::nothingToSettle();
+            }
+
+            if ($expectedCents !== null && $expectedCents !== $total) {
+                throw PaymentException::settlementChanged();
             }
 
             $now = CarbonImmutable::now();

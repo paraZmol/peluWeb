@@ -49,6 +49,11 @@ class PaymentException extends BusinessRuleException
         return new self('No hay comisiones pendientes en ese período.');
     }
 
+    public static function settlementChanged(): self
+    {
+        return new self('Lo pendiente cambió mientras tenías la pantalla abierta. Revisa el nuevo total y vuelve a liquidar.');
+    }
+
     public static function expenseIsSettlement(): self
     {
         return new self('Este gasto es el pago de una liquidación de comisiones y no se puede cambiar desde aquí.');

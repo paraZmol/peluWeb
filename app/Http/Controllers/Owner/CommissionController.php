@@ -41,7 +41,9 @@ class CommissionController extends SalonAreaController
     {
         $salon = $this->salon('manageCash');
         $period = Period::inSalon($salon, $this->text($request, 'from'), $this->text($request, 'to'));
-        $settle->handle($staff, $period, $request->paymentMethod(), $request->user());
+        $expected = $request->filled('expected') ? $request->integer('expected') : null;
+
+        $settle->handle($staff, $period, $request->paymentMethod(), $request->user(), $expected);
         $this->toast("Comisiones de {$staff->name} liquidadas.");
 
         return back();

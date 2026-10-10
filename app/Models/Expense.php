@@ -7,6 +7,7 @@ use App\Enums\PaymentMethod;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
+ * @property bool|null $settlement_exists Only when loaded with `withExists('settlement')`.
  * @property-read ExpenseCategory|null $category
  */
 class Expense extends Model
@@ -48,5 +50,15 @@ class Expense extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
+    }
+
+    /**
+     * The commission settlement this expense is the payment of, if any.
+     *
+     * @return HasOne<CommissionSettlement, $this>
+     */
+    public function settlement(): HasOne
+    {
+        return $this->hasOne(CommissionSettlement::class);
     }
 }

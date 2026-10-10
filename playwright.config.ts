@@ -32,6 +32,8 @@ export default defineConfig({
     outputDir: process.env.E2E_OUTPUT ?? 'test-results',
     fullyParallel: false,
     workers: 1,
+    // The money flows (charge, till, settlement) take close to 30 s on a phone.
+    timeout: 60_000,
     retries: process.env.CI ? 1 : 0,
     reporter: process.env.CI ? 'github' : 'list',
     globalSetup: './tests/e2e/global-setup.ts',

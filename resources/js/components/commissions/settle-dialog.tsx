@@ -44,18 +44,17 @@ export function SettleDialog({ staff, period, paymentMethods }: Props) {
             open={isOpen}
             onOpenChange={toggle}
             trigger={
-                <DialogTrigger asChild>
-                    <Button
-                        variant={
-                            staff.pendingCents === 0 ? 'outline' : 'default'
-                        }
-                        disabled={staff.pendingCents === 0}
-                        aria-label={`Liquidar ${price} a ${staff.name}`}
-                        className="h-12 sm:h-10"
-                    >
-                        Liquidar {price}
-                    </Button>
-                </DialogTrigger>
+                // Nothing owed, nothing to press: the card already says so.
+                staff.pendingCents > 0 && (
+                    <DialogTrigger asChild>
+                        <Button
+                            aria-label={`Liquidar ${price} a ${staff.name}`}
+                            className="h-12 sm:h-10"
+                        >
+                            Liquidar {price}
+                        </Button>
+                    </DialogTrigger>
+                )
             }
             title={`Liquidar comisiones de ${staff.name}`}
             description={`Pagas lo pendiente de ${countVisits(paying.visits)} del ${formatPeriod(period)}.`}
@@ -76,7 +75,12 @@ function SettleForm({
     paymentMethods,
     onSettled,
 }: Props & { onSettled: () => void }) {
-    const form = useForm({ ...period, method: CASH_METHOD });
+    // The total goes along: the server refuses if it is no longer that one.
+    const form = useForm({
+        ...period,
+        method: CASH_METHOD,
+        expected: staff.pendingCents,
+    });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -116,7 +120,7 @@ function SettleForm({
                 {form.data.method === CASH_METHOD
                     ? ' y, al ser en efectivo, sale de la caja.'
                     : '. No sale de la caja porque no es en efectivo.'}{' '}
-                <strong className="font-medium text-foreground">
+                <strong className="mt-1.5 block font-medium text-foreground">
                     Una liquidación no se puede deshacer ni editar después.
                 </strong>
             </p>
@@ -129,7 +133,7 @@ function SettleForm({
                 </DialogClose>
                 <Button type="submit" disabled={form.processing}>
                     {form.processing && <Spinner />}
-                    Sí, liquidar
+                    Sí, liquidar {formatPrice(staff.pending)}
                 </Button>
             </DialogFooter>
         </form>

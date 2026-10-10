@@ -32,14 +32,20 @@ export function CloseCashForm({ session }: Props) {
 
     return (
         <form onSubmit={submit} noValidate className="flex flex-col gap-5">
-            <p className="flex items-baseline justify-between gap-4 rounded-xl border bg-card p-4">
-                <span className="text-sm text-muted-foreground">
-                    Efectivo esperado
-                </span>
-                <span className="text-xl font-semibold whitespace-nowrap tabular-nums">
-                    {formatBalance(expectedCents)}
-                </span>
-            </p>
+            <div className="flex flex-col gap-1 rounded-xl border bg-card p-4">
+                <p className="flex items-baseline justify-between gap-4">
+                    <span className="text-sm text-muted-foreground">
+                        Efectivo esperado
+                    </span>
+                    <span className="text-xl font-semibold whitespace-nowrap tabular-nums">
+                        {formatBalance(expectedCents)}
+                    </span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    El fondo inicial más lo cobrado en efectivo, menos lo que
+                    salió.
+                </p>
+            </div>
 
             <div className="grid gap-2">
                 <Label htmlFor="cash-counted">Efectivo contado</Label>

@@ -19,6 +19,7 @@ function expense(overrides: Partial<Expense>): Expense {
         categoryName: 'Alquiler',
         description: null,
         receiptUrl: null,
+        isSettlement: false,
         ...overrides,
     };
 }

@@ -142,7 +142,7 @@ test.describe('Comisiones del salón', () => {
         await expect(card.getByText('S/ 0.00', { exact: true })).toBeVisible();
         await expect(
             card.getByRole('button', { name: /^Liquidar/ }),
-        ).toBeDisabled();
+        ).toHaveCount(0);
         const lastSettlement = page
             .getByRole('listitem', { name: /^Liquidación de / })
             .first();

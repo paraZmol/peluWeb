@@ -71,7 +71,7 @@ export function ClientMix({ clients }: { clients: Mix }) {
             ) : (
                 <>
                     <dl className="grid grid-cols-2 gap-4">
-                        <div>
+                        <div className="flex flex-col justify-end">
                             <dt className="text-sm text-muted-foreground">
                                 Vinieron por primera vez
                             </dt>
@@ -82,7 +82,7 @@ export function ClientMix({ clients }: { clients: Mix }) {
                                 {newPercent} %
                             </dd>
                         </div>
-                        <div>
+                        <div className="flex flex-col justify-end">
                             <dt className="text-sm text-muted-foreground">
                                 Ya habían venido
                             </dt>

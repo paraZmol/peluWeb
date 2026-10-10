@@ -26,9 +26,9 @@ export function IncomeSources({ totals }: { totals: ReportTotals }) {
                             detail: countVisits(totals.visits),
                         },
                         {
-                            name: 'Señas retenidas',
+                            name: 'Señas no devueltas',
                             cents: totals.keptDepositsCents,
-                            detail: 'de citas que no se hicieron',
+                            detail: 'de citas canceladas tarde o sin asistencia',
                         },
                     ]}
                 />

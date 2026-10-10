@@ -133,6 +133,9 @@ it('pays a period once, as an expense, and leaves the rest pending', function ()
     // The till sees the cash leave: 100 + 35 + 20 + 35 − 19 = 171.00
     $this->actingAs($this->owner)->get(route('cash.index'))->assertInertia(fn (Assert $page) => $page->where('session.expectedCash', '171.00'));
 
+    // Gastos shows it as what it is, so its edit and delete buttons are not offered.
+    $this->actingAs($this->owner)->get(route('expenses.index'))->assertInertia(fn (Assert $page) => $page->where('expenses.0.isSettlement', true));
+
     // The payment cannot be edited or deleted from Gastos.
     $this->actingAs($this->owner)->delete(route('expenses.destroy', $expense))->assertInertiaFlash('toast.type', 'error');
     $this->actingAs($this->owner)->post(route('expenses.update', $expense), ['amount' => '1', 'method' => 'cash', 'date' => '2026-10-08'])

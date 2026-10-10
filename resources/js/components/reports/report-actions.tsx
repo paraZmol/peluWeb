@@ -4,13 +4,25 @@ import type { Period } from '@/components/commissions/types';
 import { Button } from '@/components/ui/button';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { formatFullPeriod } from '@/lib/reports';
+import { cn } from '@/lib/utils';
 import { index as agenda } from '@/routes/agenda';
 import { exportMethod } from '@/routes/reports';
 
 /** Take the period away: its movements as a file, or the report on paper. */
-export function ReportActions({ period }: { period: Period }) {
+export function ReportActions({
+    period,
+    className,
+}: {
+    period: Period;
+    className?: string;
+}) {
     return (
-        <div className="flex flex-col gap-2 sm:flex-row print:hidden">
+        <div
+            className={cn(
+                'flex flex-col gap-2 sm:flex-row print:hidden',
+                className,
+            )}
+        >
             <Button asChild variant="outline" className="h-11">
                 {/* A file, not a page: a plain link, so Inertia stays out. */}
                 <a

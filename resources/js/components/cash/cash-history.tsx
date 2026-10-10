@@ -48,12 +48,14 @@ function HistoryRow({ session }: { session: CashSession }) {
                 <div className="col-span-2 min-w-0 sm:col-span-1">
                     <dt className="sr-only">Cierre</dt>
                     <dd className="font-medium">{closedAt}</dd>
-                    <dd className="flex flex-wrap gap-x-1.5 text-sm text-muted-foreground">
+                    {/* The dot hangs before the float and is clipped when it
+                        drops to a line of its own. */}
+                    <dd className="flex flex-wrap gap-x-3 overflow-hidden text-sm text-muted-foreground">
                         <span className="whitespace-nowrap">
                             Abierta {formatDateTime(session.openedAt)}
                         </span>
-                        <span className="whitespace-nowrap tabular-nums">
-                            · fondo {formatPrice(session.openingCash)}
+                        <span className="relative whitespace-nowrap tabular-nums before:absolute before:-left-2 before:content-['·']">
+                            fondo {formatPrice(session.openingCash)}
                         </span>
                     </dd>
                 </div>

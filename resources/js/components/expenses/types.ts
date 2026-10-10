@@ -12,6 +12,8 @@ export type Expense = {
     categoryName: string | null;
     description: string | null;
     receiptUrl: string | null;
+    /** The payment of a commission settlement: not edited nor removed here. */
+    isSettlement: boolean;
 };
 
 export type ExpenseCategory = { id: number; name: string };

@@ -5,11 +5,19 @@ import type { StaffOccupancy } from './types';
 
 const FULL = 100;
 
-/** "62 %", or a dash when the person had no hours to fill. */
-const percentOf = (member: StaffOccupancy) =>
-    member.openMinutes === 0
-        ? '—'
-        : `${shareOf(member.busyMinutes, member.openMinutes)} %`;
+/**
+ * "62 %"; a dash when there were no hours to fill, and "< 1 %" when the
+ * little that was attended would round down to nothing.
+ */
+function percentLabel(busyMinutes: number, openMinutes: number): string {
+    if (openMinutes === 0) {
+        return '—';
+    }
+
+    const percent = shareOf(busyMinutes, openMinutes);
+
+    return busyMinutes > 0 && percent === 0 ? '< 1 %' : `${percent} %`;
+}
 
 function OccupancyRow({ member }: { member: StaffOccupancy }) {
     const percent = shareOf(member.busyMinutes, member.openMinutes);
@@ -20,16 +28,17 @@ function OccupancyRow({ member }: { member: StaffOccupancy }) {
             className="flex break-inside-avoid flex-col gap-1"
         >
             <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="min-w-0 break-words">
-                    {member.name}
-                    <span className="text-muted-foreground">
-                        {' · '}
+                {/* The dot hangs before the hours and is clipped when they
+                    drop to a line of their own. */}
+                <span className="flex min-w-0 flex-wrap gap-x-3 overflow-hidden">
+                    <span className="min-w-0 break-words">{member.name}</span>
+                    <span className="relative whitespace-nowrap text-muted-foreground tabular-nums before:absolute before:-left-2 before:content-['·']">
                         {formatMinutes(member.busyMinutes)} de{' '}
                         {formatMinutes(member.openMinutes)}
                     </span>
                 </span>
                 <span className="shrink-0 font-medium tabular-nums">
-                    {percentOf(member)}
+                    {percentLabel(member.busyMinutes, member.openMinutes)}
                 </span>
             </div>
             <div
@@ -63,13 +72,15 @@ export function Occupancy({ staff }: { staff: StaffOccupancy[] }) {
                 </SectionEmpty>
             ) : (
                 <>
-                    <p className="text-sm">
+                    <p className="flex flex-col text-sm">
                         <span className="text-2xl font-semibold tabular-nums">
-                            {open === 0 ? '—' : `${shareOf(busy, open)} %`}
+                            {percentLabel(busy, open)}
                         </span>{' '}
-                        <span className="text-muted-foreground">
-                            del tiempo disponible: {formatMinutes(busy)} de{' '}
-                            {formatMinutes(open)}
+                        <span className="text-muted-foreground tabular-nums">
+                            del tiempo disponible:{' '}
+                            <span className="whitespace-nowrap">
+                                {formatMinutes(busy)} de {formatMinutes(open)}
+                            </span>
                         </span>
                     </p>
                     <ul className="flex flex-col gap-3">

@@ -32,6 +32,8 @@ class ExpenseResource extends JsonResource
             'categoryId' => $this->expense_category_id,
             'categoryName' => $this->category?->name,
             'description' => $this->description,
+            // Paid from Comisiones: it is changed there, not from the expenses list.
+            'isSettlement' => (bool) $this->settlement_exists,
             // The file's own random name busts the browser cache when the photo changes.
             'receiptUrl' => $this->receipt_path === null ? null : route('expenses.receipt', ['expense' => $this->id, 'v' => substr($this->receipt_path, -13, 8)]),
         ];

@@ -49,7 +49,7 @@ export function MonthSummary({ month, total, expenses }: Props) {
                                         <span className="font-medium">
                                             {formatCents(share.cents)}
                                         </span>
-                                        <span className="ml-2 inline-block w-10 text-right text-muted-foreground">
+                                        <span className="ml-2 inline-block w-12 text-right whitespace-nowrap text-muted-foreground">
                                             {share.percent} %
                                         </span>
                                     </span>

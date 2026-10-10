@@ -55,7 +55,7 @@ export default function Reports({
                             que elijas.
                         </p>
                     </div>
-                    <ReportActions period={period} />
+                    <ReportActions period={period} className="max-lg:hidden" />
                 </div>
 
                 <div className="print:hidden">
@@ -76,7 +76,7 @@ export default function Reports({
                     <>
                         <DailyChart days={report.days} />
 
-                        <div className="grid items-start gap-6 lg:grid-cols-2">
+                        <div className="grid gap-6 lg:grid-cols-2">
                             <IncomeSources totals={report.totals} />
                             <ExpenseCategories categories={report.byCategory} />
                         </div>
@@ -85,17 +85,20 @@ export default function Reports({
 
                         <Occupancy staff={report.occupancy} />
 
-                        <div className="grid items-start gap-6 lg:grid-cols-2">
+                        <div className="grid gap-6 lg:grid-cols-2">
                             <TopServices services={report.byService} />
                             <MoneyReceived methods={report.byMethod} />
                         </div>
 
-                        <div className="grid items-start gap-6 lg:grid-cols-2">
+                        <div className="grid gap-6 lg:grid-cols-2">
                             <LostVisits lost={report.lost} />
                             <ClientMix clients={report.clients} />
                         </div>
                     </>
                 )}
+
+                {/* On a phone the figures come first; taking them away, last. */}
+                <ReportActions period={period} className="lg:hidden" />
             </div>
         </>
     );

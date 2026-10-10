@@ -44,7 +44,7 @@ export function ServiceRuleField({ name, rule, onChange, error }: Props) {
             >
                 <SelectTrigger
                     aria-label={`Comisión de ${name}`}
-                    className="h-11 w-full"
+                    className="w-full data-[size=default]:h-11"
                 >
                     <SelectValue />
                 </SelectTrigger>
