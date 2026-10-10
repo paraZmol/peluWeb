@@ -32,6 +32,14 @@ class SalonPolicy
         return $user->membershipIn($salon)?->isOwner() ?? false;
     }
 
+    /**
+     * Expenses, the cash register and whatever else moves the salon's money.
+     */
+    public function manageCash(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageCash) ?? false;
+    }
+
     public function update(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageSalonProfile) ?? false;

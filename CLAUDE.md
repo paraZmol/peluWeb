@@ -46,7 +46,10 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
    permisos se filtran en el backend.
 4. **Dinero**: enteros en céntimos, moneda por salón (`PEN` por defecto). Nunca `float`.
 5. **Imágenes**: validar tipo y tamaño, re-codificar a WebP, quitar EXIF, nunca aceptar SVG.
-6. **Sin secretos en git**: `.env`, claves de Maps/WhatsApp fuera del repo.
+6. **Sin secretos en git**: `.env`, claves de Maps/WhatsApp fuera del repo. El repositorio
+   (`github.com/paraZmol/peluWeb`) es **público**: antes de cada `git push` revisar que no vayan
+   contraseñas, claves, datos de personas reales ni rutas o correos personales. Las cuentas de
+   demostración (`password`) solo existen en local; `DemoSeeder` no corre en producción.
 7. Campos nuevos en tablas con datos: siempre `nullable` o con `default` (los registros viejos
    — la cuenta del super admin, el primer salón — son los que se rompen primero).
 
@@ -61,6 +64,13 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
 - Despliegue: hosting cPanel peruano o VPS (ver docs/stack.md). **No** se usa Laravel Cloud aunque
   las guías de Boost lo mencionen.
 - Arrancar en local: `.\dev.cmd` (usa PHP 8.4 aunque el terminal tenga el de XAMPP).
+
+## Ramas
+- `main` es lo estable y lo que se ve en GitHub. Cada fase se trabaja en su rama (`fase-5-caja`,
+  `fase-6-clientes`, …): commits pequeños ahí, `git push` de la rama al cerrar cada paso, y unión a
+  `main` (`git merge --no-ff`) solo con `composer ci:check` y los E2E en verde.
+- Cada fase cerrada lleva una etiqueta anotada (`fase-4-cerrada`) para poder volver en una emergencia.
+- Nunca `git push --force` sobre `main` ni reescribir historia ya subida.
 
 ## Calidad — antes de dar un paso por terminado
 - `composer ci:check` en verde (formato, lint, tipos TS, Pint, PHPStan nivel 7 y tests).

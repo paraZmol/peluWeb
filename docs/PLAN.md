@@ -386,7 +386,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | D3 | Precios finales de los planes | Fase 7 | Ver [mercado.md](mercado.md): S/ 39 / 89 / 169 |
 | D4 | ¿Hay un salón amigo para el piloto? | Fase 8 | Sí (el del proyecto anterior) |
 | D5 | ¿Se reutiliza algo del proyecto Flutter anterior (`StudioProjects/peluqueria`)? | Fase 10 | Solo las reglas de dominio, ya pasadas a `booking-domain` |
-| D6 | ¿Subir el código a un repositorio privado de GitHub? (activa el CI) | Fase 9 | Pendiente; el CI ya está listo para cuando exista |
+| D6 | ¿Subir el código a un repositorio de GitHub? (activa el CI) | Fase 9 | **Respondido 2026-10-10:** sí, en `github.com/paraZmol/peluWeb`, **público**. Se trabaja con ramas (ver §8) |
 
 ## 11. Registro de cambios del plan
 | Fecha | Cambio | Motivo |
@@ -412,6 +412,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-08 | El paso "¿Cuándo?" destaca el próximo horario libre y pliega los periodos con más de 12 horarios; el detalle de una reserva viste toda la app (cabecera, fondo, avisos) con la plantilla del salón; Vibrante pone el nombre del equipo debajo de la foto (variante `captioned-portrait`) y su barra fija es opaca; el registro repite la promesa de la portada; el salón vitrina de pruebas pasa a ser "Estudio Ñusta", unisex y con horario de 9 a 8 | Hallazgos de ux-reviewer y qa-tester al cerrar el 4.12 |
 | 2026-10-10 | Paso 5.1, cómo se cobra: al completar una cita se registra el cobro del saldo (precio − descuento − seña ya pagada + propina) repartido en uno o varios métodos (efectivo, Yape, Plin, tarjeta, transferencia, otro); el descuento no puede dejar el precio por debajo de la seña pagada; la propina se guarda aparte y no cuenta como ingreso del salón; "Seña recibida" pide el método; una seña devuelta se registra como movimiento de salida. Cobra quien atiende la cita (o quien ve toda la agenda); devolver una seña y lo demás de caja exige el permiso de caja | Sin método de pago por movimiento no hay cuadre de caja; en Perú es común pagar parte en efectivo y parte por Yape |
 | 2026-10-10 | La PWA (manifest, service worker, instalación en Android e iOS, modo sin conexión básico) se adelanta de la Fase 8 al paso 6.4, antes del Web Push | El usuario confirmó que quiere la app instalable; además el Web Push no funciona sin el service worker, así que el orden anterior estaba mal |
+| 2026-10-10 | El código vive en GitHub (`paraZmol/peluWeb`, público). `main` es lo estable; cada fase se trabaja en su rama (`fase-5-caja`, …) y se une a `main` al cerrar un paso con todo en verde; cada fase cerrada lleva una etiqueta (`fase-4-cerrada`) para poder volver. Antes de cada subida se revisa que no vaya ningún secreto. `DemoSeeder` se niega a correr en producción | Pedido del usuario: ver las mejoras por ramas y poder volver atrás en una emergencia; el repositorio es público |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de
