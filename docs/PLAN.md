@@ -311,8 +311,9 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 6.1 Ficha del cliente (historial, notas, fotos antes/después, ausencias, VIP).
 - [ ] 6.2 Reseñas verificadas con los modos Ocultas / Privadas / Públicas, respuesta y reporte.
 - [ ] 6.3 Emails transaccionales y recordatorio de 24 h (scheduler).
-- [ ] 6.4 Web Push (cliente y profesional).
-- [ ] 6.5 Lista de espera con prioridad VIP; cola "sin cita" para barberías.
+- [ ] 6.4 **PWA instalable** (adelantado desde 8.1): `manifest.webmanifest` con nombre, colores e íconos (192, 512 y maskable), service worker con caché de la app y página sin conexión, aviso "Instalar" en Android/escritorio, guía visual para iOS ("Compartir → Añadir a pantalla de inicio") y modo sin conexión básico (ver mis próximas reservas). Íconos y nombre propios por salón cuando se instala desde su página pública.
+- [ ] 6.5 Web Push (cliente y profesional); necesita el service worker de 6.4.
+- [ ] 6.6 Lista de espera con prioridad VIP; cola "sin cita" para barberías.
 - *Cierre:* **qa-tester** + **security-auditor** (reseñas: XSS, spam, rate limit).
 
 ### Fase 7 — SaaS
@@ -324,7 +325,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - *Cierre:* **security-auditor** (escalada a super admin, eludir límites del plan).
 
 ### Fase 8 — PWA, pulido y piloto
-- [ ] 8.1 Manifest, service worker, íconos, aviso de instalación en Android y guía para iOS.
+- [x] 8.1 PWA → adelantada al paso 6.4 (el Web Push la necesita). Aquí solo queda repasarla: Lighthouse PWA, actualización del service worker sin dejar a nadie con una versión vieja, y la prueba en teléfonos reales (8.6).
 - [ ] 8.2 Revisión completa de animaciones, estados vacíos y de error, y accesibilidad.
 - [ ] 8.3 Rendimiento: Lighthouse ≥ 90 en móvil en la página pública y en el flujo de reserva.
 - [ ] 8.4 Auditoría completa: los 4 agentes en paralelo + OWASP ZAP baseline; corregir todo lo CRÍTICO y ALTO.
@@ -410,6 +411,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-08 | Un color de marca oscuro y casi sin tono (carbón, grafito) se convierte, sobre fondo oscuro, en un botón casi blanco con texto oscuro en vez de un gris medio. Las fotos de muestra se sirven sin sesión ni cookies. La portada de Studio Bella y la de muestra de salón de belleza pasan a fotos claras | Hallazgos de visual-designer (botón apagado en Nocturna) y security-auditor (respuesta pública cacheable con cookie de sesión) |
 | 2026-10-08 | El paso "¿Cuándo?" destaca el próximo horario libre y pliega los periodos con más de 12 horarios; el detalle de una reserva viste toda la app (cabecera, fondo, avisos) con la plantilla del salón; Vibrante pone el nombre del equipo debajo de la foto (variante `captioned-portrait`) y su barra fija es opaca; el registro repite la promesa de la portada; el salón vitrina de pruebas pasa a ser "Estudio Ñusta", unisex y con horario de 9 a 8 | Hallazgos de ux-reviewer y qa-tester al cerrar el 4.12 |
 | 2026-10-10 | Paso 5.1, cómo se cobra: al completar una cita se registra el cobro del saldo (precio − descuento − seña ya pagada + propina) repartido en uno o varios métodos (efectivo, Yape, Plin, tarjeta, transferencia, otro); el descuento no puede dejar el precio por debajo de la seña pagada; la propina se guarda aparte y no cuenta como ingreso del salón; "Seña recibida" pide el método; una seña devuelta se registra como movimiento de salida. Cobra quien atiende la cita (o quien ve toda la agenda); devolver una seña y lo demás de caja exige el permiso de caja | Sin método de pago por movimiento no hay cuadre de caja; en Perú es común pagar parte en efectivo y parte por Yape |
+| 2026-10-10 | La PWA (manifest, service worker, instalación en Android e iOS, modo sin conexión básico) se adelanta de la Fase 8 al paso 6.4, antes del Web Push | El usuario confirmó que quiere la app instalable; además el Web Push no funciona sin el service worker, así que el orden anterior estaba mal |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

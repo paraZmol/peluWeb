@@ -57,7 +57,7 @@ MySQL no tiene *exclusion constraints*. El patrón es:
 Ver la skill `booking-domain`.
 
 ## Móvil
-1. **PWA** (Fase 6): instalable en Android y en iOS ("Añadir a pantalla de inicio"). Web Push funciona
+1. **PWA** (paso 6.4 del plan, todavía sin construir): instalable en Android y en iOS ("Añadir a pantalla de inicio"). Web Push funciona
    en iOS ≥ 16.4 **solo si la app está instalada** y el usuario aceptó tras pulsar un botón.
 2. **Flutter** (Fase 9, opcional): app de tienda que consume `/api/v1` con Sanctum y push por FCM.
 
