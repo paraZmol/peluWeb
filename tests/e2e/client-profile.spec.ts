@@ -12,6 +12,16 @@ const CLIENTS: Record<string, string> = {
 
 const clientOf = (testInfo: TestInfo) => CLIENTS[testInfo.project.name];
 
+// A 1x1 PNG is enough to go through the real upload.
+const PHOTO = {
+    name: 'trabajo.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        'base64',
+    ),
+};
+
 async function openSidebar(page: Page) {
     if (page.viewportSize()!.width < 768) {
         await page.locator('[data-sidebar="trigger"]').first().click();
@@ -130,6 +140,73 @@ test.describe('Ficha del cliente', () => {
         await expect(care).toBeDisabled();
         await expect(care).toHaveValue('');
         await expect(page.getByText(/^Autorización registrada/)).toHaveCount(0);
+        assertNoErrors();
+    });
+
+    test('fotos antes y después: se sube con la autorización marcada, se ve grande y se elimina', async ({
+        page,
+    }, testInfo) => {
+        const assertNoErrors = watchForErrors(page);
+        const name = clientOf(testInfo);
+
+        await login(page, fileOwner.email, fileOwner.password);
+        await expect(page).toHaveURL(/dashboard$/);
+        await page.goto('/clientes');
+        await page.getByRole('link', { name: `Ver ficha de ${name}` }).click();
+        const section = page.getByRole('region', {
+            name: 'Fotos antes y después',
+        });
+        await expect(section).toContainText(
+            'Solo para el registro interno del salón. No se publican desde aquí.',
+        );
+        await expect(section).toContainText('Encuadra el trabajo, no la cara.');
+        await expect(section).toContainText(
+            'No subas fotos de menores de edad.',
+        );
+        await expect(section.getByText('0 de 40')).toBeVisible();
+        await expect(section.getByText(/^Aún no hay fotos/)).toBeVisible();
+
+        // Without the box the picture cannot be sent.
+        const consent = section.getByRole('checkbox', {
+            name: `${name} autorizó estas fotos para uso interno. Le avisé que no se publican y que puede pedir que se borren.`,
+        });
+        const save = section.getByRole('button', { name: 'Guardar foto' });
+        await section.getByText('Después', { exact: true }).click();
+        await section
+            .getByLabel('Foto del trabajo', { exact: true })
+            .setInputFiles(PHOTO);
+        await expect(
+            section.getByAltText('Vista previa de la foto'),
+        ).toBeVisible();
+        await expect(consent).not.toBeChecked();
+        await expect(save).toBeDisabled();
+
+        await consent.check();
+        await save.click();
+        await expect(page.getByText('Foto guardada.')).toBeVisible();
+        await expect(section.getByText('1 de 40')).toBeVisible();
+        // Every upload asks again.
+        await expect(consent).not.toBeChecked();
+        await expect(save).toBeDisabled();
+
+        const thumbnail = section.getByRole('button', {
+            name: /^Ver foto: Después · \d+ \w+ \d{4}$/,
+        });
+        await expect(thumbnail).toBeVisible();
+        expect(await hasHorizontalScroll(page)).toBe(false);
+        await thumbnail.click();
+        const viewer = page.getByRole('dialog', { name: 'Foto' });
+        await expect(viewer.getByAltText(/^Después · /)).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(viewer).toHaveCount(0);
+
+        await section
+            .getByRole('button', { name: /^Eliminar foto: Después/ })
+            .click();
+        await page.getByRole('button', { name: 'Sí, eliminar' }).click();
+        await expect(page.getByText('Foto eliminada.')).toBeVisible();
+        await expect(thumbnail).toHaveCount(0);
+        await expect(section.getByText('0 de 40')).toBeVisible();
         assertNoErrors();
     });
 

@@ -1,4 +1,8 @@
-import type { ClientFile, ClientNotesFields } from '@/components/clients/types';
+import type {
+    ClientFile,
+    ClientNotesFields,
+    ClientPhoto,
+} from '@/components/clients/types';
 import { formatDate } from './format';
 
 const longDayFormat = new Intl.DateTimeFormat('es-PE', {
@@ -24,6 +28,40 @@ export function formatLongDay(date: string): string {
 /** "2026-10-07" → "mié 7 oct 2026": the day of a visit, weekday included. */
 export function formatVisitDay(date: string): string {
     return `${formatDate(date)} ${date.slice(0, 4)}`;
+}
+
+/**
+ * Since when they are a client: the first visit when the record was created
+ * after it (a history loaded later), the record's day otherwise.
+ */
+export function clientSince(
+    since: string | null,
+    firstVisit: string | null,
+): string | null {
+    if (since === null || firstVisit === null) {
+        return since ?? firstVisit;
+    }
+
+    // "Y-m-d" sorts as text.
+    return firstVisit < since ? firstVisit : since;
+}
+
+/** "Antes · 7 oct 2026": what a picture is, for who cannot see it. */
+export function photoCaption(photo: ClientPhoto): string {
+    return `${photo.kindLabel} · ${formatLongDay(photo.date)}`;
+}
+
+/** The pictures of each day together, in the order they arrive. */
+export function groupPhotosByDay(
+    photos: ClientPhoto[],
+): { date: string; photos: ClientPhoto[] }[] {
+    const days = new Map<string, ClientPhoto[]>();
+
+    for (const photo of photos) {
+        days.set(photo.date, [...(days.get(photo.date) ?? []), photo]);
+    }
+
+    return [...days].map(([date, ofDay]) => ({ date, photos: ofDay }));
 }
 
 /** 1 → "1 vez", 3 → "3 veces". */

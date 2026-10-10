@@ -2,10 +2,12 @@ import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { CalendarPlus, History } from 'lucide-react';
 import { CareConsentSheet } from '@/components/clients/care-consent';
 import { ClientHeader } from '@/components/clients/client-header';
+import { ClientPhotos } from '@/components/clients/client-photos';
 import { ClientStats } from '@/components/clients/client-stats';
 import { NotesForm } from '@/components/clients/notes-form';
 import type {
     ClientFile,
+    ClientPhoto,
     ClientStats as Stats,
     ClientVisit,
 } from '@/components/clients/types';
@@ -28,6 +30,9 @@ type Props = {
     careConsentText: string;
     canManageVip: boolean;
     notesMaxLength: number;
+    /** Before and after pictures; empty for whoever may not see them. */
+    photos: ClientPhoto[];
+    photosMax: number;
 };
 
 export default function Client({
@@ -40,6 +45,8 @@ export default function Client({
     careConsentText,
     canManageVip,
     notesMaxLength,
+    photos,
+    photosMax,
 }: Props) {
     // The client list is only for who manages it; the rest came from the agenda.
     setLayoutProps({
@@ -62,10 +69,14 @@ export default function Client({
                     canSeeCare && 'print:hidden',
                 )}
             >
-                <ClientHeader client={client} canManageVip={canManageVip} />
+                <ClientHeader
+                    client={client}
+                    firstVisit={stats.firstVisit}
+                    canManageVip={canManageVip}
+                />
                 <ClientStats stats={stats} />
 
-                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_1fr]">
+                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_auto_1fr]">
                     <VisitList
                         id="client-upcoming-title"
                         title="Próximas citas"
@@ -89,8 +100,17 @@ export default function Client({
                         canSeeCare={canSeeCare}
                         careConsentText={careConsentText}
                         maxLength={notesMaxLength}
-                        className="lg:col-start-2 lg:row-span-2 lg:row-start-1"
+                        className="lg:col-start-2 lg:row-span-3 lg:row-start-1"
                     />
+                    {canSeeCare && (
+                        <ClientPhotos
+                            clientId={client.id}
+                            clientName={client.name}
+                            photos={photos}
+                            max={photosMax}
+                            className="lg:col-start-1"
+                        />
+                    )}
                     <VisitList
                         id="client-history-title"
                         title="Historial"

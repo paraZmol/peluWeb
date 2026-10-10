@@ -2,15 +2,21 @@ import { router } from '@inertiajs/react';
 import { MessageCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInitials } from '@/hooks/use-initials';
-import { formatLongDay } from '@/lib/clients';
+import { clientSince, formatLongDay } from '@/lib/clients';
 import { update as updateVip } from '@/routes/clients/vip';
 import type { ClientFile } from './types';
 
-type Props = { client: ClientFile; canManageVip: boolean };
+type Props = {
+    client: ClientFile;
+    /** The day of their first completed visit, if any. */
+    firstVisit: string | null;
+    canManageVip: boolean;
+};
 
 /** Who the file is about, how to reach them and whether they are VIP. */
-export function ClientHeader({ client, canManageVip }: Props) {
+export function ClientHeader({ client, firstVisit, canManageVip }: Props) {
     const getInitials = useInitials();
+    const since = clientSince(client.since, firstVisit);
     const origin = client.hasAccount
         ? 'Tiene cuenta en peluWeb'
         : 'Registro creado por el salón';
@@ -42,8 +48,7 @@ export function ClientHeader({ client, canManageVip }: Props) {
                     <p className="text-sm break-words text-muted-foreground">
                         {[
                             client.phone,
-                            client.since &&
-                                `Cliente desde ${formatLongDay(client.since)}`,
+                            since && `Cliente desde ${formatLongDay(since)}`,
                             origin,
                         ]
                             .filter(Boolean)

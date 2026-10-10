@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vite-plus/test';
-import type { ClientFile, ClientNotesFields } from '@/components/clients/types';
+import type {
+    ClientFile,
+    ClientNotesFields,
+    ClientPhoto,
+} from '@/components/clients/types';
 import {
+    clientSince,
     erasesSavedCare,
     formatLongDay,
     formatVisitDay,
+    groupPhotosByDay,
     initialNotesFields,
     notesPayload,
+    photoCaption,
     timesLabel,
 } from './clients';
 
@@ -46,6 +53,53 @@ describe('formatLongDay', () => {
 describe('formatVisitDay', () => {
     it('adds the weekday and keeps the year', () => {
         expect(formatVisitDay('2026-10-07')).toBe('mié 7 oct 2026');
+    });
+});
+
+function photo(overrides: Partial<ClientPhoto>): ClientPhoto {
+    return {
+        id: 1,
+        kind: 'before',
+        kindLabel: 'Antes',
+        date: '2026-10-07',
+        url: '/clientes/1/fotos/1',
+        ...overrides,
+    };
+}
+
+describe('clientSince', () => {
+    it('takes the earlier of the record and the first visit', () => {
+        expect(clientSince('2026-10-10', '2026-10-09')).toBe('2026-10-09');
+        expect(clientSince('2026-01-05', '2026-10-09')).toBe('2026-01-05');
+    });
+
+    it('falls back to whichever is known', () => {
+        expect(clientSince('2026-10-10', null)).toBe('2026-10-10');
+        expect(clientSince(null, '2026-10-09')).toBe('2026-10-09');
+        expect(clientSince(null, null)).toBeNull();
+    });
+});
+
+describe('photoCaption', () => {
+    it('says when in the service and the day', () => {
+        expect(photoCaption(photo({}))).toBe('Antes · 7 oct 2026');
+    });
+});
+
+describe('groupPhotosByDay', () => {
+    it('keeps the order and puts each day together', () => {
+        const groups = groupPhotosByDay([
+            photo({ id: 3, date: '2026-10-09', kind: 'after' }),
+            photo({ id: 2, date: '2026-10-09' }),
+            photo({ id: 1, date: '2026-10-07' }),
+        ]);
+
+        expect(groups.map((group) => group.date)).toEqual([
+            '2026-10-09',
+            '2026-10-07',
+        ]);
+        expect(groups[0].photos.map((item) => item.id)).toEqual([3, 2]);
+        expect(groupPhotosByDay([])).toEqual([]);
     });
 });
 

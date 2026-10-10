@@ -49,3 +49,17 @@ export type ClientNotesFields = {
     care_notes: string;
     care_consent: boolean;
 };
+
+export type ClientPhotoKind = 'before' | 'after';
+
+/** A picture of the work, kept only for the salon's own record. */
+export type ClientPhoto = {
+    id: number;
+    kind: ClientPhotoKind;
+    /** "Antes" or "Después". */
+    kindLabel: string;
+    /** The day it was taken, "2026-10-07" on the salon's calendar. */
+    date: string;
+    /** Private: served only to who may see the file's care notes. */
+    url: string;
+};
