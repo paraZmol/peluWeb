@@ -166,6 +166,16 @@ para cubrir recepcionistas o encargados sin crear más roles.
   conexión básico (ver mis próximas reservas).
 - **Flutter** después del lanzamiento, contra la API `/api/v1` (que se diseña desde el inicio).
 
+### 4.13 Promociones
+- El dueño tiene una sección **Promociones** donde crea ofertas para llenar la agenda: por ejemplo
+  "vienen dos y pagan uno", un combo a precio cerrado, descuento en horas flojas o una campaña de
+  temporada con nombre y fechas (Halloween, Día de la Madre, Fiestas Patrias, Navidad).
+- Cada promoción tiene vigencia, servicios y profesionales incluidos, cupos y condiciones; el
+  cliente la ve en la página pública y en la reserva, y el salón la comparte con un enlace.
+- El precio con promoción se calcula y se congela en el servidor al reservar; caja, comisiones y
+  reportes muestran cuánto se vendió con cada promoción.
+- El alcance exacto y el orden los propone el agente `marketing-advisor` antes de construir.
+
 ### 4.12 Legal (Perú)
 - Términos y condiciones y política de privacidad (Ley 29733 de Protección de Datos Personales):
   consentimiento explícito al registrarse y opción de borrar la cuenta.
@@ -314,6 +324,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - [ ] 6.4 **PWA instalable** (adelantado desde 8.1): `manifest.webmanifest` con nombre, colores e íconos (192, 512 y maskable), service worker con caché de la app y página sin conexión, aviso "Instalar" en Android/escritorio, guía visual para iOS ("Compartir → Añadir a pantalla de inicio") y modo sin conexión básico (ver mis próximas reservas). Íconos y nombre propios por salón cuando se instala desde su página pública.
 - [ ] 6.5 Web Push (cliente y profesional); necesita el service worker de 6.4.
 - [ ] 6.6 Lista de espera con prioridad VIP; cola "sin cita" para barberías.
+- [ ] 6.7 **Promociones** (módulo 4.13): primero `marketing-advisor` propone y prioriza las opciones y la versión mínima; el usuario elige; después se construye la sección "Promociones" del dueño, cómo las ve el cliente en la página pública y la reserva, y su efecto en caja, comisiones y reportes.
 - *Cierre:* **qa-tester** + **security-auditor** (reseñas: XSS, spam, rate limit).
 
 ### Fase 7 — SaaS
@@ -363,6 +374,7 @@ Inicio previsto: **lunes 2026-10-05**.
 | `design-director` | Al empezar un rediseño o una pantalla pública nueva | Dirección visual: propone direcciones con maquetas y capturas reales, define tokens, tipografía y componentes base, y mantiene la skill `ui-system` (edita `app.css`, fuentes y `components/ui/*` solo para tokens) |
 | `frontend-builder` | Con cada pantalla nueva o rehecha | Construye pantallas y componentes React según la dirección y la skill `design-craft`; componentes ≤150 líneas, Wayfinder, E2E en verde, en su propio carril de Playwright |
 | `ux-reviewer` | Cada pantalla | Intuitivo, 360 px, contraste, animaciones, lenguaje neutro |
+| `marketing-advisor` | Antes de diseñar o cambiar promociones, cupones, precios especiales, fidelización o textos de venta | Exclusivo de marketing y ventas: qué promociones convienen a un salón pequeño (2x1, combos, horas flojas, temporada, primera visita, referidos, cumpleaños, paquetes), en qué orden, con qué reglas, riesgos y textos. Solo propone; no escribe código |
 | `publish-guard` | **Antes de cada `git push`** y de unir una rama a `main` | Exclusivo para el repositorio público: que no salgan contraseñas, claves, `.env`, datos de personas reales, volcados, archivos de la máquina ni información de negocio por descuido. Solo lectura; responde APTO o BLOQUEADO |
 
 **Definición de terminado:** tests verdes, phpstan y lint limpios, agentes aplicables sin hallazgos
@@ -420,6 +432,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 | 2026-10-10 | Paso 5.6: la exportación es un **CSV** de movimientos que Excel y Google Sheets abren directo (UTF-8 con marca, separador `;`, celdas protegidas contra fórmulas) y el **PDF** sale de imprimir el reporte con una hoja de estilos de impresión. No se añade una librería para `.xlsx` ni para PDF | Costo cero y sin dependencias nuevas; el resultado para el dueño es el mismo: abrirlo en Excel o guardarlo como PDF |
 | 2026-10-10 | Tras la auditoría de la Fase 5: aplicar un **descuento** al cobrar exige el permiso de caja (cobrar sin descuento sigue pudiendo hacerlo quien atiende); la **propina** no puede superar el precio de la cita; los **comprobantes de gastos** se guardan en disco privado y solo los ve quien maneja la caja del salón; los seeders con contraseña conocida solo corren en local y en pruebas | security-auditor: un profesional sin permisos podía descuadrar la caja con un descuento o una propina inventada, y un comprobante (RUC, cuenta bancaria) quedaba visible para quien tuviera el enlace |
 | 2026-10-10 | **Las propinas quedan fuera del sistema**: no se cobran, no se registran, no entran en la caja ni en los reportes; al completar una cita se cobra el saldo acordado (precio − descuento − seña pagada) y nada más. Se elimina la columna `bookings.tip_cents` | Decisión del usuario: la propina es un acuerdo personal entre el cliente y quien lo atendió; el salón solo cobra lo acordado |
+| 2026-10-10 | Nuevo módulo **Promociones** (4.13, paso 6.7) y nuevo agente `marketing-advisor`, exclusivo para guiar qué promociones y funciones comerciales ofrecer | Pedido del usuario: que los salones puedan publicar ofertas como "vienen dos y pagan uno" o un peinado de Halloween, con un agente que oriente qué opciones agregar |
 
 ## Ideas para después (no entran sin pasar por §11)
 - Pantalla de turnos para TV en el local · Programa de referidos entre salones · Recomendación de

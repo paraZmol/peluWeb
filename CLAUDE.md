@@ -80,6 +80,8 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
 - Lista de la sección 8 de la skill `clean-code` y `/simplify` sobre lo cambiado.
 - Lanzar el agente **qa-tester** sobre el paso. Si tocó agenda → **booking-breaker**.
   Si tocó auth, roles, subidas, dinero o consultas por salón → **security-auditor**.
+  Si toca promociones, cupones, precios especiales, fidelización o textos de venta → primero
+  **marketing-advisor** (solo propone y prioriza; el usuario elige antes de construir).
   Si tocó una pantalla → **visual-designer** (mira capturas y corrige la presentación para que
   se vea profesional) y después **ux-reviewer** (solo opina).
 - Pantallas públicas y de alta del salón (portada, registro, página del salón, reserva, Mis
