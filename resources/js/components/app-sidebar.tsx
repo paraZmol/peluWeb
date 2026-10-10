@@ -3,6 +3,7 @@ import {
     BookHeart,
     CalendarClock,
     CalendarDays,
+    ChartColumn,
     Contact,
     HandCoins,
     Ticket,
@@ -34,6 +35,7 @@ import { index as cash } from '@/routes/cash';
 import { index as clients } from '@/routes/clients';
 import { index as commissions } from '@/routes/commissions';
 import { index as expenses } from '@/routes/expenses';
+import { index as reports } from '@/routes/reports';
 import { edit as editSalon } from '@/routes/salon';
 import { index as services } from '@/routes/services';
 import { index as staff } from '@/routes/staff';
@@ -77,6 +79,9 @@ export function AppSidebar() {
                       icon: HandCoins,
                   },
               ]
+            : []),
+        ...(can('view_reports')
+            ? [{ title: 'Reportes', href: reports(), icon: ChartColumn }]
             : []),
         ...(isOwner
             ? [

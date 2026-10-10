@@ -16,7 +16,7 @@ export type PeriodShortcut = Period & { label: string };
 export type PendingTotals = { cents: number; visits: number; people: number };
 
 /** Dates as UTC midnights: only the calendar matters, no timezone shifts it. */
-function parseDay(day: string): Date {
+export function parseDay(day: string): Date {
     const [year, month, date] = day.split('-').map(Number);
 
     return new Date(Date.UTC(year, month - 1, date));

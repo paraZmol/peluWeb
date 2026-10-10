@@ -11,13 +11,15 @@ type Props = {
     period: Period;
     /** Today on the salon's calendar: there is nothing after it. */
     today: string;
+    /** The page that shows the period; Comisiones unless told otherwise. */
+    route?: typeof index;
 };
 
-const toPeriod = ({ from, to }: Period) =>
-    index({ query: { desde: from, hasta: to } });
-
 /** The days on screen: the usual periods one tap away, or any two dates. */
-export function PeriodPicker({ period, today }: Props) {
+export function PeriodPicker({ period, today, route = index }: Props) {
+    const toPeriod = ({ from, to }: Period) =>
+        route({ query: { desde: from, hasta: to } });
+
     // What is being typed: a half-written date must not reload the page.
     const [draft, setDraft] = useState(period);
     const [shown, setShown] = useState(period);

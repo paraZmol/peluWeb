@@ -167,8 +167,10 @@ export type AgendaBooking = {
     /** Price minus the deposit already paid: what is left to collect. */
     balance: string;
     depositPaid: string;
-    /** Set once completed. `total` is price − discount; the tip goes apart. */
-    charged: { total: string; discount: string; tip: string } | null;
+    /** Set once completed. `total` is price − discount. */
+    charged: { total: string; discount: string } | null;
+    /** Taking money off the price needs the cash permission. */
+    canDiscount: boolean;
     note: string | null;
     referencePhotoUrl: string | null;
     actions: AgendaAction[];

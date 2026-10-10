@@ -892,3 +892,67 @@
     z-index: 0;
     font-family: inherit;
 }
+
+/* ==========================================================================
+   Print. The shell (sidebar, toasts) never goes on paper. A page that marks
+   itself with `.report-sheet` is a document: it prints on white with the
+   light tokens and the salon's light brand color, whatever the mode on
+   screen, and keeps its fills (bars are data, not decoration).
+   ========================================================================== */
+@media print {
+    @page {
+        margin: 14mm 12mm;
+    }
+
+    [data-slot='sidebar'],
+    [data-sonner-toaster] {
+        display: none !important;
+    }
+
+    [data-slot='sidebar-inset'] {
+        min-height: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    html:has(.report-sheet),
+    html:has(.report-sheet) body {
+        background: #ffffff;
+    }
+
+    html:has(.report-sheet) {
+        color-scheme: light;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+        --background: #ffffff;
+        --foreground: #1f1b18;
+        --card: #ffffff;
+        --card-foreground: #1f1b18;
+        --surface-2: #ffffff;
+        --muted: #f1ece6;
+        --muted-foreground: #6b635c;
+        --primary: #8f5e45;
+        --primary-foreground: #ffffff;
+        --destructive-foreground: #b42318;
+        --success: #15803d;
+        --warning: #b45309;
+        --border: #e8e2db;
+        --border-strong: #d6cdc3;
+        --elevation-1: none;
+        --brand-text-min: 0;
+        --brand-text-max: 0.5;
+        --brand-text-mix: black;
+        --brand-soft-amount: 12%;
+    }
+
+    html:has(.report-sheet) .brand-scope {
+        --primary: var(--brand-light);
+        --primary-foreground: var(--brand-light-foreground);
+    }
+
+    .report-sheet {
+        max-width: none;
+        padding: 0;
+    }
+}

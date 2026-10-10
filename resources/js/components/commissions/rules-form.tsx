@@ -32,8 +32,7 @@ export function RulesForm({ staff, onSaved }: Props) {
                     id="rules-percent-hint"
                     className="text-sm text-muted-foreground"
                 >
-                    Lo que gana de cada servicio que atiende, de 0 a 100. La
-                    propina no entra: es de quien atendió.
+                    Lo que gana de cada servicio que atiende, de 0 a 100.
                 </p>
                 <InputError
                     id="rules-percent-error"

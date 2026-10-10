@@ -14,7 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useCheckout, usePaymentMethods } from '@/hooks/use-checkout';
 import { formatCents } from '@/lib/format';
 import { complete } from '@/routes/agenda/bookings';
-import { CheckoutExtras } from './checkout-extras';
+import { CheckoutDiscount } from './checkout-discount';
 import { CheckoutSummary } from './checkout-summary';
 import { PaymentMethodChips } from './payment-method-chips';
 import { SplitPayments } from './split-payments';
@@ -58,15 +58,14 @@ export function CheckoutForm({ booking }: Props) {
             <CheckoutSummary
                 booking={booking}
                 discountCents={checkout.discountCents}
-                tipCents={checkout.tipCents}
                 totalCents={checkout.totalCents}
             />
-            <CheckoutExtras
-                discount={checkout.discount}
-                tip={checkout.tip}
-                onDiscount={checkout.setDiscount}
-                onTip={checkout.setTip}
-            />
+            {booking.canDiscount && (
+                <CheckoutDiscount
+                    discount={checkout.discount}
+                    onDiscount={checkout.setDiscount}
+                />
+            )}
 
             {!nothingToPay && !checkout.isSplit && (
                 <>

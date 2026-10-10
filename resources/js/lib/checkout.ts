@@ -11,7 +11,6 @@ export type CheckoutInput = {
     /** Price minus the deposit already paid. */
     balanceCents: number;
     discount: string;
-    tip: string;
     parts: PaymentPart[];
     /** The last part takes whatever the others leave. */
     lastIsAuto: boolean;
@@ -19,8 +18,7 @@ export type CheckoutInput = {
 
 export type CheckoutState = {
     discountCents: number;
-    tipCents: number;
-    /** balance − discount + tip: what the client hands over now. */
+    /** balance − discount: what the client hands over now. */
     totalCents: number;
     /** What each part adds; 0 for a part whose text is not an amount. */
     partCents: number[];
@@ -36,9 +34,7 @@ const BAD_AMOUNT = 'Revisa los montos: usa números como 20 o 20.50.';
  */
 export function resolveCheckout(input: CheckoutInput): CheckoutState {
     const discountCents = toCents(input.discount);
-    const tipCents = toCents(input.tip);
-    const totalCents =
-        input.balanceCents - (discountCents ?? 0) + (tipCents ?? 0);
+    const totalCents = input.balanceCents - (discountCents ?? 0);
     const typed = input.parts.map((part) => toCents(part.amount));
     const last = typed.length - 1;
     const isSingle = typed.length === 1;
@@ -52,7 +48,6 @@ export function resolveCheckout(input: CheckoutInput): CheckoutState {
     );
     const hasBadAmount =
         discountCents === null ||
-        tipCents === null ||
         typed.some(
             (cents, index) =>
                 cents === null &&
@@ -63,7 +58,6 @@ export function resolveCheckout(input: CheckoutInput): CheckoutState {
 
     return {
         discountCents: discountCents ?? 0,
-        tipCents: tipCents ?? 0,
         totalCents,
         partCents,
         problem: problemOf({
