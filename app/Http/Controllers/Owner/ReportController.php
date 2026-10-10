@@ -16,7 +16,7 @@ class ReportController extends SalonAreaController
     public function index(Request $request, SalonReport $report): Response
     {
         $salon = $this->salon('viewReports');
-        $period = Period::inSalon($salon, $request->query('desde'), $request->query('hasta'));
+        $period = Period::inSalon($salon, $this->text($request, 'desde'), $this->text($request, 'hasta'));
         $previous = $period->previous();
 
         return Inertia::render('owner/reports/index', [

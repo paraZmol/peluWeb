@@ -25,7 +25,7 @@ class CommissionController extends SalonAreaController
     public function index(Request $request, CommissionOverview $overview): Response
     {
         $salon = $this->salon('manageCash');
-        $period = Period::inSalon($salon, $request->query('desde'), $request->query('hasta'));
+        $period = Period::inSalon($salon, $this->text($request, 'desde'), $this->text($request, 'hasta'));
 
         return Inertia::render('owner/commissions/index', [
             'from' => $period->from->format('Y-m-d'),
@@ -40,7 +40,7 @@ class CommissionController extends SalonAreaController
     public function settle(PaymentMethodRequest $request, Staff $staff, SettleCommissions $settle): RedirectResponse
     {
         $salon = $this->salon('manageCash');
-        $period = Period::inSalon($salon, $request->input('from'), $request->input('to'));
+        $period = Period::inSalon($salon, $this->text($request, 'from'), $this->text($request, 'to'));
         $settle->handle($staff, $period, $request->paymentMethod(), $request->user());
         $this->toast("Comisiones de {$staff->name} liquidadas.");
 

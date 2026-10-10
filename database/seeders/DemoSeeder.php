@@ -101,8 +101,8 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         // Its accounts share a public password: never on a real server.
-        if (app()->isProduction()) {
-            throw new LogicException('DemoSeeder cannot run in production.');
+        if (! app()->environment(['local', 'testing'])) {
+            throw new LogicException('DemoSeeder only runs in local and testing.');
         }
 
         if (User::where('email', self::SALONS[0]['owner']['email'])->exists()) {

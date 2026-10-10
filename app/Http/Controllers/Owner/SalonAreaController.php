@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Salon;
 use App\Support\CurrentSalon;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 /**
@@ -35,6 +36,17 @@ abstract class SalonAreaController extends Controller
         abort_if($salon === null, 403);
 
         return $salon;
+    }
+
+    /**
+     * A query or body value only when it is plain text: `?desde[]=x` is
+     * treated as missing instead of breaking a typed parameter.
+     */
+    protected function text(Request $request, string $key): ?string
+    {
+        $value = $request->input($key);
+
+        return is_string($value) ? $value : null;
     }
 
     protected function toast(string $message, string $type = 'success'): void

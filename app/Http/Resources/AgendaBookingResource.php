@@ -68,6 +68,7 @@ class AgendaBookingResource extends JsonResource
             // What is left to collect when the visit ends, before discount and tip.
             'balance' => Money::toAmount($this->price_cents - $booking->depositPaidCents()),
             'depositPaid' => Money::toAmount($booking->depositPaidCents()),
+            'canDiscount' => $request->user()?->can('confirmDeposit', $booking) ?? false,
             'charged' => $this->charged_cents === null ? null : [
                 'total' => Money::toAmount($this->charged_cents),
                 'discount' => Money::toAmount($this->discount_cents),

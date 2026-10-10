@@ -159,7 +159,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('comisiones/{staff}/liquidar', [CommissionController::class, 'settle'])->name('commissions.settle');
         Route::put('comisiones/{staff}/reglas', [CommissionController::class, 'updateRules'])->name('commissions.rules.update');
 
-        Route::get('reportes', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reportes', [ReportController::class, 'index'])->middleware('throttle:30,1,reports')->name('reports.index');
         Route::get('reportes/movimientos.csv', ReportExportController::class)->middleware('throttle:20,1,report-export')->name('reports.export');
 
         Route::get('gastos', [ExpenseController::class, 'index'])->name('expenses.index');
@@ -167,6 +167,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // POST: browsers cannot send a file in a PUT form.
         Route::post('gastos/{expense}', [ExpenseController::class, 'update'])->middleware('throttle:60,1,expenses')->name('expenses.update');
         Route::delete('gastos/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+        Route::get('gastos/{expense}/comprobante', [ExpenseController::class, 'receipt'])->name('expenses.receipt');
         Route::post('gastos-categorias', [ExpenseCategoryController::class, 'store'])->name('expenses.categories.store');
         Route::put('gastos-categorias/{category}', [ExpenseCategoryController::class, 'update'])->name('expenses.categories.update');
         Route::delete('gastos-categorias/{category}', [ExpenseCategoryController::class, 'destroy'])->name('expenses.categories.destroy');

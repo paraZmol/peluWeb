@@ -56,7 +56,7 @@ class SettleCommissions
             Booking::withoutGlobalScope('salon')->whereKey($pending->modelKeys())->update(['commission_settlement_id' => $settlement->id]);
 
             return $settlement;
-        });
+        }, attempts: 3);
     }
 
     /**

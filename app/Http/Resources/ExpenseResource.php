@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Expense;
-use App\Support\Images\ImageStore;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -33,7 +32,8 @@ class ExpenseResource extends JsonResource
             'categoryId' => $this->expense_category_id,
             'categoryName' => $this->category?->name,
             'description' => $this->description,
-            'receiptUrl' => app(ImageStore::class)->url($this->receipt_path),
+            // The file's own random name busts the browser cache when the photo changes.
+            'receiptUrl' => $this->receipt_path === null ? null : route('expenses.receipt', ['expense' => $this->id, 'v' => substr($this->receipt_path, -13, 8)]),
         ];
     }
 }

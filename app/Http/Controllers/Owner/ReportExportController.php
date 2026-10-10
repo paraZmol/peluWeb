@@ -19,7 +19,7 @@ class ReportExportController extends SalonAreaController
     public function __invoke(Request $request, ExportMovements $export): StreamedResponse
     {
         $salon = $this->salon('viewReports');
-        $period = Period::inSalon($salon, $request->query('desde'), $request->query('hasta'));
+        $period = Period::inSalon($salon, $this->text($request, 'desde'), $this->text($request, 'hasta'));
         $rows = $export->handle($salon, $period);
         $name = "movimientos-{$salon->slug}-{$period->from->format('Y-m-d')}-a-{$period->to->format('Y-m-d')}.csv";
 

@@ -67,6 +67,11 @@ final readonly class Checkout
             throw PaymentException::discountTooLarge();
         }
 
+        // A tip larger than the visit itself is a typo, or a way to inflate the till.
+        if ($this->tipCents > $priceCents) {
+            throw PaymentException::tipTooLarge();
+        }
+
         if (count($this->receivedParts()) > self::MAX_PARTS) {
             throw PaymentException::tooManyParts(self::MAX_PARTS);
         }

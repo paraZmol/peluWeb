@@ -16,6 +16,7 @@ use App\Models\Staff;
 use App\Models\User;
 use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
+use LogicException;
 
 /**
  * Known accounts for the Playwright end-to-end tests (tests/e2e).
@@ -27,6 +28,11 @@ class E2eSeeder extends Seeder
 
     public function run(): void
     {
+        // Its accounts share a public password: never on a real server.
+        if (! app()->environment(['local', 'testing'])) {
+            throw new LogicException('E2eSeeder only runs in local and testing.');
+        }
+
         User::factory()->create([
             'name' => 'Rosa Quispe',
             'email' => 'duena@example.com',

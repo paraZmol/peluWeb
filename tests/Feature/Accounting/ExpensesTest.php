@@ -21,7 +21,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 */
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('local');
     $this->travelTo(CarbonImmutable::parse('2026-10-07 20:30', 'America/Lima'));
 
     $this->owner = User::factory()->create();
@@ -97,21 +97,49 @@ it('stores the receipt re-encoded and replaces or removes it on edit', function 
     $expense = expensesOf($this->salon)->sole();
     $first = $expense->receipt_path;
 
-    expect($first)->toEndWith('.webp')->and(Storage::disk('public')->exists($first))->toBeTrue();
+    expect($first)->toEndWith('.webp')->and(Storage::disk('local')->exists($first))->toBeTrue();
 
     $this->actingAs($this->owner)->post(route('expenses.update', $expense), expensePayload(['amount' => '1300', 'receipt' => UploadedFile::fake()->image('otra.png', 600, 600)]));
     $second = $expense->refresh()->receipt_path;
 
     expect($expense->amount_cents)->toBe(130000)
         ->and($second)->not->toBe($first)
-        ->and(Storage::disk('public')->exists($first))->toBeFalse();
+        ->and(Storage::disk('local')->exists($first))->toBeFalse();
 
     $this->actingAs($this->owner)->post(route('expenses.update', $expense), expensePayload(['remove_receipt' => '1']));
 
-    expect($expense->refresh()->receipt_path)->toBeNull()->and(Storage::disk('public')->exists($second))->toBeFalse();
+    expect($expense->refresh()->receipt_path)->toBeNull()->and(Storage::disk('local')->exists($second))->toBeFalse();
 
     $this->actingAs($this->owner)->post(route('expenses.store'), expensePayload(['receipt' => UploadedFile::fake()->create('boleta.svg', 10, 'image/svg+xml')]))
         ->assertSessionHasErrors('receipt');
+});
+
+it('shows the receipt only to whoever handles this salon\'s cash', function () {
+    $this->actingAs($this->owner)->post(route('expenses.store'), expensePayload(['receipt' => UploadedFile::fake()->image('boleta.jpg', 900, 1200)]));
+    $expense = expensesOf($this->salon)->sole();
+    $member = SalonMember::factory()->for($this->salon)->create();
+    $intruder = User::factory()->create();
+    app(CreateSalon::class)->handle($intruder, 'Otro Salón', BusinessType::Barbershop, Clientele::Men);
+
+    $this->actingAs($this->owner)->get(route('expenses.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('expenses.0.receiptUrl', fn (string $url) => str_contains($url, "/gastos/{$expense->id}/comprobante")));
+    $this->actingAs($this->owner)->get(route('expenses.receipt', $expense))
+        ->assertOk()->assertHeader('Content-Type', 'image/webp')->assertHeader('Cache-Control', 'max-age=3600, private');
+
+    $this->actingAs($member->user)->get(route('expenses.receipt', $expense))->assertForbidden();
+    $this->actingAs($intruder)->get(route('expenses.receipt', $expense->id))->assertNotFound();
+    auth()->logout();
+    $this->get(route('expenses.receipt', $expense))->assertRedirect(route('login'));
+
+    // Nothing of it on the public disk.
+    expect(Storage::disk('public')->exists($expense->receipt_path))->toBeFalse()
+        ->and(Storage::disk('local')->exists($expense->receipt_path))->toBeTrue();
+});
+
+it('treats array parameters as missing instead of failing', function () {
+    $this->actingAs($this->owner)->get('/gastos?mes[]=x')->assertOk();
+    $this->actingAs($this->owner)->get('/comisiones?desde[]=x&hasta[]=y')->assertOk();
+    $this->actingAs($this->owner)->get('/reportes/movimientos.csv?desde[]=x')->assertOk();
 });
 
 it('stops counting a deleted expense but keeps its record', function () {
@@ -123,7 +151,7 @@ it('stops counting a deleted expense but keeps its record', function () {
 
     expect(expensesOf($this->salon))->toBeEmpty()
         ->and(Expense::withoutGlobalScope('salon')->withTrashed()->whereKey($expense->id)->exists())->toBeTrue()
-        ->and(Storage::disk('public')->exists($receipt))->toBeFalse();
+        ->and(Storage::disk('local')->exists($receipt))->toBeFalse();
 });
 
 it('needs the cash permission for everything', function () {

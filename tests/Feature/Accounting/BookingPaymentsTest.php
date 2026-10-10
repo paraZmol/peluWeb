@@ -156,6 +156,35 @@ it('lets whoever attends collect their own visit, but not a colleague\'s', funct
     expect($booking->refresh()->status)->toBe(BookingStatus::Completed);
 });
 
+it('keeps discounts for whoever handles cash and tips within the price', function () {
+    $booking = payInService();
+
+    // The barber attends it but has no cash permission: no discounts.
+    $this->actingAs($this->barber->user)->post(route('agenda.bookings.complete', $booking), [
+        'discount' => '24.50', 'payments' => [],
+    ])->assertForbidden();
+    $this->actingAs($this->barber->user)->get(route('agenda.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('bookings.0.canDiscount', false));
+
+    // Nobody records a tip larger than the visit: 24.50 + 35.01 = 59.51.
+    $this->actingAs($this->owner)->post(route('agenda.bookings.complete', $booking), [
+        'tip' => '35.01', 'payments' => [['method' => 'cash', 'amount' => '59.51']],
+    ])->assertInertiaFlash('toast.type', 'error');
+    $this->actingAs($this->owner)->post(route('agenda.bookings.complete', $booking), [
+        'tip' => '999999.99', 'payments' => [['method' => 'cash', 'amount' => '999999.99']],
+    ]);
+
+    expect($booking->refresh()->status)->toBe(BookingStatus::InService)
+        ->and(paymentsOf($booking))->toHaveCount(1);
+
+    $this->barber->forceFill(['permissions' => [SalonPermission::ManageCash]])->save();
+    $this->actingAs($this->barber->user->fresh())->post(route('agenda.bookings.complete', $booking), [
+        'discount' => '4.50', 'tip' => '35.00', 'payments' => [['method' => 'cash', 'amount' => '55.00']],
+    ])->assertRedirect();
+
+    expect([$booking->refresh()->charged_cents, $booking->tip_cents])->toBe([3050, 3500]);
+});
+
 describe('giving a deposit back', function () {
     beforeEach(function () {
         $this->booking = payBook('10:00');

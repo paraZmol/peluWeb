@@ -18,7 +18,25 @@ class SaveExpense
 {
     public const int RECEIPT_MAX_SIDE = 1600;
 
-    public function __construct(private readonly ImageStore $images) {}
+    /** Receipts carry tax ids and bank details: never on the public disk. */
+    public const string DISK = 'local';
+
+    private readonly ImageStore $images;
+
+    public function __construct()
+    {
+        $this->images = new ImageStore(self::DISK);
+    }
+
+    /**
+     * Deletes the receipt's file and forgets it on the expense.
+     */
+    public function removeReceipt(Expense $expense): void
+    {
+        $this->images->delete($expense->receipt_path);
+        $expense->receipt_path = null;
+        $expense->save();
+    }
 
     public function handle(Salon $salon, ExpenseInput $input, ?User $by, ?Expense $expense = null): Expense
     {

@@ -11,12 +11,13 @@ use App\Http\Resources\ExpenseResource;
 use App\Models\CommissionSettlement;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use App\Support\Images\ImageStore;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * What the salon spends. Everything here needs the cash permission;
@@ -27,7 +28,7 @@ class ExpenseController extends SalonAreaController
     public function index(Request $request, MonthlyExpenses $monthly): Response
     {
         $salon = $this->salon('manageCash');
-        $found = $monthly->handle($salon, $request->query('mes'));
+        $found = $monthly->handle($salon, $this->text($request, 'mes'));
 
         return Inertia::render('owner/expenses/index', [
             'month' => $found['month'],
@@ -50,22 +51,37 @@ class ExpenseController extends SalonAreaController
 
     public function update(ExpenseRequest $request, Expense $expense, SaveExpense $save): RedirectResponse
     {
+        $salon = $this->salon('manageCash');
         $this->ensureEditable($expense);
-        $save->handle($this->salon('manageCash'), $request->expense(), $request->user(), $expense);
+        $save->handle($salon, $request->expense(), $request->user(), $expense);
         $this->toast('Gasto actualizado.');
 
         return back();
     }
 
-    public function destroy(Expense $expense, ImageStore $images): RedirectResponse
+    public function destroy(Expense $expense, SaveExpense $save): RedirectResponse
     {
         $this->salon('manageCash');
         $this->ensureEditable($expense);
-        $images->delete($expense->receipt_path);
-        $expense->forceFill(['receipt_path' => null])->delete();
+        $save->removeReceipt($expense);
+        $expense->delete();
         $this->toast('Gasto eliminado.');
 
         return back();
+    }
+
+    /**
+     * The receipt's photo, only for whoever handles this salon's cash.
+     */
+    public function receipt(Expense $expense): StreamedResponse
+    {
+        $this->salon('manageCash');
+        abort_if($expense->receipt_path === null || ! Storage::disk(SaveExpense::DISK)->exists($expense->receipt_path), 404);
+
+        return Storage::disk(SaveExpense::DISK)->response($expense->receipt_path, null, [
+            'Content-Type' => 'image/webp',
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 
     /**
