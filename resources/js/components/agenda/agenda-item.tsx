@@ -8,6 +8,7 @@ import type {
 import { formatPrice, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { AgendaActions } from './agenda-actions';
+import { AgendaMoneyNote } from './agenda-money-note';
 
 type Props = {
     booking: AgendaBooking;
@@ -32,7 +33,10 @@ export function AgendaItem({
             className={cn(
                 'flex flex-col gap-3 rounded-xl border bg-card p-4',
                 booking.status === 'in_service' && 'border-primary',
-                DIMMED.includes(booking.status) && 'opacity-60',
+                // A deposit still owed is work to do: it stays at full strength.
+                DIMMED.includes(booking.status) &&
+                    !booking.actions.includes('refundDeposit') &&
+                    'opacity-60',
                 className,
             )}
         >
@@ -109,6 +113,7 @@ export function AgendaItem({
                     . Confírmala cuando recibas el comprobante.
                 </p>
             )}
+            <AgendaMoneyNote booking={booking} />
 
             <AgendaActions
                 booking={booking}

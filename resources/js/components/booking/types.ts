@@ -137,7 +137,8 @@ export type AgendaAction =
     | 'complete'
     | 'noShow'
     | 'move'
-    | 'cancel';
+    | 'cancel'
+    | 'refundDeposit';
 
 export type AgendaBooking = {
     id: number;
@@ -162,7 +163,12 @@ export type AgendaBooking = {
     staffName: string;
     services: string[];
     price: string;
-    deposit: { amount: string; isPaid: boolean } | null;
+    deposit: { amount: string; isPaid: boolean; isRefunded: boolean } | null;
+    /** Price minus the deposit already paid: what is left to collect. */
+    balance: string;
+    depositPaid: string;
+    /** Set once completed. `total` is price − discount; the tip goes apart. */
+    charged: { total: string; discount: string; tip: string } | null;
     note: string | null;
     referencePhotoUrl: string | null;
     actions: AgendaAction[];

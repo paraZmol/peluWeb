@@ -1,3 +1,5 @@
+import { fromCents, toCents } from './money';
+
 /** "35.50" → "S/ 35.50". Amounts arrive as text from the server (no floats). */
 export function formatPrice(amount: string): string {
     return `S/ ${amount}`;
@@ -44,11 +46,12 @@ export function formatDate(date: string): string {
 
 /** Adds amounts sent as text ("35.50") in whole céntimos, never as floats. */
 export function sumAmounts(amounts: string[]): string {
-    const cents = amounts.reduce((total, amount) => {
-        const [units, decimals = ''] = amount.split('.');
+    return fromCents(
+        amounts.reduce((total, amount) => total + (toCents(amount) ?? 0), 0),
+    );
+}
 
-        return total + Number(units) * 100 + Number(decimals.padEnd(2, '0'));
-    }, 0);
-
-    return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`;
+/** 2450 → "S/ 24.50". */
+export function formatCents(cents: number): string {
+    return formatPrice(fromCents(cents));
 }

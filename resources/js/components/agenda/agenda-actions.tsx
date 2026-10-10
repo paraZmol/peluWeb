@@ -1,6 +1,11 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarClock, Check, MessageCircle, Play } from 'lucide-react';
+import { CalendarClock, MessageCircle, Play } from 'lucide-react';
+import { CheckoutDialog } from '@/components/accounting/checkout-dialog';
+import {
+    DepositReceivedDialog,
+    DepositRefundDialog,
+} from '@/components/accounting/deposit-dialogs';
 import { MoveDialog } from '@/components/booking/move-dialog';
 import type {
     AgendaBooking,
@@ -10,16 +15,7 @@ import type {
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { formatPrice } from '@/lib/format';
-import {
-    cancel,
-    complete,
-    confirm,
-    move,
-    noShow,
-    slots,
-    start,
-} from '@/routes/agenda/bookings';
+import { cancel, move, noShow, slots, start } from '@/routes/agenda/bookings';
 
 type Props = {
     booking: AgendaBooking;
@@ -53,22 +49,9 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
     return (
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center [&_a]:h-11 sm:[&_a]:h-9 [&_button]:h-11 sm:[&_button]:h-9">
             {can('confirm') && (
-                <ConfirmRemoveDialog
-                    tone="default"
-                    trigger={
-                        <Button className={PRIMARY}>
-                            <Check /> Seña recibida
-                        </Button>
-                    }
-                    triggerLabel="Seña recibida"
-                    title={
-                        booking.deposit
-                            ? `¿Recibiste ${formatPrice(booking.deposit.amount)} de ${booking.client.name}?`
-                            : `¿Confirmar la cita de ${booking.client.name}?`
-                    }
-                    description="La cita quedará confirmada y la seña anotada como recibida."
-                    confirmLabel="Sí, la recibí"
-                    form={confirm.form(booking.id)}
+                <DepositReceivedDialog
+                    booking={booking}
+                    triggerClassName={PRIMARY}
                 />
             )}
             {can('start') && (
@@ -81,13 +64,13 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
                 </Button>
             )}
             {can('complete') && (
-                <Button
-                    className={PRIMARY}
-                    disabled={busy}
-                    onClick={() => post(complete(booking.id))}
-                >
-                    {busy ? <Spinner /> : <Check />} Terminé
-                </Button>
+                <CheckoutDialog booking={booking} triggerClassName={PRIMARY} />
+            )}
+            {can('refundDeposit') && (
+                <DepositRefundDialog
+                    booking={booking}
+                    triggerClassName={PRIMARY}
+                />
             )}
             {booking.client.whatsappUrl && (
                 <Button asChild variant="outline">
