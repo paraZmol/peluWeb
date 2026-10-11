@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Http\Middleware\BypassSalonScope;
 use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\SecurityHeaders;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,6 +34,10 @@ class PlataformaPanelProvider extends PanelProvider
             ->default()
             ->id('plataforma')
             ->path('plataforma')
+            // The way back to their own panel: the app and this panel are two places.
+            ->userMenuItems([
+                Action::make('back-to-app')->label('Volver a peluWeb')->url(fn (): string => route('dashboard'))->icon('heroicon-o-arrow-uturn-left'),
+            ])
             ->brandName('peluWeb · Plataforma')
             ->colors([
                 'primary' => Color::hex('#8F5E45'),

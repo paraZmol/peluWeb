@@ -17,7 +17,7 @@ import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { update as switchSalon } from '@/routes/current-salon';
 import { create as createSalon } from '@/routes/salons';
 
-const roleLabels = { owner: 'Dueño', staff: 'Personal' } as const;
+const roleLabels = { owner: 'Titular', staff: 'Personal' } as const;
 
 export function SalonSwitcher() {
     const { currentSalon, salons } = useCurrentSalon();

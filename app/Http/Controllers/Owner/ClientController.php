@@ -18,7 +18,7 @@ class ClientController extends SalonAreaController
 
     public function index(Request $request): Response
     {
-        $this->salon('manageVipClients');
+        $salon = $this->salon('viewClients');
         $search = $request->string('buscar')->trim()->limit(60, '')->toString();
         // "%" and "_" typed by the user are text to find, not wildcards.
         $like = '%'.addcslashes($search, '%_\\').'%';
@@ -44,6 +44,8 @@ class ClientController extends SalonAreaController
                 'noShows' => $client->no_show_count,
             ]),
             'search' => $search,
+            // Seeing the list is not marking VIPs: the server asks again on each change.
+            'canManageVip' => $request->user()?->can('manageVipClients', $salon) ?? false,
             'isTruncated' => $clients->count() === self::PAGE_SIZE,
         ]);
     }

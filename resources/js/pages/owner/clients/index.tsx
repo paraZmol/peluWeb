@@ -1,10 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Search, Star, Users } from 'lucide-react';
+import { VipControl } from '@/components/clients/vip-control';
+import { Search, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { index, show } from '@/routes/clients';
-import { update as updateVip } from '@/routes/clients/vip';
 
 type Client = {
     id: number;
@@ -16,9 +16,20 @@ type Client = {
     noShows: number;
 };
 
-type Props = { clients: Client[]; search: string; isTruncated: boolean };
+type Props = {
+    clients: Client[];
+    search: string;
+    isTruncated: boolean;
+    /** false: they see who is VIP but cannot change it. */
+    canManageVip: boolean;
+};
 
-export default function Clients({ clients, search, isTruncated }: Props) {
+export default function Clients({
+    clients,
+    search,
+    isTruncated,
+    canManageVip,
+}: Props) {
     const [term, setTerm] = useState(search);
 
     const submit = (event: React.FormEvent) => {
@@ -90,29 +101,10 @@ export default function Clients({ clients, search, isTruncated }: Props) {
                                             .join(' · ')}
                                     </p>
                                 </div>
-                                <Button
-                                    variant={
-                                        client.isVip ? 'default' : 'outline'
-                                    }
-                                    aria-pressed={client.isVip}
-                                    aria-label={`${client.name}: ${client.isVip ? 'quitar VIP' : 'marcar como VIP'}`}
-                                    onClick={() =>
-                                        router.patch(
-                                            updateVip(client.id),
-                                            { is_vip: !client.isVip },
-                                            { preserveScroll: true },
-                                        )
-                                    }
-                                >
-                                    <Star
-                                        className={
-                                            client.isVip
-                                                ? 'fill-current'
-                                                : undefined
-                                        }
-                                    />
-                                    VIP
-                                </Button>
+                                <VipControl
+                                    client={client}
+                                    canManage={canManageVip}
+                                />
                             </li>
                         ))}
                     </ul>

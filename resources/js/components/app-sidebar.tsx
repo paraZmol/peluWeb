@@ -70,7 +70,7 @@ export function AppSidebar() {
         ...(can('manage_services')
             ? [{ title: 'Servicios', href: services(), icon: Scissors }]
             : []),
-        ...(can('manage_vip_clients')
+        ...(can('manage_vip_clients') || can('view_all_schedules')
             ? [{ title: 'Clientes', href: clients(), icon: BookHeart }]
             : []),
         // Same permission as "Mi salón": the server asks for `update` on the salon.

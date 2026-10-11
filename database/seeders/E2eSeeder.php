@@ -38,6 +38,9 @@ class E2eSeeder extends Seeder
 {
     public const string PASSWORD = 'password';
 
+    /** Base32 secret of the two-step platform admin (RFC 6238 codes). */
+    public const string TWO_FACTOR_SECRET = 'JBSWY3DPEHPK3PXP';
+
     public function run(): void
     {
         // Its accounts share a public password: never on a real server.
@@ -69,14 +72,53 @@ class E2eSeeder extends Seeder
         // Runs the platform, without two-step verification yet: their panel has to say what is missing.
         User::factory()->platformAdmin()->create(['name' => 'Paula Plataforma', 'email' => 'plataforma@example.com']);
 
+        // Platform admin with two-step verification on: the secret is known so a test can compute its code.
+        User::factory()->platformAdmin()->create([
+            'name' => 'Pablo Plataforma',
+            'email' => 'plataforma-2fa@example.com',
+            'two_factor_secret' => encrypt(self::TWO_FACTOR_SECRET),
+            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
+            'two_factor_confirmed_at' => now(),
+        ]);
+        // Just registered: has not opened the link in the verification email.
+        User::factory()->unverified()->create(['name' => 'Nora Nueva', 'email' => 'sin-verificar@example.com']);
+
         $showcase = $this->seedShowcaseSalon();
+        $permissions = $this->seedPermissionsSalon();
         $till = $this->seedTillSalon();
         $files = $this->seedClientFileSalon();
 
         // Factories skip what CreateSalon gives every real salon.
-        foreach ([$first, $second, $showcase, $till, $files, ...$this->seedReviewSalons()] as $salon) {
+        foreach ([$first, $second, $showcase, $till, $files, $permissions, ...$this->seedReviewSalons()] as $salon) {
             app(ManageExpenseCategories::class)->createDefaults($salon);
         }
+    }
+
+    /**
+     * A salon with one team member per permission that opens screens, each
+     * with that permission alone, to prove the menu and the server agree.
+     */
+    private function seedPermissionsSalon(): Salon
+    {
+        $owner = User::factory()->create(['name' => 'Perla Permisos', 'email' => 'permisos-duena@example.com']);
+        $salon = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Permisos', 'slug' => 'salon-permisos']);
+
+        $alone = [
+            'perm-perfil' => ['Pía Perfil', SalonPermission::ManageSalonProfile],
+            'perm-servicios' => ['Sol Servicios', SalonPermission::ManageServices],
+            'perm-caja' => ['Cata Caja', SalonPermission::ManageCash],
+            'perm-reportes' => ['Rubén Reportes', SalonPermission::ViewReports],
+            'perm-vip' => ['Vico Vip', SalonPermission::ManageVipClients],
+            'perm-agenda' => ['Ági Agenda', SalonPermission::ViewAllSchedules],
+        ];
+
+        foreach ($alone as $handle => [$name, $permission]) {
+            $user = User::factory()->create(['name' => $name, 'email' => "{$handle}@example.com"]);
+            SalonMember::factory()->for($salon)->for($user)->withPermissions($permission)->create();
+            Staff::factory()->for($salon)->linkedTo($user)->create(['name' => $name]);
+        }
+
+        return $salon;
     }
 
     /**

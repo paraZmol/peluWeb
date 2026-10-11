@@ -1,22 +1,24 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'motion/react';
-import { CalendarDays, ExternalLink, Store, Users } from 'lucide-react';
+import { ExternalLink, Store, Ticket } from 'lucide-react';
 import { PlatformCard } from '@/components/platform-card';
+import { PanelShortcuts } from '@/components/salon/panel-shortcuts';
 import { SetupChecklist } from '@/components/salon/setup-checklist';
 import type { SetupStep } from '@/components/salon/setup-checklist';
 import { Button } from '@/components/ui/button';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 import { dashboard } from '@/routes';
-import { index as agenda } from '@/routes/agenda';
+import { index as myBookings } from '@/routes/bookings';
 import { create as createSalon } from '@/routes/salons';
-import { index as team } from '@/routes/team';
 
 type Props = {
     setup: SetupStep[] | null;
     publicUrl: string | null;
+    /** Only for who runs the platform: the way into its panel. */
+    platform: { hasTwoFactor: boolean } | null;
 };
 
-export default function Dashboard({ setup, publicUrl }: Props) {
+export default function Dashboard({ setup, publicUrl, platform }: Props) {
     const { auth } = usePage().props;
     const { currentSalon, isOwner } = useCurrentSalon();
     const reduceMotion = useReducedMotion();
@@ -31,7 +33,17 @@ export default function Dashboard({ setup, publicUrl }: Props) {
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6"
             >
-                <h1 className="text-3xl font-semibold">Hola, {firstName}</h1>
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-3xl font-semibold">
+                        Hola, {firstName}
+                    </h1>
+                    {currentSalon && (
+                        <p className="text-sm text-muted-foreground">
+                            {currentSalon.name} ·{' '}
+                            {isOwner ? 'Titular' : 'Personal'}
+                        </p>
+                    )}
+                </div>
 
                 {currentSalon && publicUrl && (
                     <Button
@@ -46,41 +58,28 @@ export default function Dashboard({ setup, publicUrl }: Props) {
                     </Button>
                 )}
 
-                {auth.user.is_platform_admin && (
-                    <PlatformCard
-                        hasTwoFactor={auth.user.two_factor_enabled === true}
-                    />
+                {platform && (
+                    <PlatformCard hasTwoFactor={platform.hasTwoFactor} />
                 )}
 
                 {setup && <SetupChecklist steps={setup} />}
 
                 {currentSalon ? (
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <Link
-                            href={agenda()}
-                            className="flex flex-col gap-2 rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
-                        >
-                            <CalendarDays className="size-5 text-primary" />
-                            <h2 className="font-semibold">Agenda de hoy</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Las citas del día y lo que falta confirmar.
-                            </p>
-                        </Link>
-                        {isOwner && (
-                            <Link
-                                href={team()}
-                                className="flex flex-col gap-2 rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
-                            >
-                                <Users className="size-5 text-primary" />
-                                <h2 className="font-semibold">Tu equipo</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Invita a quienes atienden en{' '}
-                                    {currentSalon.name}.
-                                </p>
-                            </Link>
-                        )}
-                    </div>
+                    <PanelShortcuts />
                 ) : (
+                    <Link
+                        href={myBookings()}
+                        className="flex flex-col gap-2 rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
+                    >
+                        <Ticket className="size-5 text-primary" />
+                        <h2 className="font-semibold">Mis reservas</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Tus próximas citas y las que ya pasaron.
+                        </p>
+                    </Link>
+                )}
+
+                {!currentSalon && !platform && (
                     <div className="flex flex-col items-start gap-4 rounded-xl border bg-card p-6">
                         <Store className="size-6 text-primary" />
                         <div>

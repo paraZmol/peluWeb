@@ -77,8 +77,6 @@ class HandleInertiaRequests extends Middleware
             'avatar' => $user->avatar,
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),
             'two_factor_enabled' => $user->hasTwoFactorEnabled(),
-            // Only drives what their own panel offers; /plataforma checks it again.
-            'is_platform_admin' => $user->is_platform_admin,
             'created_at' => $user->created_at?->toIso8601String(),
             'updated_at' => $user->updated_at?->toIso8601String(),
         ];

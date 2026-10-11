@@ -24,6 +24,8 @@ class EnsureSalonMember
 
         if ($salon === null) {
             if ($request->isMethod('GET')) {
+                Inertia::flash('toast', ['type' => 'error', 'message' => 'Esa pantalla es de un salón y tu cuenta no pertenece a ninguno.']);
+
                 return redirect()->route('salons.create');
             }
 

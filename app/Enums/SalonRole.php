@@ -10,7 +10,7 @@ enum SalonRole: string
     public function label(): string
     {
         return match ($this) {
-            self::Owner => 'Dueño',
+            self::Owner => 'Titular',
             self::Staff => 'Personal',
         };
     }
