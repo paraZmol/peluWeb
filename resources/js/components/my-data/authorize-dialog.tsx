@@ -54,9 +54,12 @@ export function AuthorizeDialog({
                 </Button>
             </DialogTrigger>
             <DialogContent className={cn(SHEET_ON_PHONE, 'overflow-y-auto')}>
-                <DialogHeader className="pr-8 text-left">
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription className="text-base leading-relaxed text-foreground">
+                <DialogHeader className="gap-3 text-left">
+                    <DialogTitle className="pr-8 leading-snug text-balance">
+                        {title}
+                    </DialogTitle>
+                    {/* The document, set apart from what is asked below it. */}
+                    <DialogDescription className="rounded-lg border bg-surface-2 p-3 leading-relaxed text-foreground sm:p-4">
                         {text}
                     </DialogDescription>
                 </DialogHeader>

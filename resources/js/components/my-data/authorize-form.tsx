@@ -72,7 +72,7 @@ export function AuthorizeForm({ clientId, kind, acceptLabel, onDone }: Props) {
                     message={error}
                     className="pl-8"
                 />
-                <p className="pl-8 text-xs text-muted-foreground">
+                <p className="pl-8 text-sm text-muted-foreground">
                     ¿Tienes menos de 18? La autorización la firma tu madre,
                     padre o tutor, en el salón.
                 </p>

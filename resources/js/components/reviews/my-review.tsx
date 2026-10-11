@@ -66,7 +66,8 @@ export function MyReview({ code, salonName, review, isPublic }: Props) {
                 />
             )}
 
-            <div className="border-t pt-2">
+            {/* The link is a 44 px target: it eats the card's bottom padding. */}
+            <div className="-mb-2 border-t pt-1 sm:-mb-3">
                 <ConfirmRemoveDialog
                     themed
                     triggerLabel="Retirar mi reseña"

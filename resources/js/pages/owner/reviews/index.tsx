@@ -43,9 +43,9 @@ export default function Reviews({ mode, modes, reviews, limits }: Props) {
             <Head title="Reseñas" />
 
             <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
-                <div>
+                <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-semibold">Reseñas</h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="max-w-2xl text-sm text-pretty text-muted-foreground">
                         Lo que opinan tus clientes después de una cita atendida.
                         Puedes responder y reportar; no puedes editarlas ni
                         borrarlas. Quien la escribió sí puede retirarla.

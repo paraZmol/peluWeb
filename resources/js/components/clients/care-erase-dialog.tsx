@@ -32,8 +32,9 @@ export function CareEraseDialog({
     return (
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
             <DialogContent className={SHEET_ON_PHONE}>
-                <DialogHeader>
-                    <DialogTitle>
+                {/* Room for the close button: the name makes the title wrap. */}
+                <DialogHeader className="text-left">
+                    <DialogTitle className="pr-8 leading-snug text-balance">
                         ¿Retirar la autorización de {clientName}?
                     </DialogTitle>
                     <DialogDescription>

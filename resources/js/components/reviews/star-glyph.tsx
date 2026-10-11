@@ -17,8 +17,11 @@ export function StarGlyph({
                 strokeWidth={1.75}
                 className={cn(
                     'size-full',
-                    // The empty outline still reads at 3:1 against the surface.
-                    onBrand ? 'opacity-40' : 'text-muted-foreground',
+                    // The empty outline still reads against the surface. On
+                    // the brand color it keeps the full ink of its text
+                    // (4.5:1 with any salon color): empty and filled differ
+                    // by the fill, never by a faded line.
+                    !onBrand && 'text-muted-foreground',
                 )}
             />
             {fill > 0 && (

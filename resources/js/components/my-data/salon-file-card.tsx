@@ -19,7 +19,7 @@ export function SalonFileCard({ file }: { file: MyDataFile }) {
             aria-labelledby={titleId}
             className="overflow-hidden rounded-xl skin-card"
         >
-            <header className="flex items-center gap-4 border-b p-4 sm:p-5">
+            <header className="flex items-center gap-4 border-b p-4 sm:p-5 lg:px-6">
                 <SalonMark name={salon.name} logoUrl={null} size="sm" />
                 <div className="min-w-0 flex-1">
                     <h2
@@ -45,12 +45,13 @@ export function SalonFileCard({ file }: { file: MyDataFile }) {
                 </div>
             </header>
 
-            <div className="grid gap-6 p-4 sm:p-5 lg:grid-cols-2 lg:gap-10">
+            {/* Two matters, told apart by a rule: under on a phone, between on desktop. */}
+            <div className="grid divide-y lg:grid-cols-2 lg:divide-x lg:divide-y-0 [&>section]:p-4 sm:[&>section]:p-5 lg:[&>section]:p-6">
                 <CareSection file={file} />
                 <PhotosSection file={file} />
             </div>
 
-            <p className="border-t bg-surface-2 px-4 py-3 text-xs text-muted-foreground sm:px-5">
+            <p className="border-t bg-surface-2 px-4 py-3 text-sm text-pretty text-muted-foreground sm:px-5 lg:px-6">
                 {salon.isClosed
                     ? 'Este salón cerró su cuenta en peluWeb. Retira tus autorizaciones para borrar ahora tus alergias y fotos.'
                     : `¿Quieres ver, corregir o borrar el resto de lo que ${salon.name} guarda de ti (nombre, teléfono, citas)? Pídelo en el salón.`}

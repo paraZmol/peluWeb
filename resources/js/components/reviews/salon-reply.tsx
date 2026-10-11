@@ -20,17 +20,20 @@ export function SalonReply({ title, text, repliedOn, className }: Props) {
                 className,
             )}
         >
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm font-semibold">
+            {/* The arrow stays beside the title even when the name wraps. */}
+            <p className="flex items-start gap-2 text-sm font-semibold">
                 <CornerDownRight
-                    className="size-4 shrink-0 text-brand-text"
+                    className="mt-0.5 size-4 shrink-0 text-brand-text"
                     aria-hidden
                 />
-                <span className="min-w-0 break-words">{title}</span>
-                {repliedOn && (
-                    <span className="font-normal text-muted-foreground tabular-nums">
-                        {formatLongDay(repliedOn)}
-                    </span>
-                )}
+                <span className="flex min-w-0 flex-wrap gap-x-2 gap-y-0.5">
+                    <span className="min-w-0 break-words">{title}</span>
+                    {repliedOn && (
+                        <span className="font-normal text-muted-foreground tabular-nums">
+                            {formatLongDay(repliedOn)}
+                        </span>
+                    )}
+                </span>
             </p>
             <p className="text-sm break-words whitespace-pre-line text-muted-foreground">
                 {text}

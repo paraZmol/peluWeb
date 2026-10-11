@@ -69,7 +69,14 @@ export function ReviewsSection({ reviews, salonName }: Props) {
                         className={SUMMARY[layout.highlight]}
                     />
                     {/* Columns, not a grid: comments differ a lot in length. */}
-                    <ul className="gap-3 sm:columns-2 lg:gap-4">
+                    <ul
+                        className={cn(
+                            'gap-3 lg:gap-4',
+                            // One review alone fills the row: half a row
+                            // beside nothing reads as something missing.
+                            shown.length > 1 && 'sm:columns-2',
+                        )}
+                    >
                         {shown.map((review) => (
                             <li
                                 key={review.id}

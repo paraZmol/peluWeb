@@ -49,7 +49,10 @@ export function ConfirmRemoveDialog({
     const content = (
         <>
             <DialogHeader>
-                <DialogTitle>{title}</DialogTitle>
+                {/* Centered on a phone: clear of the close button on both sides. */}
+                <DialogTitle className="px-5 leading-snug text-balance sm:pr-6 sm:pl-0">
+                    {title}
+                </DialogTitle>
                 <DialogDescription>{description}</DialogDescription>
             </DialogHeader>
             <Form {...form}>

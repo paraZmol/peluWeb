@@ -47,8 +47,8 @@ export function CareNotesField({
                 isFromAccount && (
                     // Theirs to give: nothing to tick. The salon takes it
                     // back only when they ask for it in person.
-                    <div className="flex flex-col gap-2 text-sm">
-                        <p className="flex items-start gap-2">
+                    <div className="flex flex-col gap-2 rounded-lg border bg-surface-2 p-3 text-sm">
+                        <p className="flex items-start gap-2 font-medium">
                             <ShieldCheck
                                 className="mt-0.5 size-4 shrink-0 text-success"
                                 aria-hidden
