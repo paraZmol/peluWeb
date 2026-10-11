@@ -6,6 +6,7 @@ import { AvatarUploader } from '@/components/profile/avatar-uploader';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
@@ -112,6 +113,37 @@ export default function Profile({
                                 <InputError
                                     className="mt-2"
                                     message={errors.phone}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                {/* Unchecked boxes are not sent: this is the "no". */}
+                                <input
+                                    type="hidden"
+                                    name="booking_reminders"
+                                    value="0"
+                                />
+                                <Label
+                                    htmlFor="booking_reminders"
+                                    className="flex min-h-11 items-center gap-3 font-normal"
+                                >
+                                    <Checkbox
+                                        id="booking_reminders"
+                                        name="booking_reminders"
+                                        value="1"
+                                        defaultChecked={
+                                            auth.user.booking_reminders ?? true
+                                        }
+                                    />
+                                    Recordarme mis citas por correo el día
+                                    anterior
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Las confirmaciones, cambios y cancelaciones
+                                    de tus reservas te llegan siempre.
+                                </p>
+                                <InputError
+                                    message={errors.booking_reminders}
                                 />
                             </div>
 

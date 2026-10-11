@@ -73,6 +73,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
+            'booking_reminders' => $user->booking_reminders,
             'avatar' => $user->avatar,
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),
             'two_factor_enabled' => $user->hasTwoFactorEnabled(),

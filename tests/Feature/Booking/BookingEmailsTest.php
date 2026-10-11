@@ -156,3 +156,21 @@ it('renders the mail without leaking markdown from a salon\'s name', function ()
         return ! str_contains($html, 'href="http://evil.test"') && ! str_contains($html, '<em>Luz</em>');
     });
 });
+
+it('lets a person switch the reminder off from their profile, and still tells them the rest', function () {
+    $this->actingAs($this->user)->patch(route('profile.update'), ['name' => $this->user->name, 'email' => $this->user->email, 'booking_reminders' => '0'])
+        ->assertSessionHasNoErrors();
+    expect($this->user->refresh()->booking_reminders)->toBeFalse()
+        ->and($this->user->hasVerifiedEmail())->toBeTrue();
+
+    mailBooking('2026-10-07 10:00');
+    $this->travelTo(CarbonImmutable::parse('2026-10-06 10:15', 'America/Lima'));
+    $this->artisan('bookings:send-reminders')->assertSuccessful();
+
+    expect(mailNotices())->toBe([BookingNotice::Confirmed]);
+});
+
+it('rejects a reminder preference that is not yes or no', function () {
+    $this->actingAs($this->user)->patch(route('profile.update'), ['name' => $this->user->name, 'email' => $this->user->email, 'booking_reminders' => 'quizás'])
+        ->assertSessionHasErrors('booking_reminders');
+});

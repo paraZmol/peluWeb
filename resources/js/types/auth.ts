@@ -3,6 +3,8 @@ export type User = {
     name: string;
     email: string;
     phone?: string | null;
+    /** Wants the day-before reminder of their bookings by email. */
+    booking_reminders?: boolean;
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;

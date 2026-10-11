@@ -26,6 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $name
  * @property string $email
  * @property string|null $phone
+ * @property bool $booking_reminders Wants the day-before reminder by email.
  * @property string|null $avatar_path
  * @property string|null $google_id
  * @property bool $is_platform_admin
@@ -39,7 +40,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property CarbonImmutable|null $updated_at
  * @property-read Collection<int, SalonMember> $memberships
  */
-#[Fillable(['name', 'email', 'phone', 'password'])]
+#[Fillable(['name', 'email', 'phone', 'booking_reminders', 'password'])]
 #[Hidden(['password', 'google_id', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail, PasskeyUser
 {
@@ -74,6 +75,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
      */
     protected $attributes = [
         'phone' => null,
+        'booking_reminders' => true,
         'avatar_path' => null,
         'google_id' => null,
         'is_platform_admin' => false,
@@ -103,6 +105,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     {
         return [
             'email_verified_at' => 'datetime',
+            'booking_reminders' => 'boolean',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'is_platform_admin' => 'boolean',
