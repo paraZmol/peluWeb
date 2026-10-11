@@ -99,7 +99,9 @@ class SaveExpense
     private function place(Expense $expense, Salon $salon, ExpenseInput $input): void
     {
         $now = CarbonImmutable::now();
-        $expense->paid_at = $input->paidAt($salon->timezone, $now);
-        $expense->cash_session_id = $expense->paid_at->equalTo($now) ? CashSession::lockOpenIdFor($salon->id) : null;
+        $paidAt = $input->paidAt($salon->timezone, $now);
+        // Compared before storing: the attribute drops the fraction of a second.
+        $expense->cash_session_id = $paidAt->equalTo($now) ? CashSession::lockOpenIdFor($salon->id) : null;
+        $expense->paid_at = $paidAt;
     }
 }

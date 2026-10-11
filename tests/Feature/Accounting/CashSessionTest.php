@@ -170,3 +170,13 @@ it('needs the cash permission and stays inside its salon', function () {
         ->and($session->differenceCents())->toBe(0)
         ->and(CashSession::withoutGlobalScope('salon')->whereNull('closed_at')->count())->toBe(1);
 });
+
+it('takes today\'s cash expense out of the open till at any fraction of a second', function () {
+    // The clock of a real request is never on a whole second.
+    $this->travelTo(CarbonImmutable::parse('2026-10-07 09:15:20.345678', 'America/Lima'));
+    $this->actingAs($this->owner)->post(route('cash.open'), ['amount' => '50']);
+
+    $this->actingAs($this->owner)->post(route('expenses.store'), ['amount' => '12.30', 'method' => 'cash', 'date' => '2026-10-07'])->assertSessionHasNoErrors();
+
+    $this->actingAs($this->owner)->get(route('cash.index'))->assertInertia(fn (Assert $page) => $page->where('session.expectedCash', '37.70'));
+});
