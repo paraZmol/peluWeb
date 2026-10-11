@@ -79,6 +79,9 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
 - `composer ci:check` en verde (formato, lint, tipos TS, Pint, PHPStan nivel 7 y tests).
 - Lista de la sección 8 de la skill `clean-code` y `/simplify` sobre lo cambiado.
 - Lanzar el agente **qa-tester** sobre el paso. Si tocó agenda → **booking-breaker**.
+  Si añadió o cambió una pantalla, un permiso, una entrada de menú o el inicio de sesión →
+  **role-walker** (entra con cada tipo de cuenta y recorre lo que ve; mantiene
+  `tests/e2e/roles-walkthrough.spec.ts`, que se corre en cada paso que toque pantallas).
   Si tocó auth, roles, subidas, dinero o consultas por salón → **security-auditor**.
   Si toca promociones, cupones, precios especiales, fidelización o textos de venta → primero
   **marketing-advisor** (solo propone y prioriza; el usuario elige antes de construir).

@@ -66,6 +66,9 @@ class E2eSeeder extends Seeder
         SalonMember::factory()->for($second)->for($staff)->create();
         Staff::factory()->for($second)->linkedTo($staff)->create(['name' => 'Pedro Personal']);
 
+        // Runs the platform, without two-step verification yet: their panel has to say what is missing.
+        User::factory()->platformAdmin()->create(['name' => 'Paula Plataforma', 'email' => 'plataforma@example.com']);
+
         $showcase = $this->seedShowcaseSalon();
         $till = $this->seedTillSalon();
         $files = $this->seedClientFileSalon();
