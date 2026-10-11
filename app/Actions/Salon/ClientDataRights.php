@@ -7,6 +7,7 @@ use App\Enums\ConsentAction;
 use App\Enums\ConsentKind;
 use App\Models\ClientConsent;
 use App\Models\ClientPhoto;
+use App\Models\Review;
 use App\Models\SalonClient;
 use App\Models\User;
 use App\Support\Images\ImageStore;
@@ -72,6 +73,9 @@ class ClientDataRights
     public function forgetEverywhere(User $user): void
     {
         $files = SalonClient::withoutGlobalScope('salon')->where('user_id', $user->id)->get();
+
+        // What they wrote stays as an opinion of the salon, without their name.
+        Review::withoutGlobalScope('salon')->whereIn('salon_client_id', $files->modelKeys())->update(['author_name' => Review::ANONYMOUS]);
 
         foreach ($files as $client) {
             foreach (ConsentKind::cases() as $kind) {

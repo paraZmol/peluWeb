@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Client\BookingController as ClientBookingController;
 use App\Http\Controllers\Client\MyDataController;
+use App\Http\Controllers\Client\ReviewController as ClientReviewController;
 use App\Http\Controllers\CurrentSalonController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Owner\InvitationController;
 use App\Http\Controllers\Owner\MemberController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\ReportExportController;
+use App\Http\Controllers\Owner\ReviewController;
 use App\Http\Controllers\Owner\SalonBrandingController;
 use App\Http\Controllers\Owner\SalonController;
 use App\Http\Controllers\Owner\SalonPhotoController;
@@ -122,6 +124,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:10,1,booking-photo')
         ->name('bookings.photo.store');
     Route::delete('mis-reservas/{code}/foto', [ClientBookingController::class, 'destroyPhoto'])->name('bookings.photo.destroy');
+
+    Route::post('mis-reservas/{code}/resena', [ClientReviewController::class, 'store'])
+        ->middleware('throttle:10,1,review-store')
+        ->name('bookings.review.store');
+    Route::delete('mis-reservas/{code}/resena', [ClientReviewController::class, 'destroy'])->name('bookings.review.destroy');
 
     // What each salon keeps of the person under their authorization.
     Route::get('mis-datos', [MyDataController::class, 'index'])
@@ -258,6 +265,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('clients.photos.store');
         Route::get('clientes/{client}/fotos/{photo}', [ClientPhotoController::class, 'show'])->name('clients.photos.show');
         Route::delete('clientes/{client}/fotos/{photo}', [ClientPhotoController::class, 'destroy'])->name('clients.photos.destroy');
+
+        Route::get('resenas', [ReviewController::class, 'index'])->name('reviews.index');
+        Route::put('resenas/modo', [ReviewController::class, 'updateMode'])->name('reviews.mode.update');
+        Route::put('resenas/{review}/respuesta', [ReviewController::class, 'reply'])
+            ->middleware('throttle:30,1,review-reply')
+            ->name('reviews.reply');
+        Route::post('resenas/{review}/reportar', [ReviewController::class, 'report'])
+            ->middleware('throttle:10,1,review-report')
+            ->name('reviews.report');
 
         Route::post('feriados', [HolidayController::class, 'store'])
             ->middleware('throttle:60,1')

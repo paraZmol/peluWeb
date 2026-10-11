@@ -14,6 +14,8 @@ enum BookingNotice: string
     case Moved = 'moved';
     /** The day before the visit. */
     case Reminder = 'reminder';
+    /** After the visit: how did it go? */
+    case ReviewRequest = 'review';
 
     public function subject(string $salonName): string
     {
@@ -23,7 +25,21 @@ enum BookingNotice: string
             self::Cancelled => "Tu reserva en {$salonName} fue cancelada",
             self::Moved => "Tu reserva en {$salonName} cambió de horario",
             self::Reminder => "Recordatorio: tu cita en {$salonName}",
+            self::ReviewRequest => "¿Cómo te fue en {$salonName}?",
         };
+    }
+
+    /**
+     * A courtesy the person may switch off; what happened to a booking is always told.
+     */
+    public function isOptional(): bool
+    {
+        return $this === self::Reminder || $this === self::ReviewRequest;
+    }
+
+    public function action(): string
+    {
+        return $this === self::ReviewRequest ? 'Dejar mi reseña' : 'Ver mi reserva';
     }
 
     public function intro(): string
@@ -34,6 +50,7 @@ enum BookingNotice: string
             self::Cancelled => 'Tu reserva fue cancelada y el horario quedó libre.',
             self::Moved => 'Tu reserva tiene un nuevo horario.',
             self::Reminder => 'Te recordamos tu cita.',
+            self::ReviewRequest => 'Gracias por tu visita. Cuéntale al salón cómo te fue: te toma un minuto.',
         };
     }
 }

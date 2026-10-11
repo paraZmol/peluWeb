@@ -5,8 +5,10 @@ namespace App\Http\Resources;
 use App\Actions\Booking\RescheduleBooking;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
+use App\Enums\ReviewMode;
 use App\Models\Booking;
 use App\Models\BookingService;
+use App\Models\Review;
 use App\Models\Salon;
 use App\Support\Images\ImageStore;
 use App\Support\Money;
@@ -75,6 +77,16 @@ class ClientBookingResource extends JsonResource
             // Cancelling now would forfeit the deposit already paid.
             'cancelForfeitsDeposit' => $this->deposit_paid_at !== null && ! $hasNotice,
             'cancelWindowHours' => $salon->cancel_window_hours,
+            'review' => $this->review === null ? null : [
+                'rating' => $this->review->rating,
+                'comment' => $this->review->comment,
+                'reply' => $this->review->hidden_at === null ? $this->review->reply : null,
+            ],
+            // A completed visit, while the salon takes reviews and the time to leave one lasts.
+            'canReview' => $this->review === null && $status === BookingStatus::Completed && $salon->review_mode->collects()
+                && $this->starts_at->greaterThanOrEqualTo($now->subDays(Review::WINDOW_DAYS)),
+            // Public reviews carry the first name: the form says so before sending.
+            'reviewIsPublic' => $salon->review_mode === ReviewMode::Public,
             'salon' => [
                 'name' => $salon->name,
                 'slug' => $salon->slug,

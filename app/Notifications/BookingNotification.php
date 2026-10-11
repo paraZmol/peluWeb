@@ -56,8 +56,10 @@ class BookingNotification extends Notification implements ShouldQueue
             $mail->line(Markdown::escape($note));
         }
 
-        return $mail
-            ->action('Ver mi reserva', $this->booking['url'])
-            ->line('Si necesitas cambiarla o cancelarla, hazlo desde ese enlace o escribe al salón.');
+        $mail->action($this->notice->action(), $this->booking['url']);
+
+        return $this->notice === BookingNotice::ReviewRequest
+            ? $mail
+            : $mail->line('Si necesitas cambiarla o cancelarla, hazlo desde ese enlace o escribe al salón.');
     }
 }

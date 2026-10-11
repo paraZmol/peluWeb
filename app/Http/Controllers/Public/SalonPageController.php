@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Actions\Reviews\SalonReviews;
 use App\Data\Salon\PublicSalonContent;
 use App\Data\Salon\SalonPreview;
 use App\Domain\Schedule\TimeRange;
@@ -58,6 +59,8 @@ class SalonPageController extends Controller
 
         return Inertia::render('public/salon', [
             'salon' => new PublicSalonResource($salon, $content, $preview),
+            // Null unless the salon shows its reviews.
+            'reviews' => app(SalonReviews::class)->forPublic($salon),
         ])->withViewData(['meta' => $this->meta($salon)]);
     }
 

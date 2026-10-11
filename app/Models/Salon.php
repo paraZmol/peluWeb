@@ -6,6 +6,7 @@ use App\Domain\Schedule\TimeRange;
 use App\Domain\Schedule\WeeklyHours;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
+use App\Enums\ReviewMode;
 use App\Enums\SalonRole;
 use App\Enums\SalonStatus;
 use App\Enums\SalonTheme;
@@ -50,6 +51,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $vip_deposit_percent Null = same as everyone.
  * @property string|null $payment_instructions
  * @property bool $accepts_online_bookings
+ * @property ReviewMode $review_mode
  * @property CarbonImmutable|null $trial_ends_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -95,6 +97,7 @@ class Salon extends Model
         'vip_deposit_percent' => null,
         'payment_instructions' => null,
         'accepts_online_bookings' => true,
+        'review_mode' => 'private',
     ];
 
     /**
@@ -111,6 +114,7 @@ class Salon extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'accepts_online_bookings' => 'boolean',
+            'review_mode' => ReviewMode::class,
         ];
     }
 

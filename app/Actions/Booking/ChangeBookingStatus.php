@@ -84,7 +84,7 @@ class ChangeBookingStatus
      */
     public function complete(Booking $booking, ?User $by, ?Checkout $checkout = null): Booking
     {
-        return $this->change($booking, BookingStatus::Completed, $by, function (Booking $locked, CarbonImmutable $now) use ($by, $checkout): void {
+        $completed = $this->change($booking, BookingStatus::Completed, $by, function (Booking $locked, CarbonImmutable $now) use ($by, $checkout): void {
             $depositPaid = $locked->depositPaidCents();
             $checkout ??= Checkout::inFull(PaymentMethod::Other, $locked->price_cents, $depositPaid);
             $checkout->assertSettles($locked->price_cents, $depositPaid);
@@ -97,6 +97,9 @@ class ChangeBookingStatus
                 Payment::record($locked, PaymentKind::Charge, PaymentMethod::from($method), $cents, $now, $by);
             }
         });
+        $this->notify->handle($completed, BookingNotice::ReviewRequest);
+
+        return $completed;
     }
 
     /**

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A visit of one client with one professional. Instants are UTC; prices
@@ -52,6 +53,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, BookingSegment> $segments
  * @property-read Collection<int, BookingEvent> $events
  * @property-read Collection<int, Payment> $payments
+ * @property-read Review|null $review
  */
 class Booking extends Model
 {
@@ -111,6 +113,16 @@ class Booking extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(Staff::class)->withTrashed();
+    }
+
+    /**
+     * What the client said about this visit, if anything.
+     *
+     * @return HasOne<Review, $this>
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
     }
 
     /**

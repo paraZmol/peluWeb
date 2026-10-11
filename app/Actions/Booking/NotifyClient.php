@@ -32,12 +32,17 @@ class NotifyClient
             return;
         }
 
-        // What happened to the booking is always told; the reminder is a courtesy.
-        if ($notice === BookingNotice::Reminder && ! $user->booking_reminders) {
+        // What happened to the booking is always told; the rest is a courtesy.
+        if ($notice->isOptional() && ! $user->booking_reminders) {
             return;
         }
 
         $salon = Salon::withTrashed()->findOrFail($booking->salon_id);
+
+        if ($notice === BookingNotice::ReviewRequest && ! $salon->review_mode->collects()) {
+            return;
+        }
+
         $start = $booking->starts_at->setTimezone($salon->timezone);
 
         $user->notify(new BookingNotification($notice, [
