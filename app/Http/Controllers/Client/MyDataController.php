@@ -58,7 +58,11 @@ class MyDataController extends Controller
         }
 
         $text = $kind->text($salon->name);
-        $rights->authorize($file, $kind, ConsentProof::fromAccount($request, $user, $text));
+        if (! $rights->authorize($file, $kind, ConsentProof::fromAccount($request, $user, $text))) {
+            Inertia::flash('toast', ['type' => 'success', 'message' => 'Ya lo habías autorizado.']);
+
+            return back();
+        }
 
         $user->notify(new ConsentReceiptNotification(
             $salon->name,

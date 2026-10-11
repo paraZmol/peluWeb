@@ -43,7 +43,7 @@ class ReviewResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->whereNotNull('reported_at')->with('salon');
+        return parent::getEloquentQuery()->whereNull('withdrawn_at')->whereNotNull('reported_at')->with('salon');
     }
 
     public static function getNavigationBadge(): ?string

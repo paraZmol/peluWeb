@@ -77,12 +77,14 @@ class ClientBookingResource extends JsonResource
             // Cancelling now would forfeit the deposit already paid.
             'cancelForfeitsDeposit' => $this->deposit_paid_at !== null && ! $hasNotice,
             'cancelWindowHours' => $salon->cancel_window_hours,
-            'review' => $this->review === null ? null : [
+            'review' => $this->review === null || $this->review->withdrawn_at !== null ? null : [
                 'rating' => $this->review->rating,
                 'comment' => $this->review->comment,
                 'reply' => $this->review->hidden_at === null ? $this->review->reply : null,
             ],
             // A completed visit, while the salon takes reviews and the time to leave one lasts.
+            // Taken back: the visit was reviewed once and that was it.
+            'reviewWithdrawn' => $this->review?->withdrawn_at !== null,
             'canReview' => $this->review === null && $status === BookingStatus::Completed && $salon->review_mode->collects()
                 && $this->starts_at->greaterThanOrEqualTo($now->subDays(Review::WINDOW_DAYS)),
             // Public reviews carry the first name: the form says so before sending.

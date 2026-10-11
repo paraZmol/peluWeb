@@ -27,9 +27,15 @@ trait BelongsToSalon
         static::addGlobalScope('salon', function (Builder $query): void {
             $currentSalon = app(CurrentSalon::class);
 
+            // The platform panel opted out on purpose: it sees every salon,
+            // also when its admin happens to belong to one.
+            if ($currentSalon->isBypassed()) {
+                return;
+            }
+
             if ($currentSalon->has()) {
                 $query->where($query->qualifyColumn('salon_id'), $currentSalon->id());
-            } elseif (! $currentSalon->isBypassed()) {
+            } else {
                 $query->whereRaw('1 = 0');
             }
         });

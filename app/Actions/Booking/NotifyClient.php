@@ -5,6 +5,7 @@ namespace App\Actions\Booking;
 use App\Enums\BookingNotice;
 use App\Models\Booking;
 use App\Models\BookingService;
+use App\Models\Review;
 use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\Staff;
@@ -39,7 +40,8 @@ class NotifyClient
 
         $salon = Salon::withTrashed()->findOrFail($booking->salon_id);
 
-        if ($notice === BookingNotice::ReviewRequest && ! $salon->review_mode->collects()) {
+        if ($notice === BookingNotice::ReviewRequest
+            && (! $salon->review_mode->collects() || $booking->starts_at->lessThan(now()->subDays(Review::WINDOW_DAYS)))) {
             return;
         }
 

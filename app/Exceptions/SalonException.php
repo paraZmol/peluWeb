@@ -17,6 +17,11 @@ class SalonException extends BusinessRuleException
         return new self("Una ficha guarda {$max} fotos como máximo. Elimina alguna para subir otra.");
     }
 
+    public static function careWithdrawn(): self
+    {
+        return new self('Esta persona retiró su autorización para guardar alergias. Solo ella puede volver a darla, desde su cuenta.');
+    }
+
     public static function photosWithdrawn(): self
     {
         return new self('Esta persona retiró su autorización para fotos. Solo ella puede volver a darla, desde su cuenta.');

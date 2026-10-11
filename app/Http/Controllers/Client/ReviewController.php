@@ -45,7 +45,10 @@ class ReviewController extends Controller
         $user = $request->user();
         $booking = $this->bookings->findOrFail($user, $code);
 
-        Review::withoutGlobalScope('salon')->where('booking_id', $booking->id)->delete();
+        // Kept, not deleted: a visit is reviewed once, so taking it back
+        // cannot be a way around a report or the salon's answer.
+        Review::withoutGlobalScope('salon')->where('booking_id', $booking->id)->whereNull('withdrawn_at')
+            ->update(['withdrawn_at' => now(), 'comment' => null]);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Reseña retirada.']);
 
         return back();

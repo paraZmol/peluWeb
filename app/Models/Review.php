@@ -28,6 +28,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $reported_by
  * @property CarbonImmutable|null $report_resolved_at
  * @property CarbonImmutable|null $hidden_at Set only by the platform, after a report.
+ * @property CarbonImmutable|null $withdrawn_at Taken back by its author; the row stays.
+ * @property bool $is_publishable Written knowing it would be public.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Salon $salon
@@ -59,6 +61,8 @@ class Review extends Model
             'reported_at' => 'datetime',
             'report_resolved_at' => 'datetime',
             'hidden_at' => 'datetime',
+            'withdrawn_at' => 'datetime',
+            'is_publishable' => 'boolean',
         ];
     }
 
@@ -79,13 +83,33 @@ class Review extends Model
     }
 
     /**
-     * Not hidden by the platform.
+     * Still standing: not taken back by its author.
+     *
+     * @param  Builder<Review>  $query
+     */
+    public function scopeStanding(Builder $query): void
+    {
+        $query->whereNull('withdrawn_at');
+    }
+
+    /**
+     * Standing and not hidden by the platform.
      *
      * @param  Builder<Review>  $query
      */
     public function scopeVisible(Builder $query): void
     {
-        $query->whereNull('hidden_at');
+        $query->whereNull('withdrawn_at')->whereNull('hidden_at');
+    }
+
+    /**
+     * What a salon's public page may show.
+     *
+     * @param  Builder<Review>  $query
+     */
+    public function scopePublishable(Builder $query): void
+    {
+        $query->whereNull('withdrawn_at')->whereNull('hidden_at')->where('is_publishable', true);
     }
 
     /**
@@ -95,6 +119,6 @@ class Review extends Model
      */
     public function scopeAwaitingModeration(Builder $query): void
     {
-        $query->whereNotNull('reported_at')->whereNull('report_resolved_at');
+        $query->whereNull('withdrawn_at')->whereNotNull('reported_at')->whereNull('report_resolved_at');
     }
 }

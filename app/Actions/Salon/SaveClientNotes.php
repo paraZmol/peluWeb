@@ -7,6 +7,7 @@ use App\Data\Salon\ConsentProof;
 use App\Enums\ConsentAction;
 use App\Enums\ConsentKind;
 use App\Enums\ConsentMethod;
+use App\Exceptions\SalonException;
 use App\Models\ClientConsent;
 use App\Models\SalonClient;
 use App\Models\User;
@@ -56,6 +57,12 @@ class SaveClientNotes
             }
 
             return;
+        }
+
+        // Taken back by the person: the team's word, or a form opened
+        // before that, does not bring their health data back.
+        if (! $hadConsent && ClientConsent::latest($client, ConsentKind::Care)?->isWithdrawnByThePerson() === true) {
+            throw SalonException::careWithdrawn();
         }
 
         $client->care_notes = $notes->careNotes;

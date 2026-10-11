@@ -227,3 +227,52 @@ it('takes back everything, in every salon, when the account is deleted', functio
         ->and($rows->pluck('account_number')->unique()->all())->toBe([$this->carla->id])
         ->and($rows->pluck('account_id')->unique()->all())->toBe([null]);
 });
+
+it('does not let the salon bring back the allergies the person took back', function () {
+    $this->file->forceFill(['care_notes' => 'Alergia a la PPD', 'care_consent_at' => now(), 'care_consent_by' => $this->owner->id])->save();
+    $this->actingAs($this->carla)->post(route('my-data.withdraw', [$this->file->id, 'care']));
+
+    // A form the team had open, or the same text typed again.
+    $this->actingAs($this->owner)->put(route('clients.notes.update', $this->file), ['notes' => 'Prefiere las mañanas', 'care_notes' => 'Alergia a la PPD', 'care_consent' => true])
+        ->assertInertiaFlash('toast.type', 'error');
+    $this->file->refresh();
+
+    expect($this->file->care_notes)->toBeNull()
+        ->and($this->file->care_consent_at)->toBeNull()
+        ->and($this->file->notes)->toBeNull()
+        ->and(consentTrail($this->file, ConsentKind::Care))->toBe([ConsentAction::Withdrawn]);
+
+    // Until she says so again, from her account.
+    $this->actingAs($this->carla)->post(route('my-data.grant', [$this->file->id, 'care']), ['accept' => true]);
+    $this->actingAs($this->owner)->put(route('clients.notes.update', $this->file), ['care_notes' => 'Alergia a la PPD', 'care_consent' => true])
+        ->assertSessionHasNoErrors();
+    expect($this->file->refresh()->care_notes)->toBe('Alergia a la PPD');
+});
+
+it('adds the person\'s own word to a signed sheet, once, and sends one receipt', function () {
+    $this->file->forceFill(['care_notes' => 'Alergia a la PPD', 'care_consent_at' => now()->subDays(3)])->save();
+    $since = $this->file->refresh()->care_consent_at;
+
+    $this->actingAs($this->carla)->post(route('my-data.grant', [$this->file->id, 'care']), ['accept' => true]);
+    $this->actingAs($this->carla)->post(route('my-data.grant', [$this->file->id, 'care']), ['accept' => true]);
+
+    expect(consentTrail($this->file, ConsentKind::Care))->toBe([ConsentAction::Granted])
+        ->and($this->file->refresh()->care_consent_at?->equalTo($since))->toBeTrue()
+        ->and($this->file->care_notes)->toBe('Alergia a la PPD');
+    Notification::assertSentToTimes($this->carla, ConsentReceiptNotification::class, 1);
+});
+
+it('still shows what a closed salon kept, to take it back', function () {
+    $this->file->forceFill(['care_notes' => 'Alergia a la PPD', 'care_consent_at' => now()])->save();
+    $this->salon->delete();
+
+    $this->actingAs($this->carla)->get(route('my-data.index'))->assertInertia(fn (Assert $page) => $page
+        ->has('files', 1)
+        ->where('files.0.salon.isClosed', true)
+        ->where('files.0.care.notes', 'Alergia a la PPD'));
+
+    $this->actingAs($this->carla)->post(route('my-data.grant', [$this->file->id, 'photos']), ['accept' => true])->assertNotFound();
+    $this->actingAs($this->carla)->post(route('my-data.withdraw', [$this->file->id, 'care']))->assertSessionHasNoErrors();
+
+    expect($this->file->refresh()->care_notes)->toBeNull();
+});

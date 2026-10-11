@@ -35,9 +35,9 @@ class MyClientFiles
         $files = [];
 
         foreach ($this->query($user)->orderBy('id')->get() as $client) {
-            $salon = Salon::query()->find($client->salon_id);
+            // Also a salon that closed its account: what it kept is still there to take back.
+            $salon = Salon::withTrashed()->find($client->salon_id);
 
-            // A salon that closed its account shows nothing to manage.
             if ($salon !== null) {
                 $files[] = $this->file($client, $salon);
             }
@@ -59,7 +59,7 @@ class MyClientFiles
 
         return [
             'clientId' => $client->id,
-            'salon' => ['name' => $salon->name, 'slug' => $salon->slug],
+            'salon' => ['name' => $salon->name, 'slug' => $salon->slug, 'isClosed' => $salon->trashed()],
             'care' => [
                 'isAuthorized' => $client->care_consent_at !== null,
                 'since' => $client->care_consent_at?->setTimezone($salon->timezone)->format('Y-m-d'),

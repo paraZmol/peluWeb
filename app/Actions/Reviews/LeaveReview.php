@@ -3,6 +3,7 @@
 namespace App\Actions\Reviews;
 
 use App\Enums\BookingStatus;
+use App\Enums\ReviewMode;
 use App\Exceptions\ReviewException;
 use App\Models\Booking;
 use App\Models\Review;
@@ -42,6 +43,7 @@ class LeaveReview
         $review->rating = $rating;
         $review->comment = $comment;
         $review->author_name = self::firstName($author->name);
+        $review->is_publishable = $salon->review_mode === ReviewMode::Public;
 
         try {
             $review->save();
@@ -58,8 +60,10 @@ class LeaveReview
      */
     public static function firstName(string $name): string
     {
-        $clean = PersonName::clean($name, 40, Review::ANONYMOUS);
+        $first = preg_split('/[\s\p{Z}]+/u', trim(PersonName::clean($name, 40, Review::ANONYMOUS)))[0] ?? '';
+        // Letters only: an account named after an email or a phone signs as "Cliente".
+        $letters = preg_replace('/[^\p{L}\p{M}\'’-]/u', '', $first) ?? '';
 
-        return explode(' ', $clean)[0] ?: Review::ANONYMOUS;
+        return $letters === '' || $letters !== $first ? Review::ANONYMOUS : $letters;
     }
 }

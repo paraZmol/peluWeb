@@ -2,6 +2,7 @@
 
 use App\Actions\Booking\ChangeBookingStatus;
 use App\Actions\Booking\CreateBooking;
+use App\Actions\Reviews\LeaveReview;
 use App\Actions\Salon\CreateSalon;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingNotice;
@@ -19,6 +20,7 @@ use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
 use App\Notifications\BookingNotification;
+use App\Support\CurrentSalon;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
@@ -160,26 +162,38 @@ it('lets only the person who made the visit review it or take the review back', 
     expect(Review::withoutGlobalScope('salon')->count())->toBe(1);
 
     $this->actingAs($this->maria)->delete(route('bookings.review.destroy', $this->visit->code))->assertSessionHasNoErrors();
-    expect(Review::withoutGlobalScope('salon')->count())->toBe(0);
+    $review = Review::withoutGlobalScope('salon')->sole();
+    expect($review->withdrawn_at)->not->toBeNull()->and($review->comment)->toBeNull();
+
+    // Taken back is final: the visit cannot be reviewed again to dodge a report or the salon's answer.
+    leaveReview($this->visit, 5, 'Otra vez')->assertInertiaFlash('toast.type', 'error');
+    $this->actingAs($this->maria)->get(route('bookings.show', $this->visit->code))
+        ->assertInertia(fn (Assert $page) => $page->where('booking.review', null)->where('booking.canReview', false)->where('booking.reviewWithdrawn', true));
+    $this->actingAs($this->owner)->get(route('reviews.index'))->assertInertia(fn (Assert $page) => $page->where('reviews.count', 0)->has('reviews.items', 0));
 });
 
 it('shows reviews on the salon\'s page only in public mode, all of them, with the average', function () {
+    // Written while private: its author was told only the salon would read it.
     leaveReview($this->visit, 5, 'Excelente');
-    $second = reviewVisit('2026-10-08 10:00');
-    leaveReview($second, 2, '<script>alert(1)</script> Llegué y esperé 40 minutos');
-
     $this->get(route('salons.show', $this->salon))->assertInertia(fn (Assert $page) => $page->where('reviews', null));
 
     $this->actingAs($this->owner)->put(route('reviews.mode.update'), ['mode' => 'public'])->assertSessionHasNoErrors();
+    $second = reviewVisit('2026-10-08 10:00');
+    leaveReview($second, 2, '<script>alert(1)</script> Llegué y esperé 40 minutos');
+    $third = reviewVisit('2026-10-09 10:00');
+    leaveReview($third, 5, null);
     auth()->logout();
 
     $this->get(route('salons.show', $this->salon))->assertInertia(fn (Assert $page) => $page
+        // The private one stays out of the page and of the average.
         ->where('reviews.count', 2)
         ->where('reviews.average', 3.5)
-        ->where('reviews.items.0.rating', 2)
-        ->where('reviews.items.0.author', 'María')
+        ->where('reviews.items.0.rating', 5)
+        ->where('reviews.items.0.comment', null)
+        ->where('reviews.items.1.rating', 2)
+        ->where('reviews.items.1.author', 'María')
         // Stored as written; React shows it as text.
-        ->where('reviews.items.0.comment', '<script>alert(1)</script> Llegué y esperé 40 minutos')
+        ->where('reviews.items.1.comment', '<script>alert(1)</script> Llegué y esperé 40 minutos')
         ->missing('reviews.items.0.staffName')
         ->missing('reviews.items.0.isReported'));
 
@@ -270,6 +284,12 @@ it('lets only the platform hide a reported review, and takes it out of the page 
         ->where('reviews.count', 1)
         ->has('reviews.items', 2)
         ->where('reviews.items.0.isHidden', true));
+
+    // Hidden stays hidden: its author cannot take it back and write it again.
+    $this->actingAs($this->maria)->delete(route('bookings.review.destroy', $abusive->code));
+    $this->actingAs($this->maria)->post(route('bookings.review.store', $abusive->code), ['rating' => 1, 'comment' => 'Insulto'])
+        ->assertInertiaFlash('toast.type', 'error');
+    expect(Review::withoutGlobalScope('salon')->where('booking_id', $abusive->id)->count())->toBe(1);
 });
 
 it('leaves the opinion without the name when the account is deleted', function () {
@@ -278,4 +298,29 @@ it('leaves the opinion without the name when the account is deleted', function (
     $this->actingAs($this->maria)->delete(route('profile.destroy'), ['password' => 'password'])->assertRedirect('/');
 
     expect(Review::withoutGlobalScope('salon')->sole()->author_name)->toBe(Review::ANONYMOUS);
+});
+
+it('signs with a first name only, or with nothing that is not a name', function (string $account, string $signature) {
+    expect(LeaveReview::firstName($account))->toBe($signature);
+})->with([
+    ['María Fernanda Quispe', 'María'],
+    ["Jean-Luc O'Neill", 'Jean-Luc'],
+    ["Ana\tPérez", 'Ana'],
+    ["Ana\u{00A0}Pérez", 'Ana'],
+    ['juan.perez@gmail.com', 'Cliente'],
+    ['987654321', 'Cliente'],
+    ['', 'Cliente'],
+]);
+
+it('lets the platform see every salon even when its admin belongs to one', function () {
+    leaveReview($this->visit);
+    $admin = User::factory()->platformAdmin()->create();
+    $own = app(CreateSalon::class)->handle($admin, 'Salón del Admin', BusinessType::Barbershop, Clientele::Men);
+
+    $current = app(CurrentSalon::class);
+    $current->set($own);
+    expect(Review::query()->count())->toBe(0);
+
+    $current->bypass();
+    expect(Review::query()->count())->toBe(1);
 });

@@ -29,14 +29,14 @@ class ModerateReview
 
     public function report(Review $review, string $reason, ?User $by): Review
     {
-        if ($review->reported_at !== null && $review->report_resolved_at === null) {
-            throw ReviewException::alreadyReported();
+        if ($review->reported_at !== null) {
+            // One look by the platform per review: its answer is final.
+            throw $review->report_resolved_at === null ? ReviewException::alreadyReported() : ReviewException::alreadyResolved();
         }
 
         $review->reported_at = CarbonImmutable::now();
         $review->report_reason = $reason;
         $review->reported_by = $by?->id;
-        $review->report_resolved_at = null;
         $review->save();
 
         return $review;

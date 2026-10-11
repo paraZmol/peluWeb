@@ -28,22 +28,29 @@ class ClientDataRights
         $this->images = new ImageStore(ManageClientPhotos::DISK);
     }
 
-    public function authorize(SalonClient $client, ConsentKind $kind, ConsentProof $proof): void
+    /**
+     * @return bool false when the person had already given it from their account: nothing new to record
+     */
+    public function authorize(SalonClient $client, ConsentKind $kind, ConsentProof $proof): bool
     {
-        DB::transaction(function () use ($client, $kind, $proof): void {
+        return DB::transaction(function () use ($client, $kind, $proof): bool {
             $locked = SalonClient::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($client->id);
+            $latest = ClientConsent::latest($locked, $kind);
 
-            if ($kind === ConsentKind::Care) {
-                if ($locked->care_consent_at !== null) {
-                    return;
-                }
+            if ($latest !== null && $latest->action === ConsentAction::Granted && $latest->method->isByThePerson()) {
+                return false;
+            }
 
+            // Already on a signed sheet: their own word is added to it, the date stays.
+            if ($kind === ConsentKind::Care && $locked->care_consent_at === null) {
                 $locked->care_consent_at = CarbonImmutable::now();
                 $locked->care_consent_by = null;
                 $locked->save();
             }
 
             ClientConsent::record($locked, $kind, ConsentAction::Granted, $proof);
+
+            return true;
         });
     }
 

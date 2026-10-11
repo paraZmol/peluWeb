@@ -27,6 +27,11 @@ class ReviewException extends BusinessRuleException
         return new self('Ya dejaste tu reseña de esta cita.');
     }
 
+    public static function alreadyResolved(): self
+    {
+        return new self('El equipo de peluWeb ya revisó esta reseña.');
+    }
+
     public static function alreadyReported(): self
     {
         return new self('Esta reseña ya está en revisión.');

@@ -34,6 +34,12 @@ return new class extends Migration
             $table->foreignId('reported_by')->nullable()->constrained('users')->nullOnDelete();
             $table->dateTime('report_resolved_at')->nullable();
             $table->dateTime('hidden_at')->nullable();
+            // Taken back by who wrote it. The row stays, so the visit cannot be
+            // reviewed again to dodge a report or drop the salon's answer.
+            $table->dateTime('withdrawn_at')->nullable();
+            // Written while the salon showed its reviews: the author was told it
+            // would be public. Reviews written as private never are.
+            $table->boolean('is_publishable')->default(false);
             $table->timestamps();
 
             $table->index(['salon_id', 'created_at']);

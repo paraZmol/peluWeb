@@ -128,7 +128,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('mis-reservas/{code}/resena', [ClientReviewController::class, 'store'])
         ->middleware('throttle:10,1,review-store')
         ->name('bookings.review.store');
-    Route::delete('mis-reservas/{code}/resena', [ClientReviewController::class, 'destroy'])->name('bookings.review.destroy');
+    Route::delete('mis-reservas/{code}/resena', [ClientReviewController::class, 'destroy'])
+        ->middleware('throttle:10,1,review-destroy')
+        ->name('bookings.review.destroy');
 
     // What each salon keeps of the person under their authorization.
     Route::get('mis-datos', [MyDataController::class, 'index'])

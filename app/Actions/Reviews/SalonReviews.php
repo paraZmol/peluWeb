@@ -29,7 +29,7 @@ class SalonReviews
             return null;
         }
 
-        $visible = fn (): Builder => $this->query($salon)->visible();
+        $visible = fn (): Builder => $this->query($salon)->publishable();
 
         return [
             ...$this->summary($visible()),
@@ -47,12 +47,14 @@ class SalonReviews
     {
         return [
             ...$this->summary($this->query($salon)->visible()),
-            'items' => $this->query($salon)->with('staff')->orderByDesc('id')->limit(self::OWNER_LIMIT)->get()
+            'items' => $this->query($salon)->standing()->with('staff')->orderByDesc('id')->limit(self::OWNER_LIMIT)->get()
                 ->map(fn (Review $review): array => [
                     ...$this->item($review, $salon),
                     'staffName' => $review->staff->name,
                     'isReported' => $review->reported_at !== null && $review->report_resolved_at === null,
                     'isHidden' => $review->hidden_at !== null,
+                    // Written as private: stays out of the public page whatever the mode.
+                    'isPublishable' => $review->is_publishable,
                     // Looked at and left up: reporting it again is still possible.
                     'wasKept' => $review->report_resolved_at !== null && $review->hidden_at === null,
                 ])->all(),
