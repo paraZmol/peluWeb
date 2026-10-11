@@ -310,7 +310,7 @@ it('signs with a first name only, or with nothing that is not a name', function 
     ["Jean-Luc O'Neill", 'Jean-Luc'],
     ["Ana\tPérez", 'Ana'],
     ["Ana\u{00A0}Pérez", 'Ana'],
-    ['juan.perez@gmail.com', 'Cliente'],
+    ['juan.perez@example.com', 'Cliente'],
     ['987654321', 'Cliente'],
     ['', 'Cliente'],
 ]);

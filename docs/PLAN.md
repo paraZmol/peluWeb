@@ -410,7 +410,7 @@ CRÍTICOS ni ALTOS abiertos, y la casilla marcada en este plan.
 ## 10. Decisiones abiertas (responder antes de la fase indicada)
 | # | Pregunta | Antes de | Supuesto actual |
 |---|---|---|---|
-| D1 | Nombre comercial y dominio de la plataforma | Fase 9 | **Respondido 2026-10-04:** aún no hay; se usa "peluWeb" provisional (se cambia con `APP_NAME`). Decidir antes del lanzamiento |
+| D1 | Nombre comercial y dominio de la plataforma | Fase 9 | **Respondido 2026-10-04:** aún no hay; se usa "peluWeb" provisional (se cambia con `APP_NAME`). Decidir antes del lanzamiento. **2026-10-11:** el usuario ya eligió un nombre; se anota aquí cuando el dominio y la marca estén registrados (repositorio público) |
 | D2 | País y moneda iniciales | — | **Cerrado 2026-10-04:** Perú, PEN, America/Lima por defecto (cada salón guarda su zona y moneda) |
 | D3 | Precios finales de los planes | Fase 7 | Ver [mercado.md](mercado.md): S/ 39 / 89 / 169 |
 | D4 | ¿Hay un salón amigo para el piloto? | Fase 8 | Sí (el del proyecto anterior) |
