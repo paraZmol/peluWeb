@@ -11,6 +11,7 @@ Artisan::command('inspire', function () {
 // Housekeeping: an expired hold already freed its slot; this records it.
 Schedule::command('bookings:expire-holds')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('bookings:send-reminders')->everyFifteenMinutes()->withoutOverlapping();
+Schedule::command('clients:purge-expired-data')->dailyAt('03:30')->withoutOverlapping();
 
 // API tokens past their 90 days are dead weight.
 Schedule::command('sanctum:prune-expired --hours=24')->daily();

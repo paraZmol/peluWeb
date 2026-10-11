@@ -78,7 +78,7 @@ Ver la skill `booking-domain`.
   la **cola** (`QUEUE_CONNECTION=database`). En local `MAIL_MAILER=log`: se escriben en
   `storage/logs/laravel.log`, no se envían.
 - Producción necesita dos tareas cada minuto (cron de cPanel o del VPS), con el PHP 8.4:
-  `php artisan schedule:run` (vence retenciones cada 5 min, recordatorios cada 15 min) y
+  `php artisan schedule:run` (vence retenciones cada 5 min, recordatorios cada 15 min, borrado de alergias y fotos vencidas una vez al día) y
   `php artisan queue:work --stop-when-empty --max-time=50` (o un `queue:work` permanente con
   supervisor en un VPS). Sin la segunda, los correos se quedan en la tabla `jobs`.
 - `APP_LOCALE=es`: las fechas de los correos salen en español.
