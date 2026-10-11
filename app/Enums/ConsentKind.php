@@ -14,14 +14,20 @@ enum ConsentKind: string
     case Photos = 'photos';
 
     /**
-     * How the salon gets it: health data needs the person's signature;
-     * for pictures, whoever attends them declares they agreed.
+     * What the person agrees to, word for word (drafts in
+     * docs/legal/consentimientos.md, rows 17 and 20).
      */
-    public function method(): ConsentMethod
+    public function text(string $salonName): string
     {
         return match ($this) {
-            self::Care => ConsentMethod::Paper,
-            self::Photos => ConsentMethod::StaffDeclared,
+            self::Care => "Autorizo a {$salonName} a guardar mis alergias, sensibilidades y reacciones a productos (datos de salud) para atenderme con seguridad. "
+                .'Es voluntario: si no autorizo, me atienden igual y no se anota. '
+                .'Lo verán solo quien dirige el salón y quien me atiende. '
+                .'Se guarda en peluWeb, la plataforma de reservas que usa el salón. No se usa para publicidad ni se entrega a nadie más. '
+                .'Puedo ver lo anotado y retirar esta autorización cuando quiera, desde mi cuenta de peluWeb o pidiéndolo en el salón; al retirarla, se borra.',
+            self::Photos => "Autorizo a {$salonName} a tomar y guardar fotos del antes y el después de mi servicio, solo para su registro interno y para mis próximas citas. "
+                .'Solo las verán quien dirige el salón y quien me atiende. No se publicarán. '
+                .'Puedo verlas y borrarlas cuando quiera desde mi cuenta de peluWeb o pidiéndolo en el salón.',
         };
     }
 
@@ -29,8 +35,8 @@ enum ConsentKind: string
     public function textVersion(): string
     {
         return match ($this) {
-            self::Care => '0.3',
-            self::Photos => '0.1',
+            self::Care => '0.4',
+            self::Photos => '0.2',
         };
     }
 }

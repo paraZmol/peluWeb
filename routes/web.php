@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Client\BookingController as ClientBookingController;
+use App\Http\Controllers\Client\MyDataController;
 use App\Http\Controllers\CurrentSalonController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
@@ -121,6 +122,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:10,1,booking-photo')
         ->name('bookings.photo.store');
     Route::delete('mis-reservas/{code}/foto', [ClientBookingController::class, 'destroyPhoto'])->name('bookings.photo.destroy');
+
+    // What each salon keeps of the person under their authorization.
+    Route::get('mis-datos', [MyDataController::class, 'index'])
+        ->middleware('cache.headers:no_store;private')
+        ->name('my-data.index');
+    Route::post('mis-datos/{client}/autorizar/{kind}', [MyDataController::class, 'grant'])
+        ->whereNumber('client')
+        ->middleware('throttle:10,1,my-data-grant')
+        ->name('my-data.grant');
+    Route::post('mis-datos/{client}/retirar/{kind}', [MyDataController::class, 'withdraw'])
+        ->whereNumber('client')
+        ->middleware('throttle:10,1,my-data-withdraw')
+        ->name('my-data.withdraw');
+    Route::get('mis-datos/{client}/fotos/{photo}', [MyDataController::class, 'photo'])
+        ->whereNumber(['client', 'photo'])
+        ->name('my-data.photos.show');
 
     Route::post('invitaciones/{token}', [InvitationAcceptanceController::class, 'store'])
         ->middleware('throttle:10,1')

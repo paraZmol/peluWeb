@@ -2,9 +2,11 @@
 
 namespace App\Actions\Salon;
 
+use App\Data\Salon\ConsentProof;
 use App\Enums\ClientPhotoKind;
 use App\Enums\ConsentAction;
 use App\Enums\ConsentKind;
+use App\Enums\ConsentMethod;
 use App\Exceptions\SalonException;
 use App\Models\ClientConsent;
 use App\Models\ClientPhoto;
@@ -41,6 +43,11 @@ class ManageClientPhotos
                 // One at a time per client, so the limit holds.
                 SalonClient::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($client->id);
 
+                // They took their pictures back themselves: the team's word is no longer enough.
+                if (ClientConsent::latest($client, ConsentKind::Photos)?->isWithdrawnByThePerson() === true) {
+                    throw SalonException::photosWithdrawn();
+                }
+
                 if (ClientPhoto::withoutGlobalScope('salon')->where('salon_client_id', $client->id)->count() >= ClientPhoto::MAX_PER_CLIENT) {
                     throw SalonException::tooManyClientPhotos(ClientPhoto::MAX_PER_CLIENT);
                 }
@@ -54,7 +61,7 @@ class ManageClientPhotos
                 $photo->uploaded_by = $by?->id;
                 $photo->save();
 
-                ClientConsent::record($client, ConsentKind::Photos, ConsentAction::Granted, $by);
+                ClientConsent::record($client, ConsentKind::Photos, ConsentAction::Granted, ConsentProof::byStaff(ConsentMethod::StaffDeclared, $by));
 
                 return $photo;
             });

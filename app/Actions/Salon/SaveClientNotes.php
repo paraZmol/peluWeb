@@ -3,8 +3,10 @@
 namespace App\Actions\Salon;
 
 use App\Data\Salon\ClientNotes;
+use App\Data\Salon\ConsentProof;
 use App\Enums\ConsentAction;
 use App\Enums\ConsentKind;
+use App\Enums\ConsentMethod;
 use App\Models\ClientConsent;
 use App\Models\SalonClient;
 use App\Models\User;
@@ -50,7 +52,7 @@ class SaveClientNotes
             $client->care_consent_by = null;
 
             if ($hadConsent) {
-                ClientConsent::record($client, ConsentKind::Care, ConsentAction::Withdrawn, $by);
+                ClientConsent::record($client, ConsentKind::Care, ConsentAction::Withdrawn, ConsentProof::byStaff(ConsentMethod::Paper, $by));
             }
 
             return;
@@ -61,7 +63,7 @@ class SaveClientNotes
         if (! $hadConsent) {
             $client->care_consent_at = CarbonImmutable::now();
             $client->care_consent_by = $by?->id;
-            ClientConsent::record($client, ConsentKind::Care, ConsentAction::Granted, $by);
+            ClientConsent::record($client, ConsentKind::Care, ConsentAction::Granted, ConsentProof::byStaff(ConsentMethod::Paper, $by));
         }
     }
 }

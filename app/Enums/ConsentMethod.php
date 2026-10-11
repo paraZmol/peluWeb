@@ -12,4 +12,15 @@ enum ConsentMethod: string
 
     /** The person said so and whoever attends them declares it. Not enough for health data. */
     case StaffDeclared = 'staff';
+
+    /** The person, signed in to their own account. */
+    case Account = 'account';
+
+    /** Nobody: the account was deleted or the data ran out its time. */
+    case System = 'system';
+
+    public function isByThePerson(): bool
+    {
+        return $this === self::Account;
+    }
 }

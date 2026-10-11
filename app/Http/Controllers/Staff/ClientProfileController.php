@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Staff;
 
 use App\Actions\Salon\ClientProfile;
 use App\Actions\Salon\SaveClientNotes;
+use App\Enums\ConsentAction;
 use App\Enums\ConsentKind;
 use App\Http\Controllers\Owner\SalonAreaController;
 use App\Http\Requests\Staff\ClientNotesRequest;
+use App\Models\ClientConsent;
 use App\Models\ClientPhoto;
 use App\Models\SalonClient;
 use App\Support\WhatsApp;
@@ -29,6 +31,9 @@ class ClientProfileController extends SalonAreaController
         $showsMoney = ($user?->can('manageCash', $salon) ?? false) || ($user?->can('viewReports', $salon) ?? false);
         $seesCare = $user?->can('viewCare', $client) ?? false;
         $client->load('careConsentBy:id,name');
+        $care = $seesCare ? ClientConsent::latest($client, ConsentKind::Care) : null;
+        $photos = $seesCare ? ClientConsent::latest($client, ConsentKind::Photos) : null;
+        $day = fn (ClientConsent $consent): string => $consent->created_at->setTimezone($salon->timezone)->format('Y-m-d');
         // Health data must not come back with "Back" once the session is over.
         Inertia::encryptHistory();
 
@@ -48,14 +53,23 @@ class ClientProfileController extends SalonAreaController
                 'careConsent' => ! $seesCare || $client->care_consent_at === null ? null : [
                     'date' => $client->care_consent_at->setTimezone($salon->timezone)->format('Y-m-d'),
                     'by' => $client->careConsentBy?->name,
+                    // "account": the person authorized it themselves; otherwise a signed sheet.
+                    'method' => $care?->method->value,
                 ],
+                // Taken back: the file must say so, never read as "no allergies".
+                'careWithdrawal' => $care !== null && $care->action === ConsentAction::Withdrawn
+                    ? ['date' => $day($care), 'byThePerson' => $care->method->isByThePerson()]
+                    : null,
+                'photosWithdrawal' => $photos !== null && $photos->action === ConsentAction::Withdrawn
+                    ? ['date' => $day($photos), 'byThePerson' => $photos->method->isByThePerson(), 'count' => (int) ($photos->details['photos'] ?? 0)]
+                    : null,
             ],
             ...$profile->handle($salon, $client, $showsMoney),
             'canSeeCare' => $seesCare,
             // Pictures of the person follow the same rule as their health notes.
             'photos' => $seesCare ? $this->photos($client) : [],
             'photosMax' => ClientPhoto::MAX_PER_CLIENT,
-            'careConsentText' => $seesCare ? $this->careConsentText($salon->name) : null,
+            'careConsentText' => $seesCare ? ConsentKind::Care->text($salon->name) : null,
             'careConsentVersion' => $seesCare ? ConsentKind::Care->textVersion() : null,
             'canManageVip' => $user?->can('manageVipClients', $salon) ?? false,
             'notesMaxLength' => SalonClient::NOTES_MAX_LENGTH,
@@ -89,18 +103,5 @@ class ClientProfileController extends SalonAreaController
                 'date' => $photo->taken_on->format('Y-m-d'),
                 'url' => route('clients.photos.show', [$client, $photo]),
             ])->all());
-    }
-
-    /**
-     * What the person signs before the salon may keep their care notes
-     * (draft v0.3 in docs/legal/consentimientos.md, row 17).
-     */
-    private function careConsentText(string $salonName): string
-    {
-        return "Autorizo a {$salonName} a guardar mis alergias, sensibilidades y reacciones a productos (datos de salud) para atenderme con seguridad. "
-            .'Es voluntario: si no autorizo, me atienden igual y no se anota. '
-            .'Lo verán solo quien dirige el salón y quien me atiende. '
-            .'Se guarda en peluWeb, la plataforma de reservas que usa el salón. No se usa para publicidad ni se entrega a nadie más. '
-            .'Puedo pedir en el salón ver lo anotado, que lo corrijan o retirar esta autorización cuando quiera; al retirarla, se borra.';
     }
 }

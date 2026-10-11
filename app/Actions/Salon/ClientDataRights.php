@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Actions\Salon;
+
+use App\Data\Salon\ConsentProof;
+use App\Enums\ConsentAction;
+use App\Enums\ConsentKind;
+use App\Models\ClientConsent;
+use App\Models\ClientPhoto;
+use App\Models\SalonClient;
+use App\Models\User;
+use App\Support\Images\ImageStore;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * What a person decides about the data a salon keeps of them: giving an
+ * authorization from their own account, or taking one back, which erases
+ * what it allowed. The record of both stays.
+ */
+class ClientDataRights
+{
+    private readonly ImageStore $images;
+
+    public function __construct()
+    {
+        $this->images = new ImageStore(ManageClientPhotos::DISK);
+    }
+
+    public function authorize(SalonClient $client, ConsentKind $kind, ConsentProof $proof): void
+    {
+        DB::transaction(function () use ($client, $kind, $proof): void {
+            $locked = SalonClient::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($client->id);
+
+            if ($kind === ConsentKind::Care) {
+                if ($locked->care_consent_at !== null) {
+                    return;
+                }
+
+                $locked->care_consent_at = CarbonImmutable::now();
+                $locked->care_consent_by = null;
+                $locked->save();
+            }
+
+            ClientConsent::record($locked, $kind, ConsentAction::Granted, $proof);
+        });
+    }
+
+    /**
+     * Takes the authorization back and erases what it allowed. Does
+     * nothing when there was nothing to take back.
+     */
+    public function withdraw(SalonClient $client, ConsentKind $kind, ConsentProof $proof): void
+    {
+        $files = DB::transaction(function () use ($client, $kind, $proof): array {
+            $locked = SalonClient::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($client->id);
+
+            return $kind === ConsentKind::Care
+                ? $this->eraseCare($locked, $proof)
+                : $this->erasePhotos($locked, $proof);
+        });
+
+        foreach ($files as $path) {
+            $this->images->delete($path);
+        }
+    }
+
+    /**
+     * The account is going away: nothing it authorized stays behind, in
+     * any salon.
+     */
+    public function forgetEverywhere(User $user): void
+    {
+        $files = SalonClient::withoutGlobalScope('salon')->where('user_id', $user->id)->get();
+
+        foreach ($files as $client) {
+            foreach (ConsentKind::cases() as $kind) {
+                $this->withdraw($client, $kind, ConsentProof::bySystem($user));
+            }
+        }
+    }
+
+    /**
+     * @return list<string> files to delete once the transaction is done
+     */
+    private function eraseCare(SalonClient $client, ConsentProof $proof): array
+    {
+        if ($client->care_consent_at === null && $client->care_notes === null) {
+            return [];
+        }
+
+        $hadText = $client->care_notes !== null;
+        $client->care_notes = null;
+        $client->care_consent_at = null;
+        $client->care_consent_by = null;
+        $client->save();
+
+        ClientConsent::record($client, ConsentKind::Care, ConsentAction::Withdrawn, $proof->with(['had_text' => $hadText]));
+
+        return [];
+    }
+
+    /**
+     * @return list<string> files to delete once the transaction is done
+     */
+    private function erasePhotos(SalonClient $client, ConsentProof $proof): array
+    {
+        $photos = ClientPhoto::withoutGlobalScope('salon')->where('salon_client_id', $client->id)->get();
+        $latest = ClientConsent::latest($client, ConsentKind::Photos);
+
+        // Nothing kept and nothing in force: there is no authorization to take back.
+        if ($photos->isEmpty() && ($latest === null || $latest->action === ConsentAction::Withdrawn)) {
+            return [];
+        }
+
+        ClientPhoto::withoutGlobalScope('salon')->whereKey($photos->modelKeys())->delete();
+        ClientConsent::record($client, ConsentKind::Photos, ConsentAction::Withdrawn, $proof->with(['photos' => $photos->count()]));
+
+        return array_values($photos->pluck('path')->all());
+    }
+}
