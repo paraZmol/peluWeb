@@ -50,7 +50,7 @@ enum BookingNotice: string
             self::Cancelled => 'Tu reserva fue cancelada y el horario quedó libre.',
             self::Moved => 'Tu reserva tiene un nuevo horario.',
             self::Reminder => 'Te recordamos tu cita.',
-            self::ReviewRequest => 'Gracias por tu visita. Cuéntale al salón cómo te fue: te toma un minuto.',
+            self::ReviewRequest => 'Gracias por tu visita. ¿Nos cuentas cómo te fue? Te toma un minuto. Antes de enviar verás quién puede leer tu reseña.',
         };
     }
 }

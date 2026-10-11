@@ -28,7 +28,7 @@ enum ReviewMode: string
         return match ($this) {
             self::Hidden => 'No se piden ni se muestran.',
             self::Private => 'Se piden y solo las lee tu equipo, como retroalimentación.',
-            self::Public => 'Se muestran todas en tu página, con el promedio. No se pueden ocultar las negativas.',
+            self::Public => 'Se muestran en tu página todas las que recibas en este modo, con el promedio. No se pueden ocultar las negativas.',
         };
     }
 

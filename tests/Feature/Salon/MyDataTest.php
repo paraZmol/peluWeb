@@ -76,7 +76,7 @@ it('lets the person authorize their allergies from their account, with proof and
         ->and($consent->recorded_by)->toBeNull()
         ->and($consent->ip)->toBe('190.1.2.3')
         ->and($consent->user_agent)->toBe('Navegador de Carla')
-        ->and($consent->text_hash)->toBe(hash('sha256', ConsentKind::Care->text('Estudio Luz')));
+        ->and($consent->text_hash)->toBe(hash('sha256', ConsentKind::Care->accountText('Estudio Luz')));
 
     Notification::assertSentTo($this->carla, ConsentReceiptNotification::class, fn (ConsentReceiptNotification $receipt): bool => $receipt->salonName === 'Estudio Luz'
         && $receipt->text === ConsentKind::Care->text('Estudio Luz')
@@ -280,4 +280,18 @@ it('still shows what a closed salon kept, to take it back', function () {
     $this->actingAs($this->carla)->post(route('my-data.withdraw', [$this->file->id, 'care']))->assertSessionHasNoErrors();
 
     expect($this->file->refresh()->care_notes)->toBeNull();
+});
+
+it('lets the salon take back, on the person\'s word, what they authorized from their account', function () {
+    $this->actingAs($this->carla)->post(route('my-data.grant', [$this->file->id, 'care']), ['accept' => true]);
+    $this->actingAs($this->owner)->put(route('clients.notes.update', $this->file), ['care_notes' => 'Alergia a la PPD', 'care_consent' => true])
+        ->assertSessionHasNoErrors();
+
+    $this->actingAs($this->owner)->put(route('clients.notes.update', $this->file), ['care_consent' => false])->assertSessionHasNoErrors();
+
+    $latest = ClientConsent::latest($this->file, ConsentKind::Care);
+    expect($this->file->refresh()->care_notes)->toBeNull()
+        ->and($this->file->care_consent_at)->toBeNull()
+        ->and($latest?->action)->toBe(ConsentAction::Withdrawn)
+        ->and($latest?->method)->toBe(ConsentMethod::StaffDeclared);
 });

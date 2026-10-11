@@ -163,7 +163,7 @@ it('lets only the person who made the visit review it or take the review back', 
 
     $this->actingAs($this->maria)->delete(route('bookings.review.destroy', $this->visit->code))->assertSessionHasNoErrors();
     $review = Review::withoutGlobalScope('salon')->sole();
-    expect($review->withdrawn_at)->not->toBeNull()->and($review->comment)->toBeNull();
+    expect($review->withdrawn_at)->not->toBeNull()->and($review->comment)->toBeNull()->and($review->author_name)->toBe('Cliente');
 
     // Taken back is final: the visit cannot be reviewed again to dodge a report or the salon's answer.
     leaveReview($this->visit, 5, 'Otra vez')->assertInertiaFlash('toast.type', 'error');

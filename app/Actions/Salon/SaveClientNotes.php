@@ -53,7 +53,11 @@ class SaveClientNotes
             $client->care_consent_by = null;
 
             if ($hadConsent) {
-                ClientConsent::record($client, ConsentKind::Care, ConsentAction::Withdrawn, ConsentProof::byStaff(ConsentMethod::Paper, $by));
+                // Given from their account: the team takes it back on their word, there is no sheet.
+                $method = ClientConsent::latest($client, ConsentKind::Care)?->method->isByThePerson() === true
+                    ? ConsentMethod::StaffDeclared
+                    : ConsentMethod::Paper;
+                ClientConsent::record($client, ConsentKind::Care, ConsentAction::Withdrawn, ConsentProof::byStaff($method, $by));
             }
 
             return;

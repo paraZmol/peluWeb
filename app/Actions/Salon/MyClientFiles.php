@@ -68,6 +68,7 @@ class MyClientFiles
                 'notes' => $client->care_notes,
                 'withdrawnOn' => $care !== null && $care->action === ConsentAction::Withdrawn ? $day($care) : null,
                 'text' => ConsentKind::Care->text($salon->name),
+                'acceptLabel' => ConsentKind::Care->acceptLabel($salon->name),
             ],
             'photos' => [
                 'items' => $photos->map(fn (ClientPhoto $photo): array => [
@@ -79,10 +80,13 @@ class MyClientFiles
                 // In force even with no picture yet: there is something to take back.
                 'isAuthorized' => $photosConsent?->action === ConsentAction::Granted,
                 'since' => $photosConsent !== null && $photosConsent->action === ConsentAction::Granted ? $day($photosConsent) : null,
+                // "account": they did it here; anything else, the team said they agreed in person.
+                'method' => $photosConsent !== null && $photosConsent->action === ConsentAction::Granted ? $photosConsent->method->value : null,
                 // They took them back: the salon cannot add more until they say so here.
                 'isBlocked' => $photosConsent?->isWithdrawnByThePerson() ?? false,
                 'withdrawnOn' => $photosConsent !== null && $photosConsent->action === ConsentAction::Withdrawn ? $day($photosConsent) : null,
                 'text' => ConsentKind::Photos->text($salon->name),
+                'acceptLabel' => ConsentKind::Photos->acceptLabel($salon->name),
             ],
         ];
     }
