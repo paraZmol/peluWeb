@@ -333,7 +333,7 @@ Inicio previsto: **lunes 2026-10-05**.
 - *Cierre:* test de que los totales cuadran al céntimo + **security-auditor** (permisos de caja) + **qa-tester**.
 
 ### Fase 6 — Clientes, reseñas, notificaciones
-- [ ] 6.1 Ficha del cliente: (a) historial, próximas citas, visitas, ausencias, VIP, preferencias, fórmula y alergias con autorización firmada; (b) fotos antes/después con su propia autorización, sin menores en la primera versión; (c) la persona ve lo anotado y da o retira la autorización desde su cuenta.
+- [ ] 6.1 Ficha del cliente: (a) *(hecho 2026-10-10)* historial, próximas citas, visitas, ausencias, VIP, preferencias, fórmula y alergias con autorización firmada; (b) *(hecho 2026-10-10)* fotos antes/después con su propia autorización, sin menores en la primera versión; (c) **pendiente**: la persona ve lo anotado y da o retira la autorización desde su cuenta; borrado automático (alergias a los 24 meses de la última cita, fotos a los 12); casilla "es menor de edad". Decisiones abiertas del usuario: firma en pantalla (solo si el abogado la valida) y hojas de autorización en blanco para imprimir en lote.
 - [ ] 6.2 Reseñas verificadas con los modos Ocultas / Privadas / Públicas, respuesta y reporte.
 - [ ] 6.3 Emails transaccionales y recordatorio de 24 h (scheduler).
 - [ ] 6.4 **PWA instalable** (adelantado desde 8.1): `manifest.webmanifest` con nombre, colores e íconos (192, 512 y maskable), service worker con caché de la app y página sin conexión, aviso "Instalar" en Android/escritorio, guía visual para iOS ("Compartir → Añadir a pantalla de inicio") y modo sin conexión básico (ver mis próximas reservas). Íconos y nombre propios por salón cuando se instala desde su página pública.
