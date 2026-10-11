@@ -8,46 +8,49 @@ import type { ClientPhoto } from './types';
 
 type Props = { clientId: number; photos: ClientPhoto[] };
 
-function PhotoTile({
-    clientId,
-    photo,
-}: {
-    clientId: number;
-    photo: ClientPhoto;
-}) {
+type TileProps = { clientId: number; photo: ClientPhoto };
+
+/** A thumbnail that opens the picture; removing it is asked from there. */
+function PhotoTile({ clientId, photo }: TileProps) {
     const caption = photoCaption(photo);
 
     return (
-        <li className="relative">
+        <li>
             <ReceiptViewer
                 url={photo.url}
                 caption={caption}
                 noun="foto"
                 alt={caption}
                 className="relative block aspect-square size-auto w-full rounded-lg bg-muted"
+                footer={
+                    <div className="flex justify-end">
+                        <ConfirmRemoveDialog
+                            triggerLabel="Eliminar"
+                            trigger={
+                                <Button
+                                    variant="outline"
+                                    aria-label={`Eliminar foto: ${caption}`}
+                                    className="text-destructive-foreground max-sm:w-full"
+                                >
+                                    <Trash2 aria-hidden /> Eliminar
+                                </Button>
+                            }
+                            title="¿Eliminar esta foto?"
+                            description={`${caption}. Se borra del registro del salón y no se puede recuperar.`}
+                            confirmLabel="Sí, eliminar"
+                            themed
+                            form={destroy.form({
+                                client: clientId,
+                                photo: photo.id,
+                            })}
+                        />
+                    </div>
+                }
             >
                 <span className="absolute bottom-2 left-2 rounded-full bg-card px-2.5 py-0.5 text-xs font-medium text-card-foreground shadow-card">
                     {photo.kindLabel}
                 </span>
             </ReceiptViewer>
-            <ConfirmRemoveDialog
-                triggerLabel="Eliminar"
-                trigger={
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label={`Eliminar foto: ${caption}`}
-                        className="absolute top-1 right-1 rounded-full text-destructive-foreground"
-                    >
-                        <Trash2 aria-hidden />
-                    </Button>
-                }
-                title="¿Eliminar esta foto?"
-                description={`${caption}. Se borra del registro del salón y no se puede recuperar.`}
-                confirmLabel="Sí, eliminar"
-                themed
-                form={destroy.form({ client: clientId, photo: photo.id })}
-            />
         </li>
     );
 }
@@ -65,7 +68,7 @@ export function PhotoGrid({ clientId, photos }: Props) {
                     <h3 className="text-sm font-medium text-muted-foreground tabular-nums">
                         {formatLongDay(day.date)}
                     </h3>
-                    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                    <ul className="grid grid-cols-3 gap-2 sm:gap-3 xl:grid-cols-4">
                         {day.photos.map((photo) => (
                             <PhotoTile
                                 key={photo.id}

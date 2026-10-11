@@ -2,7 +2,28 @@ import { Printer, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 
-/** Why the field is locked, what the person signs and how to get it on paper. */
+const STEPS = [
+    'Imprime la hoja o guárdala como PDF',
+    'La persona la firma',
+    'Marca que el salón la guardó',
+];
+
+/** Prints the sheet to sign: the page's only content on paper. */
+export function PrintConsentButton({ label }: { label: string }) {
+    return (
+        <Button
+            type="button"
+            variant="outline"
+            className="sm:self-start"
+            onClick={() => window.print()}
+        >
+            <Printer aria-hidden />
+            {label}
+        </Button>
+    );
+}
+
+/** Why the field is locked and the three steps that open it. */
 export function CareConsentNotice({ text }: { text: string }) {
     return (
         <div className="flex flex-col gap-3">
@@ -13,27 +34,37 @@ export function CareConsentNotice({ text }: { text: string }) {
                 />
                 <span>
                     Las alergias y otros datos de salud solo se guardan con la
-                    autorización escrita de la persona. Que lo diga de palabra
-                    no basta.
+                    autorización escrita de la persona. Hace falta su firma en
+                    papel; con decirlo no alcanza.
                 </span>
             </p>
-            <figure className="flex flex-col gap-3 rounded-lg border bg-surface-2 p-4">
-                <figcaption className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    Texto que firma la persona
-                </figcaption>
-                <blockquote className="text-sm leading-relaxed">
+            <ol className="flex flex-col gap-2 text-sm">
+                {STEPS.map((step, index) => (
+                    <li key={step} className="flex items-center gap-3">
+                        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand-text tabular-nums">
+                            {index + 1}
+                            <span className="sr-only">.</span>
+                        </span>
+                        {step}
+                    </li>
+                ))}
+            </ol>
+            <PrintConsentButton label="Imprimir o guardar como PDF" />
+            <p className="text-sm text-muted-foreground">
+                Ctrl+P en esta página imprime esta hoja, no la ficha.
+            </p>
+            <details className="rounded-lg border bg-surface-2 text-sm">
+                <summary className="flex min-h-11 cursor-pointer items-center px-4 font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+                    Ver lo que firma la persona
+                </summary>
+                <blockquote className="px-4 pb-4 leading-relaxed">
                     {text}
                 </blockquote>
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="sm:self-start"
-                    onClick={() => window.print()}
-                >
-                    <Printer aria-hidden />
-                    Imprimir autorización
-                </Button>
-            </figure>
+            </details>
+            <p className="text-sm text-muted-foreground">
+                ¿Sin impresora ahora? No anotes alergias en otro campo: tenlas
+                presentes hoy y regístralas cuando tengas la hoja firmada.
+            </p>
         </div>
     );
 }

@@ -5,6 +5,7 @@ import type {
     ClientPhoto,
 } from '@/components/clients/types';
 import {
+    attendingBrief,
     clientSince,
     erasesSavedCare,
     formatLongDay,
@@ -66,6 +67,50 @@ function photo(overrides: Partial<ClientPhoto>): ClientPhoto {
         ...overrides,
     };
 }
+
+describe('attendingBrief', () => {
+    const full = client({
+        notes: 'Café sin azúcar',
+        formulaNotes: '7.1 + 20 vol',
+        careNotes: 'Alergia al látex',
+    });
+
+    it('puts the allergies first and marks them', () => {
+        const lines = attendingBrief(full, true);
+
+        expect(lines.map((line) => line.key)).toEqual([
+            'care',
+            'formula',
+            'notes',
+        ]);
+        expect(lines[0]).toMatchObject({
+            text: 'Alergia al látex',
+            isAlert: true,
+            href: '#client-care-notes-field',
+        });
+    });
+
+    it('says there are no allergies written, without alarm', () => {
+        const lines = attendingBrief(client({ notes: 'Café' }), true);
+
+        expect(lines).toHaveLength(2);
+        expect(lines[0]).toMatchObject({
+            text: 'Sin alergias anotadas',
+            isAlert: false,
+        });
+    });
+
+    it('says nothing about allergies to who may not read them', () => {
+        const lines = attendingBrief(full, false);
+
+        expect(lines.map((line) => line.key)).toEqual(['formula', 'notes']);
+    });
+
+    it('has no lines when nothing is written', () => {
+        expect(attendingBrief(client(), true)).toEqual([]);
+        expect(attendingBrief(client({ notes: '  ' }), false)).toEqual([]);
+    });
+});
 
 describe('clientSince', () => {
     it('takes the earlier of the record and the first visit', () => {

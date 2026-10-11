@@ -1,5 +1,5 @@
-import { Head, Link, setLayoutProps } from '@inertiajs/react';
-import { CalendarPlus, History } from 'lucide-react';
+import { Head, setLayoutProps } from '@inertiajs/react';
+import { BeforeAttending } from '@/components/clients/before-attending';
 import { CareConsentSheet } from '@/components/clients/care-consent';
 import { ClientHeader } from '@/components/clients/client-header';
 import { ClientPhotos } from '@/components/clients/client-photos';
@@ -11,11 +11,13 @@ import type {
     ClientStats as Stats,
     ClientVisit,
 } from '@/components/clients/types';
+import {
+    NoPastVisits,
+    NoUpcomingVisits,
+} from '@/components/clients/visit-empty-states';
 import { VisitList } from '@/components/clients/visit-list';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { index as agenda } from '@/routes/agenda';
-import { create as newBooking } from '@/routes/agenda/bookings';
 import { index as clients, show } from '@/routes/clients';
 
 type Props = {
@@ -26,8 +28,8 @@ type Props = {
     /** Only the latest visits are listed. */
     isHistoryTruncated: boolean;
     canSeeCare: boolean;
-    /** What the person signs before their care notes may be kept. */
-    careConsentText: string;
+    /** What the person signs before care notes are kept; null without access. */
+    careConsentText: string | null;
     canManageVip: boolean;
     notesMaxLength: number;
     /** Before and after pictures; empty for whoever may not see them. */
@@ -65,6 +67,8 @@ export default function Client({
             <div
                 className={cn(
                     'mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6',
+                    // Room for the docked save bar of the notes on a phone.
+                    'max-sm:has-[[data-unsaved]]:pb-28',
                     // On paper this page is the authorization to sign.
                     canSeeCare && 'print:hidden',
                 )}
@@ -74,6 +78,7 @@ export default function Client({
                     firstVisit={stats.firstVisit}
                     canManageVip={canManageVip}
                 />
+                <BeforeAttending client={client} canSeeCare={canSeeCare} />
                 <ClientStats stats={stats} />
 
                 <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_auto_1fr]">
@@ -81,17 +86,8 @@ export default function Client({
                         id="client-upcoming-title"
                         title="Próximas citas"
                         visits={upcoming}
-                        empty={
-                            <>
-                                <CalendarPlus className="size-6" aria-hidden />
-                                <p>No tiene citas próximas.</p>
-                                <Button asChild variant="outline">
-                                    <Link href={newBooking()}>
-                                        Agendar una cita
-                                    </Link>
-                                </Button>
-                            </>
-                        }
+                        className="lg:col-start-1 lg:row-start-1"
+                        empty={<NoUpcomingVisits />}
                     />
                     <NotesForm
                         // A saved file starts the form again from what was kept.
@@ -102,40 +98,35 @@ export default function Client({
                         maxLength={notesMaxLength}
                         className="lg:col-start-2 lg:row-span-3 lg:row-start-1"
                     />
-                    {canSeeCare && (
-                        <ClientPhotos
-                            clientId={client.id}
-                            clientName={client.name}
-                            photos={photos}
-                            max={photosMax}
-                            className="lg:col-start-1"
-                        />
-                    )}
                     <VisitList
                         id="client-history-title"
                         title="Historial"
                         visits={history}
-                        className="lg:col-start-1"
-                        empty={
-                            <>
-                                <History className="size-6" aria-hidden />
-                                <p>
-                                    Todavía no hay visitas terminadas. Aquí
-                                    verás qué se hizo, quién atendió y si faltó
-                                    o canceló alguna vez.
-                                </p>
-                            </>
-                        }
+                        // On a wide screen the pictures sit above it.
+                        className={cn(
+                            'lg:col-start-1',
+                            canSeeCare ? 'lg:row-start-3' : 'lg:row-start-2',
+                        )}
+                        empty={<NoPastVisits />}
                         footnote={
                             isHistoryTruncated
                                 ? `Mostramos las últimas ${history.length} citas.`
                                 : undefined
                         }
                     />
+                    {canSeeCare && (
+                        <ClientPhotos
+                            clientId={client.id}
+                            clientName={client.name}
+                            photos={photos}
+                            max={photosMax}
+                            className="lg:col-start-1 lg:row-start-2"
+                        />
+                    )}
                 </div>
             </div>
 
-            {canSeeCare && (
+            {careConsentText !== null && (
                 <CareConsentSheet
                     clientName={client.name}
                     text={careConsentText}

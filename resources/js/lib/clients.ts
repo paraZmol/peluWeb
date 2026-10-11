@@ -46,6 +46,64 @@ export function clientSince(
     return firstVisit < since ? firstVisit : since;
 }
 
+/** One thing to keep in mind before attending, and where it is written. */
+export type BriefLine = {
+    key: 'care' | 'formula' | 'notes';
+    label: string;
+    text: string;
+    /** The field of the notes form it jumps to. */
+    href: string;
+    /** An allergy on the file: it must stand out. */
+    isAlert: boolean;
+};
+
+const NO_CARE_NOTES = 'Sin alergias anotadas';
+
+/**
+ * What to read first with the person in the chair: allergies (only for who
+ * may see them), formula and preferences. Nothing written, no lines.
+ */
+export function attendingBrief(
+    client: ClientFile,
+    canSeeCare: boolean,
+): BriefLine[] {
+    const care = canSeeCare ? (client.careNotes ?? '').trim() : '';
+    const formula = (client.formulaNotes ?? '').trim();
+    const notes = (client.notes ?? '').trim();
+
+    if (care === '' && formula === '' && notes === '') {
+        return [];
+    }
+
+    const lines: BriefLine[] = [
+        {
+            key: 'care',
+            label: 'Alergias',
+            text: care === '' ? NO_CARE_NOTES : care,
+            href: '#client-care-notes-field',
+            isAlert: care !== '',
+        },
+        {
+            key: 'formula',
+            label: 'Fórmula',
+            text: formula,
+            href: '#client-formula-notes-field',
+            isAlert: false,
+        },
+        {
+            key: 'notes',
+            label: 'Preferencias',
+            text: notes,
+            href: '#client-notes-field',
+            isAlert: false,
+        },
+    ];
+
+    return lines.filter((line) =>
+        line.key === 'care' ? canSeeCare : line.text !== '',
+    );
+}
+
 /** "Antes · 7 oct 2026": what a picture is, for who cannot see it. */
 export function photoCaption(photo: ClientPhoto): string {
     return `${photo.kindLabel} · ${formatLongDay(photo.date)}`;

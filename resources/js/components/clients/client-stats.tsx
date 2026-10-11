@@ -12,20 +12,21 @@ type FigureProps = {
     className?: string;
 };
 
+/** A row of the one card on a phone; a card of its own from `lg` up. */
 function Figure({ label, value, caption, className }: FigureProps) {
     return (
         <div
             className={cn(
-                'flex flex-col gap-1 rounded-xl border bg-card p-4 shadow-card',
+                'grid grid-cols-[1fr_auto] items-baseline gap-x-3 px-4 py-2.5 lg:flex lg:flex-col lg:items-stretch lg:gap-1 lg:rounded-xl lg:border lg:bg-card lg:p-4 lg:shadow-card',
                 className,
             )}
         >
             <dt className="text-sm text-muted-foreground">{label}</dt>
-            <dd className="text-2xl font-semibold tracking-tight tabular-nums">
+            <dd className="text-base font-semibold tabular-nums lg:text-2xl lg:tracking-tight">
                 {value}
             </dd>
             {caption && (
-                <dd className="text-sm text-muted-foreground tabular-nums">
+                <dd className="col-span-2 text-sm text-muted-foreground tabular-nums">
                     {caption}
                 </dd>
             )}
@@ -42,7 +43,7 @@ export function ClientStats({ stats }: { stats: Stats }) {
         <dl
             aria-label="Resumen de visitas"
             className={cn(
-                'grid grid-cols-2 gap-3',
+                'max-lg:divide-y max-lg:rounded-xl max-lg:border max-lg:bg-card max-lg:shadow-card lg:grid lg:gap-3',
                 showsMoney ? 'lg:grid-cols-5' : 'lg:grid-cols-4',
             )}
         >
@@ -50,9 +51,12 @@ export function ClientStats({ stats }: { stats: Stats }) {
                 label="Visitas"
                 value={stats.visits}
                 caption={
-                    stats.firstVisit
-                        ? `Desde ${formatLongDay(stats.firstVisit)}`
-                        : 'Aún no ha venido'
+                    // On a phone the header already says since when.
+                    <span className="max-lg:hidden">
+                        {stats.firstVisit
+                            ? `Desde ${formatLongDay(stats.firstVisit)}`
+                            : 'Aún no ha venido'}
+                    </span>
                 }
             />
             <Figure
@@ -64,7 +68,7 @@ export function ClientStats({ stats }: { stats: Stats }) {
             <Figure
                 label="Ausencias"
                 value={stats.noShows}
-                className={hasNoShows ? 'border-warning/50' : undefined}
+                className={hasNoShows ? 'lg:border-warning/50' : undefined}
                 caption={
                     hasNoShows ? (
                         <span className="inline-flex items-center gap-1.5 text-warning">
@@ -72,7 +76,7 @@ export function ClientStats({ stats }: { stats: Stats }) {
                             Faltó {timesLabel(stats.noShows)}
                         </span>
                     ) : (
-                        'Sin ausencias'
+                        <span className="max-lg:hidden">Sin ausencias</span>
                     )
                 }
             />
@@ -81,8 +85,11 @@ export function ClientStats({ stats }: { stats: Stats }) {
                 <Figure
                     label="Gastado"
                     value={formatPrice(stats.spent)}
-                    caption="En visitas completadas"
-                    className="max-lg:col-span-2"
+                    caption={
+                        <span className="max-lg:hidden">
+                            En visitas completadas
+                        </span>
+                    }
                 />
             )}
         </dl>

@@ -1,17 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { useClientNotesForm } from '@/hooks/use-client-notes-form';
 import { cn } from '@/lib/utils';
 import { CareEraseDialog } from './care-erase-dialog';
 import { CareNotesField } from './care-notes-field';
 import { NotesField } from './notes-field';
+import { NotesSaveBar } from './notes-save-bar';
 import type { ClientFile } from './types';
 
 type Props = {
     client: ClientFile;
     /** Health notes are only for the owner and whoever attends the person. */
     canSeeCare: boolean;
-    careConsentText: string;
+    careConsentText: string | null;
     maxLength: number;
     className?: string;
 };
@@ -71,7 +70,7 @@ export function NotesForm({
                     maxLength={maxLength}
                     error={errors.formula_notes}
                 />
-                {canSeeCare && (
+                {canSeeCare && careConsentText !== null && (
                     <CareNotesField
                         client={client}
                         form={form}
@@ -80,14 +79,11 @@ export function NotesForm({
                     />
                 )}
 
-                <Button
-                    type="submit"
-                    disabled={processing}
-                    className="h-12 sm:h-10 sm:self-end"
-                >
-                    {processing && <Spinner />}
-                    Guardar notas
-                </Button>
+                <NotesSaveBar
+                    isDirty={form.isDirty}
+                    processing={processing}
+                    hasNetworkProblem={form.hasNetworkProblem}
+                />
             </form>
 
             <CareEraseDialog

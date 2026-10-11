@@ -23,6 +23,8 @@ type Props = {
     className?: string;
     /** Drawn over the thumbnail, e.g. a label. */
     children?: ReactNode;
+    /** Under the big photo, e.g. what can be done with it. */
+    footer?: ReactNode;
 };
 
 /** The receipt's thumbnail; tapping it shows the photo big enough to read. */
@@ -33,6 +35,7 @@ export function ReceiptViewer({
     alt,
     className,
     children,
+    footer,
 }: Props) {
     const portalTheme = usePortalTheme();
     const title = noun.charAt(0).toUpperCase() + noun.slice(1);
@@ -71,6 +74,7 @@ export function ReceiptViewer({
                     alt={alt ?? `Foto del comprobante: ${caption}`}
                     className="max-h-[70svh] w-full rounded-md bg-muted object-contain"
                 />
+                {footer}
             </DialogContent>
         </Dialog>
     );

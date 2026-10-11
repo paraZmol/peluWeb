@@ -17,12 +17,16 @@ import { update } from '@/routes/clients/notes';
 export function useClientNotesForm(client: ClientFile, canSeeCare: boolean) {
     const form = useForm<ClientNotesFields>(initialNotesFields(client));
     const [isConfirmingErase, setIsConfirmingErase] = useState(false);
+    // The request never arrived: what was typed is still here to retry.
+    const [hasNetworkProblem, setHasNetworkProblem] = useState(false);
     const { data, setData } = form;
 
     const send = () => {
         form.transform((fields) => notesPayload(fields, canSeeCare));
         form.submit(update(client.id), {
             preserveScroll: true,
+            onStart: () => setHasNetworkProblem(false),
+            onNetworkError: () => setHasNetworkProblem(true),
             onSuccess: () => {
                 // Nothing is kept without the authorization: neither here.
                 if (!data.care_consent) {
@@ -39,6 +43,7 @@ export function useClientNotesForm(client: ClientFile, canSeeCare: boolean) {
         errors: form.errors,
         processing: form.processing,
         isDirty: form.isDirty,
+        hasNetworkProblem,
         isConfirmingErase,
         confirmErase: send,
         cancelErase: () => setIsConfirmingErase(false),

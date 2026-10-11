@@ -48,7 +48,7 @@ export function CareEraseDialog({
                         onClick={onConfirm}
                     >
                         {processing && <Spinner />}
-                        Sí, borrar y guardar
+                        Borrar alergias y guardar
                     </Button>
                 </DialogFooter>
             </DialogContent>

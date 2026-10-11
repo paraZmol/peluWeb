@@ -19,7 +19,7 @@ export function ClientHeader({ client, firstVisit, canManageVip }: Props) {
     const since = clientSince(client.since, firstVisit);
     const origin = client.hasAccount
         ? 'Tiene cuenta en peluWeb'
-        : 'Registro creado por el salón';
+        : 'Sin cuenta: lo registró el salón';
 
     return (
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -46,8 +46,20 @@ export function ClientHeader({ client, firstVisit, canManageVip }: Props) {
                         )}
                     </div>
                     <p className="text-sm break-words text-muted-foreground">
+                        {client.phone && (
+                            <>
+                                {/* Inline padding widens the touch area only. */}
+                                <a
+                                    href={`tel:${client.phone}`}
+                                    aria-label={`Llamar al ${client.phone}`}
+                                    className="rounded-sm py-3 text-foreground underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                    {client.phone}
+                                </a>
+                                {' · '}
+                            </>
+                        )}
                         {[
-                            client.phone,
                             since && `Cliente desde ${formatLongDay(since)}`,
                             origin,
                         ]

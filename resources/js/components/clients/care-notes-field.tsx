@@ -3,7 +3,8 @@ import InputError from '@/components/input-error';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ClientNotesForm } from '@/hooks/use-client-notes-form';
 import { formatLongDay } from '@/lib/clients';
-import { CareConsentNotice } from './care-consent';
+import { cn } from '@/lib/utils';
+import { CareConsentNotice, PrintConsentButton } from './care-consent';
 import { NotesField } from './notes-field';
 import type { ClientFile } from './types';
 
@@ -33,16 +34,20 @@ export function CareNotesField({
             {consent === null ? (
                 <CareConsentNotice text={consentText} />
             ) : (
-                <p className="flex items-start gap-2 text-sm">
-                    <ShieldCheck
-                        className="mt-0.5 size-4 shrink-0 text-success"
-                        aria-hidden
-                    />
-                    <span>
-                        Autorización registrada el {formatLongDay(consent.date)}
-                        {consent.by && ` por ${consent.by}`}
-                    </span>
-                </p>
+                <div className="flex flex-col gap-2">
+                    <p className="flex items-start gap-2 text-sm">
+                        <ShieldCheck
+                            className="mt-0.5 size-4 shrink-0 text-success"
+                            aria-hidden
+                        />
+                        <span>
+                            Autorización registrada el{' '}
+                            {formatLongDay(consent.date)}
+                            {consent.by && ` por ${consent.by}`}
+                        </span>
+                    </p>
+                    <PrintConsentButton label="Reimprimir la hoja" />
+                </div>
             )}
 
             <div className="grid gap-1">
@@ -57,7 +62,10 @@ export function CareNotesField({
                             setData('care_consent', checked === true)
                         }
                         aria-invalid={Boolean(errors.care_consent)}
-                        aria-describedby="client-care-consent-error"
+                        aria-describedby={cn(
+                            'client-care-consent-help',
+                            errors.care_consent && 'client-care-consent-error',
+                        )}
                         className="mt-0.5 size-5"
                     />
                     <span>
@@ -65,6 +73,12 @@ export function CareNotesField({
                         y que el salón la conserva.
                     </span>
                 </label>
+                <p
+                    id="client-care-consent-help"
+                    className="pl-8 text-sm text-muted-foreground"
+                >
+                    Marca esto solo cuando ya tengas la hoja firmada.
+                </p>
                 <InputError
                     id="client-care-consent-error"
                     message={errors.care_consent}
@@ -95,12 +109,12 @@ export function CareNotesField({
                 onChange={(value) => setData('care_notes', value)}
                 maxLength={maxLength}
                 error={errors.care_notes}
-                disabled={!data.care_consent}
-                placeholder={
+                lockedReason={
                     data.care_consent
-                        ? 'Ej. Reacción al tinte con PPD; hacer prueba de parche'
-                        : 'Marca la casilla de arriba para poder escribir'
+                        ? undefined
+                        : 'Se habilita cuando marques que la hoja está firmada.'
                 }
+                placeholder="Ej. Se irrita con el tinte negro; hacer prueba de parche antes"
             />
         </div>
     );

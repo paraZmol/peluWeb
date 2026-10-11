@@ -1,13 +1,13 @@
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { PaymentMethodChips } from '@/components/accounting/payment-method-chips';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/clients/photos';
 import type { Option } from '@/types';
 import { PhotoPicker } from './photo-picker';
+import { PhotoUploadSubmit } from './photo-upload-submit';
 import type { ClientPhotoKind } from './types';
 
 const KINDS: Option<ClientPhotoKind>[] = [
@@ -17,36 +17,35 @@ const KINDS: Option<ClientPhotoKind>[] = [
 
 type Fields = { photo: File | null; kind: ClientPhotoKind; consent: boolean };
 
-type Props = { clientId: number; clientName: string };
+type Props = { clientId: number; clientName: string; onSaved: () => void };
 
 /**
  * Adds one picture to the file. The person's permission is declared again
  * for every upload: the box always starts unchecked.
  */
-export function PhotoUpload({ clientId, clientName }: Props) {
+export function PhotoUpload({ clientId, clientName, onSaved }: Props) {
     const form = useForm<Fields>({
         photo: null,
         kind: 'before',
         consent: false,
     });
-    const { data, setData, errors, processing } = form;
+    // The upload never arrived: the picture is still picked to retry.
+    const [hasNetworkProblem, setHasNetworkProblem] = useState(false);
+    const { data, setData, errors } = form;
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         form.submit(store(clientId), {
             forceFormData: true,
             preserveScroll: true,
-            onSuccess: () => form.reset(),
+            onStart: () => setHasNetworkProblem(false),
+            onNetworkError: () => setHasNetworkProblem(true),
+            onSuccess: onSaved,
         });
     };
 
     return (
-        <form
-            onSubmit={submit}
-            noValidate
-            aria-label="Subir una foto"
-            className="flex flex-col gap-4 rounded-lg border bg-surface-2 p-4"
-        >
+        <form onSubmit={submit} noValidate className="flex flex-col gap-4">
             <div className="grid gap-2">
                 <PaymentMethodChips
                     legend="¿Antes o después del servicio?"
@@ -84,7 +83,11 @@ export function PhotoUpload({ clientId, clientName }: Props) {
                             setData('consent', checked === true)
                         }
                         aria-invalid={Boolean(errors.consent)}
-                        aria-describedby="client-photo-consent-error"
+                        aria-describedby={
+                            errors.consent
+                                ? 'client-photo-consent-error'
+                                : undefined
+                        }
                         className="mt-0.5 size-5"
                     />
                     <span>
@@ -99,14 +102,13 @@ export function PhotoUpload({ clientId, clientName }: Props) {
                 />
             </div>
 
-            <Button
-                type="submit"
-                disabled={processing || !data.photo || !data.consent}
-                className="h-12 sm:h-10 sm:self-start"
-            >
-                {processing && <Spinner />}
-                Guardar foto
-            </Button>
+            <PhotoUploadSubmit
+                hasPhoto={data.photo !== null}
+                hasConsent={data.consent}
+                processing={form.processing}
+                percentage={form.progress?.percentage ?? null}
+                hasNetworkProblem={hasNetworkProblem}
+            />
         </form>
     );
 }

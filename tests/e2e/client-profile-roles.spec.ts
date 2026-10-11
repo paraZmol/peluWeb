@@ -172,7 +172,8 @@ for (const scheme of ['light', 'dark'] as const) {
             for (const trace of [
                 'Alergias y cuidado',
                 'Fotos antes y después',
-                'Imprimir autorización',
+                'Imprimir o guardar como PDF',
+                'Sin alergias anotadas',
                 'autorización escrita',
                 'amoníaco',
             ]) {
@@ -361,7 +362,7 @@ for (const scheme of ['light', 'dark'] as const) {
             await confirmation.getByRole('button', { name: 'Volver' }).click();
             await page.getByRole('button', { name: 'Guardar notas' }).click();
             await confirmation
-                .getByRole('button', { name: 'Sí, borrar y guardar' })
+                .getByRole('button', { name: 'Borrar alergias y guardar' })
                 .click();
             await expect(page.getByText('Ficha actualizada.')).toBeVisible({
                 timeout: 25_000,
@@ -571,11 +572,15 @@ test.describe('fotos con archivos reales', () => {
         const section = page.getByRole('region', {
             name: 'Fotos antes y después',
         });
-        const consent = section.getByRole('checkbox', {
+        // The upload form lives in a dialog opened with "Agregar foto".
+        const dialog = page.getByRole('dialog', { name: 'Agregar foto' });
+        const openUpload = () =>
+            section.getByRole('button', { name: 'Agregar foto' }).click();
+        const consent = dialog.getByRole('checkbox', {
             name: /autorizó estas fotos para uso interno/,
         });
-        const save = section.getByRole('button', { name: 'Guardar foto' });
-        const input = section.getByLabel('Foto del trabajo', { exact: true });
+        const save = dialog.getByRole('button', { name: 'Guardar foto' });
+        const input = dialog.getByLabel('Foto del trabajo', { exact: true });
         const count = async () =>
             Number(
                 (await section.getByLabel(/ de 40 fotos$/).innerText()).split(
@@ -585,7 +590,8 @@ test.describe('fotos con archivos reales', () => {
         const before = await count();
 
         const upload = async (file: string, kind: 'Antes' | 'Después') => {
-            await section.getByText(kind, { exact: true }).click();
+            await openUpload();
+            await dialog.getByText(kind, { exact: true }).click();
             await input.setInputFiles(file);
             await consent.check();
             await save.click();
@@ -654,10 +660,12 @@ test.describe('fotos con archivos reales', () => {
 
         // Remove what this test added.
         for (let i = 0; i < 2; i += 1) {
+            // Removing is inside the viewer of each picture.
             await section
-                .getByRole('button', { name: /^Eliminar foto/ })
+                .getByRole('button', { name: /^Ver foto/ })
                 .first()
                 .click();
+            await page.getByRole('button', { name: /^Eliminar foto/ }).click();
             await page.getByRole('button', { name: 'Sí, eliminar' }).click();
             await expect(page.getByText('Foto eliminada.')).toBeVisible({
                 timeout: 25_000,
@@ -679,11 +687,15 @@ test.describe('fotos con archivos reales', () => {
         const section = page.getByRole('region', {
             name: 'Fotos antes y después',
         });
-        const consent = section.getByRole('checkbox', {
+        // The upload form lives in a dialog opened with "Agregar foto".
+        const dialog = page.getByRole('dialog', { name: 'Agregar foto' });
+        const openUpload = () =>
+            section.getByRole('button', { name: 'Agregar foto' }).click();
+        const consent = dialog.getByRole('checkbox', {
             name: /autorizó estas fotos para uso interno/,
         });
-        const save = section.getByRole('button', { name: 'Guardar foto' });
-        const input = section.getByLabel('Foto del trabajo', { exact: true });
+        const save = dialog.getByRole('button', { name: 'Guardar foto' });
+        const input = dialog.getByLabel('Foto del trabajo', { exact: true });
         const count = async () =>
             Number(
                 (await section.getByLabel(/ de 40 fotos$/).innerText()).split(
@@ -701,6 +713,7 @@ test.describe('fotos con archivos reales', () => {
             'ancha-5000.jpg',
         ]) {
             await page.reload();
+            await openUpload();
             await input.setInputFiles(join(FILES, file));
             await page.waitForTimeout(1500);
             if (await consent.isVisible()) {
@@ -717,7 +730,7 @@ test.describe('fotos con archivos reales', () => {
                     .catch(() => undefined);
                 await page.waitForTimeout(800);
             }
-            const alerts = await section.getByRole('alert').allInnerTexts();
+            const alerts = await dialog.getByRole('alert').allInnerTexts();
             const toast = await page.getByText('Foto guardada.').count();
             outcomes[file] =
                 `alertas=${JSON.stringify(alerts)} guardada=${toast} fotos=${await count()}`;
@@ -760,10 +773,12 @@ test.describe('fotos con archivos reales', () => {
         // Leave nothing behind (enorme.jpg may legitimately be scaled and kept).
         await page.reload();
         while ((await count()) > before) {
+            // Removing is inside the viewer of each picture.
             await section
-                .getByRole('button', { name: /^Eliminar foto/ })
+                .getByRole('button', { name: /^Ver foto/ })
                 .first()
                 .click();
+            await page.getByRole('button', { name: /^Eliminar foto/ }).click();
             await page.getByRole('button', { name: 'Sí, eliminar' }).click();
             await expect(page.getByText('Foto eliminada.')).toBeVisible({
                 timeout: 25_000,

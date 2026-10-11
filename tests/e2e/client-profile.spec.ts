@@ -85,13 +85,24 @@ test.describe('Ficha del cliente', () => {
             ),
         ).toBeVisible();
         await expect(
-            page.getByRole('button', { name: 'Imprimir autorización' }),
+            page.getByRole('button', { name: 'Imprimir o guardar como PDF' }),
         ).toBeVisible();
+        await expect(
+            page.getByText('Ver lo que firma la persona'),
+        ).toBeVisible();
+        await expect(page.locator('details blockquote')).toBeHidden();
+        await expect(care).toHaveAccessibleDescription(
+            /Se habilita cuando marques que la hoja está firmada\./,
+        );
+        const brief = page.getByRole('region', { name: 'Antes de atender' });
+        await expect(brief).toHaveCount(0);
 
         await page.getByLabel('Preferencias').fill('Café sin azúcar');
         await page.getByLabel('Fórmula y técnica').fill('7.1 + 20 vol, 35 min');
+        await expect(page.getByText('Hay cambios sin guardar')).toBeVisible();
         await saveNotes(page);
         await expect(page.getByText('Ficha actualizada.')).toBeVisible();
+        await expect(page.getByText('Hay cambios sin guardar')).toHaveCount(0);
 
         await page.reload();
         await expect(page.getByLabel('Preferencias')).toHaveValue(
@@ -118,6 +129,15 @@ test.describe('Ficha del cliente', () => {
         ).toBeVisible();
         await expect(consent).toBeChecked();
         await expect(care).toHaveValue('Reacción al tinte con PPD');
+        await expect(
+            page.getByRole('button', { name: 'Reimprimir la hoja' }),
+        ).toBeVisible();
+        // What matters before attending is on top, allergies first.
+        await expect(brief.getByRole('link')).toHaveText([
+            /Alergias.*Reacción al tinte con PPD/,
+            /Fórmula.*7\.1 \+ 20 vol, 35 min/,
+            /Preferencias.*Café sin azúcar/,
+        ]);
         expect(await hasHorizontalScroll(page)).toBe(false);
 
         // Withdrawing it erases what was written: asked before saving.
@@ -131,7 +151,7 @@ test.describe('Ficha del cliente', () => {
         await expect(confirmation).toHaveCount(0);
         await saveNotes(page);
         await confirmation
-            .getByRole('button', { name: 'Sí, borrar y guardar' })
+            .getByRole('button', { name: 'Borrar alergias y guardar' })
             .click();
         await expect(page.getByText('Ficha actualizada.')).toBeVisible();
         await expect(confirmation).toHaveCount(0);
@@ -140,6 +160,7 @@ test.describe('Ficha del cliente', () => {
         await expect(care).toBeDisabled();
         await expect(care).toHaveValue('');
         await expect(page.getByText(/^Autorización registrada/)).toHaveCount(0);
+        await expect(brief).toContainText('Sin alergias anotadas');
         assertNoErrors();
     });
 
@@ -159,35 +180,45 @@ test.describe('Ficha del cliente', () => {
         await expect(section).toContainText(
             'Solo para el registro interno del salón. No se publican desde aquí.',
         );
-        await expect(section).toContainText('Encuadra el trabajo, no la cara.');
-        await expect(section).toContainText(
-            'No subas fotos de menores de edad.',
-        );
         await expect(section.getByText('0 de 40')).toBeVisible();
         await expect(section.getByText(/^Aún no hay fotos/)).toBeVisible();
 
-        // Without the box the picture cannot be sent.
-        const consent = section.getByRole('checkbox', {
+        // The form opens on demand; without the box the picture cannot be sent.
+        await section.getByRole('button', { name: 'Agregar foto' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Agregar foto' });
+        await expect(dialog).toContainText('Encuadra el trabajo, no la cara.');
+        await expect(dialog).toContainText(
+            'No subas fotos de menores de edad.',
+        );
+        const consent = dialog.getByRole('checkbox', {
             name: `${name} autorizó estas fotos para uso interno. Le avisé que no se publican y que puede pedir que se borren.`,
         });
-        const save = section.getByRole('button', { name: 'Guardar foto' });
-        await section.getByText('Después', { exact: true }).click();
-        await section
+        const save = dialog.getByRole('button', { name: 'Guardar foto' });
+        await expect(save).toBeDisabled();
+        await expect(dialog.getByText('Falta elegir la foto')).toBeVisible();
+        await dialog.getByText('Después', { exact: true }).click();
+        await dialog
             .getByLabel('Foto del trabajo', { exact: true })
             .setInputFiles(PHOTO);
         await expect(
-            section.getByAltText('Vista previa de la foto'),
+            dialog.getByAltText('Vista previa de la foto'),
         ).toBeVisible();
         await expect(consent).not.toBeChecked();
         await expect(save).toBeDisabled();
+        await expect(
+            dialog.getByText('Falta marcar la autorización'),
+        ).toBeVisible();
 
         await consent.check();
         await save.click();
         await expect(page.getByText('Foto guardada.')).toBeVisible();
+        await expect(dialog).toHaveCount(0);
         await expect(section.getByText('1 de 40')).toBeVisible();
         // Every upload asks again.
+        await section.getByRole('button', { name: 'Agregar foto' }).click();
         await expect(consent).not.toBeChecked();
-        await expect(save).toBeDisabled();
+        await page.keyboard.press('Escape');
+        await expect(dialog).toHaveCount(0);
 
         const thumbnail = section.getByRole('button', {
             name: /^Ver foto: Después · \d+ \w+ \d{4}$/,
@@ -197,17 +228,54 @@ test.describe('Ficha del cliente', () => {
         await thumbnail.click();
         const viewer = page.getByRole('dialog', { name: 'Foto' });
         await expect(viewer.getByAltText(/^Después · /)).toBeVisible();
-        await page.keyboard.press('Escape');
-        await expect(viewer).toHaveCount(0);
 
-        await section
+        // Removing lives inside the viewer, behind a confirmation.
+        await viewer
             .getByRole('button', { name: /^Eliminar foto: Después/ })
             .click();
         await page.getByRole('button', { name: 'Sí, eliminar' }).click();
         await expect(page.getByText('Foto eliminada.')).toBeVisible();
+        await expect(viewer).toHaveCount(0);
         await expect(thumbnail).toHaveCount(0);
         await expect(section.getByText('0 de 40')).toBeVisible();
         assertNoErrors();
+    });
+
+    test('sin conexión: guardar notas o subir una foto avisa y no pierde lo que había', async ({
+        page,
+    }, testInfo) => {
+        const name = clientOf(testInfo);
+
+        await login(page, fileOwner.email, fileOwner.password);
+        await expect(page).toHaveURL(/dashboard$/);
+        await page.goto('/clientes');
+        await page.getByRole('link', { name: `Ver ficha de ${name}` }).click();
+        await expect(page).toHaveURL(/\/clientes\/\d+$/);
+
+        await page.route('**/clientes/*/notas', (route) => route.abort());
+        await page.getByLabel('Preferencias').fill('Sin red por ahora');
+        await saveNotes(page);
+        await expect(page.getByRole('alert')).toContainText(
+            'No se pudo guardar. Revisa tu conexión y vuelve a intentarlo; lo que escribiste sigue aquí.',
+        );
+        await expect(page.getByLabel('Preferencias')).toHaveValue(
+            'Sin red por ahora',
+        );
+
+        await page.route('**/clientes/*/fotos', (route) => route.abort());
+        await page.getByRole('button', { name: 'Agregar foto' }).click();
+        const dialog = page.getByRole('dialog', { name: 'Agregar foto' });
+        await dialog
+            .getByLabel('Foto del trabajo', { exact: true })
+            .setInputFiles(PHOTO);
+        await dialog.getByRole('checkbox').check();
+        await dialog.getByRole('button', { name: 'Guardar foto' }).click();
+        await expect(dialog.getByRole('alert')).toContainText(
+            'No se pudo subir. Revisa tu conexión y vuelve a intentarlo; la foto sigue elegida.',
+        );
+        await expect(
+            dialog.getByAltText('Vista previa de la foto'),
+        ).toBeVisible();
     });
 
     test('desde una cita de la agenda, "Ver ficha" lleva a la ficha', async ({
