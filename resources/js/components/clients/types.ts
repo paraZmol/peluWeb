@@ -1,7 +1,18 @@
 import type { BookingStatus } from '@/components/booking/types';
 
-/** Who recorded the signed authorization, and the day (salon's calendar). */
-export type CareConsent = { date: string; by: string | null };
+/** Who recorded the authorization, the day (salon's calendar) and how it was given. */
+export type CareConsent = {
+    date: string;
+    by: string | null;
+    /** "account": the person gave it from their account; otherwise a signed sheet. */
+    method: string | null;
+};
+
+/** An authorization taken back, by the person themselves or on their behalf. */
+export type ConsentWithdrawal = { date: string; byThePerson: boolean };
+
+/** The pictures taken back, and how many were erased with it. */
+export type PhotosWithdrawal = ConsentWithdrawal & { count: number };
 
 export type ClientFile = {
     id: number;
@@ -17,6 +28,9 @@ export type ClientFile = {
     /** Health data: null for whoever may not read it. */
     careNotes: string | null;
     careConsent: CareConsent | null;
+    /** The latest word on the care notes is a withdrawal; null for who may not read them. */
+    careWithdrawal: ConsentWithdrawal | null;
+    photosWithdrawal: PhotosWithdrawal | null;
 };
 
 export type ClientStats = {

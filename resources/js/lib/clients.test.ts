@@ -6,14 +6,18 @@ import type {
 } from '@/components/clients/types';
 import {
     attendingBrief,
+    careWithdrawalNotice,
     clientSince,
     erasesSavedCare,
     formatLongDay,
     formatVisitDay,
     groupPhotosByDay,
     initialNotesFields,
+    isCareAuthorizedFromAccount,
+    isCareLockedByThePerson,
     notesPayload,
     photoCaption,
+    photosWithdrawalNotice,
     timesLabel,
 } from './clients';
 
@@ -30,6 +34,8 @@ function client(overrides: Partial<ClientFile> = {}): ClientFile {
         formulaNotes: null,
         careNotes: null,
         careConsent: null,
+        careWithdrawal: null,
+        photosWithdrawal: null,
         ...overrides,
     };
 }
@@ -90,14 +96,31 @@ describe('attendingBrief', () => {
         });
     });
 
-    it('says there are no allergies written, without alarm', () => {
+    it('never says "no allergies": none written means ask', () => {
         const lines = attendingBrief(client({ notes: 'Café' }), true);
 
         expect(lines).toHaveLength(2);
         expect(lines[0]).toMatchObject({
-            text: 'Sin alergias anotadas',
+            text: 'Sin alergias registradas. Pregunta antes de aplicar productos.',
             isAlert: false,
+            isNotice: false,
         });
+    });
+
+    it('warns of a withdrawal even with nothing else written', () => {
+        const withdrawn = client({
+            careWithdrawal: { date: '2026-10-07', byThePerson: true },
+        });
+        const lines = attendingBrief(withdrawn, true);
+
+        expect(lines).toHaveLength(1);
+        expect(lines[0]).toMatchObject({
+            key: 'care',
+            text: careWithdrawalNotice(withdrawn),
+            isAlert: true,
+            isNotice: true,
+        });
+        expect(attendingBrief(withdrawn, false)).toEqual([]);
     });
 
     it('says nothing about allergies to who may not read them', () => {
@@ -109,6 +132,134 @@ describe('attendingBrief', () => {
     it('has no lines when nothing is written', () => {
         expect(attendingBrief(client(), true)).toEqual([]);
         expect(attendingBrief(client({ notes: '  ' }), false)).toEqual([]);
+    });
+});
+
+describe('isCareAuthorizedFromAccount', () => {
+    it('is true only for an authorization given from the account', () => {
+        const consent = { date: '2026-10-07', by: null };
+
+        expect(
+            isCareAuthorizedFromAccount(
+                client({ careConsent: { ...consent, method: 'account' } }),
+            ),
+        ).toBe(true);
+        expect(
+            isCareAuthorizedFromAccount(
+                client({ careConsent: { ...consent, method: 'paper' } }),
+            ),
+        ).toBe(false);
+        expect(isCareAuthorizedFromAccount(client())).toBe(false);
+    });
+});
+
+describe('careWithdrawalNotice', () => {
+    const REST =
+        'para guardar alergias. Lo anotado se borró. No lo anotes en otro campo. Pregúntale por alergias antes de cada servicio.';
+
+    it('names the person when they took it back themselves', () => {
+        const withdrawn = client({
+            careWithdrawal: { date: '2026-10-07', byThePerson: true },
+        });
+
+        expect(careWithdrawalNotice(withdrawn)).toBe(
+            `Carla Cliente retiró el 7 oct 2026 su autorización ${REST}`,
+        );
+    });
+
+    it('is impersonal when it was taken back at the salon', () => {
+        const withdrawn = client({
+            careWithdrawal: { date: '2026-10-07', byThePerson: false },
+        });
+
+        expect(careWithdrawalNotice(withdrawn)).toBe(
+            `Se retiró el 7 oct 2026 la autorización ${REST}`,
+        );
+    });
+
+    it('is null without a withdrawal or once authorized again', () => {
+        expect(careWithdrawalNotice(client())).toBeNull();
+        expect(
+            careWithdrawalNotice(
+                client({
+                    careWithdrawal: { date: '2026-10-07', byThePerson: true },
+                    careConsent: {
+                        date: '2026-10-08',
+                        by: 'Ana',
+                        method: 'paper',
+                    },
+                }),
+            ),
+        ).toBeNull();
+    });
+});
+
+describe('isCareLockedByThePerson', () => {
+    const withdrawal = { date: '2026-10-07', byThePerson: true };
+
+    it('is true while their own withdrawal stands', () => {
+        expect(
+            isCareLockedByThePerson(client({ careWithdrawal: withdrawal })),
+        ).toBe(true);
+    });
+
+    it('is false when the salon withdrew it, or once authorized again', () => {
+        expect(isCareLockedByThePerson(client())).toBe(false);
+        expect(
+            isCareLockedByThePerson(
+                client({
+                    careWithdrawal: { ...withdrawal, byThePerson: false },
+                }),
+            ),
+        ).toBe(false);
+        expect(
+            isCareLockedByThePerson(
+                client({
+                    careWithdrawal: withdrawal,
+                    careConsent: {
+                        date: '2026-10-08',
+                        by: null,
+                        method: 'account',
+                    },
+                }),
+            ),
+        ).toBe(false);
+    });
+});
+
+describe('photosWithdrawalNotice', () => {
+    const withdrawal = { date: '2026-10-07', byThePerson: true, count: 3 };
+
+    it('says how many were erased and who can allow them again', () => {
+        expect(
+            photosWithdrawalNotice(client({ photosWithdrawal: withdrawal })),
+        ).toBe(
+            'Carla Cliente retiró el 7 oct 2026 su autorización para fotos. Se borraron las 3 fotos de su ficha. Si hay copias en un teléfono u otro lugar, bórralas también. Solo Carla Cliente puede volver a autorizarlas, desde su cuenta.',
+        );
+    });
+
+    it('agrees in number, and skips the count when there were none', () => {
+        expect(
+            photosWithdrawalNotice(
+                client({ photosWithdrawal: { ...withdrawal, count: 1 } }),
+            ),
+        ).toContain('fotos. Se borró la foto de su ficha. Si hay');
+        expect(
+            photosWithdrawalNotice(
+                client({ photosWithdrawal: { ...withdrawal, count: 0 } }),
+            ),
+        ).toContain('para fotos. Si hay copias');
+    });
+
+    it('is null unless the person took them back themselves', () => {
+        expect(photosWithdrawalNotice(client())).toBeNull();
+        expect(
+            photosWithdrawalNotice(
+                client({
+                    photosWithdrawal: { ...withdrawal, byThePerson: false },
+                }),
+            ),
+        ).toBeNull();
     });
 });
 
@@ -169,7 +320,7 @@ describe('initialNotesFields', () => {
         const saved = client({
             notes: 'Café sin azúcar',
             careNotes: 'Alergia al látex',
-            careConsent: { date: '2026-10-07', by: 'Ana' },
+            careConsent: { date: '2026-10-07', by: 'Ana', method: 'paper' },
         });
 
         expect(initialNotesFields(saved)).toMatchObject({
@@ -202,7 +353,7 @@ describe('notesPayload', () => {
 describe('erasesSavedCare', () => {
     const saved = client({
         careNotes: 'Alergia al látex',
-        careConsent: { date: '2026-10-07', by: 'Ana' },
+        careConsent: { date: '2026-10-07', by: 'Ana', method: 'paper' },
     });
 
     it('is true when the consent is withdrawn with notes on the file', () => {

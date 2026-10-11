@@ -4,6 +4,7 @@ import { OpeningHours } from '@/components/public/opening-hours';
 import { PhotoGallery } from '@/components/public/photo-gallery';
 import { PreviewBanner } from '@/components/public/preview-banner';
 import { Reveal } from '@/components/public/reveal';
+import { ReviewsSection } from '@/components/public/reviews-section';
 import { SalonFooter } from '@/components/public/salon-footer';
 import { SalonHero } from '@/components/public/salon-hero';
 import { SalonLocation } from '@/components/public/salon-location';
@@ -11,6 +12,7 @@ import { ServiceList } from '@/components/public/service-list';
 import { StickyActions } from '@/components/public/sticky-actions';
 import { TeamSection } from '@/components/public/team-section';
 import type { PublicSalon } from '@/components/public/types';
+import type { PublicReviews } from '@/components/reviews/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { useFramedPreview } from '@/hooks/use-framed-preview';
 import { usePageTemplate } from '@/hooks/use-page-template';
@@ -18,14 +20,16 @@ import { ThemeBackdrop } from '@/components/salon/theme-backdrop';
 
 type Props = {
     salon: PublicSalon;
+    /** Null unless the salon shows its reviews: then nothing is rendered. */
+    reviews: PublicReviews | null;
 };
 
 /**
  * The salon's public page in its own template (ui-system §4). Phones: one
- * column and the dock. Desktop: services, team and gallery on the left; the
+ * column and the dock. Desktop: services, team, reviews and gallery on the left; the
  * booking card, hours and map on the right.
  */
-export default function Salon({ salon }: Props) {
+export default function Salon({ salon, reviews }: Props) {
     const hasLocation = salon.location !== null || salon.address !== null;
     const isFramed = useFramedPreview(salon.isPreview);
 
@@ -70,8 +74,16 @@ export default function Salon({ salon }: Props) {
                             <TeamSection team={salon.team} />
                         </Reveal>
                     )}
-                    {salon.photos.length > 0 && (
+                    {reviews && (
                         <Reveal order={4}>
+                            <ReviewsSection
+                                reviews={reviews}
+                                salonName={salon.name}
+                            />
+                        </Reveal>
+                    )}
+                    {salon.photos.length > 0 && (
+                        <Reveal order={5}>
                             <PhotoGallery
                                 salonName={salon.name}
                                 photos={salon.photos}
@@ -82,12 +94,12 @@ export default function Salon({ salon }: Props) {
 
                 <aside className="flex min-w-0 flex-col gap-14 lg:col-start-2 lg:row-start-2 lg:gap-10">
                     {salon.openingHours && (
-                        <Reveal order={5}>
+                        <Reveal order={6}>
                             <OpeningHours hours={salon.openingHours} />
                         </Reveal>
                     )}
                     {hasLocation && (
-                        <Reveal order={6}>
+                        <Reveal order={7}>
                             <SalonLocation
                                 address={salon.address}
                                 location={salon.location}

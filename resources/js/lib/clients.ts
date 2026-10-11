@@ -53,15 +53,81 @@ export type BriefLine = {
     text: string;
     /** The field of the notes form it jumps to. */
     href: string;
-    /** An allergy on the file: it must stand out. */
+    /** An allergy on the file, or its withdrawal: it must stand out. */
     isAlert: boolean;
+    /** A warning to read whole, never cut short. */
+    isNotice: boolean;
 };
 
-const NO_CARE_NOTES = 'Sin alergias anotadas';
+/** Never "no allergies": nothing written is not the same as none. */
+const NO_CARE_NOTES =
+    'Sin alergias registradas. Pregunta antes de aplicar productos.';
+
+/** How an authorization given from the person's own account is recorded. */
+export const ACCOUNT_METHOD = 'account';
+
+/** The person authorized the care notes themselves: no sheet to declare. */
+export function isCareAuthorizedFromAccount(client: ClientFile): boolean {
+    return client.careConsent?.method === ACCOUNT_METHOD;
+}
+
+/**
+ * The care notes were erased with a withdrawal that still stands: the team
+ * must know, so the empty field never reads as "no allergies".
+ */
+export function careWithdrawalNotice(client: ClientFile): string | null {
+    const withdrawal = client.careWithdrawal;
+
+    if (withdrawal === null || client.careConsent !== null) {
+        return null;
+    }
+
+    const day = formatLongDay(withdrawal.date);
+    const who = withdrawal.byThePerson
+        ? `${client.name} retiró el ${day} su autorización`
+        : `Se retiró el ${day} la autorización`;
+
+    return `${who} para guardar alergias. Lo anotado se borró. No lo anotes en otro campo. Pregúntale por alergias antes de cada servicio.`;
+}
+
+/**
+ * The person took the care notes back themselves and nothing stands since:
+ * only they can allow them again, so no sheet or box opens the field.
+ */
+export function isCareLockedByThePerson(client: ClientFile): boolean {
+    return (
+        client.careConsent === null &&
+        client.careWithdrawal !== null &&
+        client.careWithdrawal.byThePerson
+    );
+}
+
+/**
+ * The person took their pictures back from their account: only they can
+ * allow them again, so the file offers no upload. Null otherwise.
+ */
+export function photosWithdrawalNotice(client: ClientFile): string | null {
+    const withdrawal = client.photosWithdrawal;
+
+    if (withdrawal === null || !withdrawal.byThePerson) {
+        return null;
+    }
+
+    const { name } = client;
+    const erased =
+        withdrawal.count === 1
+            ? ' Se borró la foto de su ficha.'
+            : withdrawal.count > 1
+              ? ` Se borraron las ${withdrawal.count} fotos de su ficha.`
+              : '';
+
+    return `${name} retiró el ${formatLongDay(withdrawal.date)} su autorización para fotos.${erased} Si hay copias en un teléfono u otro lugar, bórralas también. Solo ${name} puede volver a autorizarlas, desde su cuenta.`;
+}
 
 /**
  * What to read first with the person in the chair: allergies (only for who
- * may see them), formula and preferences. Nothing written, no lines.
+ * may see them), formula and preferences. Nothing written, no lines, unless
+ * the care notes were taken back: that is always said.
  */
 export function attendingBrief(
     client: ClientFile,
@@ -70,8 +136,9 @@ export function attendingBrief(
     const care = canSeeCare ? (client.careNotes ?? '').trim() : '';
     const formula = (client.formulaNotes ?? '').trim();
     const notes = (client.notes ?? '').trim();
+    const withdrawal = canSeeCare ? careWithdrawalNotice(client) : null;
 
-    if (care === '' && formula === '' && notes === '') {
+    if (care === '' && formula === '' && notes === '' && withdrawal === null) {
         return [];
     }
 
@@ -79,9 +146,10 @@ export function attendingBrief(
         {
             key: 'care',
             label: 'Alergias',
-            text: care === '' ? NO_CARE_NOTES : care,
+            text: withdrawal ?? (care === '' ? NO_CARE_NOTES : care),
             href: '#client-care-notes-field',
-            isAlert: care !== '',
+            isAlert: care !== '' || withdrawal !== null,
+            isNotice: withdrawal !== null,
         },
         {
             key: 'formula',
@@ -89,6 +157,7 @@ export function attendingBrief(
             text: formula,
             href: '#client-formula-notes-field',
             isAlert: false,
+            isNotice: false,
         },
         {
             key: 'notes',
@@ -96,6 +165,7 @@ export function attendingBrief(
             text: notes,
             href: '#client-notes-field',
             isAlert: false,
+            isNotice: false,
         },
     ];
 
@@ -105,7 +175,9 @@ export function attendingBrief(
 }
 
 /** "Antes · 7 oct 2026": what a picture is, for who cannot see it. */
-export function photoCaption(photo: ClientPhoto): string {
+export function photoCaption(
+    photo: Pick<ClientPhoto, 'kindLabel' | 'date'>,
+): string {
     return `${photo.kindLabel} · ${formatLongDay(photo.date)}`;
 }
 

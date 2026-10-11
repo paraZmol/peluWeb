@@ -10,6 +10,8 @@ import {
     LayoutGrid,
     ReceiptText,
     Scissors,
+    ShieldCheck,
+    Star,
     Store,
     Users,
     Wallet,
@@ -35,7 +37,9 @@ import { index as cash } from '@/routes/cash';
 import { index as clients } from '@/routes/clients';
 import { index as commissions } from '@/routes/commissions';
 import { index as expenses } from '@/routes/expenses';
+import { index as myData } from '@/routes/my-data';
 import { index as reports } from '@/routes/reports';
+import { index as reviews } from '@/routes/reviews';
 import { edit as editSalon } from '@/routes/salon';
 import { index as services } from '@/routes/services';
 import { index as staff } from '@/routes/staff';
@@ -69,6 +73,10 @@ export function AppSidebar() {
         ...(can('manage_vip_clients')
             ? [{ title: 'Clientes', href: clients(), icon: BookHeart }]
             : []),
+        // Same permission as "Mi salón": the server asks for `update` on the salon.
+        ...(can('manage_salon_profile')
+            ? [{ title: 'Reseñas', href: reviews(), icon: Star }]
+            : []),
         ...(can('manage_cash')
             ? [
                   { title: 'Caja', href: cash(), icon: Wallet },
@@ -91,6 +99,7 @@ export function AppSidebar() {
             : []),
         // Everyone can also be a client of some salon.
         { title: 'Mis reservas', href: myBookings(), icon: Ticket },
+        { title: 'Mis datos', href: myData(), icon: ShieldCheck },
     ];
 
     return (

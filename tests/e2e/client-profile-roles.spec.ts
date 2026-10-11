@@ -173,7 +173,7 @@ for (const scheme of ['light', 'dark'] as const) {
                 'Alergias y cuidado',
                 'Fotos antes y después',
                 'Imprimir la hoja',
-                'Sin alergias anotadas',
+                'Sin alergias registradas',
                 'autorización escrita',
                 'amoníaco',
             ]) {

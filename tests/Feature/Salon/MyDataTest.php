@@ -169,6 +169,11 @@ it('deletes the pictures when the person takes them back, and only they can allo
 
     // Until they say so again, from their account.
     $this->actingAs($this->carla)->post(route('my-data.grant', [$this->file->id, 'photos']), ['accept' => true])->assertSessionHasNoErrors();
+    // In force before the first picture: they see it and can take it back.
+    $this->actingAs($this->carla)->get(route('my-data.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('files.0.photos.isAuthorized', true)
+        ->where('files.0.photos.isBlocked', false)
+        ->has('files.0.photos.items', 0));
     ownerUploadsPhoto($this->file);
     expect(ClientPhoto::withoutGlobalScope('salon')->count())->toBe(1);
 });

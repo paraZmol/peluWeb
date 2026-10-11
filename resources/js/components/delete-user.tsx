@@ -33,6 +33,10 @@ export default function DeleteUser() {
                         Procede con precaución, esta acción no se puede
                         deshacer.
                     </p>
+                    <p className="text-sm">
+                        También se retirarán tus autorizaciones y se borrarán
+                        las alergias y fotos que los salones guarden de ti.
+                    </p>
                 </div>
 
                 <Dialog>

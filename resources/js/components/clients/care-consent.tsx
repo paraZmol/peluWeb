@@ -34,8 +34,8 @@ export function CareConsentNotice({ text }: { text: string }) {
                 />
                 <span>
                     Las alergias y otros datos de salud solo se guardan con la
-                    autorización escrita de la persona. Hace falta su firma en
-                    papel; con decirlo no alcanza.
+                    autorización escrita de la persona: su firma en la hoja o su
+                    autorización desde su cuenta. Con decirlo no alcanza.
                 </span>
             </p>
             <ol className="flex flex-col gap-2 text-sm">
@@ -63,8 +63,9 @@ export function CareConsentNotice({ text }: { text: string }) {
                 </blockquote>
             </details>
             <p className="text-sm text-muted-foreground">
-                ¿Sin impresora ahora? No anotes alergias en otro campo: tenlas
-                presentes hoy y regístralas cuando tengas la hoja firmada.
+                ¿Sin impresora ahora? Pídele que lo autorice desde su cuenta
+                (Mis datos). No anotes alergias en otro campo: tenlas presentes
+                hoy.
             </p>
         </div>
     );

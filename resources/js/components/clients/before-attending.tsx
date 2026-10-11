@@ -69,7 +69,9 @@ export function BeforeAttending({ client, canSeeCare }: Props) {
                                     </span>
                                     <span
                                         className={cn(
-                                            'line-clamp-2 break-words',
+                                            'break-words',
+                                            // A withdrawal is read whole.
+                                            !line.isNotice && 'line-clamp-2',
                                             line.isAlert && 'font-medium',
                                         )}
                                     >

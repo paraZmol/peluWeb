@@ -92,8 +92,8 @@ export function PhotoUpload({ clientId, clientName, onSaved }: Props) {
                     />
                     <span>
                         {clientName} autorizó estas fotos para uso interno. Le
-                        avisé que no se publican y que puede pedir que se
-                        borren.
+                        avisé que no se publican y que puede verlas y borrarlas
+                        desde su cuenta.
                     </span>
                 </label>
                 <InputError

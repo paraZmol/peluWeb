@@ -16,6 +16,7 @@ import {
     NoUpcomingVisits,
 } from '@/components/clients/visit-empty-states';
 import { VisitList } from '@/components/clients/visit-list';
+import { photosWithdrawalNotice } from '@/lib/clients';
 import { cn } from '@/lib/utils';
 import { index as agenda } from '@/routes/agenda';
 import { index as clients, show } from '@/routes/clients';
@@ -122,6 +123,7 @@ export default function Client({
                             clientName={client.name}
                             photos={photos}
                             max={photosMax}
+                            withdrawalNotice={photosWithdrawalNotice(client)}
                             className="lg:col-start-1 lg:row-start-2"
                         />
                     )}

@@ -76,6 +76,9 @@ class MyClientFiles
                     'date' => $photo->taken_on->format('Y-m-d'),
                     'url' => route('my-data.photos.show', [$client->id, $photo->id]),
                 ])->values()->all(),
+                // In force even with no picture yet: there is something to take back.
+                'isAuthorized' => $photosConsent?->action === ConsentAction::Granted,
+                'since' => $photosConsent !== null && $photosConsent->action === ConsentAction::Granted ? $day($photosConsent) : null,
                 // They took them back: the salon cannot add more until they say so here.
                 'isBlocked' => $photosConsent?->isWithdrawnByThePerson() ?? false,
                 'withdrawnOn' => $photosConsent !== null && $photosConsent->action === ConsentAction::Withdrawn ? $day($photosConsent) : null,

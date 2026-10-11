@@ -6,6 +6,8 @@ import { BookingSummary } from '@/components/booking/booking-summary';
 import { DepositCard } from '@/components/booking/deposit-card';
 import { ReferencePhoto } from '@/components/booking/reference-photo';
 import type { BookingDay, ClientBooking } from '@/components/booking/types';
+import { MyReview } from '@/components/reviews/my-review';
+import { ReviewForm } from '@/components/reviews/review-form';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { usePageTemplate } from '@/hooks/use-page-template';
@@ -38,6 +40,26 @@ export default function BookingShow({ booking, days }: Props) {
                 <BookingHero booking={booking} className="lg:col-span-2" />
 
                 <div className="flex min-w-0 flex-col gap-5 lg:col-start-1">
+                    {booking.canReview && (
+                        <ReviewForm
+                            code={booking.code}
+                            salonName={salon.name}
+                            staffName={booking.staffName}
+                            isPublic={booking.reviewIsPublic}
+                        />
+                    )}
+                    {booking.review && (
+                        <MyReview
+                            code={booking.code}
+                            salonName={salon.name}
+                            review={booking.review}
+                        />
+                    )}
+                    {booking.reviewWithdrawn && (
+                        <p className="rounded-xl p-4 text-sm skin-card text-muted-foreground sm:px-5">
+                            Retiraste tu reseña de esta cita.
+                        </p>
+                    )}
                     {booking.deposit && (
                         <DepositCard deposit={booking.deposit} />
                     )}
@@ -62,6 +84,7 @@ export default function BookingShow({ booking, days }: Props) {
                         booking={booking}
                         days={days}
                         isActive={isActive}
+                        isRepeatSecondary={booking.canReview}
                     />
                 </div>
 

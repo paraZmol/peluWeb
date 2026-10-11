@@ -81,7 +81,7 @@ test.describe('Ficha del cliente', () => {
         await expect(consent).not.toBeChecked();
         await expect(
             page.getByText(
-                'Las alergias y otros datos de salud solo se guardan con la autorización escrita de la persona.',
+                'Las alergias y otros datos de salud solo se guardan con la autorización escrita de la persona: su firma en la hoja o su autorización desde su cuenta. Con decirlo no alcanza.',
             ),
         ).toBeVisible();
         await expect(
@@ -113,6 +113,10 @@ test.describe('Ficha del cliente', () => {
         );
         await expect(care).toBeDisabled();
         await expect(page.getByText(/^Autorización registrada/)).toHaveCount(0);
+        // Nothing written is never "no allergies".
+        await expect(brief).toContainText(
+            'Sin alergias registradas. Pregunta antes de aplicar productos.',
+        );
 
         // Declaring the signed authorization opens the field.
         await consent.check();
@@ -160,7 +164,13 @@ test.describe('Ficha del cliente', () => {
         await expect(care).toBeDisabled();
         await expect(care).toHaveValue('');
         await expect(page.getByText(/^Autorización registrada/)).toHaveCount(0);
-        await expect(brief).toContainText('Sin alergias anotadas');
+        // The file says it was taken back, above and on the field.
+        await expect(
+            page.getByText(
+                /^Se retiró el \d+ \w+ \d{4} la autorización para guardar alergias\. Lo anotado se borró\. No lo anotes en otro campo\. Pregúntale por alergias antes de cada servicio\.$/,
+            ),
+        ).toHaveCount(2);
+        await expect(brief).toContainText('Se retiró el');
         assertNoErrors();
     });
 
@@ -191,7 +201,7 @@ test.describe('Ficha del cliente', () => {
             'No subas fotos de menores de edad.',
         );
         const consent = dialog.getByRole('checkbox', {
-            name: `${name} autorizó estas fotos para uso interno. Le avisé que no se publican y que puede pedir que se borren.`,
+            name: `${name} autorizó estas fotos para uso interno. Le avisé que no se publican y que puede verlas y borrarlas desde su cuenta.`,
         });
         const save = dialog.getByRole('button', { name: 'Guardar foto' });
         await expect(save).toBeDisabled();

@@ -1,3 +1,4 @@
+import type { MyReview } from '@/components/reviews/types';
 import type { BrandTokens, SalonTheme } from '@/types';
 
 export type BookableVariant = {
@@ -120,6 +121,14 @@ export type ClientBooking = {
     canMove: boolean;
     cancelForfeitsDeposit: boolean;
     cancelWindowHours: number;
+    /** What they wrote about this visit, if anything. */
+    review: MyReview | null;
+    /** They took their review back: the visit cannot be reviewed again. */
+    reviewWithdrawn: boolean;
+    /** A completed visit, while the salon takes reviews and the time lasts. */
+    canReview: boolean;
+    /** The salon shows its reviews: one left now carries the first name. */
+    reviewIsPublic: boolean;
     salon: {
         name: string;
         slug: string;

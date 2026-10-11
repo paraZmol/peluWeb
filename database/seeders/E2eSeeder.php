@@ -71,7 +71,7 @@ class E2eSeeder extends Seeder
         $files = $this->seedClientFileSalon();
 
         // Factories skip what CreateSalon gives every real salon.
-        foreach ([$first, $second, $showcase, $till, $files] as $salon) {
+        foreach ([$first, $second, $showcase, $till, $files, ...$this->seedReviewSalons()] as $salon) {
             app(ManageExpenseCategories::class)->createDefaults($salon);
         }
     }
@@ -150,7 +150,62 @@ class E2eSeeder extends Seeder
 
         $this->seedClientFileTeam($salon, $owner, $cut, $staff);
 
+        // "Mis datos": one person per project with an account of their own
+        // (verified address) and a file here, as if they had booked with it,
+        // and another in a salon that closed its account since.
+        $closed = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Cerrado', 'slug' => 'salon-cerrado', 'deleted_at' => now()]);
+
+        foreach (['Dato Movil' => 'datos-movil@example.com', 'Dato Escritorio' => 'datos-escritorio@example.com'] as $name => $email) {
+            $person = User::factory()->create(['name' => $name, 'email' => $email]);
+            SalonClient::factory()->for($salon)->forUser($person)->create();
+            SalonClient::factory()->for($closed)->forUser($person)->create();
+        }
+
         return $salon;
+    }
+
+    /**
+     * Reviews: a salon per Playwright project (each one switches its own
+     * between private and public), with its owner and a person who has an
+     * account and a visit charged yesterday, ready to be reviewed.
+     *
+     * @return list<Salon>
+     */
+    private function seedReviewSalons(): array
+    {
+        $salons = [];
+        $status = app(ChangeBookingStatus::class);
+
+        foreach (['movil' => ['Rene Movil', 'Milan Movil'], 'escritorio' => ['Rene Escritorio', 'Eli Escritorio']] as $project => [$ownerName, $clientName]) {
+            $owner = User::factory()->create(['name' => $ownerName, 'email' => "resenas-duena-{$project}@example.com"]);
+            $salon = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Reseñas '.ucfirst($project), 'slug' => "salon-resenas-{$project}"]);
+            $cut = Service::factory()->for($salon)->create(['name' => 'Corte de reseña', 'price_cents' => 3500, 'active_minutes' => 30]);
+            $staff = Staff::factory()->for($salon)->linkedTo($owner)->working([1, 2, 3, 4, 5, 6, 7], '00:00', '23:55')->create(['name' => $ownerName]);
+            $staff->services()->attach($cut->id);
+            $person = User::factory()->create(['name' => $clientName, 'email' => "resenas-{$project}@example.com"]);
+            $client = SalonClient::factory()->for($salon)->forUser($person)->create();
+
+            // The past is written as it happened: with the clock on that day.
+            $at = $salon->localNow()->startOfDay()->subDay()->setTime(11, 0);
+            CarbonImmutable::setTestNow($at->subHour());
+            $visit = app(CreateBooking::class)->handle(new NewBooking(
+                salon: $salon,
+                client: $client,
+                selections: [['service_id' => $cut->id, 'variant_id' => null]],
+                staff: $staff,
+                startsAt: $at->utc(),
+                source: BookingSource::Staff,
+                actor: $owner,
+            ));
+            CarbonImmutable::setTestNow($at);
+            $status->start($visit, $owner);
+            $status->complete($visit, $owner, new Checkout(parts: ['cash' => 3500]));
+            CarbonImmutable::setTestNow();
+
+            $salons[] = $salon;
+        }
+
+        return $salons;
     }
 
     /**
