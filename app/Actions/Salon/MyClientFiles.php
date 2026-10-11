@@ -67,6 +67,8 @@ class MyClientFiles
                 'method' => $client->care_consent_at === null ? null : $care?->method->value,
                 'notes' => $client->care_notes,
                 'withdrawnOn' => $care !== null && $care->action === ConsentAction::Withdrawn ? $day($care) : null,
+                // false: the salon recorded it, on a sheet or on their word.
+                'withdrawnByThePerson' => $care?->isWithdrawnByThePerson() ?? false,
                 'text' => ConsentKind::Care->text($salon->name),
                 'acceptLabel' => ConsentKind::Care->acceptLabel($salon->name),
             ],

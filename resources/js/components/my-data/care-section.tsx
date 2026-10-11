@@ -1,8 +1,9 @@
 import { ShieldCheck } from 'lucide-react';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
-import { formatLongDay } from '@/lib/clients';
-import { careStatus } from '@/lib/my-data';
+import { careStatus, careWithdrawnNotice } from '@/lib/my-data';
+import { TOUCH_BUTTON } from '@/lib/sheet';
+import { cn } from '@/lib/utils';
 import { withdraw } from '@/routes/my-data';
 import { AuthorizeDialog } from './authorize-dialog';
 import { Fold } from './fold';
@@ -15,7 +16,7 @@ import type { MyDataFile } from './types';
 export function CareSection({ file }: { file: MyDataFile }) {
     const { care, salon, clientId } = file;
     const titleId = `my-data-care-${clientId}`;
-    const status = careStatus(care);
+    const status = careStatus(care, salon.name);
 
     return (
         <section
@@ -30,8 +31,7 @@ export function CareSection({ file }: { file: MyDataFile }) {
                 <>
                     {care.withdrawnOn !== null && (
                         <p className="text-sm">
-                            Retiraste esta autorización el{' '}
-                            {formatLongDay(care.withdrawnOn)}.
+                            {careWithdrawnNotice(care, salon.name)}
                         </p>
                     )}
                     {salon.isClosed && (
@@ -43,7 +43,8 @@ export function CareSection({ file }: { file: MyDataFile }) {
                     {!salon.isClosed && (
                         <p className="text-sm text-muted-foreground">
                             {salon.name} solo puede anotar tus alergias si lo
-                            autorizas. Es voluntario: si no, te atienden igual.
+                            autorizas. Es voluntario: si no autorizas, te
+                            atienden igual.
                         </p>
                     )}
                     {!salon.isClosed && (
@@ -51,9 +52,10 @@ export function CareSection({ file }: { file: MyDataFile }) {
                             clientId={clientId}
                             kind="care"
                             triggerLabel="Autorizar"
+                            triggerName={`Autorizar alergias en ${salon.name}`}
                             title={`Autorizar a ${salon.name} a guardar mis alergias`}
                             text={care.text}
-                            acceptLabel={`Soy mayor de 18 años, leí lo anterior y autorizo a ${salon.name} a guardar estos datos de salud.`}
+                            acceptLabel={care.acceptLabel}
                         />
                     )}
                 </>
@@ -82,7 +84,11 @@ export function CareSection({ file }: { file: MyDataFile }) {
                         trigger={
                             <Button
                                 variant="outline"
-                                className="h-11 text-destructive-foreground sm:h-9 sm:self-start"
+                                aria-label={`Retirar autorización de alergias en ${salon.name}`}
+                                className={cn(
+                                    TOUCH_BUTTON,
+                                    'text-destructive-foreground sm:self-start',
+                                )}
                             >
                                 Retirar autorización
                             </Button>

@@ -52,4 +52,6 @@ export type MyReview = {
     rating: number;
     comment: string | null;
     reply: string | null;
+    /** Shown on the salon's page: written as public, while the salon keeps them public. */
+    isPublished: boolean;
 };

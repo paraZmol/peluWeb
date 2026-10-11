@@ -17,7 +17,8 @@ export function StarGlyph({
                 strokeWidth={1.75}
                 className={cn(
                     'size-full',
-                    onBrand ? 'opacity-40' : 'text-muted-foreground/45',
+                    // The empty outline still reads at 3:1 against the surface.
+                    onBrand ? 'opacity-40' : 'text-muted-foreground',
                 )}
             />
             {fill > 0 && (

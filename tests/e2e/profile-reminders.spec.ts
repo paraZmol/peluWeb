@@ -9,7 +9,7 @@ test('el recordatorio por correo se apaga y se vuelve a encender desde el perfil
 }) => {
     const assertNoErrors = watchForErrors(page);
     const reminders = page.getByRole('checkbox', {
-        name: 'Recordarme mis citas por correo el día anterior',
+        name: 'Enviarme por correo el recordatorio de mis citas y el pedido de reseña',
     });
     const save = page.getByRole('button', { name: 'Guardar', exact: true });
 

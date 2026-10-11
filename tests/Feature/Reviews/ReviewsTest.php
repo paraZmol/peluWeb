@@ -175,9 +175,12 @@ it('lets only the person who made the visit review it or take the review back', 
 it('shows reviews on the salon\'s page only in public mode, all of them, with the average', function () {
     // Written while private: its author was told only the salon would read it.
     leaveReview($this->visit, 5, 'Excelente');
+    $mine = fn () => $this->actingAs($this->maria)->get(route('bookings.show', $this->visit->code));
+    $mine()->assertInertia(fn (Assert $page) => $page->where('booking.review.isPublished', false));
     $this->get(route('salons.show', $this->salon))->assertInertia(fn (Assert $page) => $page->where('reviews', null));
 
     $this->actingAs($this->owner)->put(route('reviews.mode.update'), ['mode' => 'public'])->assertSessionHasNoErrors();
+    $mine()->assertInertia(fn (Assert $page) => $page->where('booking.review.isPublished', false));
     $second = reviewVisit('2026-10-08 10:00');
     leaveReview($second, 2, '<script>alert(1)</script> Llegué y esperé 40 minutos');
     $third = reviewVisit('2026-10-09 10:00');

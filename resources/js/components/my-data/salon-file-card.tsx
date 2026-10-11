@@ -52,8 +52,8 @@ export function SalonFileCard({ file }: { file: MyDataFile }) {
 
             <p className="border-t bg-surface-2 px-4 py-3 text-xs text-muted-foreground sm:px-5">
                 {salon.isClosed
-                    ? 'Este salón ya no usa peluWeb. Puedes retirar tus autorizaciones para que se borre lo que guardó.'
-                    : `¿Quieres ver o corregir el resto de lo que ${salon.name} guarda de ti? Pídelo en el salón.`}
+                    ? 'Este salón cerró su cuenta en peluWeb. Retira tus autorizaciones para borrar ahora tus alergias y fotos.'
+                    : `¿Quieres ver, corregir o borrar el resto de lo que ${salon.name} guarda de ti (nombre, teléfono, citas)? Pídelo en el salón.`}
             </p>
         </article>
     );

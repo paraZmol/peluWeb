@@ -1,4 +1,5 @@
 import { ShieldCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { ClientNotesForm } from '@/hooks/use-client-notes-form';
 import {
     careWithdrawalNotice,
@@ -6,6 +7,8 @@ import {
     isCareAuthorizedFromAccount,
     isCareLockedByThePerson,
 } from '@/lib/clients';
+import { TOUCH_BUTTON } from '@/lib/sheet';
+import { cn } from '@/lib/utils';
 import { CarePaperConsent } from './care-paper-consent';
 import { NotesField } from './notes-field';
 import type { ClientFile } from './types';
@@ -42,8 +45,9 @@ export function CareNotesField({
 
             {consent !== null &&
                 isFromAccount && (
-                    // Theirs to give and to take back: nothing to tick here.
-                    <div className="flex flex-col gap-1 text-sm">
+                    // Theirs to give: nothing to tick. The salon takes it
+                    // back only when they ask for it in person.
+                    <div className="flex flex-col gap-2 text-sm">
                         <p className="flex items-start gap-2">
                             <ShieldCheck
                                 className="mt-0.5 size-4 shrink-0 text-success"
@@ -55,9 +59,20 @@ export function CareNotesField({
                             </span>
                         </p>
                         <p className="pl-6 text-muted-foreground">
-                            Solo {client.name} puede retirarla, desde su cuenta
-                            (Mis datos).
+                            {client.name} puede retirarla desde su cuenta (Mis
+                            datos). Si te lo pide en el salón, retírala aquí.
                         </p>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={form.withdrawCare}
+                            className={cn(
+                                TOUCH_BUTTON,
+                                'ml-6 self-start text-destructive-foreground',
+                            )}
+                        >
+                            Retirar autorización
+                        </Button>
                     </div>
                 )}
             {/* A sheet opens the field unless they took it back themselves. */}

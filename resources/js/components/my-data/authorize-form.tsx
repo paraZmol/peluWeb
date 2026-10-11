@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { TOUCH_FOOTER } from '@/lib/sheet';
 import { grant } from '@/routes/my-data';
 import type { ConsentKind } from './types';
 
@@ -71,6 +72,10 @@ export function AuthorizeForm({ clientId, kind, acceptLabel, onDone }: Props) {
                     message={error}
                     className="pl-8"
                 />
+                <p className="pl-8 text-xs text-muted-foreground">
+                    ¿Tienes menos de 18? La autorización la firma tu madre,
+                    padre o tutor, en el salón.
+                </p>
             </div>
 
             {hasNetworkProblem && (
@@ -79,7 +84,7 @@ export function AuthorizeForm({ clientId, kind, acceptLabel, onDone }: Props) {
                 </p>
             )}
 
-            <DialogFooter className="gap-2 [&_button]:h-11 sm:[&_button]:h-9">
+            <DialogFooter className={TOUCH_FOOTER}>
                 <Button type="button" variant="outline" onClick={onDone}>
                     Ahora no
                 </Button>

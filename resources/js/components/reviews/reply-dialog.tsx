@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,10 +11,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { SHEET_ON_PHONE } from '@/lib/sheet';
+import { SHEET_ON_PHONE, TOUCH_FOOTER } from '@/lib/sheet';
 import { cn } from '@/lib/utils';
 import { reply as saveReply } from '@/routes/reviews';
 import { CountedTextarea } from './counted-textarea';
+import { NetworkProblem } from './network-problem';
 import { ReviewQuote } from './review-quote';
 import type { OwnerReview } from './types';
 
@@ -35,6 +37,7 @@ function ReplyForm({
     onSaved: () => void;
 }) {
     const form = useForm({ reply: review.reply ?? '' });
+    const [hasNetworkProblem, setHasNetworkProblem] = useState(false);
     const isEditing = review.reply !== null;
     const isEmpty = form.data.reply.trim() === '';
 
@@ -43,6 +46,8 @@ function ReplyForm({
         form.submit(saveReply(review.id), {
             preserveScroll: true,
             preserveState: true,
+            onStart: () => setHasNetworkProblem(false),
+            onNetworkError: () => setHasNetworkProblem(true),
             onSuccess: onSaved,
         });
     };
@@ -64,7 +69,8 @@ function ReplyForm({
                 }
                 placeholder="Agradece, aclara o cuenta qué vas a mejorar"
             />
-            <DialogFooter className="gap-2 [&_button]:h-11 sm:[&_button]:h-9">
+            <NetworkProblem isShown={hasNetworkProblem} />
+            <DialogFooter className={TOUCH_FOOTER}>
                 <DialogClose asChild>
                     <Button type="button" variant="outline">
                         Volver
@@ -98,7 +104,9 @@ export function ReplyDialog({ open, onClose, review, maxLength }: Props) {
                     <DialogDescription>
                         La lee quien escribió la reseña.
                         {review?.isPublishable &&
-                            ' Si tus reseñas son públicas, también quien visita tu página.'}
+                            ' Si tus reseñas son públicas, también quien visita tu página.'}{' '}
+                        No menciones datos de la persona que ella no haya
+                        contado (apellido, teléfono, salud, lo que se hizo).
                     </DialogDescription>
                 </DialogHeader>
                 {review && (

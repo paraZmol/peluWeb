@@ -107,6 +107,10 @@ export function CareConsentSheet({
                     Nombre: <strong>{clientName}</strong>
                 </p>
                 <p>Documento (DNI o CE): ______________________</p>
+                <p>
+                    Si es menor de edad: nombre, documento y firma de madre,
+                    padre o tutor: ______
+                </p>
             </div>
             <p className="text-base leading-relaxed">{text}</p>
             <p className="text-sm leading-relaxed">

@@ -81,6 +81,8 @@ class ClientBookingResource extends JsonResource
                 'rating' => $this->review->rating,
                 'comment' => $this->review->comment,
                 'reply' => $this->review->hidden_at === null ? $this->review->reply : null,
+                // This one, not the salon's mode today: written as private, it never goes public.
+                'isPublished' => $this->review->is_publishable && $this->review->hidden_at === null && $salon->review_mode === ReviewMode::Public,
             ],
             // A completed visit, while the salon takes reviews and the time to leave one lasts.
             // Taken back: the visit was reviewed once and that was it.

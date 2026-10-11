@@ -76,7 +76,8 @@ export function CarePaperConsent({ client, form, consentText }: Props) {
             </div>
 
             {isWithdrawing && (
-                <WarningNote>
+                // It shows up on unticking: said at once, not on the next read.
+                <WarningNote role="alert">
                     Al guardar se retira la autorización y se borra lo anotado
                     en «Alergias y cuidado». No se puede deshacer.
                 </WarningNote>

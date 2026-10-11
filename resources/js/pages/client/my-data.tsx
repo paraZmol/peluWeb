@@ -25,8 +25,9 @@ export default function MyData({ files }: Props) {
                     </h1>
                     {files.length > 0 && (
                         <p className="max-w-2xl text-muted-foreground">
-                            Lo que cada salón guarda de ti con tu autorización:
-                            tus alergias y las fotos de tus servicios.
+                            Lo que cada salón guarda de ti solo si lo autorizas:
+                            tus alergias y las fotos de tus servicios. Aquí lo
+                            ves, lo autorizas y lo retiras.
                         </p>
                     )}
                 </div>

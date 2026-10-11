@@ -31,10 +31,23 @@ export function formatAverage(average: number): string {
     return average.toFixed(1);
 }
 
-/** 1 → "1 reseña verificada", 12 → "12 reseñas verificadas". */
+/** 1 → "1 reseña de una cita atendida", 12 → "12 reseñas de citas atendidas". */
 export function verifiedCountLabel(count: number): string {
-    return count === 1 ? '1 reseña verificada' : `${count} reseñas verificadas`;
+    return count === 1
+        ? '1 reseña de una cita atendida'
+        : `${count} reseñas de citas atendidas`;
 }
+
+/** Under the public average: who may leave a review, and which ones show. */
+export const PUBLIC_REVIEWS_NOTE =
+    'Solo opina quien tuvo una cita atendida. Se muestran las escritas mientras el salón las tenía públicas.';
+
+/** Said when a review is sent without stars. */
+export const RATING_REQUIRED = 'Elige de 1 a 5 estrellas.';
+
+/** A request that never reached the server, in any of the reviews' forms. */
+export const NETWORK_PROBLEM =
+    'No se pudo enviar. Revisa tu conexión y vuelve a intentarlo.';
 
 /**
  * How much of the star at `position` an average fills, from 0 to 1:
@@ -55,8 +68,23 @@ export function reviewAudienceNotice(
     salonName: string,
 ): string {
     return isPublic
-        ? `Tu reseña se publicará con tu nombre de pila en la página de ${salonName}. No incluyas datos personales de otras personas.`
-        : `Solo la leerá el equipo de ${salonName}.`;
+        ? `Tu reseña se publicará con tu nombre de pila en la página de ${salonName}, y el salón puede responderla ahí. No incluyas datos personales de otras personas. Puedes retirarla cuando quieras desde esta reserva.`
+        : `La leerá el equipo de ${salonName}, con tu nombre de pila. No se publica. Si el salón la reporta, la revisa peluWeb.`;
+}
+
+/** "Publicar reseña" when it goes out, "Enviar al salón" when only the team reads it. */
+export function reviewSubmitLabel(isPublic: boolean): string {
+    return isPublic ? 'Publicar reseña' : 'Enviar al salón';
+}
+
+/** Where a review already sent can be read. */
+export function reviewVisibilityNotice(
+    isPublic: boolean,
+    salonName: string,
+): string {
+    return isPublic
+        ? `Publicada en la página de ${salonName} con tu nombre de pila.`
+        : `Solo la ve el equipo de ${salonName}.`;
 }
 
 /** Why the salon's list is empty, which depends on whether it asks for them. */

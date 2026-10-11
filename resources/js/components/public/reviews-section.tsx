@@ -5,6 +5,7 @@ import { ReviewCard } from '@/components/reviews/review-card';
 import type { PublicReviews } from '@/components/reviews/types';
 import { useSalonTheme } from '@/components/salon/brand-theme';
 import type { SalonThemeLayout } from '@/components/salon/salon-themes';
+import { PUBLIC_REVIEWS_NOTE } from '@/lib/reviews';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from './section-heading';
@@ -63,7 +64,7 @@ export function ReviewsSection({ reviews, salonName }: Props) {
                     <RatingSummary
                         average={reviews.average}
                         count={reviews.count}
-                        note="Solo opina quien tuvo una cita atendida."
+                        note={PUBLIC_REVIEWS_NOTE}
                         onBrand={layout.highlight === 'solid'}
                         className={SUMMARY[layout.highlight]}
                     />

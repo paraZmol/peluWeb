@@ -24,7 +24,7 @@ export default function DeleteUser() {
             <Heading
                 variant="small"
                 title="Eliminar cuenta"
-                description="Elimina tu cuenta y todos sus recursos"
+                description="Elimina tu cuenta de peluWeb"
             />
             <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
                 <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
@@ -34,8 +34,12 @@ export default function DeleteUser() {
                         deshacer.
                     </p>
                     <p className="text-sm">
-                        También se retirarán tus autorizaciones y se borrarán
-                        las alergias y fotos que los salones guarden de ti.
+                        Se retirarán tus autorizaciones y se borrarán las
+                        alergias y fotos que los salones guarden de ti. Los
+                        salones donde reservaste conservan tu ficha (nombre,
+                        teléfono y citas): para borrarla, pídeselo a cada salón.
+                        Tus reseñas siguen publicadas sin tu nombre; si
+                        prefieres quitarlas, retíralas antes desde Mis reservas.
                     </p>
                 </div>
 
@@ -53,10 +57,9 @@ export default function DeleteUser() {
                             ¿Seguro que quieres eliminar tu cuenta?
                         </DialogTitle>
                         <DialogDescription>
-                            Una vez eliminada tu cuenta, todos sus recursos y
-                            datos también se eliminarán de forma permanente.
-                            Ingresa tu contraseña para confirmar que deseas
-                            eliminar tu cuenta de forma permanente.
+                            Tu cuenta se elimina de forma permanente y no se
+                            puede recuperar. Ingresa tu contraseña para
+                            confirmar.
                         </DialogDescription>
 
                         <Form

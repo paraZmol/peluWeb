@@ -1,5 +1,6 @@
+import { Globe, Lock } from 'lucide-react';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
-import { starsLabel } from '@/lib/reviews';
+import { reviewVisibilityNotice, starsLabel } from '@/lib/reviews';
 import { destroy } from '@/routes/bookings/review';
 import { SalonReply } from './salon-reply';
 import { StarRating } from './star-rating';
@@ -9,14 +10,18 @@ type Props = {
     code: string;
     salonName: string;
     review: MyReviewData;
+    /** The salon shows its reviews: this one is on its page. */
+    isPublic: boolean;
 };
 
 /**
- * The review the person left for this visit, with the salon's answer, and
- * the way to take it back (for good: the visit cannot be reviewed again,
- * so it asks first).
+ * The review the person left for this visit, who can read it, the salon's
+ * answer, and the way to take it back (for good: the visit cannot be
+ * reviewed again, so it asks first).
  */
-export function MyReview({ code, salonName, review }: Props) {
+export function MyReview({ code, salonName, review, isPublic }: Props) {
+    const VisibilityIcon = isPublic ? Globe : Lock;
+
     return (
         <section
             id="resena"
@@ -31,11 +36,21 @@ export function MyReview({ code, salonName, review }: Props) {
                     Tu reseña
                 </h2>
                 <div className="flex items-center gap-2.5">
-                    <StarRating value={review.rating} size="lg" />
+                    {/* The number beside it says the same: read once. */}
+                    <StarRating value={review.rating} size="lg" isDecorative />
                     <span className="text-sm font-semibold tabular-nums">
                         {starsLabel(review.rating)}
                     </span>
                 </div>
+                <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <VisibilityIcon
+                        className="mt-0.5 size-4 shrink-0 text-brand-text"
+                        aria-hidden
+                    />
+                    <span className="min-w-0 break-words">
+                        {reviewVisibilityNotice(isPublic, salonName)}
+                    </span>
+                </p>
             </div>
 
             {review.comment && (
@@ -64,7 +79,7 @@ export function MyReview({ code, salonName, review }: Props) {
                         </button>
                     }
                     title="¿Retirar tu reseña?"
-                    description="Se borra y no podrás volver a opinar de esta cita."
+                    description="Deja de mostrarse y se borra tu comentario. No podrás volver a opinar de esta cita."
                     confirmLabel="Retirar"
                     form={destroy.form(code)}
                 />

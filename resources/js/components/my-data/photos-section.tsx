@@ -6,7 +6,10 @@ import {
     photosBlockedNotice,
     photosCountLabel,
     photosEraseWarning,
+    photosInPersonNotice,
 } from '@/lib/my-data';
+import { TOUCH_BUTTON } from '@/lib/sheet';
+import { cn } from '@/lib/utils';
 import { withdraw } from '@/routes/my-data';
 import { AuthorizeDialog } from './authorize-dialog';
 import { Fold } from './fold';
@@ -46,6 +49,12 @@ export function PhotosSection({ file }: { file: MyDataFile }) {
     const canWithdraw = count > 0 || photos.isAuthorized;
     const withdrawLabel =
         count > 0 ? 'Retirar y borrar fotos' : 'Retirar autorización';
+    // Names the salon and still starts with what the button shows.
+    const withdrawName =
+        count > 0
+            ? `Retirar y borrar fotos en ${salon.name}`
+            : `Retirar autorización de fotos en ${salon.name}`;
+    const inPersonNotice = photosInPersonNotice(photos, salon.name);
 
     return (
         <section
@@ -70,6 +79,11 @@ export function PhotosSection({ file }: { file: MyDataFile }) {
                     <p className="text-sm tabular-nums">
                         {photosCountLabel(count)}
                     </p>
+                    {inPersonNotice !== null && (
+                        <p className="text-sm text-muted-foreground">
+                            {inPersonNotice}
+                        </p>
+                    )}
                     <Fold summary="Ver las fotos">
                         <Thumbnails photos={photos.items} />
                     </Fold>
@@ -82,7 +96,11 @@ export function PhotosSection({ file }: { file: MyDataFile }) {
                     trigger={
                         <Button
                             variant="outline"
-                            className="h-11 text-destructive-foreground sm:h-9 sm:self-start"
+                            aria-label={withdrawName}
+                            className={cn(
+                                TOUCH_BUTTON,
+                                'text-destructive-foreground sm:self-start',
+                            )}
                         >
                             {withdrawLabel}
                         </Button>
@@ -104,9 +122,10 @@ export function PhotosSection({ file }: { file: MyDataFile }) {
                             clientId={clientId}
                             kind="photos"
                             triggerLabel="Volver a autorizar fotos"
+                            triggerName={`Volver a autorizar fotos en ${salon.name}`}
                             title={`Autorizar a ${salon.name} a guardar fotos de mis servicios`}
                             text={photos.text}
-                            acceptLabel={`Soy mayor de 18 años, leí lo anterior y autorizo a ${salon.name} a guardar estas fotos.`}
+                            acceptLabel={photos.acceptLabel}
                         />
                     )}
                 </>

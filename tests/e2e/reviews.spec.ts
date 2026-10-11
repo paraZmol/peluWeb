@@ -128,13 +128,27 @@ test.describe('Reseñas', () => {
         expect(await hasHorizontalScroll(page)).toBe(false);
 
         const form = page.getByRole('region', { name: '¿Cómo te fue?' });
-        const send = form.getByRole('button', { name: 'Enviar reseña' });
+        const send = form.getByRole('button', { name: 'Publicar reseña' });
         await expect(form).toContainText(
-            `Tu reseña se publicará con tu nombre de pila en la página de ${people.salon}. No incluyas datos personales de otras personas.`,
+            `Tu reseña se publicará con tu nombre de pila en la página de ${people.salon}, y el salón puede responderla ahí. No incluyas datos personales de otras personas. Puedes retirarla cuando quieras desde esta reserva.`,
         );
-        // Nothing goes out without stars.
-        await expect(send).toBeDisabled();
+        // Nothing goes out without stars: it says so and goes back to them.
         const stars = form.getByRole('radiogroup', { name: 'Calificación' });
+        let sent = 0;
+        page.on('request', (request) => {
+            if (request.method() === 'POST' && /resena/.test(request.url())) {
+                sent += 1;
+            }
+        });
+        await expect(send).toBeEnabled();
+        await send.click();
+        await expect(form.getByRole('alert')).toHaveText(
+            'Elige de 1 a 5 estrellas.',
+        );
+        await expect(
+            stars.getByRole('radio', { name: '1 estrella' }),
+        ).toBeFocused();
+        expect(sent).toBe(0);
         await expect(stars.getByRole('radio')).toHaveCount(5);
         if (isPhone) {
             const box = await stars
@@ -144,15 +158,20 @@ test.describe('Reseñas', () => {
             expect(box!.height).toBeGreaterThanOrEqual(44);
         }
         await stars.getByRole('radio', { name: '4 estrellas' }).check();
+        await expect(form.getByRole('alert')).toHaveCount(0);
         await form.getByLabel(/Comentario/).fill(COMMENT);
         await expect(form).toContainText(`${COMMENT.length} / 600`);
         await send.click();
 
         const mine = page.getByRole('region', { name: 'Tu reseña' });
         await expect(mine).toContainText(COMMENT);
-        await expect(
-            mine.getByRole('img', { name: '4 de 5 estrellas' }),
-        ).toBeVisible();
+        // The rating is read once: as text, not also as an image.
+        await expect(mine).toContainText('4 estrellas');
+        await expect(mine.getByRole('img')).toHaveCount(0);
+        await expect(mine).toContainText(
+            `Publicada en la página de ${people.salon} con tu nombre de pila.`,
+        );
+        expect(sent).toBe(1);
         await expect(page.getByText('Gracias por tu reseña.')).toBeVisible();
         await expect(question).toHaveCount(0);
 
@@ -169,7 +188,7 @@ test.describe('Reseñas', () => {
         ).toBeVisible();
         await expect(
             owner.getByRole('region', { name: 'Resumen' }),
-        ).toContainText('1 reseña verificada');
+        ).toContainText('1 reseña de una cita atendida');
         await card.getByRole('button', { name: 'Responder' }).click();
         const replyDialog = owner.getByRole('dialog', { name: 'Responder' });
         await replyDialog.getByLabel('Tu respuesta').fill(REPLY);
@@ -186,7 +205,7 @@ test.describe('Reseñas', () => {
         // The visitor reads the review, the average and the answer.
         await visitor.reload();
         await expect(section).toContainText('4.0');
-        await expect(section).toContainText('1 reseña verificada');
+        await expect(section).toContainText('1 reseña de una cita atendida');
         const published = section.getByRole('article', {
             name: `Reseña de ${people.author}`,
         });
@@ -215,7 +234,7 @@ test.describe('Reseñas', () => {
             name: '¿Retirar tu reseña?',
         });
         await expect(withdraw).toContainText(
-            'Se borra y no podrás volver a opinar de esta cita.',
+            'Deja de mostrarse y se borra tu comentario. No podrás volver a opinar de esta cita.',
         );
         await withdraw.getByRole('button', { name: 'Retirar' }).click();
         await expect(

@@ -47,7 +47,8 @@ export default function Reviews({ mode, modes, reviews, limits }: Props) {
                     <h1 className="text-2xl font-semibold">Reseñas</h1>
                     <p className="text-sm text-muted-foreground">
                         Lo que opinan tus clientes después de una cita atendida.
-                        Puedes responder; ninguna se edita ni se borra.
+                        Puedes responder y reportar; no puedes editarlas ni
+                        borrarlas. Quien la escribió sí puede retirarla.
                     </p>
                 </div>
 

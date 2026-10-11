@@ -135,8 +135,8 @@ export default function Profile({
                                             auth.user.booking_reminders ?? true
                                         }
                                     />
-                                    Recordarme mis citas por correo el día
-                                    anterior
+                                    Enviarme por correo el recordatorio de mis
+                                    citas y el pedido de reseña
                                 </Label>
                                 <p className="text-sm text-muted-foreground">
                                     Las confirmaciones, cambios y cancelaciones

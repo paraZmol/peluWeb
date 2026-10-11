@@ -53,6 +53,7 @@ export default function BookingShow({ booking, days }: Props) {
                             code={booking.code}
                             salonName={salon.name}
                             review={booking.review}
+                            isPublic={booking.review.isPublished}
                         />
                     )}
                     {booking.reviewWithdrawn && (

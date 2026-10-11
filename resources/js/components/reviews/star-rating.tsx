@@ -16,6 +16,8 @@ type Props = {
     value: number;
     size?: keyof typeof SIZES;
     className?: string;
+    /** Its rating is written beside it: readers skip the drawing. */
+    isDecorative?: boolean;
     /** On a block of the brand color the stars take the color of its text. */
     onBrand?: boolean;
     /** With it the stars become a group of radios named "Calificación". */
@@ -36,6 +38,7 @@ export function StarRating({
     value,
     size = 'md',
     className,
+    isDecorative = false,
     onBrand = false,
     onChange,
     name = 'rating',
@@ -48,8 +51,9 @@ export function StarRating({
     if (!onChange) {
         return (
             <span
-                role="img"
-                aria-label={ratingText(value)}
+                role={isDecorative ? undefined : 'img'}
+                aria-label={isDecorative ? undefined : ratingText(value)}
+                aria-hidden={isDecorative || undefined}
                 className={cn('inline-flex items-center gap-0.5', className)}
             >
                 {STAR_POSITIONS.map((position) => (

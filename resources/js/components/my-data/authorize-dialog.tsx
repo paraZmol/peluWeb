@@ -8,7 +8,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { SHEET_ON_PHONE } from '@/lib/sheet';
+import { SHEET_ON_PHONE, TOUCH_BUTTON } from '@/lib/sheet';
 import { cn } from '@/lib/utils';
 import { AuthorizeForm } from './authorize-form';
 import type { ConsentKind } from './types';
@@ -18,6 +18,8 @@ type Props = {
     kind: ConsentKind;
     /** What opens it, e.g. "Autorizar". */
     triggerLabel: string;
+    /** The same, naming the salon: several cards repeat the button. */
+    triggerName: string;
     title: string;
     /** What the person agrees to, word for word: shown whole, never folded. */
     text: string;
@@ -34,6 +36,7 @@ export function AuthorizeDialog({
     clientId,
     kind,
     triggerLabel,
+    triggerName,
     title,
     text,
     acceptLabel,
@@ -43,7 +46,10 @@ export function AuthorizeDialog({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="h-11 sm:h-9 sm:self-start">
+                <Button
+                    aria-label={triggerName}
+                    className={cn(TOUCH_BUTTON, 'sm:self-start')}
+                >
                     {triggerLabel}
                 </Button>
             </DialogTrigger>

@@ -12,7 +12,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { SHEET_ON_PHONE } from '@/lib/sheet';
+import { SHEET_ON_PHONE, TOUCH_FOOTER } from '@/lib/sheet';
 import { cn } from '@/lib/utils';
 import type { RouteFormDefinition } from '@/wayfinder';
 
@@ -54,7 +54,7 @@ export function ConfirmRemoveDialog({
             </DialogHeader>
             <Form {...form}>
                 {({ processing }) => (
-                    <DialogFooter className="gap-2 [&_button]:h-11 sm:[&_button]:h-9">
+                    <DialogFooter className={TOUCH_FOOTER}>
                         <DialogClose asChild>
                             <Button variant="outline">Volver</Button>
                         </DialogClose>

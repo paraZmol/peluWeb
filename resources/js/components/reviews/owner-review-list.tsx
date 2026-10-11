@@ -3,24 +3,35 @@ import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { canReport, PRIVATE_REVIEW_NOTE, reviewStatus } from '@/lib/reviews';
 import type { ReviewStatus } from '@/lib/reviews';
+import { TOUCH_FOOTER } from '@/lib/sheet';
 import { cn } from '@/lib/utils';
 import { ReviewCard } from './review-card';
 import type { OwnerReview } from './types';
 
-const STATUS: Record<ReviewStatus['key'], { icon: LucideIcon; style: string }> =
-    {
-        reported: { icon: Clock, style: 'bg-warning/15 text-warning' },
-        hidden: {
-            icon: EyeOff,
-            style: 'bg-destructive/10 text-destructive-foreground',
-        },
-        kept: { icon: Check, style: 'bg-muted text-muted-foreground' },
-    };
+type TagStyle = {
+    icon: LucideIcon;
+    style: string;
+    /** The warning color is too light for words: only the icon wears it. */
+    iconStyle?: string;
+};
 
-type TagProps = { icon: LucideIcon; label: string; style: string };
+const STATUS: Record<ReviewStatus['key'], TagStyle> = {
+    reported: {
+        icon: Clock,
+        style: 'bg-warning/15 text-foreground',
+        iconStyle: 'text-warning',
+    },
+    hidden: {
+        icon: EyeOff,
+        style: 'bg-destructive/10 text-destructive-foreground',
+    },
+    kept: { icon: Check, style: 'bg-muted text-muted-foreground' },
+};
+
+type TagProps = TagStyle & { label: string };
 
 /** The label always says it; color only reinforces it. */
-function Tag({ icon: Icon, label, style }: TagProps) {
+function Tag({ icon: Icon, label, style, iconStyle }: TagProps) {
     return (
         <span
             className={cn(
@@ -28,7 +39,7 @@ function Tag({ icon: Icon, label, style }: TagProps) {
                 style,
             )}
         >
-            <Icon className="size-3.5" aria-hidden />
+            <Icon className={cn('size-3.5', iconStyle)} aria-hidden />
             {label}
         </span>
     );
@@ -80,7 +91,12 @@ export function OwnerReviewList({ reviews, onReply, onReport }: Props) {
                             }
                             className="border bg-card shadow-card"
                             actions={
-                                <div className="flex flex-wrap gap-2 border-t pt-3 [&_button]:h-11 sm:[&_button]:h-9">
+                                <div
+                                    className={cn(
+                                        'flex flex-wrap border-t pt-3',
+                                        TOUCH_FOOTER,
+                                    )}
+                                >
                                     <Button
                                         type="button"
                                         variant="outline"

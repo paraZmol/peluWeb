@@ -14,6 +14,8 @@ const PEOPLE: Record<string, { name: string; email: string }> = {
 };
 const SALON = 'Salón Fichas';
 const ALLERGY = 'Reacción al tinte con PPD';
+const AUTHORIZE = `Autorizar alergias en ${SALON}`;
+const WITHDRAW = `Retirar autorización de alergias en ${SALON}`;
 const WITHDRAWN =
     /retiró el \d+ \w+ \d{4} su autorización para guardar alergias\. Lo anotado se borró\. No lo anotes en otro campo\. Pregúntale por alergias antes de cada servicio\.$/;
 
@@ -65,11 +67,11 @@ test.describe('Mis datos', () => {
             card.getByRole('link', { name: `Ver la página de ${SALON}` }),
         ).toHaveAttribute('href', /\/salon-fichas$/);
         await expect(card).toContainText(
-            `${SALON} solo puede anotar tus alergias si lo autorizas. Es voluntario: si no, te atienden igual.`,
+            `${SALON} solo puede anotar tus alergias si lo autorizas. Es voluntario: si no autorizas, te atienden igual.`,
         );
         await expect(card).toContainText(`${SALON} no guarda fotos tuyas.`);
         await expect(card).toContainText(
-            `¿Quieres ver o corregir el resto de lo que ${SALON} guarda de ti? Pídelo en el salón.`,
+            `¿Quieres ver, corregir o borrar el resto de lo que ${SALON} guarda de ti (nombre, teléfono, citas)? Pídelo en el salón.`,
         );
         expect(await hasHorizontalScroll(page)).toBe(false);
 
@@ -77,13 +79,13 @@ test.describe('Mis datos', () => {
         const closed = page.getByRole('article', { name: 'Salón Cerrado' });
         await expect(closed).toContainText('Este salón cerró su cuenta');
         await expect(closed).toContainText(
-            'Este salón ya no usa peluWeb. Puedes retirar tus autorizaciones para que se borre lo que guardó.',
+            'Este salón cerró su cuenta en peluWeb. Retira tus autorizaciones para borrar ahora tus alergias y fotos.',
         );
         await expect(closed.getByRole('link')).toHaveCount(0);
         await expect(closed.getByRole('button')).toHaveCount(0);
 
         // The whole text, a box that starts unticked, and nothing sent without it.
-        await card.getByRole('button', { name: 'Autorizar' }).click();
+        await card.getByRole('button', { name: AUTHORIZE }).click();
         const dialog = page.getByRole('dialog', {
             name: `Autorizar a ${SALON} a guardar mis alergias`,
         });
@@ -92,9 +94,12 @@ test.describe('Mis datos', () => {
         );
         await expect(dialog).toContainText('al retirarla, se borra.');
         const accept = dialog.getByRole('checkbox', {
-            name: `Soy mayor de 18 años, leí lo anterior y autorizo a ${SALON} a guardar estos datos de salud.`,
+            name: `Declaro que soy mayor de 18 años. Leí el texto de arriba y autorizo a ${SALON} a guardar estos datos de salud.`,
         });
         await expect(accept).not.toBeChecked();
+        await expect(dialog).toContainText(
+            '¿Tienes menos de 18? La autorización la firma tu madre, padre o tutor, en el salón.',
+        );
         let sent = 0;
         page.on('request', (request) => {
             if (request.url().includes('/autorizar/')) {
@@ -112,7 +117,7 @@ test.describe('Mis datos', () => {
         await expect(card.getByText(/^Autorizaste el/)).toHaveCount(0);
 
         // Opened again it starts unticked; ticked, it goes through.
-        await card.getByRole('button', { name: 'Autorizar' }).click();
+        await card.getByRole('button', { name: AUTHORIZE }).click();
         await expect(accept).not.toBeChecked();
         await accept.check();
         await dialog.getByRole('button', { name: 'Autorizar' }).click();
@@ -149,7 +154,7 @@ test.describe('Mis datos', () => {
         ).toBeVisible();
         await expect(
             ownerPage.getByText(
-                `Solo ${person.name} puede retirarla, desde su cuenta (Mis datos).`,
+                `${person.name} puede retirarla desde su cuenta (Mis datos). Si te lo pide en el salón, retírala aquí.`,
             ),
         ).toBeVisible();
         await expect(ownerPage.getByRole('checkbox')).toHaveCount(0);
@@ -172,9 +177,7 @@ test.describe('Mis datos', () => {
         expect(await hasHorizontalScroll(page)).toBe(false);
 
         // Taking it back is asked first, then erases.
-        await card
-            .getByRole('button', { name: 'Retirar autorización' })
-            .click();
+        await card.getByRole('button', { name: WITHDRAW }).click();
         const confirmation = page.getByRole('dialog', {
             name: '¿Retirar la autorización?',
         });
@@ -184,9 +187,7 @@ test.describe('Mis datos', () => {
         await confirmation.getByRole('button', { name: 'Volver' }).click();
         await expect(confirmation).toHaveCount(0);
         await expect(card.getByText(/^Autorizaste el/)).toBeVisible();
-        await card
-            .getByRole('button', { name: 'Retirar autorización' })
-            .click();
+        await card.getByRole('button', { name: WITHDRAW }).click();
         await confirmation
             .getByRole('button', { name: 'Retirar y borrar' })
             .click();
@@ -198,7 +199,7 @@ test.describe('Mis datos', () => {
             card.getByText(/^Retiraste esta autorización el \d+ \w+ \d{4}\.$/),
         ).toBeVisible();
         await expect(
-            card.getByRole('button', { name: 'Autorizar' }),
+            card.getByRole('button', { name: AUTHORIZE }),
         ).toBeVisible();
         await expect(page.getByText(ALLERGY)).toHaveCount(0);
         expect(await hasHorizontalScroll(page)).toBe(false);
@@ -227,6 +228,90 @@ test.describe('Mis datos', () => {
         expect(await hasHorizontalScroll(ownerPage)).toBe(false);
         await ownerContext.close();
         assertNoErrors();
+    });
+
+    test('el salón retira a pedido una autorización dada desde la cuenta', async ({
+        page,
+        browser,
+    }, testInfo) => {
+        test.setTimeout(120_000);
+        const assertNoErrors = watchForErrors(page);
+        const person = PEOPLE[testInfo.project.name];
+
+        await login(page, person.email, 'password');
+        await expect(page).not.toHaveURL(/login/, { timeout: 30_000 });
+        await page.goto('/mis-datos');
+        const card = page.getByRole('article', { name: SALON });
+        await card.getByRole('button', { name: AUTHORIZE }).click();
+        const dialog = page.getByRole('dialog', {
+            name: `Autorizar a ${SALON} a guardar mis alergias`,
+        });
+        await dialog.getByRole('checkbox').check();
+        await dialog.getByRole('button', { name: 'Autorizar' }).click();
+        await expect(card.getByText(/^Autorizaste el/)).toBeVisible();
+
+        const ownerContext = await ownerSession(browser, testInfo);
+        const ownerPage = await ownerContext.newPage();
+        const assertNoOwnerErrors = watchForErrors(ownerPage);
+        await login(ownerPage, fileOwner.email, fileOwner.password);
+        await expect(ownerPage).toHaveURL(/dashboard$/, { timeout: 30_000 });
+        await ownerPage.goto('/clientes');
+        await ownerPage
+            .getByRole('link', { name: `Ver ficha de ${person.name}` })
+            .click();
+        const care = ownerPage.getByRole('textbox', {
+            name: 'Alergias y cuidado',
+        });
+        await care.fill(ALLERGY);
+        await ownerPage.getByRole('button', { name: 'Guardar notas' }).click();
+        await expect(ownerPage.getByText('Ficha actualizada.')).toBeVisible();
+
+        // Asked first, with the words for an authorization that has no sheet.
+        const withdraw = ownerPage.getByRole('button', {
+            name: 'Retirar autorización',
+        });
+        await withdraw.click();
+        const confirmation = ownerPage.getByRole('dialog', {
+            name: `¿Retirar la autorización de ${person.name}?`,
+        });
+        await expect(confirmation).toContainText(
+            `Hazlo solo si ${person.name} te lo pidió.`,
+        );
+        await expect(confirmation).not.toContainText('hoja');
+        await confirmation.getByRole('button', { name: 'Volver' }).click();
+        await expect(confirmation).toHaveCount(0);
+        await expect(care).toHaveValue(ALLERGY);
+        await withdraw.click();
+        await confirmation
+            .getByRole('button', { name: 'Retirar y borrar alergias' })
+            .click();
+        await expect(confirmation).toHaveCount(0);
+
+        // Erased, and said on the file as taken back at the salon.
+        await ownerPage.reload();
+        await expect(care).toBeDisabled();
+        await expect(care).toHaveValue('');
+        await expect(
+            ownerPage.getByText(/lo autorizó desde su cuenta/),
+        ).toHaveCount(0);
+        await expect(
+            ownerPage.getByText(
+                /^Se retiró el \d+ \w+ \d{4} la autorización para guardar alergias\./,
+            ),
+        ).toHaveCount(2);
+        expect(await ownerPage.content()).not.toContain('PPD');
+        expect(await hasHorizontalScroll(ownerPage)).toBe(false);
+
+        // The person finds nothing kept, and can authorize again.
+        await page.reload();
+        await expect(card.getByText(/^Autorizaste el/)).toHaveCount(0);
+        await expect(page.getByText(ALLERGY)).toHaveCount(0);
+        await expect(
+            card.getByRole('button', { name: AUTHORIZE }),
+        ).toBeVisible();
+        await ownerContext.close();
+        assertNoErrors();
+        assertNoOwnerErrors();
     });
 
     test('sin ficha en ningún salón: lo dice y lleva a Mis reservas', async ({

@@ -1,17 +1,17 @@
 import { useForm } from '@inertiajs/react';
-import { Globe, Lock } from 'lucide-react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import InputError from '@/components/input-error';
 import {
     COMMENT_MAX_LENGTH,
     isRatingChosen,
-    reviewAudienceNotice,
+    RATING_REQUIRED,
     starsLabel,
 } from '@/lib/reviews';
-import { PRIMARY_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import { store } from '@/routes/bookings/review';
 import { CountedTextarea } from './counted-textarea';
+import { ReviewSubmit } from './review-submit';
 import { StarRating } from './star-rating';
 
 type Props = {
@@ -24,22 +24,33 @@ type Props = {
 
 /**
  * "¿Cómo te fue?": the stars, an optional comment and, right above the
- * button, who is going to read it. Nothing is sent without stars.
+ * button, who is going to read it. Sent without stars, it says so and takes
+ * the person back to them.
  */
 export function ReviewForm({ code, salonName, staffName, isPublic }: Props) {
     const form = useForm({ rating: 0, comment: '' });
     const { data, setData, errors, processing } = form;
+    // The request never arrived: what was written stays to retry.
+    const [hasNetworkProblem, setHasNetworkProblem] = useState(false);
     const hasRating = isRatingChosen(data.rating);
-    const AudienceIcon = isPublic ? Globe : Lock;
 
-    const submit = (event: FormEvent) => {
+    const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         if (!hasRating) {
+            form.setError('rating', RATING_REQUIRED);
+            event.currentTarget
+                .querySelector<HTMLInputElement>('input[name="rating"]')
+                ?.focus();
+
             return;
         }
 
-        form.submit(store(code), { preserveScroll: true });
+        form.submit(store(code), {
+            preserveScroll: true,
+            onStart: () => setHasNetworkProblem(false),
+            onNetworkError: () => setHasNetworkProblem(true),
+        });
     };
 
     return (
@@ -64,7 +75,10 @@ export function ReviewForm({ code, salonName, staffName, isPublic }: Props) {
                 <div className="flex flex-col gap-1">
                     <StarRating
                         value={data.rating}
-                        onChange={(rating) => setData('rating', rating)}
+                        onChange={(rating) => {
+                            setData('rating', rating);
+                            form.clearErrors('rating');
+                        }}
                         describedBy={cn(
                             'review-rating-hint',
                             errors.rating && 'review-rating-error',
@@ -88,6 +102,7 @@ export function ReviewForm({ code, salonName, staffName, isPublic }: Props) {
                     </p>
                     <InputError
                         id="review-rating-error"
+                        role="alert"
                         message={errors.rating}
                     />
                 </div>
@@ -109,24 +124,12 @@ export function ReviewForm({ code, salonName, staffName, isPublic }: Props) {
                     placeholder="Qué te gustó, qué mejorarías"
                 />
 
-                <div className="flex flex-col gap-3">
-                    <p className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <AudienceIcon
-                            className="mt-0.5 size-4 shrink-0 text-brand-text"
-                            aria-hidden
-                        />
-                        <span className="min-w-0 break-words">
-                            {reviewAudienceNotice(isPublic, salonName)}
-                        </span>
-                    </p>
-                    <button
-                        type="submit"
-                        disabled={!hasRating || processing}
-                        className={cn(PRIMARY_ACTION, 'w-full sm:w-fit')}
-                    >
-                        Enviar reseña
-                    </button>
-                </div>
+                <ReviewSubmit
+                    salonName={salonName}
+                    isPublic={isPublic}
+                    processing={processing}
+                    hasNetworkProblem={hasNetworkProblem}
+                />
             </form>
         </section>
     );

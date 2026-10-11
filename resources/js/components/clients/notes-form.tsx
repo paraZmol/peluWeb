@@ -1,4 +1,5 @@
 import { useClientNotesForm } from '@/hooks/use-client-notes-form';
+import { isCareAuthorizedFromAccount } from '@/lib/clients';
 import { cn } from '@/lib/utils';
 import { CareEraseDialog } from './care-erase-dialog';
 import { CareNotesField } from './care-notes-field';
@@ -89,6 +90,7 @@ export function NotesForm({
             <CareEraseDialog
                 open={form.isConfirmingErase}
                 clientName={client.name}
+                isFromAccount={isCareAuthorizedFromAccount(client)}
                 processing={processing}
                 onConfirm={form.confirmErase}
                 onClose={form.cancelErase}

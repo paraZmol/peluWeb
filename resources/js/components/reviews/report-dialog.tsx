@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,10 +12,11 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { isReportReasonValid, REPORT_MIN_LENGTH } from '@/lib/reviews';
-import { SHEET_ON_PHONE } from '@/lib/sheet';
+import { SHEET_ON_PHONE, TOUCH_FOOTER } from '@/lib/sheet';
 import { cn } from '@/lib/utils';
 import { report } from '@/routes/reviews';
 import { CountedTextarea } from './counted-textarea';
+import { NetworkProblem } from './network-problem';
 import { ReviewQuote } from './review-quote';
 import type { OwnerReview } from './types';
 
@@ -36,12 +38,15 @@ function ReportForm({
     onSent: () => void;
 }) {
     const form = useForm({ reason: '' });
+    const [hasNetworkProblem, setHasNetworkProblem] = useState(false);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         form.submit(report(review.id), {
             preserveScroll: true,
             preserveState: true,
+            onStart: () => setHasNetworkProblem(false),
+            onNetworkError: () => setHasNetworkProblem(true),
             onSuccess: onSent,
         });
     };
@@ -59,7 +64,8 @@ function ReportForm({
                 hint={`Cuenta qué pasa, con al menos ${REPORT_MIN_LENGTH} caracteres.`}
                 isRequired
             />
-            <DialogFooter className="gap-2 [&_button]:h-11 sm:[&_button]:h-9">
+            <NetworkProblem isShown={hasNetworkProblem} />
+            <DialogFooter className={TOUCH_FOOTER}>
                 <DialogClose asChild>
                     <Button type="button" variant="outline">
                         Volver
@@ -90,9 +96,9 @@ export function ReportDialog({ open, onClose, review, maxLength }: Props) {
                 <DialogHeader className="pr-8 text-left">
                     <DialogTitle>Reportar reseña</DialogTitle>
                     <DialogDescription>
-                        El equipo de peluWeb la revisa. No se borra por ser
+                        El equipo de peluWeb la revisa. No se oculta por ser
                         negativa: solo si insulta, revela datos personales o no
-                        corresponde a una cita.
+                        trata de la cita.
                     </DialogDescription>
                 </DialogHeader>
                 {review && (

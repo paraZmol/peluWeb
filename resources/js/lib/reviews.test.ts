@@ -9,6 +9,8 @@ import {
     ratingText,
     reviewAudienceNotice,
     reviewStatus,
+    reviewSubmitLabel,
+    reviewVisibilityNotice,
     starFill,
     starsLabel,
     STAR_POSITIONS,
@@ -43,9 +45,9 @@ describe('formatAverage', () => {
 
 describe('verifiedCountLabel', () => {
     it('agrees in number', () => {
-        expect(verifiedCountLabel(1)).toBe('1 reseña verificada');
-        expect(verifiedCountLabel(12)).toBe('12 reseñas verificadas');
-        expect(verifiedCountLabel(0)).toBe('0 reseñas verificadas');
+        expect(verifiedCountLabel(1)).toBe('1 reseña de una cita atendida');
+        expect(verifiedCountLabel(12)).toBe('12 reseñas de citas atendidas');
+        expect(verifiedCountLabel(0)).toBe('0 reseñas de citas atendidas');
     });
 });
 
@@ -76,13 +78,31 @@ describe('isRatingChosen', () => {
 describe('reviewAudienceNotice', () => {
     it('warns that a public review carries the first name', () => {
         expect(reviewAudienceNotice(true, 'Salón Uno')).toBe(
-            'Tu reseña se publicará con tu nombre de pila en la página de Salón Uno. No incluyas datos personales de otras personas.',
+            'Tu reseña se publicará con tu nombre de pila en la página de Salón Uno, y el salón puede responderla ahí. No incluyas datos personales de otras personas. Puedes retirarla cuando quieras desde esta reserva.',
         );
     });
 
     it('says only the team reads a private one', () => {
         expect(reviewAudienceNotice(false, 'Salón Uno')).toBe(
-            'Solo la leerá el equipo de Salón Uno.',
+            'La leerá el equipo de Salón Uno, con tu nombre de pila. No se publica. Si el salón la reporta, la revisa peluWeb.',
+        );
+    });
+});
+
+describe('reviewSubmitLabel', () => {
+    it('names what the button does in each mode', () => {
+        expect(reviewSubmitLabel(true)).toBe('Publicar reseña');
+        expect(reviewSubmitLabel(false)).toBe('Enviar al salón');
+    });
+});
+
+describe('reviewVisibilityNotice', () => {
+    it('says where a sent review can be read', () => {
+        expect(reviewVisibilityNotice(true, 'Salón Uno')).toBe(
+            'Publicada en la página de Salón Uno con tu nombre de pila.',
+        );
+        expect(reviewVisibilityNotice(false, 'Salón Uno')).toBe(
+            'Solo la ve el equipo de Salón Uno.',
         );
     });
 });
