@@ -1,7 +1,7 @@
 # Inventario de datos personales, terceros y cookies
 
 > **Borrador — no es asesoría legal.** Debe revisarlo un abogado colegiado en Perú.
-> Versión 0.1 — 2026-10-10. Leído del código de la rama `fase-5-caja`; rehacer al cerrar cada fase.
+> Versión 0.2 — 2026-10-11. Leído del código de la rama `fase-6-clientes`; rehacer al cerrar cada fase.
 
 Roles: **R** = la plataforma es responsable; **E** = la plataforma es encargada y el salón es el
 responsable.
@@ -22,8 +22,9 @@ responsable.
 | 10 | Reserva: servicios, profesional, fecha, precio, seña, estado, historial de cambios | Clientes | Asistente de reserva, agenda | `bookings`, `booking_services`, `booking_events` | Prestar el servicio; caja | **E** | Cliente (las suyas), dueño, personal | Indefinido |
 | 11 | Nota del cliente (texto libre, 255) | Clientes | Paso "confirmar" | `bookings.client_note` | Indicaciones para la cita | **E** | Dueño y personal | Indefinido. **Puede contener datos de salud** (alergias) |
 | 11a | Notas de la ficha: preferencias y fórmula/técnica (texto libre, 1000) | Clientes del salón | Las escribe el personal en la ficha | `salon_clients.notes`, `formula_notes` | Atender a la persona como prefiere | **E** | Dueño, quien ve la agenda de todos o la lista de clientes, y quien atiende a esa persona | Indefinido **[PENDIENTE L3]**. Se avisa en pantalla de no anotar salud aquí |
-| 11b | Alergias y reacciones (**dato de salud**, texto libre, 1000, cifrado en la base) | Clientes del salón | Las escribe el personal, solo con la autorización 17 firmada | `salon_clients.care_notes`; prueba en `client_consents` | Atender con seguridad | **E** | Solo el dueño y quien atiende a esa persona (cita completada o vigente). Fuera de listados, búsquedas, exportaciones y API | Hasta que se retire la autorización (borra el texto, conserva el registro). **[PENDIENTE: 24 meses desde la última cita; retiro desde la cuenta]** |
-| 11c | Fotos antes/después del servicio (WebP sin EXIF, hasta 40 por cliente) | Clientes del salón | Las sube el personal, marcando la autorización 20 en cada subida | Disco privado `salons/{id}/clients/{id}`; `client_photos`; prueba en `client_consents` | Registro interno del trabajo | **E** | Solo el dueño y quien atiende a esa persona; se sirven con sesión y sin caché | Hasta que se eliminan. **[PENDIENTE: 12 meses desde la última cita]**. No se publican |
+| 11b | Alergias y reacciones (**dato de salud**, texto libre, 1000, cifrado en la base) | Clientes del salón | Las escribe el personal, solo con la autorización 17 vigente (hoja firmada, o dada por la persona desde su cuenta) | `salon_clients.care_notes`; prueba en `client_consents` | Atender con seguridad | **E** | El dueño y quien atiende a esa persona; **la propia persona, en Mis datos**. Fuera de listados, búsquedas, exportaciones y API | Hasta que se retira la autorización: la persona desde su cuenta, el salón a su pedido, o el borrado de la cuenta. Se borra el texto y queda el registro. **[PENDIENTE: 24 meses desde la última cita; copias de seguridad]** |
+| 11c | Fotos antes/después del servicio (WebP sin EXIF, hasta 40 por cliente) | Clientes del salón | Las sube el personal, marcando la autorización 20 en cada subida | Disco privado `salons/{id}/clients/{id}`; `client_photos`; prueba en `client_consents` | Registro interno del trabajo | **E** | El dueño y quien atiende a esa persona; **la propia persona, en Mis datos** (con sesión, sin caché) | Hasta que el salón las elimina, o la persona retira la autorización (borra todas y bloquea nuevas subidas), o borra su cuenta. **[PENDIENTE: 12 meses desde la última cita]**. No se publican |
+| 11d | Constancia de autorizaciones y retiros: tipo, acción, vía (hoja, declarado por el personal, cuenta, sistema), versión y huella del texto, quién del equipo la declaró, cuenta, **IP y navegador** (solo cuando actúa la persona), qué se borró (sin el contenido) | Clientes del salón | Automático, al autorizar o retirar | `client_consents` (solo se añade; no se edita ni se borra) | Probar el consentimiento y su retiro | **E** | Solo sistema; el salón ve fecha y vía | **Indefinido; sobrevive al retiro y al borrado de la cuenta** (queda el número de cuenta). **[PENDIENTE: fijar plazo]** |
 | 12 | Foto de referencia "Mi estilo" | Clientes (puede mostrar su cara o la de otra persona) | Mis reservas | Disco **público**, ruta no adivinable, WebP sin EXIF | Mostrar lo que quiere | **E** | Dueño y personal; cualquiera que tenga la URL | Hasta que el cliente la cambia o la quita. No se borra sola tras la cita |
 | 13 | Miembro del equipo: rol y permisos | Dueños y personal | Invitación aceptada | `salon_user` | Control de acceso | R (cuenta) / E (rol) | Dueño | Hasta que se le quita |
 | 14 | Invitación: correo de la persona invitada, rol | Futuro personal (aún sin cuenta) | El dueño la escribe | `salon_invitations` (token con hash) | Invitar | **E** | Dueño | Vale 7 días; la fila no se borra |
@@ -35,11 +36,10 @@ responsable.
 | 20 | Datos del salón: nombre, teléfono, Instagram, dirección, coordenadas, datos de Yape/Plin para la seña | Dueño (si es persona natural, son datos personales) | Mi salón | `salons` | Página pública y cobro de señas | R | **Públicos** | Hasta que se cambian |
 | 21 | Galería del salón (puede mostrar personas) | Clientes o modelos fotografiados | Dueño | `salon_photos`, disco público | Mostrar trabajos | **E** | **Público** | Hasta que el dueño la quita |
 | 22 | Registros de errores del servidor | Cualquiera | Automático | `storage/logs` | Depurar | R | Quien administra el servidor | Sin rotación con la configuración de ejemplo (`LOG_STACK=single`) |
+| 23 | Reseña: estrellas (1 a 5), comentario (600), **nombre de pila**, cita, profesional que atendió, si se escribió como pública o privada | Clientes con cuenta y una cita atendida (hasta 60 días después) | Formulario en la reserva (Mis reservas) | `reviews` | Opinión para el salón y, en modo Públicas, para quien visita su página | **E** (la moderación la hace la plataforma) | Modo Públicas: **público** (nombre de pila, fecha, estrellas, comentario, respuesta; no el profesional). Modo Privadas: el equipo del salón. Super admin: las reportadas | Indefinido. Al retirarla: se borran comentario y nombre y deja de mostrarse; **la fila queda**. Al borrar la cuenta: sigue visible firmada como "Cliente". Si la oculta la plataforma, la fila queda. **[PENDIENTE: plazo]** |
+| 24 | Respuesta del salón (600) y reporte de una reseña (motivo en texto libre; quién y cuándo) | Personal del salón; puede mencionar al cliente | Panel "Reseñas" | `reviews.reply`, `report_reason`, `replied_by`, `reported_by` | Responder y pedir moderación | **E** / R (moderación) | Respuesta: igual que la reseña. Motivo: salón y super admin | Indefinido |
 
-No se recoge hoy: documento de identidad, fecha de nacimiento, dirección del cliente, datos de
-tarjeta, geolocalización del visitante, analítica ni perfiles publicitarios. No hay reseñas,
-mensajes automáticos, Web Push ni lista de espera todavía (fases 6 y 7): cuando existan, se amplía
-esta tabla **antes** de publicarlos.
+No se recoge hoy: documento de identidad (salvo el que la persona escribe a mano en la hoja impresa, que guarda el salón), fecha de nacimiento, dirección del cliente, datos de tarjeta, geolocalización del visitante, analítica ni perfiles publicitarios. La edad solo se declara ("soy mayor de 18 años") al autorizar desde la cuenta. No hay Web Push ni lista de espera todavía: cuando existan, se amplía esta tabla **antes** de publicarlos.
 
 ## 2. Terceros que reciben datos
 
@@ -50,7 +50,7 @@ esta tabla **antes** de publicarlos.
 | Google Maps (enlace "Cómo llegar") | Al pulsar | Las coordenadas del salón | Lo elige la persona | Sale del sitio |
 | OpenStreetMap (teselas de `tile.openstreetmap.org`) | Solo en "Mi salón → Ubicación" (dueño fijando el pin) | IP y navegador del dueño | Sí, para esa pantalla | No se usa en páginas públicas |
 | WhatsApp (`wa.me`) | Al pulsar un botón de WhatsApp | Nada desde el servidor: se abre WhatsApp con un mensaje ya escrito, que la persona decide enviar | Lo elige la persona | El mensaje de seña incluye código de reserva y monto |
-| Proveedor de correo | Verificación, recuperación de contraseña, invitaciones | Correo de destino y contenido | Sí | `[PROVEEDOR DE CORREO Y PAÍS]` **sin decidir** (hoy `MAIL_MAILER=log`) |
+| Proveedor de correo | Verificación, recuperación de contraseña, invitaciones, avisos de la reserva, recordatorio del día anterior, **pedido de reseña** y **constancia de autorización (incluye el texto autorizado y el nombre del salón; no las alergias anotadas)** | Correo de destino y contenido | Sí; recordatorio y pedido de reseña son opcionales (una casilla en el perfil, marcada por defecto, y línea de baja en el correo) | `[PROVEEDOR DE CORREO Y PAÍS]` **sin decidir** (hoy `MAIL_MAILER=log`) |
 | Hosting y copias de seguridad | Siempre | Toda la base y las imágenes | Sí | `[PROVEEDOR DE HOSTING Y PAÍS]` **sin decidir**. Si está fuera de Perú, es flujo transfronterizo |
 | Sentry (paso 9.3) | **No existe todavía** | Errores, que pueden arrastrar datos personales | No | Antes de activarlo: quitar datos personales de los reportes y añadirlo aquí |
 
@@ -102,3 +102,7 @@ mapas o videos incrustados que carguen solos, o repetición de sesiones, entonce
 | Hosting y correo sin definir (posible flujo transfronterizo sin declarar) | ANPD | Medio |
 | Sin procedimiento de incidentes (aviso en 48 horas) | ANPD, tras una fuga | Alto si ocurre; preparar cuesta poco |
 | Comisiones y ausencias del personal sin aviso al personal | El trabajador, ante la ANPD o Sunafil | Bajo-medio; lo cubre el aviso al equipo |
+| No hay vía en la plataforma para la autorización de un menor (solo la hoja impresa con firma de madre, padre o tutor) | Madre o padre de un menor, ante la ANPD | Medio: dato de salud de un menor |
+| Un salón puede alternar Públicas y Privadas y dejar fuera las reseñas de una mala racha | Un consumidor o un competidor, ante Indecopi (publicidad engañosa) | Bajo-medio: la página pública lo dice; valorar mostrar "públicas desde {fecha}" |
+| Datos de un salón cerrado siguen guardados hasta que la persona los retira | La persona, ante la ANPD | Medio: falta el borrado automático tras el cierre (paso 6.1 d) |
+| La constancia de autorizaciones y las reseñas no tienen plazo de conservación | La persona, ante la ANPD | Bajo-medio: fijar plazo con el abogado |
