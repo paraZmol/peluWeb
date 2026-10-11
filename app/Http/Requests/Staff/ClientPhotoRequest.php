@@ -34,6 +34,7 @@ class ClientPhotoRequest extends FormRequest
     {
         return [
             'consent.accepted' => 'Marca que la persona autorizó la foto para uso interno.',
+            'photo.dimensions' => 'La foto puede medir como máximo 4000 px por lado.',
         ];
     }
 

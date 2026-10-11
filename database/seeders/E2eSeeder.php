@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Actions\Accounting\ManageExpenseCategories;
 use App\Actions\Booking\ChangeBookingStatus;
 use App\Actions\Booking\CreateBooking;
+use App\Actions\Salon\ManageClientPhotos;
 use App\Actions\Salon\ManageSalonPhotos;
 use App\Actions\Salon\UpdateSalonBranding;
 use App\Actions\Staff\UpdateStaffPhoto;
@@ -13,6 +14,7 @@ use App\Domain\Accounting\Checkout;
 use App\Enums\BookingSource;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
+use App\Enums\ClientPhotoKind;
 use App\Enums\SalonPermission;
 use App\Enums\ServiceCategory;
 use App\Models\Booking;
@@ -25,6 +27,7 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
+use Illuminate\Http\UploadedFile;
 use LogicException;
 
 /**
@@ -145,7 +148,78 @@ class E2eSeeder extends Seeder
             CarbonImmutable::setTestNow();
         }
 
+        $this->seedClientFileTeam($salon, $owner, $cut, $staff);
+
         return $salon;
+    }
+
+    /**
+     * The rest of the team of "Salón Fichas" and the people they attend, to
+     * try who may open a file and who sees health notes and pictures:
+     * a professional (paco-ficha@) and a receptionist who sees every agenda
+     * but attends no one (rita-ficha@).
+     */
+    private function seedClientFileTeam(Salon $salon, User $owner, Service $cut, Staff $fabia): void
+    {
+        $paco = User::factory()->create(['name' => 'Paco Profesional', 'email' => 'paco-ficha@example.com']);
+        SalonMember::factory()->for($salon)->for($paco)->create();
+        $pacoStaff = Staff::factory()->for($salon)->linkedTo($paco)->working([1, 2, 3, 4, 5, 6, 7], '00:00', '23:55')->create(['name' => 'Paco Profesional']);
+        $pacoStaff->services()->attach($cut->id);
+        $rita = User::factory()->create(['name' => 'Rita Recepcion', 'email' => 'rita-ficha@example.com']);
+        SalonMember::factory()->for($salon)->for($rita)->withPermissions(SalonPermission::ViewAllSchedules)->create();
+
+        $today = $salon->localNow()->startOfDay();
+        $status = app(ChangeBookingStatus::class);
+        $visit = function (SalonClient $client, Staff $with, CarbonImmutable $at, bool $done) use ($salon, $cut, $owner, $status): void {
+            CarbonImmutable::setTestNow($at->subHour());
+            $booking = app(CreateBooking::class)->handle(new NewBooking(
+                salon: $salon,
+                client: $client,
+                selections: [['service_id' => $cut->id, 'variant_id' => null]],
+                staff: $with,
+                startsAt: $at->utc(),
+                source: BookingSource::Staff,
+                actor: $owner,
+            ));
+            CarbonImmutable::setTestNow($at);
+
+            if ($done) {
+                $status->start($booking, $owner);
+                $status->complete($booking, $owner, new Checkout(parts: ['cash' => 3500]));
+            }
+
+            CarbonImmutable::setTestNow();
+        };
+
+        // Attended by Paco, with health notes and a picture already kept.
+        $attended = SalonClient::factory()->for($salon)->create(['name' => 'Atendida Paco', 'phone' => '987654400']);
+        $visit($attended, $pacoStaff, $today->subDay()->setTime(14, 0), true);
+        $visit($attended, $pacoStaff, $today->addDay()->setTime(14, 0), false);
+        $attended->care_notes = 'Alergia al amoníaco';
+        $attended->care_consent_at = now();
+        $attended->care_consent_by = $owner->id;
+        $attended->save();
+        $source = database_path('seeders/images/pexels-3993312.jpg');
+        app(ManageClientPhotos::class)->add($attended, ClientPhotoKind::Before, new UploadedFile($source, 'antes.jpg', 'image/jpeg', null, true), $owner);
+
+        // One per project for the allergy flow done by a professional.
+        foreach (['Flujo Movil' => 15, 'Flujo Escritorio' => 16] as $name => $hour) {
+            $flow = SalonClient::factory()->for($salon)->create(['name' => $name, 'phone' => '9876545'.$hour]);
+            $visit($flow, $pacoStaff, $today->subDay()->setTime($hour, 0), true);
+        }
+
+        // Only Fabia attends her: Paco must not open the file.
+        $other = SalonClient::factory()->for($salon)->create(['name' => 'Ajena Fabia', 'phone' => '987654401']);
+        $visit($other, $fabia, $today->subDay()->setTime(17, 0), true);
+
+        // No phone, no visits, nothing booked.
+        SalonClient::factory()->for($salon)->create(['name' => 'Sin Datos', 'phone' => null]);
+
+        // More visits than the file lists.
+        $long = SalonClient::factory()->for($salon)->create(['name' => 'Larga Historia', 'phone' => '987654402']);
+        foreach (range(3, 37) as $daysAgo) {
+            $visit($long, $fabia, $today->subDays($daysAgo)->setTime(18, 0), true);
+        }
     }
 
     /**

@@ -54,7 +54,7 @@ class ClientProfileController extends SalonAreaController
             // Pictures of the person follow the same rule as their health notes.
             'photos' => $seesCare ? $this->photos($client) : [],
             'photosMax' => ClientPhoto::MAX_PER_CLIENT,
-            'careConsentText' => $this->careConsentText($salon->name),
+            'careConsentText' => $seesCare ? $this->careConsentText($salon->name) : null,
             'canManageVip' => $user?->can('manageVipClients', $salon) ?? false,
             'notesMaxLength' => SalonClient::NOTES_MAX_LENGTH,
         ]);

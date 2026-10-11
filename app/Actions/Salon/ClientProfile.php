@@ -33,13 +33,14 @@ class ClientProfile
             ->orderBy('starts_at')->limit(self::UPCOMING)->get();
         $history = $this->bookings($client)
             ->whereIn('status', [BookingStatus::Completed, BookingStatus::Cancelled, BookingStatus::NoShow])
-            ->orderByDesc('starts_at')->limit(self::HISTORY)->get();
+            // One more than shown, to know whether there is more.
+            ->orderByDesc('starts_at')->limit(self::HISTORY + 1)->get();
 
         return [
             'stats' => $this->stats($client, $salon, $showsMoney),
             'upcoming' => $upcoming->map($visit)->all(),
-            'history' => $history->map($visit)->all(),
-            'isHistoryTruncated' => $history->count() === self::HISTORY,
+            'history' => $history->take(self::HISTORY)->map($visit)->all(),
+            'isHistoryTruncated' => $history->count() > self::HISTORY,
         ];
     }
 

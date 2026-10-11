@@ -230,7 +230,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('clientes', [ClientController::class, 'index'])->name('clients.index');
         Route::patch('clientes/{client}/vip', [ClientController::class, 'updateVip'])->name('clients.vip.update');
         Route::get('clientes/{client}', [ClientProfileController::class, 'show'])
-            ->middleware('throttle:60,1,client-file')
+            // Never kept by the browser: "Back" after signing out must not bring it back.
+            ->middleware(['throttle:60,1,client-file', 'cache.headers:no_store;private'])
             ->name('clients.show');
         Route::put('clientes/{client}/notas', [ClientProfileController::class, 'updateNotes'])
             ->middleware('throttle:60,1,client-notes')

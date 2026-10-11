@@ -68,6 +68,8 @@ it('shows what is coming, what was done and how much, to the owner', function ()
     fileBooking('2026-10-08 11:00');
 
     $this->actingAs($this->owner)->get(route('clients.show', $this->client))
+        // Not kept by the browser: "Back" after signing out finds nothing.
+        ->assertHeader('Cache-Control', 'no-store, private')
         ->assertInertia(fn (Assert $page) => $page
             ->component('staff/client')
             ->where('client.name', 'Carla Cliente')
@@ -162,6 +164,7 @@ it('hides the care notes from who looks clients up without attending them, and t
     $this->actingAs($reception->user)->get(route('clients.show', $this->client))
         ->assertInertia(fn (Assert $page) => $page
             ->where('canSeeCare', false)
+            ->where('careConsentText', null)
             ->where('client.careNotes', null)
             ->where('client.careConsent', null));
 
