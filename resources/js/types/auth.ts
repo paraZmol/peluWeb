@@ -8,6 +8,8 @@ export type User = {
     avatar?: string;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
+    /** Runs the platform: their panel links to /plataforma. */
+    is_platform_admin?: boolean;
     created_at: string;
     updated_at: string;
     [key: string]: unknown;

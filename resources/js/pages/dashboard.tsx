@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'motion/react';
 import { CalendarDays, ExternalLink, Store, Users } from 'lucide-react';
+import { PlatformCard } from '@/components/platform-card';
 import { SetupChecklist } from '@/components/salon/setup-checklist';
 import type { SetupStep } from '@/components/salon/setup-checklist';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,12 @@ export default function Dashboard({ setup, publicUrl }: Props) {
                             {currentSalon.name}
                         </a>
                     </Button>
+                )}
+
+                {auth.user.is_platform_admin && (
+                    <PlatformCard
+                        hasTwoFactor={auth.user.two_factor_enabled === true}
+                    />
                 )}
 
                 {setup && <SetupChecklist steps={setup} />}

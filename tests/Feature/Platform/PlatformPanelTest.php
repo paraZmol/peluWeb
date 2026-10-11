@@ -7,6 +7,7 @@ use App\Filament\Resources\Users\UserResource;
 use App\Models\Salon;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Inertia\Testing\AssertableInertia as Assert;
 use Livewire\Livewire;
 
 it('sends guests to the app login', function () {
@@ -26,7 +27,19 @@ it('asks the platform admin to enable two-factor authentication first', function
 
     $this->actingAs($admin)
         ->get('/plataforma')
-        ->assertRedirect(route('security.edit'));
+        ->assertRedirect(route('security.edit'))
+        // Said out loud: a silent bounce to the settings looks like a broken link.
+        ->assertInertiaFlash('toast.type', 'error');
+});
+
+it('tells the platform admin apart on their own panel, and nobody else', function () {
+    $admin = User::factory()->platformAdmin()->create();
+    $client = User::factory()->create();
+
+    $this->actingAs($admin)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('auth.user.is_platform_admin', true)->where('auth.user.two_factor_enabled', false));
+    $this->actingAs($client)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('auth.user.is_platform_admin', false));
 });
 
 it('lets the platform admin with two-factor in', function () {
