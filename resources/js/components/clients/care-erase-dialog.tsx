@@ -30,10 +30,14 @@ export function CareEraseDialog({
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
             <DialogContent className={SHEET_ON_PHONE}>
                 <DialogHeader>
-                    <DialogTitle>¿Retirar la autorización?</DialogTitle>
+                    <DialogTitle>
+                        ¿Retirar la autorización de {clientName}?
+                    </DialogTitle>
                     <DialogDescription>
-                        Se borrará lo anotado en «Alergias y cuidado» de{' '}
-                        {clientName} y no se puede recuperar. Para volver a
+                        Hazlo solo si {clientName} lo pidió o si la hoja firmada
+                        no existe. Se borrará lo anotado en «Alergias y cuidado»
+                        y no se puede recuperar desde la ficha. Conserva la hoja
+                        y anota en ella la fecha del retiro. Para volver a
                         anotarlo hará falta una nueva autorización firmada.
                     </DialogDescription>
                 </DialogHeader>
@@ -48,7 +52,7 @@ export function CareEraseDialog({
                         onClick={onConfirm}
                     >
                         {processing && <Spinner />}
-                        Borrar alergias y guardar
+                        Retirar y borrar alergias
                     </Button>
                 </DialogFooter>
             </DialogContent>

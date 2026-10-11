@@ -73,6 +73,17 @@ Ver la skill `booking-domain`.
 - Futuro: Cloud API de Meta, que cobra por plantilla entregada (en Perú, utility ~US$ 0.03 desde
   oct-2026, *confirmar en developers.facebook.com/docs/whatsapp/pricing*). Sería un extra de pago.
 
+## Correo y tareas programadas
+- Los correos de la reserva (recibida, confirmada, cancelada, reprogramada, recordatorio) salen por
+  la **cola** (`QUEUE_CONNECTION=database`). En local `MAIL_MAILER=log`: se escriben en
+  `storage/logs/laravel.log`, no se envían.
+- Producción necesita dos tareas cada minuto (cron de cPanel o del VPS), con el PHP 8.4:
+  `php artisan schedule:run` (vence retenciones cada 5 min, recordatorios cada 15 min) y
+  `php artisan queue:work --stop-when-empty --max-time=50` (o un `queue:work` permanente con
+  supervisor en un VPS). Sin la segunda, los correos se quedan en la tabla `jobs`.
+- `APP_LOCALE=es`: las fechas de los correos salen en español.
+- Proveedor de correo: por elegir (requisito P12 de `docs/legal/requisitos-de-producto.md`).
+
 ## Calidad
 - Pruebas: Pest 4 (incluye pruebas de navegador con Playwright).
 - Análisis estático: Larastan nivel 6+ y Pint.

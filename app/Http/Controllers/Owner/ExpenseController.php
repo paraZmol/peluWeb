@@ -63,8 +63,7 @@ class ExpenseController extends SalonAreaController
     {
         $this->salon('manageCash');
         $this->ensureEditable($expense);
-        $save->removeReceipt($expense);
-        $expense->delete();
+        $save->delete($expense);
         $this->toast('Gasto eliminado.');
 
         return back();
@@ -80,7 +79,8 @@ class ExpenseController extends SalonAreaController
 
         return Storage::disk(SaveExpense::DISK)->response($expense->receipt_path, null, [
             'Content-Type' => 'image/webp',
-            'Cache-Control' => 'private, max-age=3600',
+            // Tax ids and bank details: not left behind in a shared browser.
+            'Cache-Control' => 'private, no-store',
         ]);
     }
 

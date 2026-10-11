@@ -85,7 +85,7 @@ test.describe('Ficha del cliente', () => {
             ),
         ).toBeVisible();
         await expect(
-            page.getByRole('button', { name: 'Imprimir o guardar como PDF' }),
+            page.getByRole('button', { name: 'Imprimir la hoja' }),
         ).toBeVisible();
         await expect(
             page.getByText('Ver lo que firma la persona'),
@@ -145,13 +145,13 @@ test.describe('Ficha del cliente', () => {
         await expect(care).toBeDisabled();
         await saveNotes(page);
         const confirmation = page.getByRole('dialog', {
-            name: '¿Retirar la autorización?',
+            name: /^¿Retirar la autorización de /,
         });
         await confirmation.getByRole('button', { name: 'Volver' }).click();
         await expect(confirmation).toHaveCount(0);
         await saveNotes(page);
         await confirmation
-            .getByRole('button', { name: 'Borrar alergias y guardar' })
+            .getByRole('button', { name: 'Retirar y borrar alergias' })
             .click();
         await expect(page.getByText('Ficha actualizada.')).toBeVisible();
         await expect(confirmation).toHaveCount(0);
@@ -178,7 +178,7 @@ test.describe('Ficha del cliente', () => {
             name: 'Fotos antes y después',
         });
         await expect(section).toContainText(
-            'Solo para el registro interno del salón. No se publican desde aquí.',
+            'Solo para el registro interno del salón. No las publiques ni las envíes: para eso hace falta otra autorización escrita de la persona.',
         );
         await expect(section.getByText('0 de 40')).toBeVisible();
         await expect(section.getByText(/^Aún no hay fotos/)).toBeVisible();

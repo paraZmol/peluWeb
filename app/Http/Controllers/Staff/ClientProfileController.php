@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Actions\Salon\ClientProfile;
 use App\Actions\Salon\SaveClientNotes;
+use App\Enums\ConsentKind;
 use App\Http\Controllers\Owner\SalonAreaController;
 use App\Http\Requests\Staff\ClientNotesRequest;
 use App\Models\ClientPhoto;
@@ -55,6 +56,7 @@ class ClientProfileController extends SalonAreaController
             'photos' => $seesCare ? $this->photos($client) : [],
             'photosMax' => ClientPhoto::MAX_PER_CLIENT,
             'careConsentText' => $seesCare ? $this->careConsentText($salon->name) : null,
+            'careConsentVersion' => $seesCare ? ConsentKind::Care->textVersion() : null,
             'canManageVip' => $user?->can('manageVipClients', $salon) ?? false,
             'notesMaxLength' => SalonClient::NOTES_MAX_LENGTH,
         ]);
@@ -91,12 +93,14 @@ class ClientProfileController extends SalonAreaController
 
     /**
      * What the person signs before the salon may keep their care notes
-     * (draft v0.2 in docs/legal/consentimientos.md, row 17).
+     * (draft v0.3 in docs/legal/consentimientos.md, row 17).
      */
     private function careConsentText(string $salonName): string
     {
-        return "Autorizo a {$salonName} a guardar mis alergias, sensibilidades y reacciones a productos para atenderme con seguridad. "
-            .'Solo lo verá el equipo que me atiende. No se usará para publicidad ni se compartirá. '
-            .'Puedo ver lo anotado y retirar esta autorización cuando quiera, pidiéndolo en el salón; al retirarla, se borra.';
+        return "Autorizo a {$salonName} a guardar mis alergias, sensibilidades y reacciones a productos (datos de salud) para atenderme con seguridad. "
+            .'Es voluntario: si no autorizo, me atienden igual y no se anota. '
+            .'Lo verán solo quien dirige el salón y quien me atiende. '
+            .'Se guarda en peluWeb, la plataforma de reservas que usa el salón. No se usa para publicidad ni se entrega a nadie más. '
+            .'Puedo pedir en el salón ver lo anotado, que lo corrijan o retirar esta autorización cuando quiera; al retirarla, se borra.';
     }
 }

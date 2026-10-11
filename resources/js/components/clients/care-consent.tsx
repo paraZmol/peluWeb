@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 
 const STEPS = [
-    'Imprime la hoja o guárdala como PDF',
-    'La persona la firma',
-    'Marca que el salón la guardó',
+    'Imprime la hoja',
+    'La persona la lee, escribe su documento y la firma',
+    'Guarda la hoja en el salón y márcalo aquí',
 ];
 
 /** Prints the sheet to sign: the page's only content on paper. */
@@ -49,8 +49,9 @@ export function CareConsentNotice({ text }: { text: string }) {
                     </li>
                 ))}
             </ol>
-            <PrintConsentButton label="Imprimir o guardar como PDF" />
+            <PrintConsentButton label="Imprimir la hoja" />
             <p className="text-sm text-muted-foreground">
+                También puedes guardarla como PDF para imprimirla después.
                 Ctrl+P en esta página imprime esta hoja, no la ficha.
             </p>
             <details className="rounded-lg border bg-surface-2 text-sm">
@@ -69,13 +70,24 @@ export function CareConsentNotice({ text }: { text: string }) {
     );
 }
 
-type SheetProps = { clientName: string; text: string };
+type SheetProps = {
+    clientId: number;
+    clientName: string;
+    text: string;
+    /** Which wording this is, to match the paper with the record. */
+    version: string;
+};
 
 /**
  * Only on paper: the authorization, ready to sign. `report-sheet` makes it
  * print on white with the light tokens whatever the mode on screen.
  */
-export function CareConsentSheet({ clientName, text }: SheetProps) {
+export function CareConsentSheet({
+    clientId,
+    clientName,
+    text,
+    version,
+}: SheetProps) {
     const { currentSalon } = useCurrentSalon();
 
     return (
@@ -85,13 +97,22 @@ export function CareConsentSheet({ clientName, text }: SheetProps) {
                     {currentSalon?.name}
                 </p>
                 <p className="text-2xl font-semibold">
-                    Autorización para guardar alergias y datos de cuidado
+                    Autorización para guardar datos de salud: alergias y
+                    reacciones a productos
                 </p>
             </header>
-            <p className="text-base">
-                Nombre: <strong>{clientName}</strong>
-            </p>
+            <div className="flex flex-col gap-3 text-base">
+                <p>
+                    Nombre: <strong>{clientName}</strong>
+                </p>
+                <p>Documento (DNI o CE): ______________________</p>
+            </div>
             <p className="text-base leading-relaxed">{text}</p>
+            <p className="text-sm leading-relaxed">
+                Para ejercer mis derechos sobre estos datos puedo pedirlo en el
+                salón. También puedo reclamar ante la Autoridad Nacional de
+                Protección de Datos Personales.
+            </p>
             <dl className="mt-16 grid grid-cols-2 gap-12 text-sm">
                 <div className="border-t border-foreground pt-2">
                     <dt>Firma</dt>
@@ -100,6 +121,9 @@ export function CareConsentSheet({ clientName, text }: SheetProps) {
                     <dt>Fecha</dt>
                 </div>
             </dl>
+            <p className="text-xs text-muted-foreground tabular-nums">
+                Texto v{version} · Ficha n.º {clientId}
+            </p>
         </article>
     );
 }

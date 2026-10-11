@@ -30,6 +30,7 @@ type Props = {
     canSeeCare: boolean;
     /** What the person signs before care notes are kept; null without access. */
     careConsentText: string | null;
+    careConsentVersion: string | null;
     canManageVip: boolean;
     notesMaxLength: number;
     /** Before and after pictures; empty for whoever may not see them. */
@@ -45,6 +46,7 @@ export default function Client({
     isHistoryTruncated,
     canSeeCare,
     careConsentText,
+    careConsentVersion,
     canManageVip,
     notesMaxLength,
     photos,
@@ -126,10 +128,12 @@ export default function Client({
                 </div>
             </div>
 
-            {careConsentText !== null && (
+            {careConsentText !== null && careConsentVersion !== null && (
                 <CareConsentSheet
+                    clientId={client.id}
                     clientName={client.name}
                     text={careConsentText}
+                    version={careConsentVersion}
                 />
             )}
         </>

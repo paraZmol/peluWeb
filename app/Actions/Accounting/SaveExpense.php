@@ -3,6 +3,7 @@
 namespace App\Actions\Accounting;
 
 use App\Data\Accounting\ExpenseInput;
+use App\Exceptions\PaymentException;
 use App\Models\CashSession;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
@@ -40,6 +41,23 @@ class SaveExpense
         $expense->save();
     }
 
+    /**
+     * Removes an expense and, once that is certain, its receipt.
+     */
+    public function delete(Expense $expense): void
+    {
+        $receipt = $expense->receipt_path;
+
+        DB::transaction(function () use ($expense): void {
+            $this->ensureTillStillOpen($expense);
+            $expense->receipt_path = null;
+            $expense->save();
+            $expense->delete();
+        });
+
+        $this->images->delete($receipt);
+    }
+
     public function handle(Salon $salon, ExpenseInput $input, ?User $by, ?Expense $expense = null): Expense
     {
         $expense ??= new Expense;
@@ -50,6 +68,7 @@ class SaveExpense
 
         try {
             DB::transaction(function () use ($salon, $input, $by, $expense, $newReceipt): void {
+                $this->ensureTillStillOpen($expense);
                 $expense->salon_id = $salon->id;
                 $expense->expense_category_id = $this->categoryOf($salon, $input->categoryId);
                 $expense->amount_cents = $input->amountCents;
@@ -101,7 +120,34 @@ class SaveExpense
         $now = CarbonImmutable::now();
         $paidAt = $input->paidAt($salon->timezone, $now);
         // Compared before storing: the attribute drops the fraction of a second.
-        $expense->cash_session_id = $paidAt->equalTo($now) ? CashSession::lockOpenIdFor($salon->id) : null;
+        $isToday = $paidAt->equalTo($now);
+
+        if (! $expense->exists) {
+            $expense->cash_session_id = $isToday ? CashSession::lockOpenIdFor($salon->id) : null;
+        } elseif (! $isToday) {
+            // Moved to another day: it no longer left today's till. The
+            // other way round is not allowed: a correction must not slip
+            // an old expense into the till that is open now.
+            $expense->cash_session_id = null;
+        }
+
         $expense->paid_at = $paidAt;
+    }
+
+    /**
+     * An expense that left a till can only change while that till is open:
+     * a closed one froze what it expected, and changing its movements
+     * afterwards would hide money. Takes the salon's row, like every
+     * movement, so it cannot cross with the closing.
+     */
+    private function ensureTillStillOpen(Expense $expense): void
+    {
+        if (! $expense->exists || $expense->cash_session_id === null) {
+            return;
+        }
+
+        if (CashSession::lockOpenIdFor($expense->salon_id) !== $expense->cash_session_id) {
+            throw PaymentException::expenseInClosedCash();
+        }
     }
 }

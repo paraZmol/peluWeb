@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $commission_cents What whoever attended earns for it; frozen when it is completed.
  * @property int|null $commission_settlement_id Set once that commission was paid.
  * @property CarbonImmutable|null $hold_expires_at
+ * @property CarbonImmutable|null $reminder_sent_at
  * @property string|null $client_note
  * @property string|null $reference_photo_path
  * @property int|null $created_by
@@ -90,6 +91,7 @@ class Booking extends Model
             'deposit_paid_at' => 'datetime',
             'deposit_refunded_at' => 'datetime',
             'hold_expires_at' => 'datetime',
+            'reminder_sent_at' => 'datetime',
             'is_vip' => 'boolean',
             'deposit_refundable' => 'boolean',
         ];

@@ -36,7 +36,7 @@ function PhotoTile({ clientId, photo }: TileProps) {
                                 </Button>
                             }
                             title="¿Eliminar esta foto?"
-                            description={`${caption}. Se borra del registro del salón y no se puede recuperar.`}
+                            description={`${caption}. Se borra del registro del salón y no se puede recuperar desde la ficha.`}
                             confirmLabel="Sí, eliminar"
                             themed
                             form={destroy.form({

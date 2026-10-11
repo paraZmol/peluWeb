@@ -4,6 +4,7 @@ namespace App\Actions\Booking;
 
 use App\Data\Booking\BookingQuote;
 use App\Data\Booking\NewBooking;
+use App\Enums\BookingNotice;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
@@ -46,6 +47,7 @@ class CreateBooking
         private readonly QuoteBooking $quote,
         private readonly StaffAvailability $availability,
         private readonly SyncBookingSegments $segments,
+        private readonly NotifyClient $notify,
     ) {}
 
     public function handle(NewBooking $data): Booking
@@ -65,6 +67,8 @@ class CreateBooking
             $booking = DB::transaction(fn () => $this->attempt($data, $staff, $now), self::DEADLOCK_ATTEMPTS);
 
             if ($booking !== null) {
+                $this->notify->handle($booking, $booking->status === BookingStatus::Pending ? BookingNotice::Received : BookingNotice::Confirmed);
+
                 return $booking;
             }
         }

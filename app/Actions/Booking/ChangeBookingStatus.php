@@ -6,6 +6,7 @@ use App\Domain\Accounting\Checkout;
 use App\Domain\Accounting\CommissionCalculator;
 use App\Domain\Booking\AvailabilityCalculator;
 use App\Domain\Booking\TimeSpan;
+use App\Enums\BookingNotice;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
 use App\Enums\PaymentKind;
@@ -37,6 +38,7 @@ class ChangeBookingStatus
         private readonly StaffAvailability $availability,
         private readonly AvailabilityCalculator $calculator,
         private readonly UpdateReferencePhoto $photos,
+        private readonly NotifyClient $notify,
     ) {}
 
     /**
@@ -44,7 +46,7 @@ class ChangeBookingStatus
      */
     public function confirm(Booking $booking, ?User $by, PaymentMethod $depositMethod = PaymentMethod::Other): Booking
     {
-        return $this->change($booking, BookingStatus::Confirmed, $by, function (Booking $locked, CarbonImmutable $now) use ($by, $depositMethod): void {
+        $confirmed = $this->change($booking, BookingStatus::Confirmed, $by, function (Booking $locked, CarbonImmutable $now) use ($by, $depositMethod): void {
             // An expired hold released the slot: it can only be confirmed
             // if nobody took that time in the meantime.
             if ($locked->isHoldExpired($now) && ! $this->slotStillFree($locked, $now)) {
@@ -58,6 +60,9 @@ class ChangeBookingStatus
 
             $locked->hold_expires_at = null;
         });
+        $this->notify->handle($confirmed, BookingNotice::Confirmed);
+
+        return $confirmed;
     }
 
     public function start(Booking $booking, ?User $by): Booking
@@ -99,7 +104,7 @@ class ChangeBookingStatus
      */
     public function cancel(Booking $booking, ?User $by, bool $byClient, ?string $note = null): Booking
     {
-        return $this->change($booking, BookingStatus::Cancelled, $by, function (Booking $locked, CarbonImmutable $now) use ($byClient): void {
+        $cancelled = $this->change($booking, BookingStatus::Cancelled, $by, function (Booking $locked, CarbonImmutable $now) use ($byClient): void {
             if ($byClient && $locked->starts_at->lessThanOrEqualTo($now)) {
                 throw BookingException::alreadyStarted();
             }
@@ -111,6 +116,9 @@ class ChangeBookingStatus
 
             $locked->hold_expires_at = null;
         }, $note);
+        $this->notify->handle($cancelled, BookingNotice::Cancelled);
+
+        return $cancelled;
     }
 
     public function markNoShow(Booking $booking, ?User $by): Booking

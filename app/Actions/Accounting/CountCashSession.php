@@ -22,6 +22,7 @@ class CountCashSession
         $out = [];
 
         $payments = Payment::withoutGlobalScope('salon')
+            ->where('salon_id', $session->salon_id)
             ->where('cash_session_id', $session->id)
             ->selectRaw('kind, method, SUM(amount_cents) as total')
             ->groupBy('kind', 'method')
@@ -37,6 +38,7 @@ class CountCashSession
         }
 
         $expenses = Expense::withoutGlobalScope('salon')
+            ->where('salon_id', $session->salon_id)
             ->where('cash_session_id', $session->id)
             ->selectRaw('method, SUM(amount_cents) as total')
             ->groupBy('method')

@@ -5,9 +5,11 @@ namespace App\Support\Images;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\ImageInterface;
+use Throwable;
 
 /**
  * Single entry point for every user-uploaded image (avatars, logos, gallery).
@@ -61,7 +63,12 @@ class ImageStore
 
     private function read(UploadedFile $file): ImageInterface
     {
-        return (new ImageManager(new Driver))->read($file->getRealPath());
+        try {
+            return (new ImageManager(new Driver))->read($file->getRealPath());
+        } catch (Throwable) {
+            // The header looked like an image but the rest does not decode.
+            throw ValidationException::withMessages([$this->field($file) => 'No pudimos leer esa imagen. Prueba con otra foto.']);
+        }
     }
 
     /**
@@ -87,5 +94,19 @@ class ImageStore
     public function url(?string $path): ?string
     {
         return $path === null ? null : Storage::disk($this->disk)->url($path);
+    }
+
+    /**
+     * The form field the file came in, to hang the error on it.
+     */
+    private function field(UploadedFile $file): string
+    {
+        foreach (request()->allFiles() as $name => $uploaded) {
+            if ($uploaded === $file) {
+                return (string) $name;
+            }
+        }
+
+        return 'photo';
     }
 }

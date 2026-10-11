@@ -13,6 +13,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\SalonPermission;
 use App\Models\Booking;
 use App\Models\CashSession;
+use App\Models\Expense;
 use App\Models\SalonClient;
 use App\Models\SalonMember;
 use App\Models\Service;
@@ -179,4 +180,32 @@ it('takes today\'s cash expense out of the open till at any fraction of a second
     $this->actingAs($this->owner)->post(route('expenses.store'), ['amount' => '12.30', 'method' => 'cash', 'date' => '2026-10-07'])->assertSessionHasNoErrors();
 
     $this->actingAs($this->owner)->get(route('cash.index'))->assertInertia(fn (Assert $page) => $page->where('session.expectedCash', '37.70'));
+});
+
+it('freezes the expenses of a till once it is closed, and keeps old ones out of the open till', function () {
+    $this->actingAs($this->owner)->post(route('cash.open'), ['amount' => '50']);
+    $this->actingAs($this->owner)->post(route('expenses.store'), ['amount' => '20', 'method' => 'cash', 'date' => '2026-10-07']);
+    $inTill = Expense::withoutGlobalScope('salon')->sole();
+    $this->actingAs($this->owner)->post(route('expenses.store'), ['amount' => '30', 'method' => 'cash', 'date' => '2026-10-01']);
+    $old = Expense::withoutGlobalScope('salon')->whereKeyNot($inTill->id)->sole();
+
+    // While the till is open its expense can be corrected: 50 − 15.
+    $this->actingAs($this->owner)->post(route('expenses.update', $inTill), ['amount' => '15', 'method' => 'cash', 'date' => '2026-10-07'])->assertSessionHasNoErrors();
+    // An old expense re-dated to today does not slip into it.
+    $this->actingAs($this->owner)->post(route('expenses.update', $old), ['amount' => '30', 'method' => 'cash', 'date' => '2026-10-07']);
+    $this->actingAs($this->owner)->get(route('cash.index'))->assertInertia(fn (Assert $page) => $page->where('session.expectedCash', '35.00'));
+
+    $session = CashSession::withoutGlobalScope('salon')->sole();
+    $this->actingAs($this->owner)->post(route('cash.close', $session), ['amount' => '35']);
+
+    $this->actingAs($this->owner)->post(route('expenses.update', $inTill), ['amount' => '1', 'method' => 'cash', 'date' => '2026-10-07'])->assertInertiaFlash('toast.type', 'error');
+    $this->actingAs($this->owner)->delete(route('expenses.destroy', $inTill))->assertInertiaFlash('toast.type', 'error');
+
+    expect($inTill->refresh()->amount_cents)->toBe(1500)
+        ->and($inTill->trashed())->toBeFalse()
+        ->and($old->refresh()->cash_session_id)->toBeNull();
+
+    // What never touched a till can still be removed.
+    $this->actingAs($this->owner)->delete(route('expenses.destroy', $old))->assertSessionHasNoErrors();
+    expect($old->refresh()->trashed())->toBeTrue();
 });

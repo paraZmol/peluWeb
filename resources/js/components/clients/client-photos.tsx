@@ -52,8 +52,9 @@ export function ClientPhotos({
                         Fotos antes y después
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                        Solo para el registro interno del salón. No se publican
-                        desde aquí.
+                        Solo para el registro interno del salón. No las
+                        publiques ni las envíes: para eso hace falta otra
+                        autorización escrita de la persona.
                     </p>
                 </div>
                 <p

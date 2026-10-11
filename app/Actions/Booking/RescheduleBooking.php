@@ -3,6 +3,7 @@
 namespace App\Actions\Booking;
 
 use App\Data\Booking\BookingMove;
+use App\Enums\BookingNotice;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
 use App\Exceptions\BookingException;
@@ -34,11 +35,15 @@ class RescheduleBooking
     public function __construct(
         private readonly StaffAvailability $availability,
         private readonly SyncBookingSegments $segments,
+        private readonly NotifyClient $notify,
     ) {}
 
     public function handle(BookingMove $move): Booking
     {
-        return DB::transaction(fn (): Booking => $this->move($move), self::DEADLOCK_ATTEMPTS);
+        $moved = DB::transaction(fn (): Booking => $this->move($move), self::DEADLOCK_ATTEMPTS);
+        $this->notify->handle($moved, BookingNotice::Moved);
+
+        return $moved;
     }
 
     /**

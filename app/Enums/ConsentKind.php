@@ -29,7 +29,7 @@ enum ConsentKind: string
     public function textVersion(): string
     {
         return match ($this) {
-            self::Care => '0.2',
+            self::Care => '0.3',
             self::Photos => '0.1',
         };
     }

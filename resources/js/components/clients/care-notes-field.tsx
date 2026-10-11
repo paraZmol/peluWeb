@@ -104,7 +104,7 @@ export function CareNotesField({
             <NotesField
                 id="client-care-notes"
                 label="Alergias y cuidado"
-                help="Alergias, sensibilidades y reacciones a productos. Solo lo ve quien dirige el salón y quien atiende a esta persona."
+                help="Alergias, sensibilidades y reacciones a productos. Lo ven quien dirige el salón y quien atiende a esta persona."
                 value={data.care_notes}
                 onChange={(value) => setData('care_notes', value)}
                 maxLength={maxLength}

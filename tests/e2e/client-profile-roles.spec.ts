@@ -172,7 +172,7 @@ for (const scheme of ['light', 'dark'] as const) {
             for (const trace of [
                 'Alergias y cuidado',
                 'Fotos antes y después',
-                'Imprimir o guardar como PDF',
+                'Imprimir la hoja',
                 'Sin alergias anotadas',
                 'autorización escrita',
                 'amoníaco',
@@ -299,7 +299,7 @@ for (const scheme of ['light', 'dark'] as const) {
             await expect(sheet).toBeVisible();
             await expect(sheet).toContainText('Salón Fichas');
             await expect(sheet).toContainText(
-                'Autorización para guardar alergias y datos de cuidado',
+                'Autorización para guardar datos de salud: alergias y reacciones a productos',
             );
             await expect(sheet).toContainText(`Nombre: ${name}`);
             await expect(sheet).toContainText('Firma');
@@ -357,12 +357,12 @@ for (const scheme of ['light', 'dark'] as const) {
             await consent.uncheck();
             await page.getByRole('button', { name: 'Guardar notas' }).click();
             const confirmation = page.getByRole('dialog', {
-                name: '¿Retirar la autorización?',
+                name: /^¿Retirar la autorización de /,
             });
             await confirmation.getByRole('button', { name: 'Volver' }).click();
             await page.getByRole('button', { name: 'Guardar notas' }).click();
             await confirmation
-                .getByRole('button', { name: 'Borrar alergias y guardar' })
+                .getByRole('button', { name: 'Retirar y borrar alergias' })
                 .click();
             await expect(page.getByText('Ficha actualizada.')).toBeVisible({
                 timeout: 25_000,
@@ -679,6 +679,8 @@ test.describe('fotos con archivos reales', () => {
     test('archivos que no se aceptan: más de 5 MB, svg, gif, falso .jpg y de más de 4000 px', async ({
         page,
     }) => {
+        // Five uploads, each waited on: well over the default minute on a phone.
+        test.setTimeout(240_000);
         await signIn(page, fabia);
         await page.goto('/clientes');
         await page
@@ -696,11 +698,15 @@ test.describe('fotos con archivos reales', () => {
         });
         const save = dialog.getByRole('button', { name: 'Guardar foto' });
         const input = dialog.getByLabel('Foto del trabajo', { exact: true });
+        // By attribute, not by role: while the upload dialog stays open (a
+        // refused file keeps it open) the page behind is hidden from roles.
         const count = async () =>
             Number(
-                (await section.getByLabel(/ de 40 fotos$/).innerText()).split(
-                    ' ',
-                )[0],
+                (
+                    (await page
+                        .locator('[aria-label$=" de 40 fotos"]')
+                        .getAttribute('aria-label')) ?? ''
+                ).split(' ')[0],
             );
         const before = await count();
         const outcomes: Record<string, string> = {};
