@@ -335,3 +335,20 @@ test.describe('Mis datos', () => {
         ).toBeVisible();
     });
 });
+
+test('descargar mis datos entrega un archivo con la cuenta propia', async ({
+    page,
+}) => {
+    await login(page, 'cliente@example.com', 'password');
+    await expect(page).toHaveURL(/dashboard$/);
+    await page.goto('/mis-datos');
+
+    const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.getByRole('link', { name: 'Descargar mis datos' }).click(),
+    ]);
+
+    expect(download.suggestedFilename()).toBe('mis-datos.json');
+    const copy = await page.request.get('/mis-datos/descargar');
+    expect((await copy.json()).cuenta.correo).toBe('cliente@example.com');
+});

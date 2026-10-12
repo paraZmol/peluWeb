@@ -295,3 +295,27 @@ it('lets the salon take back, on the person\'s word, what they authorized from t
         ->and($latest?->action)->toBe(ConsentAction::Withdrawn)
         ->and($latest?->method)->toBe(ConsentMethod::StaffDeclared);
 });
+
+it('lets the person download what is theirs, and only theirs', function () {
+    $this->file->forceFill(['care_notes' => 'Alergia a la PPD', 'care_consent_at' => now(), 'notes' => 'Prefiere las mañanas', 'formula_notes' => '6.1 + 20 vol'])->save();
+    $this->danaFile->forceFill(['care_notes' => 'Asma', 'care_consent_at' => now()])->save();
+    $this->actingAs($this->carla)->post(route('my-data.grant', [$this->file->id, 'photos']), ['accept' => true]);
+
+    $response = $this->actingAs($this->carla)->get(route('my-data.download'))
+        ->assertOk()
+        ->assertHeader('Content-Disposition', 'attachment; filename="mis-datos.json"');
+
+    $response->assertJsonPath('cuenta.correo', $this->carla->email)
+        ->assertJsonCount(1, 'salones')
+        ->assertJsonPath('salones.0.salon', 'Estudio Luz')
+        ->assertJsonPath('salones.0.alergias_y_cuidado', 'Alergia a la PPD')
+        ->assertJsonPath('salones.0.autorizaciones.0.accion', 'granted');
+    // Neither another person's data nor what the salon wrote on its own.
+    expect($response->getContent())->not->toContain('Asma')
+        ->not->toContain('Prefiere las mañanas')
+        ->not->toContain('6.1 + 20 vol')
+        ->not->toContain('password');
+
+    auth()->logout();
+    $this->get(route('my-data.download'))->assertRedirect(route('login'));
+});

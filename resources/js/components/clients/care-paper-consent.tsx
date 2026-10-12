@@ -34,6 +34,8 @@ export function CarePaperConsent({ client, form, consentText }: Props) {
                             Autorización registrada el{' '}
                             {formatLongDay(consent.date)}
                             {consent.by && ` por ${consent.by}`}
+                            {consent.byGuardian &&
+                                '. Firmó su madre, padre o tutor'}
                         </span>
                     </p>
                     <PrintConsentButton label="Reimprimir la hoja" />
@@ -74,6 +76,26 @@ export function CarePaperConsent({ client, form, consentText }: Props) {
                     message={errors.care_consent}
                 />
             </div>
+
+            {consent === null && (
+                <label
+                    htmlFor="client-care-minor"
+                    className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm"
+                >
+                    <Checkbox
+                        id="client-care-minor"
+                        checked={data.care_minor}
+                        onCheckedChange={(checked) =>
+                            setData('care_minor', checked === true)
+                        }
+                        className="mt-0.5 size-5"
+                    />
+                    <span>
+                        {client.name} es menor de edad: la hoja la firmó su
+                        madre, padre o tutor.
+                    </span>
+                </label>
+            )}
 
             {isWithdrawing && (
                 // It shows up on unticking: said at once, not on the next read.

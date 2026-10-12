@@ -50,7 +50,7 @@ test.describe('Ficha del cliente', () => {
         await login(page, fileOwner.email, fileOwner.password);
         await expect(page).toHaveURL(/dashboard$/);
         await openSidebar(page);
-        await page.getByRole('link', { name: 'Clientes' }).click();
+        await page.getByRole('link', { name: 'Clientes', exact: true }).click();
         await expect(page).toHaveURL(/\/clientes$/);
         // On a phone the menu stays over the page after navigating.
         await page.keyboard.press('Escape');

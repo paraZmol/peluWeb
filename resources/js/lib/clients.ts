@@ -206,6 +206,7 @@ export function initialNotesFields(client: ClientFile): ClientNotesFields {
         formula_notes: client.formulaNotes ?? '',
         care_notes: client.careNotes ?? '',
         care_consent: client.careConsent !== null,
+        care_minor: client.careConsent?.byGuardian ?? false,
     };
 }
 
@@ -229,6 +230,7 @@ export function notesPayload(
         formula_notes,
         care_notes: fields.care_consent ? fields.care_notes : '',
         care_consent: fields.care_consent,
+        care_minor: fields.care_consent && fields.care_minor,
     };
 }
 

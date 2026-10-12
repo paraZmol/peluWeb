@@ -12,11 +12,13 @@ final readonly class ClientNotes
      * @param  string|null  $formulaNotes  products, tones and times of their usual work
      * @param  string|null  $careNotes  allergies and reactions: health data
      * @param  bool  $hasCareConsent  the salon keeps the person's signed authorization for the care notes
+     * @param  bool  $isSignedByGuardian  the person is under age: a parent or guardian signed the sheet
      */
     public function __construct(
         public ?string $notes,
         public ?string $formulaNotes,
         public ?string $careNotes,
         public bool $hasCareConsent,
+        public bool $isSignedByGuardian = false,
     ) {}
 }

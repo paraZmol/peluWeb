@@ -77,7 +77,7 @@ test.describe('Reportes del salón', () => {
         await login(page, multi.email, multi.password);
         await expect(page).toHaveURL(/dashboard$/);
         await openSidebar(page);
-        await page.getByRole('link', { name: 'Reportes' }).click();
+        await page.getByRole('link', { name: 'Reportes', exact: true }).click();
         await expect(page).toHaveURL(/\/reportes$/);
         // On a phone the menu stays over the page after navigating.
         await page.keyboard.press('Escape');
@@ -201,9 +201,9 @@ test.describe('Reportes del salón', () => {
         await expect(
             page.getByRole('link', { name: 'Mis reservas' }),
         ).toBeVisible();
-        await expect(page.getByRole('link', { name: 'Reportes' })).toHaveCount(
-            0,
-        );
+        await expect(
+            page.getByRole('link', { name: 'Reportes', exact: true }),
+        ).toHaveCount(0);
 
         const response = await page.goto('/reportes');
         expect(response?.status()).toBe(403);

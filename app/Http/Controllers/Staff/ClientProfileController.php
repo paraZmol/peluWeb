@@ -55,6 +55,8 @@ class ClientProfileController extends SalonAreaController
                     'by' => $client->careConsentBy?->name,
                     // "account": the person authorized it themselves; otherwise a signed sheet.
                     'method' => $care?->method->value,
+                    // Under age: the sheet was signed by a parent or guardian.
+                    'byGuardian' => (bool) ($care?->details['guardian'] ?? false),
                 ],
                 // Taken back: the file must say so, never read as "no allergies".
                 'careWithdrawal' => $care !== null && $care->action === ConsentAction::Withdrawn

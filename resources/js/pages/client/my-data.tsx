@@ -1,10 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
+import { Download, ShieldCheck } from 'lucide-react';
 import { SalonFileCard } from '@/components/my-data/salon-file-card';
 import type { MyDataFile } from '@/components/my-data/types';
 import { Button } from '@/components/ui/button';
 import { index as bookings } from '@/routes/bookings';
-import { index } from '@/routes/my-data';
+import { download, index } from '@/routes/my-data';
 
 type Props = { files: MyDataFile[] };
 
@@ -59,6 +59,23 @@ export default function MyData({ files }: Props) {
                         ))}
                     </ul>
                 )}
+
+                <section className="flex flex-col items-start gap-3 border-t pt-6">
+                    <h2 className="text-base font-semibold">
+                        Llévate una copia
+                    </h2>
+                    <p className="max-w-2xl text-sm text-muted-foreground">
+                        Un archivo con tu cuenta, tus reservas, tus reseñas y lo
+                        que cada salón guarda con tu autorización. Lo que un
+                        salón anota por su cuenta (preferencias, fórmula) se
+                        pide en el salón.
+                    </p>
+                    <Button asChild variant="outline" className="h-11">
+                        <a href={download().url} download="mis-datos.json">
+                            <Download aria-hidden /> Descargar mis datos
+                        </a>
+                    </Button>
+                </section>
             </div>
         </>
     );

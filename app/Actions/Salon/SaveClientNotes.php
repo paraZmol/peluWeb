@@ -74,7 +74,9 @@ class SaveClientNotes
         if (! $hadConsent) {
             $client->care_consent_at = CarbonImmutable::now();
             $client->care_consent_by = $by?->id;
-            ClientConsent::record($client, ConsentKind::Care, ConsentAction::Granted, ConsentProof::byStaff(ConsentMethod::Paper, $by));
+            $proof = ConsentProof::byStaff(ConsentMethod::Paper, $by);
+            // Who signed is part of the proof: a minor cannot give this one alone.
+            ClientConsent::record($client, ConsentKind::Care, ConsentAction::Granted, $notes->isSignedByGuardian ? $proof->with(['guardian' => true]) : $proof);
         }
     }
 }

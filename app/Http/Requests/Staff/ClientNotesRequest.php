@@ -26,6 +26,8 @@ class ClientNotesRequest extends FormRequest
             'care_notes' => ['nullable', 'string', $max],
             // Health data is only kept with the person's signed authorization.
             'care_consent' => ['boolean', 'accepted_if:has_care_notes,true'],
+            // Under age: the sheet carries a parent's or guardian's signature.
+            'care_minor' => ['boolean'],
         ];
     }
 
@@ -53,6 +55,7 @@ class ClientNotesRequest extends FormRequest
             formulaNotes: $this->filled('formula_notes') ? $this->string('formula_notes')->toString() : null,
             careNotes: $this->filled('care_notes') ? $this->string('care_notes')->toString() : null,
             hasCareConsent: $this->boolean('care_consent'),
+            isSignedByGuardian: $this->boolean('care_minor'),
         );
     }
 }

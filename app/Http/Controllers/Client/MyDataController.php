@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Actions\Salon\ClientDataRights;
+use App\Actions\Salon\ExportMyData;
 use App\Actions\Salon\ManageClientPhotos;
 use App\Actions\Salon\MyClientFiles;
 use App\Data\Salon\ConsentProof;
@@ -15,6 +16,7 @@ use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\User;
 use App\Notifications\ConsentReceiptNotification;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -42,6 +44,20 @@ class MyDataController extends Controller
         return Inertia::render('client/my-data', [
             'files' => $this->files->handle($user),
         ]);
+    }
+
+    /**
+     * Their own data as a file to keep or take elsewhere.
+     */
+    public function download(Request $request, ExportMyData $export): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json($export->handle($user), 200, [
+            'Content-Disposition' => 'attachment; filename="mis-datos.json"',
+            'Cache-Control' => 'private, no-store',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     public function grant(AuthorizeConsentRequest $request, int $client, ConsentKind $kind, ClientDataRights $rights): RedirectResponse

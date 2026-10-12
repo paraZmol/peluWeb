@@ -136,6 +136,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('mis-datos', [MyDataController::class, 'index'])
         ->middleware('cache.headers:no_store;private')
         ->name('my-data.index');
+    Route::get('mis-datos/descargar', [MyDataController::class, 'download'])
+        ->middleware('throttle:6,1,my-data-download')
+        ->name('my-data.download');
     Route::post('mis-datos/{client}/autorizar/{kind}', [MyDataController::class, 'grant'])
         ->whereNumber('client')
         ->middleware('throttle:10,1,my-data-grant')

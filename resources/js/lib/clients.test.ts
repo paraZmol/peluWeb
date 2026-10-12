@@ -46,6 +46,7 @@ function fields(overrides: Partial<ClientNotesFields> = {}): ClientNotesFields {
         formula_notes: '7.1 + 20 vol',
         care_notes: 'Alergia a la PPD',
         care_consent: true,
+        care_minor: false,
         ...overrides,
     };
 }
@@ -313,6 +314,7 @@ describe('initialNotesFields', () => {
             formula_notes: '',
             care_notes: '',
             care_consent: false,
+            care_minor: false,
         });
     });
 
@@ -339,6 +341,7 @@ describe('notesPayload', () => {
             formula_notes: '7.1 + 20 vol',
             care_notes: '',
             care_consent: false,
+            care_minor: false,
         });
     });
 

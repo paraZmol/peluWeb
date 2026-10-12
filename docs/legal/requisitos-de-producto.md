@@ -30,7 +30,7 @@ Prioridad: **P** = bloquea el piloto con salones reales (8.5) · **L** = bloquea
 
 | # | Requisito | Por qué |
 |---|---|---|
-| L1 | **Descargar mis datos**: desde el perfil, un archivo con la cuenta y las reservas propias | Acceso y portabilidad |
+| L1 | **Descargar mis datos**. *Hecho (2026-10-12)*: desde «Mis datos», un archivo JSON con la cuenta, las reservas, las reseñas, las autorizaciones y lo que cada salón guarda con autorización; no incluye lo que el salón anota por su cuenta (preferencias, fórmula), que se pide en el salón | Acceso y portabilidad |
 | L2 | **Exportar y cerrar el salón**: exportar clientes y reservas (hoy solo movimientos en CSV); cierre del salón con plazo de exportación y borrado o anonimización posterior, incluidas sus imágenes | Fin del encargo |
 | L3 | **Conservación automática**, con plazos escritos: foto de referencia tras la cita; invitaciones vencidas; sesiones caducadas; fichas y reservas antiguas (anonimizar tras el plazo que decida el salón dentro de un máximo); cuentas sin verificar | Principio de conservación limitada |
 | L4 | **Foto de referencia fuera del disco público**: servirla solo a quien puede ver esa reserva | Imagen de personas, quizá menores |

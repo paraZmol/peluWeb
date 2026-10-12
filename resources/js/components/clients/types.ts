@@ -6,6 +6,8 @@ export type CareConsent = {
     by: string | null;
     /** "account": the person gave it from their account; otherwise a signed sheet. */
     method: string | null;
+    /** Under age: a parent or guardian signed the sheet. */
+    byGuardian?: boolean;
 };
 
 /** An authorization taken back, by the person themselves or on their behalf. */
@@ -62,6 +64,8 @@ export type ClientNotesFields = {
     formula_notes: string;
     care_notes: string;
     care_consent: boolean;
+    /** Under age: the sheet carries a parent's or guardian's signature. */
+    care_minor: boolean;
 };
 
 export type ClientPhotoKind = 'before' | 'after';

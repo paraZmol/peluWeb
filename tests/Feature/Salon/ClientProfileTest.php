@@ -9,6 +9,7 @@ use App\Enums\BookingSource;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\ConsentAction;
+use App\Enums\ConsentKind;
 use App\Enums\SalonPermission;
 use App\Models\Booking;
 use App\Models\ClientConsent;
@@ -244,4 +245,17 @@ it('keeps the consent records from being rewritten', function () {
 
     expect(fn () => $consent->delete())->toThrow(LogicException::class)
         ->and(fn () => $consent->forceFill(['text_version' => '9'])->save())->toThrow(LogicException::class);
+});
+
+it('records that a parent or guardian signed for a minor', function () {
+    $owner = User::factory()->create();
+    $salon = app(CreateSalon::class)->handle($owner, 'Estudio Menores', BusinessType::Unisex, Clientele::Everyone);
+    $client = SalonClient::factory()->for($salon)->create();
+
+    $this->actingAs($owner)->put(route('clients.notes.update', $client), ['care_notes' => 'Dermatitis', 'care_consent' => true, 'care_minor' => true])
+        ->assertSessionHasNoErrors();
+
+    expect(ClientConsent::latest($client, ConsentKind::Care)?->details)->toBe(['guardian' => true]);
+    $this->actingAs($owner)->get(route('clients.show', $client))
+        ->assertInertia(fn ($page) => $page->where('client.careConsent.byGuardian', true));
 });
