@@ -61,7 +61,10 @@ final readonly class PromotionTerms
 
         $minute = $localStart->hour * 60 + $localStart->minute;
 
-        return $minute >= $this->fromMinute && $minute < $this->toMinute;
+        // "22:00 to 02:00" wraps past midnight.
+        return $this->fromMinute <= $this->toMinute
+            ? $minute >= $this->fromMinute && $minute < $this->toMinute
+            : $minute >= $this->fromMinute || $minute < $this->toMinute;
     }
 
     /**
@@ -108,14 +111,17 @@ final readonly class PromotionTerms
             }
 
             $discounted = intdiv($item->priceCents * (100 - (int) $this->percent), 100);
+            $rounded = $discounted - $discounted % self::ROUNDING_CENTS;
 
-            return $item->chargedAt($discounted - $discounted % self::ROUNDING_CENTS);
+            // Rounding must not turn a discount into a gift.
+            return $item->chargedAt($rounded > 0 ? $rounded : $discounted);
         }, $items);
     }
 
     /**
      * A fixed amount comes off once per booking, from the first included
-     * service, and never below zero.
+     * service that costs more than it: a professional's own price may be
+     * lower than the catalogue's, and "S/ 10 less" must not make it free.
      *
      * @param  list<QuoteItem>  $items
      * @return list<QuoteItem>
@@ -125,13 +131,17 @@ final readonly class PromotionTerms
         $isUsed = false;
 
         return array_map(function (QuoteItem $item) use (&$isUsed): QuoteItem {
-            if ($isUsed || ! in_array($item->serviceId, $this->serviceIds, true)) {
+            $isIncluded = in_array($item->serviceId, $this->serviceIds, true);
+
+            if ($isUsed || ! $isIncluded || $item->priceCents <= (int) $this->amountCents) {
                 return $item;
             }
 
             $isUsed = true;
+            $discounted = $item->priceCents - (int) $this->amountCents;
+            $rounded = $discounted - $discounted % self::ROUNDING_CENTS;
 
-            return $item->chargedAt(max(0, $item->priceCents - (int) $this->amountCents));
+            return $item->chargedAt($rounded > 0 ? $rounded : $discounted);
         }, $items);
     }
 
@@ -150,8 +160,10 @@ final readonly class PromotionTerms
             return $items;
         }
 
+        // The gift has one price: an option of it (long hair, a bigger
+        // treatment) is another service, at its own price.
         return array_map(
-            fn (QuoteItem $item): QuoteItem => $item->serviceId === $this->giftServiceId ? $item->chargedAt(0) : $item,
+            fn (QuoteItem $item): QuoteItem => $item->serviceId === $this->giftServiceId && $item->variantId === null ? $item->chargedAt(0) : $item,
             $items,
         );
     }

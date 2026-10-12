@@ -68,10 +68,14 @@ class RescheduleBooking
             $salon, $target, $booking->shape(), $localDate, $this->level($booking, $byClient), $now, $booking->id,
         );
 
+        if (! $byClient) {
+            return $slots;
+        }
+
         // A client keeps the promotion's price only where it still applies.
-        return $byClient
-            ? array_values(array_filter($slots, fn (int $start): bool => $this->keepsPromotion($booking, $start, $salon)))
-            : $slots;
+        $keeps = $this->promotionRule($booking, $salon);
+
+        return array_values(array_filter($slots, $keeps));
     }
 
     /**
@@ -81,14 +85,30 @@ class RescheduleBooking
      */
     private function keepsPromotion(Booking $booking, int $start, Salon $salon): bool
     {
-        if ($booking->promotion_id === null) {
-            return true;
+        return $this->promotionRule($booking, $salon)($start);
+    }
+
+    /**
+     * The test a start must pass for the booking to keep its promotion;
+     * read once, whatever number of starts is checked.
+     *
+     * @return callable(int): bool
+     */
+    private function promotionRule(Booking $booking, Salon $salon): callable
+    {
+        if ($booking->promotion_cents === 0) {
+            return fn (int $start): bool => true;
         }
 
-        $promotion = Promotion::withoutGlobalScope('salon')->withTrashed()->with('services')->find($booking->promotion_id);
+        $terms = $booking->promotion_id === null ? null
+            : Promotion::withoutGlobalScope('salon')->withTrashed()->with('services')->find($booking->promotion_id)?->terms();
 
-        return $promotion === null
-            || $promotion->terms()->covers(CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone));
+        // Its rules are gone with the promotion: only the salon moves it now.
+        if ($terms === null) {
+            return fn (int $start): bool => $start === $booking->starts_at->getTimestamp();
+        }
+
+        return fn (int $start): bool => $terms->covers(CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone));
     }
 
     private function move(BookingMove $move): Booking

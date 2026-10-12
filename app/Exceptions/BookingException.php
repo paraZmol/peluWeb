@@ -82,6 +82,11 @@ class BookingException extends BusinessRuleException
         return new self('Ya cambiaste esta reserva varias veces. Escribe al salón para coordinar otro cambio.');
     }
 
+    public static function promotionPlaceTaken(string $name): self
+    {
+        return new self("El plazo de la seña venció y el cupo de «{$name}» ya lo tomó otra reserva. Cancela esta y crea una nueva a precio normal.");
+    }
+
     public static function promotionNotValidThen(string $name): self
     {
         return new self("La promoción «{$name}» de tu reserva no vale en ese horario. Elige otro, o pide al salón que la mueva.");

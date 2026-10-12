@@ -86,7 +86,8 @@ class Promotion extends Model
      */
     public function services(): BelongsToMany
     {
-        return $this->belongsToMany(Service::class)->withoutGlobalScope('salon');
+        // Deleted ones too: a promotion that lost a service must notice it.
+        return $this->belongsToMany(Service::class)->withoutGlobalScope('salon')->withTrashed();
     }
 
     /**
@@ -94,7 +95,7 @@ class Promotion extends Model
      */
     public function giftService(): BelongsTo
     {
-        return $this->belongsTo(Service::class, 'gift_service_id')->withoutGlobalScope('salon');
+        return $this->belongsTo(Service::class, 'gift_service_id')->withoutGlobalScope('salon')->withTrashed();
     }
 
     /**
@@ -103,7 +104,7 @@ class Promotion extends Model
      */
     public function isIntact(): bool
     {
-        $isOffered = fn (?Service $service): bool => $service !== null && $service->is_active;
+        $isOffered = fn (?Service $service): bool => $service !== null && $service->is_active && ! $service->trashed();
 
         return $this->services->isNotEmpty()
             && $this->services->every($isOffered)

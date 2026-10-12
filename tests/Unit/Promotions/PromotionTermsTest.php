@@ -58,12 +58,14 @@ it('takes the percentage off each included service, down to 10 céntimos', funct
         ->and($terms->price($items)[0]->normalPriceCents())->toBe(3500);
 });
 
-it('takes a fixed amount off once per booking, never below zero', function () {
+it('takes a fixed amount off once per booking, only from a service that costs more than it', function () {
     $terms = promoTerms(PromotionMechanic::Discount, ['amountCents' => 1000, 'serviceIds' => [1, 2]]);
 
     expect(chargedCents($terms->price([promoLine(1, 3500), promoLine(2, 1850)])))->toBe([2500, 1850])
         ->and(chargedCents($terms->price([promoLine(3, 1200), promoLine(2, 1850)])))->toBe([1200, 850])
-        ->and(chargedCents($terms->price([promoLine(2, 800)])))->toBe([0])
+        // Not below what the service costs: it is left alone rather than given away.
+        ->and(chargedCents($terms->price([promoLine(2, 800)])))->toBe([800])
+        ->and(chargedCents($terms->price([promoLine(2, 3333)])))->toBe([2330])
         ->and($terms->savedCents([promoLine(3, 1200)]))->toBe(0);
 });
 

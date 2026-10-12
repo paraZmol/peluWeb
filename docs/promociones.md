@@ -56,6 +56,20 @@ imagen descargable para Instagram.
   **confirmar con el texto legal antes del paso 9.4**; si piden un número de cupos, el campo pasa
   a obligatorio con 30 por defecto.)
 
+### Precisiones del motor (2026-10-12, tras el ataque de `booking-breaker`)
+- Los cupos y "una por cliente" se cuentan con la fila de la promoción bloqueada y con lecturas
+  bloqueantes: una lectura normal contaría con la foto anterior a la espera del bloqueo.
+- Una reserva cuya retención venció devolvió su cupo. Si otra reserva lo tomó, "Seña recibida" se
+  rechaza con un mensaje que pide cancelarla y crear una nueva a precio normal (igual que cuando
+  alguien tomó el horario).
+- El monto fijo solo se aplica a un servicio que cueste **más** que el monto con ese profesional o
+  esa variante (nunca deja un servicio gratis) y el resultado se redondea hacia abajo a 10 céntimos.
+- El porcentaje nunca redondea un servicio a S/ 0.
+- El regalo es el servicio sin opción elegida: una variante suya se cobra a su precio.
+- Un servicio incluido borrado (no solo desactivado) también detiene la promoción.
+- Días y horas pueden cruzar la medianoche ("22:00 a 02:00").
+- Si la promoción se borró del todo, el cliente ya no puede mover esa reserva: solo el salón.
+
 ## Fichas
 
 ### Descuento

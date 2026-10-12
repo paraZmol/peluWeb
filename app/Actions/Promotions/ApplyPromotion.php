@@ -5,6 +5,7 @@ namespace App\Actions\Promotions;
 use App\Data\Booking\BookingQuote;
 use App\Domain\Promotions\PromotionPicker;
 use App\Enums\BookingStatus;
+use App\Enums\PromotionStatus;
 use App\Models\Booking;
 use App\Models\Promotion;
 use App\Models\Salon;
@@ -18,9 +19,10 @@ use Illuminate\Database\Eloquent\Builder;
  * on the public page have no current salon.
  *
  * With $underLock it runs inside the booking's transaction: the promotion
- * row is locked before its places are counted, so two bookings cannot
- * take the last one. Lock order: professional → client → booking →
- * promotion → salon.
+ * row is locked and its places are counted with locking reads. A plain
+ * read there would count from the snapshot the transaction took before it
+ * waited for the lock, and hand the last place to two bookings at once.
+ * Lock order: professional → client → booking → promotion → salon.
  */
 class ApplyPromotion
 {
@@ -61,35 +63,74 @@ class ApplyPromotion
     }
 
     /**
+     * Whether a booking whose hold ran out may still be confirmed at its
+     * promotion's price: its place went back, and someone may have taken
+     * it. Runs inside the booking's transaction, with the booking locked.
+     */
+    public function stillHasRoomFor(Booking $booking): bool
+    {
+        if ($booking->promotion_id === null) {
+            return true;
+        }
+
+        $promotion = Promotion::withoutGlobalScope('salon')->withTrashed()->whereKey($booking->promotion_id)->lockForUpdate()->first();
+
+        if ($promotion === null) {
+            return true;
+        }
+
+        $others = fn (): Builder => $this->taken($promotion, underLock: true)->where('id', '!=', $booking->id);
+
+        return ($promotion->quota === null || $others()->count() < $promotion->quota)
+            && (! $promotion->once_per_client || $others()->where('salon_client_id', $booking->salon_client_id)->count() === 0);
+    }
+
+    /**
      * Places left, and not already used by this client when it is one
      * each. A booking that was cancelled or whose hold ran out gives its
      * place back; a visit that happened, or was missed, keeps it.
      */
     private function hasRoom(Promotion $promotion, ?SalonClient $client, bool $underLock): bool
     {
+        if ($underLock) {
+            // The row as it is now: it may have been paused, or its places
+            // changed, since it was read above.
+            $promotion = Promotion::withoutGlobalScope('salon')->whereKey($promotion->id)->lockForUpdate()->first();
+
+            if ($promotion === null || $promotion->status !== PromotionStatus::Published) {
+                return false;
+            }
+        }
+
         if ($promotion->quota === null && ! $promotion->once_per_client) {
             return true;
         }
 
-        if ($underLock) {
-            Promotion::withoutGlobalScope('salon')->whereKey($promotion->id)->lockForUpdate()->first();
-        }
-
-        $taken = Booking::withoutGlobalScope('salon')
-            ->where('promotion_id', $promotion->id)
-            ->whereNotIn('status', [BookingStatus::Cancelled, BookingStatus::Expired])
-            ->where(fn (Builder $live) => $live
-                ->where('status', '!=', BookingStatus::Pending)
-                ->orWhereNull('hold_expires_at')
-                ->orWhere('hold_expires_at', '>', CarbonImmutable::now()));
-
-        if ($promotion->quota !== null && (clone $taken)->count() >= $promotion->quota) {
+        if ($promotion->quota !== null && $this->taken($promotion, $underLock)->count() >= $promotion->quota) {
             return false;
         }
 
         return ! $promotion->once_per_client
             || $client === null
             || ! $client->exists
-            || ! $taken->where('salon_client_id', $client->id)->exists();
+            || $this->taken($promotion, $underLock)->where('salon_client_id', $client->id)->count() === 0;
+    }
+
+    /**
+     * The bookings holding a place of it.
+     *
+     * @return Builder<Booking>
+     */
+    private function taken(Promotion $promotion, bool $underLock): Builder
+    {
+        return Booking::withoutGlobalScope('salon')
+            ->where('promotion_id', $promotion->id)
+            ->whereNotIn('status', [BookingStatus::Cancelled, BookingStatus::Expired])
+            ->where(fn (Builder $live) => $live
+                ->where('status', '!=', BookingStatus::Pending)
+                ->orWhereNull('hold_expires_at')
+                ->orWhere('hold_expires_at', '>', CarbonImmutable::now()))
+            // Locking: sees what other bookings committed while this one waited.
+            ->when($underLock, fn (Builder $query) => $query->sharedLock());
     }
 }

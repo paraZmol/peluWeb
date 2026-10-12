@@ -2,6 +2,7 @@
 
 namespace App\Actions\Booking;
 
+use App\Actions\Promotions\ApplyPromotion;
 use App\Domain\Accounting\Checkout;
 use App\Domain\Accounting\CommissionCalculator;
 use App\Domain\Booking\AvailabilityCalculator;
@@ -51,6 +52,11 @@ class ChangeBookingStatus
             // if nobody took that time in the meantime.
             if ($locked->isHoldExpired($now) && ! $this->slotStillFree($locked, $now)) {
                 throw BookingException::slotTaken();
+            }
+
+            // The same for its promotion: the place went back with the hold.
+            if ($locked->isHoldExpired($now) && ! app(ApplyPromotion::class)->stillHasRoomFor($locked)) {
+                throw BookingException::promotionPlaceTaken((string) $locked->promotion_name);
             }
 
             if ($locked->deposit_cents > 0) {
