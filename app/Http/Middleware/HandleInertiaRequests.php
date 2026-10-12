@@ -111,6 +111,8 @@ class HandleInertiaRequests extends Middleware
                 'brand' => $salon->brandTokens(),
                 // Drives the "Mi horario" menu entry: the user attends clients here.
                 'hasStaffProfile' => Staff::query()->where('user_id', $user->id)->exists(),
+                // The team keeps a line of people without a booking: shows its menu entry.
+                'walkInsEnabled' => $salon->walk_ins_enabled,
                 'permissions' => collect(SalonPermission::cases())
                     ->filter(fn (SalonPermission $permission) => $membership->hasPermission($permission))
                     ->map(fn (SalonPermission $permission) => $permission->value)

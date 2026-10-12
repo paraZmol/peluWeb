@@ -140,6 +140,21 @@ export type ClientBooking = {
     };
 };
 
+/** A place someone holds on a salon's waiting list, in "Mis reservas". */
+export type WaitlistPlace = {
+    id: number;
+    salonName: string;
+    /** "Y-m-d" on the salon's clock. */
+    date: string;
+    services: string[];
+    /** They were told a time opened up: theirs to book until `turnUntil`. */
+    hasTurn: boolean;
+    /** "HH:MM" on the salon's clock; null while waiting. */
+    turnUntil: string | null;
+    /** The wizard, opened on that day. */
+    bookUrl: string;
+};
+
 export type AgendaAction =
     | 'confirm'
     | 'start'

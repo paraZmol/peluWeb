@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
+    Armchair,
     BookHeart,
     CalendarClock,
     CalendarDays,
@@ -45,6 +46,7 @@ import { index as services } from '@/routes/services';
 import { index as staff } from '@/routes/staff';
 import { mine as mySchedule } from '@/routes/staff/schedule';
 import { index as team } from '@/routes/team';
+import { index as walkIns } from '@/routes/walk-ins';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -54,6 +56,9 @@ export function AppSidebar() {
         { title: 'Panel', href: dashboard(), icon: LayoutGrid },
         ...(currentSalon
             ? [{ title: 'Agenda', href: agenda(), icon: CalendarDays }]
+            : []),
+        ...(currentSalon?.walkInsEnabled
+            ? [{ title: 'Fila sin cita', href: walkIns(), icon: Armchair }]
             : []),
         ...(currentSalon?.hasStaffProfile
             ? [

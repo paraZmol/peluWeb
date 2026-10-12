@@ -7,6 +7,7 @@ use App\Actions\Booking\ClientBookings;
 use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\RescheduleBooking;
 use App\Actions\Booking\UpdateReferencePhoto;
+use App\Actions\Waitlist\MyWaitlist;
 use App\Data\Booking\BookingMove;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\BookingDayRequest;
@@ -42,6 +43,7 @@ class BookingController extends Controller
 
         return Inertia::render('client/bookings/index', [
             'bookings' => ClientBookingResource::collection($bookings)->resolve(),
+            'waitlist' => app(MyWaitlist::class)->handle($user),
         ]);
     }
 

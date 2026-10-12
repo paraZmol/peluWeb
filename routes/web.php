@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Client\BookingController as ClientBookingController;
 use App\Http\Controllers\Client\MyDataController;
 use App\Http\Controllers\Client\ReviewController as ClientReviewController;
+use App\Http\Controllers\Client\WaitlistController;
 use App\Http\Controllers\CurrentSalonController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
@@ -40,6 +41,7 @@ use App\Http\Controllers\Staff\ScheduleController;
 use App\Http\Controllers\Staff\StaffPhotoController;
 use App\Http\Controllers\Staff\StaffServiceController;
 use App\Http\Controllers\Staff\TimeOffController;
+use App\Http\Controllers\Staff\WalkInController;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveCurrentSalon;
@@ -149,6 +151,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('salon-actual/{salon}', [CurrentSalonController::class, 'update'])->name('current-salon.update');
 
     Route::get('s/{salon:slug}/reservar/continuar', [BookingController::class, 'resume'])->name('salons.booking.resume');
+    // No free time that day: be told if one opens up.
+    Route::post('s/{salon:slug}/lista-de-espera', [WaitlistController::class, 'store'])
+        ->middleware('throttle:10,1,waitlist-join')
+        ->name('salons.waitlist.store');
+    Route::delete('lista-de-espera/{entry}', [WaitlistController::class, 'destroy'])
+        ->whereNumber('entry')
+        ->name('waitlist.destroy');
+
     Route::post('s/{salon:slug}/reservas', [BookingController::class, 'store'])
         ->middleware('throttle:10,1,booking-store')
         ->name('salons.booking.store');
@@ -276,6 +286,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('profesionales/{staff}/servicios', [StaffServiceController::class, 'update'])->name('staff.services.update');
 
         Route::get('agenda', [AgendaController::class, 'index'])->name('agenda.index');
+
+        // The day's line of people without a booking, kept by the team.
+        Route::get('fila', [WalkInController::class, 'index'])->name('walk-ins.index');
+        Route::post('fila', [WalkInController::class, 'store'])->middleware('throttle:60,1,walk-ins')->name('walk-ins.store');
+        Route::patch('fila/{walkIn}', [WalkInController::class, 'update'])->name('walk-ins.update');
         // The team books for a client, and moves bookings.
         Route::get('agenda/nueva', [AgendaBookingController::class, 'create'])->name('agenda.bookings.create');
         Route::get('agenda/disponibilidad', [AgendaBookingController::class, 'availability'])

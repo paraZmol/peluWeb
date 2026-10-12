@@ -34,6 +34,7 @@ export function BookingSection({ salon, slotSteps }: Props) {
     const { booking } = salon;
     const form = useForm({
         accepts_online_bookings: booking.acceptsOnlineBookings,
+        walk_ins_enabled: booking.walkInsEnabled,
         min_lead_minutes: booking.minLeadMinutes,
         max_days_ahead: booking.maxDaysAhead,
         slot_step_minutes: booking.slotStepMinutes,
@@ -133,6 +134,22 @@ export function BookingSection({ salon, slotSteps }: Props) {
                         }
                     />
                     Recibir reservas desde mi página
+                </label>
+
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+                    <Checkbox
+                        checked={data.walk_ins_enabled}
+                        onCheckedChange={(checked) =>
+                            setData('walk_ins_enabled', checked === true)
+                        }
+                    />
+                    <span>
+                        Llevar una fila sin cita
+                        <span className="block text-muted-foreground">
+                            Tu equipo anota a quien llega sin reservar y lo
+                            llama por orden.
+                        </span>
+                    </span>
                 </label>
 
                 <div className="grid gap-4 sm:grid-cols-2">

@@ -12,6 +12,7 @@ export type ThemeChoice = {
 /** Mirrors App\Http\Resources\SalonSettingsResource. */
 export type BookingSettings = {
     acceptsOnlineBookings: boolean;
+    walkInsEnabled: boolean;
     minLeadMinutes: number;
     maxDaysAhead: number;
     slotStepMinutes: number;

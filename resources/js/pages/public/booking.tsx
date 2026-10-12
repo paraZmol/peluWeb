@@ -19,6 +19,7 @@ import { ThemeBackdrop } from '@/components/salon/theme-backdrop';
 import { useAvailability } from '@/hooks/use-availability';
 import { STEPS, useBookingWizard } from '@/hooks/use-booking-wizard';
 import { usePageTemplate } from '@/hooks/use-page-template';
+import { askedDay } from '@/lib/waitlist';
 import { show as salonPage } from '@/routes/salons';
 import { availability as availabilityRoute } from '@/routes/salons/booking';
 
@@ -39,14 +40,13 @@ export default function Booking({
     preselectedServiceId,
     repeat,
 }: Props) {
-    const resume =
-        typeof window !== 'undefined' &&
-        new URLSearchParams(window.location.search).has('continuar');
+    const search = typeof window === 'undefined' ? '' : window.location.search;
     const wizard = useBookingWizard({
         salon,
         preselectedServiceId,
         repeat,
-        resume,
+        resume: new URLSearchParams(search).has('continuar'),
+        startDate: askedDay(search, days),
     });
     const firstOpenDay = days.find((day) => !day.closed)?.date ?? null;
     const availability = useAvailability({
@@ -122,6 +122,7 @@ export default function Booking({
                                 days={days}
                                 wizard={wizard}
                                 availability={availability}
+                                waitlist={{ salonSlug: salon.slug, viewer }}
                             />
                         )}
                         {wizard.step === 3 && (

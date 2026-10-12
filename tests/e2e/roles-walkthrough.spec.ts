@@ -26,6 +26,8 @@ type Role = {
 
 const SALON_PAGES = [
     '/agenda',
+    // The day's line of people without a booking: only where the salon keeps one.
+    '/fila',
     '/mi-salon',
     '/servicios',
     '/clientes',
@@ -81,6 +83,7 @@ const roles: Role[] = [
         menu: [
             'Panel',
             'Agenda',
+            'Fila sin cita',
             'Mi salón',
             'Servicios',
             'Clientes',
@@ -102,8 +105,20 @@ const roles: Role[] = [
         label: 'profesional sin permisos extra',
         email: 'sin-caja@example.com',
         name: 'Sara Sin Caja',
-        menu: ['Panel', 'Agenda', 'Mi horario', 'Mis reservas', 'Mis datos'],
-        closed: [...SALON_PAGES.filter((path) => path !== '/agenda'), PLATFORM],
+        menu: [
+            'Panel',
+            'Agenda',
+            'Fila sin cita',
+            'Mi horario',
+            'Mis reservas',
+            'Mis datos',
+        ],
+        closed: [
+            ...SALON_PAGES.filter(
+                (path) => path !== '/agenda' && path !== '/fila',
+            ),
+            PLATFORM,
+        ],
         panel: 'Agenda de hoy',
         salon: ['Salón Caja', 'Personal'],
     },
@@ -114,6 +129,7 @@ const roles: Role[] = [
         menu: [
             'Panel',
             'Agenda',
+            'Fila sin cita',
             'Mi horario',
             'Caja',
             'Gastos',

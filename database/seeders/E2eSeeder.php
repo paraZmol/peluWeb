@@ -17,6 +17,7 @@ use App\Enums\Clientele;
 use App\Enums\ClientPhotoKind;
 use App\Enums\SalonPermission;
 use App\Enums\ServiceCategory;
+use App\Enums\WaitlistStatus;
 use App\Models\Booking;
 use App\Models\Salon;
 use App\Models\SalonClient;
@@ -24,6 +25,7 @@ use App\Models\SalonMember;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
+use App\Models\WaitlistEntry;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Support\DemoImages;
 use Illuminate\Database\Seeder;
@@ -87,9 +89,10 @@ class E2eSeeder extends Seeder
         $permissions = $this->seedPermissionsSalon();
         $till = $this->seedTillSalon();
         $files = $this->seedClientFileSalon();
+        $waitlist = $this->seedWaitlistSalon();
 
         // Factories skip what CreateSalon gives every real salon.
-        foreach ([$first, $second, $showcase, $till, $files, $permissions, ...$this->seedReviewSalons()] as $salon) {
+        foreach ([$first, $second, $showcase, $till, $files, $permissions, $waitlist, ...$this->seedReviewSalons()] as $salon) {
             app(ManageExpenseCategories::class)->createDefaults($salon);
         }
     }
@@ -130,7 +133,7 @@ class E2eSeeder extends Seeder
     private function seedTillSalon(): Salon
     {
         $owner = User::factory()->create(['name' => 'Olga Obradora', 'email' => 'caja-duena@example.com']);
-        $salon = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Caja', 'slug' => 'salon-caja']);
+        $salon = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Caja', 'slug' => 'salon-caja', 'walk_ins_enabled' => true]);
         $cut = Service::factory()->for($salon)->create(['name' => 'Corte de caja', 'price_cents' => 3500, 'active_minutes' => 30]);
 
         $withoutCash = User::factory()->create(['name' => 'Sara Sin Caja', 'email' => 'sin-caja@example.com']);
@@ -204,6 +207,55 @@ class E2eSeeder extends Seeder
             $person = User::factory()->create(['name' => $name, 'email' => $email]);
             SalonClient::factory()->for($salon)->forUser($person)->create();
             SalonClient::factory()->for($closed)->forUser($person)->create();
+        }
+
+        return $salon;
+    }
+
+    /**
+     * The waiting list: a salon whose only professional attends one cut a
+     * week, already taken every week, so its only open day never has a free
+     * time. One person per Playwright project, each told that a time opened
+     * up on the second of those days (the first is theirs to join).
+     */
+    private function seedWaitlistSalon(): Salon
+    {
+        $owner = User::factory()->create(['name' => 'Elsa Espera', 'email' => 'espera-duena@example.com']);
+        $salon = Salon::factory()->ownedBy($owner)->create(['name' => 'Salón Espera', 'slug' => 'salon-espera']);
+        $cut = Service::factory()->for($salon)->create(['name' => 'Corte de espera', 'price_cents' => 3500, 'active_minutes' => 30]);
+
+        // Three days from now: never today, whatever the hour the suite runs at.
+        $firstDay = $salon->localNow()->startOfDay()->addDays(3);
+        $lastDay = $firstDay->subDays(3)->addDays($salon->max_days_ahead);
+        $staff = Staff::factory()->for($salon)->linkedTo($owner)->working([$firstDay->dayOfWeekIso], '10:00', '10:30')->create(['name' => 'Elsa Espera']);
+        $staff->services()->attach($cut->id);
+
+        for ($day = $firstDay; $day->lessThanOrEqualTo($lastDay); $day = $day->addWeek()) {
+            app(CreateBooking::class)->handle(new NewBooking(
+                salon: $salon,
+                client: SalonClient::factory()->for($salon)->create(),
+                selections: [['service_id' => $cut->id, 'variant_id' => null]],
+                staff: $staff,
+                startsAt: $day->setTime(10, 0)->utc(),
+                source: BookingSource::Staff,
+                actor: $owner,
+            ));
+        }
+
+        foreach (['Espera Movil' => 'espera-movil@example.com', 'Espera Escritorio' => 'espera-escritorio@example.com'] as $name => $email) {
+            $person = User::factory()->create(['name' => $name, 'email' => $email]);
+            $client = SalonClient::factory()->for($salon)->forUser($person)->create();
+
+            $turn = new WaitlistEntry;
+            $turn->salon_id = $salon->id;
+            $turn->salon_client_id = $client->id;
+            $turn->date = $firstDay->addWeek();
+            $turn->selections = [['service_id' => $cut->id, 'variant_id' => null]];
+            $turn->status = WaitlistStatus::Offered;
+            $turn->offers_count = 1;
+            $turn->offered_at = CarbonImmutable::now();
+            $turn->offer_expires_at = CarbonImmutable::now()->addMinutes(WaitlistEntry::OFFER_MINUTES);
+            $turn->save();
         }
 
         return $salon;

@@ -42,6 +42,8 @@ class CreateSalon
                 'business_type' => $businessType,
                 'clientele' => $clientele,
                 'phone' => $phone,
+                // Walking in without a booking is the usual way at a barbershop.
+                'walk_ins_enabled' => $businessType === BusinessType::Barbershop,
             ]);
             $salon->slug = $this->uniqueSlug($name);
             $salon->status = SalonStatus::Trial;

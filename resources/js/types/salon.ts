@@ -17,6 +17,8 @@ export type CurrentSalon = {
     brand: BrandTokens | null;
     /** The user attends clients in this salon (has a professional profile). */
     hasStaffProfile: boolean;
+    /** The team keeps a day's line of people without a booking. */
+    walkInsEnabled: boolean;
 };
 
 export type SalonSummary = {

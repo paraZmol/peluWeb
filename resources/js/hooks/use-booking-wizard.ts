@@ -10,6 +10,8 @@ import type {
 
 export const MAX_SERVICES = 5;
 export const STEPS = ['Servicios', 'Profesional', 'Día y hora', 'Confirmar'];
+/** Where the day and the time are chosen. */
+const TIME_STEP = 2;
 
 type State = {
     step: number;
@@ -66,6 +68,8 @@ type Options = {
     resume?: boolean;
     /** Keep the choices in the browser, to survive signing in. */
     persist?: boolean;
+    /** A link that asks for a day ("?fecha="): the times start on it. */
+    startDate?: string | null;
 };
 
 export function useBookingWizard({
@@ -74,6 +78,7 @@ export function useBookingWizard({
     repeat = null,
     resume = false,
     persist = true,
+    startDate = null,
 }: Options) {
     const services = salon.serviceGroups.flatMap((group) => group.services);
     const find = (id: number): BookableService | undefined =>
@@ -133,6 +138,21 @@ export function useBookingWizard({
 
         if (saved && (resume || isFresh)) {
             setState({ ...saved, notice: null });
+        }
+
+        // The day asked for wins over the one kept, and over a time already
+        // picked on another day.
+        if (startDate !== null) {
+            setState((current) =>
+                current.date === startDate
+                    ? current
+                    : {
+                          ...current,
+                          date: startDate,
+                          slot: null,
+                          step: Math.min(current.step, TIME_STEP),
+                      },
+            );
         }
         // Only on arrival.
         // eslint-disable-next-line react-hooks/exhaustive-deps
