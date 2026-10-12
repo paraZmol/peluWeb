@@ -70,10 +70,45 @@ Route::get('img/muestra/{file}', [SamplePhotoController::class, 'show'])
     ->name('samples.show');
 
 // Installable app: the platform's manifest, and each salon's own name and logo.
-Route::get('manifest.webmanifest', [ManifestController::class, 'platform'])->name('manifest');
-Route::get('s/{salon:slug}/manifest.webmanifest', [ManifestController::class, 'salon'])->name('salons.manifest');
+// Cached as public, so without the session (see the sample photos above).
+Route::get('manifest.webmanifest', [ManifestController::class, 'platform'])
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleAppearance::class,
+        ResolveCurrentSalon::class,
+        HandleInertiaRequests::class,
+    ])
+    ->middleware('throttle:120,1,manifest')
+    ->name('manifest');
+Route::get('s/{salon:slug}/manifest.webmanifest', [ManifestController::class, 'salon'])
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleAppearance::class,
+        ResolveCurrentSalon::class,
+        HandleInertiaRequests::class,
+    ])
+    ->middleware('throttle:120,1,manifest')
+    ->name('salons.manifest');
 Route::get('s/{salon:slug}/icono-{size}.png', [ManifestController::class, 'icon'])
     ->whereNumber('size')
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleAppearance::class,
+        ResolveCurrentSalon::class,
+        HandleInertiaRequests::class,
+    ])
     ->middleware('throttle:120,1,salon-icon')
     ->name('salons.icon');
 

@@ -1,6 +1,9 @@
 <?php
 
+use App\Actions\Booking\CreateBooking;
 use App\Actions\Salon\CreateSalon;
+use App\Data\Booking\NewBooking;
+use App\Enums\BookingSource;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\ConsentAction;
@@ -9,6 +12,8 @@ use App\Enums\ConsentMethod;
 use App\Models\ClientConsent;
 use App\Models\ClientPhoto;
 use App\Models\SalonClient;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Models\User;
 use App\Notifications\ConsentReceiptNotification;
 use Carbon\CarbonImmutable;
@@ -318,4 +323,27 @@ it('lets the person download what is theirs, and only theirs', function () {
 
     auth()->logout();
     $this->get(route('my-data.download'))->assertRedirect(route('login'));
+});
+
+it('keeps the team\'s note on a booking out of the download', function () {
+    $staff = Staff::factory()->for($this->salon)->working([3, 4, 5], '09:00', '18:00')->create();
+    $cut = Service::factory()->for($this->salon)->create(['price_cents' => 3500, 'active_minutes' => 30]);
+    $staff->services()->attach($cut->id);
+    $this->salon->forceFill(['deposit_percent' => 0])->save();
+
+    $book = fn (string $at, BookingSource $source, string $note) => app(CreateBooking::class)->handle(new NewBooking(
+        salon: $this->salon->refresh(),
+        client: $this->file,
+        selections: [['service_id' => $cut->id, 'variant_id' => null]],
+        staff: $staff,
+        startsAt: CarbonImmutable::parse($at, 'America/Lima'),
+        source: $source,
+        note: $note,
+    ));
+    $book('2026-10-07 10:00', BookingSource::Staff, 'Llega tarde, cobrar seña');
+    $book('2026-10-07 11:00', BookingSource::Client, 'Quiero el mismo corte');
+
+    $content = $this->actingAs($this->carla)->get(route('my-data.download'))->assertOk()->getContent();
+
+    expect($content)->toContain('Quiero el mismo corte')->not->toContain('Llega tarde');
 });

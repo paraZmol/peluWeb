@@ -5,6 +5,8 @@ export type InstallEvent = Event & {
 };
 
 const DISMISSED_KEY = 'install-dismissed';
+/** The worker's caches with the person's own pages (see public/sw.js). */
+const OFFLINE_PAGES_PREFIX = 'pages-';
 const listeners = new Set<() => void>();
 let pending: InstallEvent | null = null;
 
@@ -60,9 +62,24 @@ export function onInstallChange(listener: () => void): () => void {
 
 /** Signing out: the copy of the person's bookings leaves the device. */
 export function forgetOfflineCopies() {
-    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.controller?.postMessage('forget');
+    if (typeof window === 'undefined' || !('caches' in window)) {
+        return;
     }
+
+    // From the page itself: a tab the worker does not control yet (first
+    // load, forced reload) must forget too.
+    void caches
+        .keys()
+        .then((names) =>
+            Promise.all(
+                names
+                    .filter((name) => name.startsWith(OFFLINE_PAGES_PREFIX))
+                    .map((name) => caches.delete(name)),
+            ),
+        )
+        .catch(() => {
+            // No cache storage here: there is nothing kept either.
+        });
 }
 
 /** Already opened from the home screen. */

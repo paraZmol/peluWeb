@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\SalonStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Salon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
@@ -28,6 +30,8 @@ class ManifestController extends Controller
 
     private const int SHORT_NAME_LENGTH = 12;
 
+    private const int ICON_CACHE_DAYS = 30;
+
     public function platform(): JsonResponse
     {
         return $this->manifest([
@@ -47,6 +51,8 @@ class ManifestController extends Controller
 
     public function salon(Salon $salon): JsonResponse
     {
+        abort_if($salon->status === SalonStatus::Suspended, 404);
+
         $page = route('salons.show', $salon, absolute: false);
 
         return $this->manifest([
@@ -70,20 +76,42 @@ class ManifestController extends Controller
     public function icon(Salon $salon, int $size): Response|RedirectResponse
     {
         abort_unless(in_array($size, self::ICON_SIZES, true), 404);
+        abort_if($salon->status === SalonStatus::Suspended, 404);
 
-        $logo = $salon->logo_path === null ? null : Storage::disk('public')->get($salon->logo_path);
+        $path = $salon->logo_path;
+        // Encoded once per logo and size: anyone may ask for it, over and over.
+        $png = $path === null ? null : Cache::remember(
+            "salon-icon:{$salon->id}:{$size}:".md5($path),
+            now()->addDays(self::ICON_CACHE_DAYS),
+            fn (): ?string => $this->encode($path, $size),
+        );
 
-        if ($logo === null) {
-            return redirect("/icons/icon-{$size}.png");
-        }
+        $png = $png === null ? false : base64_decode($png, true);
 
-        try {
-            $png = (string) (new ImageManager(new Driver))->read($logo)->cover($size, $size)->toPng();
-        } catch (Throwable) {
+        if ($png === false) {
             return redirect("/icons/icon-{$size}.png");
         }
 
         return response($png, 200, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=86400']);
+    }
+
+    /**
+     * Base64, so that any cache store keeps it as text; null when the logo
+     * is gone or does not decode.
+     */
+    private function encode(string $path, int $size): ?string
+    {
+        $logo = Storage::disk('public')->get($path);
+
+        if ($logo === null) {
+            return null;
+        }
+
+        try {
+            return base64_encode((string) (new ImageManager(new Driver))->read($logo)->cover($size, $size)->toPng());
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**

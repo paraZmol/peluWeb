@@ -47,6 +47,15 @@ self.addEventListener('message', (event) => {
     }
 });
 
+function isHtml(response) {
+    return (response.headers.get('Content-Type') ?? '').includes('text/html');
+}
+
+/** The Cache API ignores it; a page the server marks as not storable is not kept. */
+function isNoStore(response) {
+    return (response.headers.get('Cache-Control') ?? '').includes('no-store');
+}
+
 async function cacheFirst(request) {
     const cache = await caches.open(STATIC);
     const cached = await cache.match(request);
@@ -57,7 +66,8 @@ async function cacheFirst(request) {
 
     const response = await fetch(request);
 
-    if (response.ok) {
+    // A hosting's maintenance page answering for a script must not stick.
+    if (response.ok && !isHtml(response)) {
         cache.put(request, response.clone());
     }
 
@@ -69,7 +79,13 @@ async function pageLoad(request, path) {
         const response = await fetch(request);
 
         // A redirect to the login page is not a copy of their bookings.
-        if (OFFLINE_PAGES.test(path) && response.ok && !response.redirected) {
+        if (
+            OFFLINE_PAGES.test(path) &&
+            response.ok &&
+            !response.redirected &&
+            isHtml(response) &&
+            !isNoStore(response)
+        ) {
             const cache = await caches.open(PAGES);
             cache.put(path, response.clone());
         }

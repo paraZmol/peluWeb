@@ -78,7 +78,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // A bare "403" line is a dead end: say it with a way back.
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
-            $isPage = ! $request->expectsJson() && ! $request->is('api/*', 'plataforma', 'plataforma/*');
+            $isPage = ! $request->expectsJson() && ! $request->is('api/*', 'plataforma', 'plataforma/*', 'livewire*') && ! $request->hasHeader('X-Livewire');
 
             if (! $isPage || ! in_array($response->getStatusCode(), [403, 404], true)) {
                 return $response;

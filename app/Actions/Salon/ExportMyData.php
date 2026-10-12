@@ -2,6 +2,7 @@
 
 namespace App\Actions\Salon;
 
+use App\Enums\BookingSource;
 use App\Models\Booking;
 use App\Models\BookingService;
 use App\Models\ClientConsent;
@@ -101,7 +102,8 @@ class ExportMyData
             'precio' => Money::toAmount($booking->price_cents),
             'sena' => Money::toAmount($booking->deposit_cents),
             'cobrado' => $booking->charged_cents === null ? null : Money::toAmount($booking->charged_cents),
-            'tu_nota' => $booking->client_note,
+            // A note the team wrote is theirs; the person gets only their own.
+            'tu_nota' => $booking->source === BookingSource::Client ? $booking->client_note : null,
         ])->all();
     }
 }

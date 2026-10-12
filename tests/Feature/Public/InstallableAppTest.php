@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SalonStatus;
 use App\Models\Salon;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -66,4 +67,16 @@ it('points each page to the manifest it installs', function () {
         ->assertSee('<link rel="manifest" href="/s/estudio-luz/manifest.webmanifest">', false);
     $this->get(route('login'))->assertOk()
         ->assertSee('<link rel="manifest" href="/manifest.webmanifest">', false);
+});
+
+it('answers nothing for a suspended salon, and never sets a cookie on what is cached as public', function () {
+    $salon = Salon::factory()->create(['slug' => 'en-pausa']);
+
+    $this->get(route('salons.manifest', $salon))->assertOk()->assertHeaderMissing('Set-Cookie');
+    $this->get('/manifest.webmanifest')->assertOk()->assertHeaderMissing('Set-Cookie');
+
+    $salon->forceFill(['status' => SalonStatus::Suspended])->save();
+
+    $this->get(route('salons.manifest', $salon))->assertNotFound();
+    $this->get(route('salons.icon', [$salon, 192]))->assertNotFound();
 });

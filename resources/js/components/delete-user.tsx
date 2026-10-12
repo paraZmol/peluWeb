@@ -1,3 +1,4 @@
+import { forgetOfflineCopies } from '@/lib/pwa';
 import { Form } from '@inertiajs/react';
 import { TriangleAlert } from 'lucide-react';
 import { useRef } from 'react';
@@ -86,6 +87,8 @@ export default function DeleteUser() {
                                 preserveScroll: true,
                             }}
                             onError={() => passwordInput.current?.focus()}
+                            // The account is gone: so is the copy of its bookings on this device.
+                            onSuccess={forgetOfflineCopies}
                             resetOnSuccess
                             className="space-y-6"
                         >
