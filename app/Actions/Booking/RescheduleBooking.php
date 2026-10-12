@@ -10,6 +10,7 @@ use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\BookingEvent;
 use App\Models\BookingService;
+use App\Models\Promotion;
 use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\Staff;
@@ -63,9 +64,31 @@ class RescheduleBooking
             return [];
         }
 
-        return $this->availability->slots(
+        $slots = $this->availability->slots(
             $salon, $target, $booking->shape(), $localDate, $this->level($booking, $byClient), $now, $booking->id,
         );
+
+        // A client keeps the promotion's price only where it still applies.
+        return $byClient
+            ? array_values(array_filter($slots, fn (int $start): bool => $this->keepsPromotion($booking, $start, $salon)))
+            : $slots;
+    }
+
+    /**
+     * Whether a visit starting then is still one the booking's promotion
+     * covers. The salon may move it anywhere and the price stays; a client
+     * may not, or a "quiet hours" price would follow them to a Saturday.
+     */
+    private function keepsPromotion(Booking $booking, int $start, Salon $salon): bool
+    {
+        if ($booking->promotion_id === null) {
+            return true;
+        }
+
+        $promotion = Promotion::withoutGlobalScope('salon')->withTrashed()->with('services')->find($booking->promotion_id);
+
+        return $promotion === null
+            || $promotion->terms()->covers(CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone));
     }
 
     private function move(BookingMove $move): Booking
@@ -92,6 +115,10 @@ class RescheduleBooking
         }
 
         $this->ensureMovable($booking, $salon, $move, $now);
+
+        if ($move->byClient && ! $this->keepsPromotion($booking, $move->startsAt->getTimestamp(), $salon)) {
+            throw BookingException::promotionNotValidThen((string) $booking->promotion_name);
+        }
 
         if ($target === null || ! $this->canTake($target, $booking)) {
             throw BookingException::staffCannotTake();

@@ -15,7 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $service_id
  * @property int|null $service_variant_id
  * @property string $name
- * @property int $price_cents
+ * @property int $price_cents What is charged for it.
+ * @property int|null $list_price_cents Its normal price; differs under a promotion.
  * @property int $active_minutes
  * @property int $idle_minutes
  * @property int $finish_minutes

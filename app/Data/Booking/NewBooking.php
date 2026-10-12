@@ -19,6 +19,7 @@ final readonly class NewBooking
      * @param  list<array{service_id: int, variant_id: int|null}>  $selections  in the order they will be done
      * @param  SalonClient  $client  may be new and unsaved: it is stored together with the booking
      * @param  Staff|null  $staff  null = whoever is free
+     * @param  bool  $withPromotion  false when the team books at the normal price on purpose
      */
     public function __construct(
         public Salon $salon,
@@ -29,5 +30,6 @@ final readonly class NewBooking
         public BookingSource $source,
         public ?User $actor = null,
         public ?string $note = null,
+        public bool $withPromotion = true,
     ) {}
 }

@@ -82,6 +82,11 @@ class BookingException extends BusinessRuleException
         return new self('Ya cambiaste esta reserva varias veces. Escribe al salón para coordinar otro cambio.');
     }
 
+    public static function promotionNotValidThen(string $name): self
+    {
+        return new self("La promoción «{$name}» de tu reserva no vale en ese horario. Elige otro, o pide al salón que la mueva.");
+    }
+
     public static function alreadyStarted(): self
     {
         return new self('La hora de esta cita ya pasó. Escribe al salón para cualquier cambio.');

@@ -161,6 +161,13 @@ class CreateBooking
         $client = $this->client($data, $now);
         $start = $data->startsAt->getTimestamp();
         $shape = $quote->shape();
+
+        // Priced under the lock: the promotion's places are counted with
+        // its row locked, after the professional's and the client's.
+        if ($data->withPromotion) {
+            $quote = $this->quote->promote($data->salon, $client, $quote, $data->startsAt, underLock: true);
+        }
+
         $deposit = $this->depositCents($data, $client, $quote->priceCents());
 
         $booking = new Booking;
@@ -173,6 +180,9 @@ class CreateBooking
         $booking->ends_at = CarbonImmutable::createFromTimestampUTC($shape->endsAt($start));
         $booking->is_vip = $client->is_vip;
         $booking->price_cents = $quote->priceCents();
+        $booking->promotion_id = $quote->promotion?->id;
+        $booking->promotion_name = $quote->promotion?->name;
+        $booking->promotion_cents = $quote->promotionCents();
         $booking->deposit_cents = $deposit;
         // Without a deposit there is nothing to wait for: it is confirmed.
         $booking->status = $deposit > 0 ? BookingStatus::Pending : BookingStatus::Confirmed;
@@ -188,6 +198,7 @@ class CreateBooking
             $service->service_variant_id = $item->variantId;
             $service->name = $item->name;
             $service->price_cents = $item->priceCents;
+            $service->list_price_cents = $item->normalPriceCents();
             $service->active_minutes = $item->activeMinutes;
             $service->idle_minutes = $item->idleMinutes;
             $service->finish_minutes = $item->finishMinutes;

@@ -2,13 +2,16 @@
 
 namespace App\Actions\Booking;
 
+use App\Actions\Promotions\ApplyPromotion;
 use App\Data\Booking\BookingQuote;
 use App\Data\Booking\QuoteItem;
 use App\Exceptions\BookingException;
 use App\Models\Salon;
+use App\Models\SalonClient;
 use App\Models\Service;
 use App\Models\ServiceVariant;
 use App\Models\Staff;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use stdClass;
@@ -23,6 +26,17 @@ class QuoteBooking
     public const int MAX_SERVICES = 5;
 
     private const int MIN_ACTIVE_MINUTES = 5;
+
+    public function __construct(private readonly ApplyPromotion $promotions) {}
+
+    /**
+     * The quote under the salon's best promotion for a visit starting then,
+     * if one applies. With $underLock, inside the booking's transaction.
+     */
+    public function promote(Salon $salon, ?SalonClient $client, BookingQuote $quote, CarbonImmutable $startsAt, bool $underLock = false): BookingQuote
+    {
+        return $this->promotions->handle($salon, $client, $quote, $startsAt, $underLock);
+    }
 
     /**
      * @param  list<array{service_id: int, variant_id: int|null}>  $selections  in the order they will be done
