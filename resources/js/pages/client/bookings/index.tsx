@@ -4,6 +4,7 @@ import { BookAgainLink } from '@/components/booking/book-again-link';
 import { ClientBookingCard } from '@/components/booking/client-booking-card';
 import type { ClientBooking } from '@/components/booking/types';
 import { InstallApp } from '@/components/install-app';
+import { PushToggle } from '@/components/push-toggle';
 import { MyDataLink } from '@/components/my-data/my-data-link';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { index } from '@/routes/bookings';
@@ -134,6 +135,7 @@ export default function BookingsIndex({ bookings }: Props) {
                     </ul>
                 )}
 
+                <PushToggle isOfferOnly className="rounded-xl p-5 skin-card" />
                 <InstallApp />
 
                 <MyDataLink />

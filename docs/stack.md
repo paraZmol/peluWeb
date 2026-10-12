@@ -77,6 +77,13 @@ Ver la skill `booking-domain`.
 - Los correos de la reserva (recibida, confirmada, cancelada, reprogramada, recordatorio) salen por
   la **cola** (`QUEUE_CONNECTION=database`). En local `MAIL_MAILER=log`: se escriben en
   `storage/logs/laravel.log`, no se envían.
+- **Notificaciones push (paso 6.5)**: librería `minishlink/web-push` (aprobada el 2026-10-12). Cada servidor
+  genera su par de claves con `php artisan webpush:keys` y lo pega en su `.env` (`VAPID_PUBLIC_KEY`,
+  `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`); sin claves no se envía nada y el interruptor no aparece. Las
+  notificaciones salen por la cola, igual que los correos. **En Windows local** PHP necesita dos cosas para
+  enviar de verdad: `OPENSSL_CONF` apuntando a `C:\php84\extras\ssl\openssl.cnf` (ya lo pone `dev.cmd`) y un
+  archivo de autoridades certificadoras en `curl.cainfo` de `C:\php84\php.ini` (sin él, el envío falla con
+  "cURL error 60"). En Linux (producción) no hace falta ninguna de las dos.
 - Producción necesita dos tareas cada minuto (cron de cPanel o del VPS), con el PHP 8.4:
   `php artisan schedule:run` (vence retenciones cada 5 min, recordatorios cada 15 min, borrado de alergias y fotos vencidas una vez al día) y
   `php artisan queue:work --stop-when-empty --max-time=50` (o un `queue:work` permanente con

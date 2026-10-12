@@ -25,8 +25,13 @@ class NotifyClient
     /** "miércoles 7 de octubre de 2026, 10:00 a. m.", in the app's locale (Spanish). */
     private const string WHEN = 'dddd D [de] MMMM [de] YYYY, h:mm a';
 
+    public function __construct(private readonly NotifyStaff $staff) {}
+
     public function handle(Booking $booking, BookingNotice $notice): void
     {
+        // Whoever attends hears of it too, whether or not the client has an account.
+        $this->staff->handle($booking, $notice);
+
         $user = SalonClient::withoutGlobalScope('salon')->with('user')->find($booking->salon_client_id)?->user;
 
         if ($user === null || ! $user->hasVerifiedEmail()) {

@@ -25,6 +25,11 @@ export const testEnv = {
     // Rate limits live in the cache: with `array` they reset on every request,
     // so the many logins of the suite are not throttled (5 per minute).
     CACHE_STORE: 'array',
+    // Shows the notifications switch. A throwaway public key; the private half
+    // is a placeholder: no test sends a real push.
+    VAPID_PUBLIC_KEY:
+        'BPtUvWFKrdVnegE9rPhmBRIJwwnI5tSPRBBmdBu8psu5oXWAEgxSyz205jPmb8ErRxaczY_wVLWNb5fZBQ-IqkU',
+    VAPID_PRIVATE_KEY: 'solo-para-pruebas',
 };
 
 export default defineConfig({

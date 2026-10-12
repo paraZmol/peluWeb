@@ -100,6 +100,57 @@ async function pageLoad(request, path) {
     }
 }
 
+// A booking's news, sent by the server to this device.
+self.addEventListener('push', (event) => {
+    let message = {};
+
+    try {
+        message = event.data ? event.data.json() : {};
+    } catch {
+        // Not ours, or cut short: nothing worth showing.
+    }
+
+    if (!message.title) {
+        return;
+    }
+
+    event.waitUntil(
+        self.registration.showNotification(message.title, {
+            body: message.body ?? '',
+            // The latest news of a booking replaces the one before.
+            tag: message.tag,
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-192.png',
+            data: { url: message.url ?? '/' },
+        }),
+    );
+});
+
+self.addEventListener('notificationclick', (event) => {
+    const target = new URL(
+        event.notification.data?.url ?? '/',
+        self.location.origin,
+    );
+    event.notification.close();
+
+    // Only ever this site: the address came in a message.
+    if (target.origin !== self.location.origin) {
+        return;
+    }
+
+    event.waitUntil(
+        self.clients
+            .matchAll({ type: 'window', includeUncontrolled: true })
+            .then((windows) => {
+                const open = windows.find((client) => 'focus' in client);
+
+                return open
+                    ? open.navigate(target.href).then((client) => client?.focus())
+                    : self.clients.openWindow(target.href);
+            }),
+    );
+});
+
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);

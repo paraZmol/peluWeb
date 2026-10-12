@@ -124,3 +124,29 @@ test('en iPhone, la página del salón explica cómo añadirla a la pantalla de 
     await expect(card).toHaveCount(0);
     await context.close();
 });
+
+// A headless browser always reports notifications as blocked, even when
+// granted: the "allowed" case (switching them on, receiving one) is a manual
+// check on a real phone, noted in the plan for step 8.6.
+test('avisos en este dispositivo: donde el navegador los bloquea, se explica y no se ofrece activarlos', async ({
+    page,
+}) => {
+    const push = page.getByRole('region', {
+        name: 'Avisos en este dispositivo',
+    });
+    await login(page, client.email, client.password);
+    await expect(page).toHaveURL(/dashboard$/);
+
+    await page.goto('/settings/profile');
+    await waitForWorker(page);
+    await page.reload();
+    await expect(push.getByText(/bloqueadas para este sitio/)).toBeVisible();
+    await expect(push.getByRole('button')).toHaveCount(0);
+
+    // Nothing to turn on there: the list of bookings does not offer it.
+    await page.goto('/mis-reservas');
+    await expect(
+        page.getByRole('heading', { name: 'Mis reservas', level: 1 }),
+    ).toBeVisible();
+    await expect(push).toHaveCount(0);
+});

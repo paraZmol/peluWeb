@@ -35,6 +35,14 @@ return [
         ],
     ],
 
+    // Web Push (VAPID). Generate the pair with `php artisan webpush:keys`.
+    // Leave empty and no notification is sent: the email still goes.
+    'webpush' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', env('APP_URL')),
+    ],
+
     // "Continuar con Google". Leave empty to hide the button.
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Enums\BookingNotice;
+use App\Notifications\Channels\WebPushChannel;
 use App\Support\Markdown;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,7 +36,22 @@ class BookingNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // The same news on the devices the person allowed, besides the email.
+        return ['mail', WebPushChannel::class];
+    }
+
+    /**
+     * @return array{title: string, body: string, url: string, tag: string}
+     */
+    public function toWebPush(object $notifiable): array
+    {
+        return [
+            'title' => $this->notice->subject($this->booking['salon']),
+            'body' => "{$this->booking['when']} · {$this->booking['services']}",
+            'url' => $this->booking['url'],
+            // One notification per booking: the latest news replaces the one before.
+            'tag' => 'booking-'.basename($this->booking['url']),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage

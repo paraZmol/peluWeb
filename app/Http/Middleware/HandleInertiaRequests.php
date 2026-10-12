@@ -49,6 +49,8 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'features' => [
                 'googleLogin' => GoogleLoginController::isEnabled(),
+                // The public half of the push keys; null hides the switch.
+                'pushKey' => config('services.webpush.private_key') ? config('services.webpush.public_key') : null,
             ],
             ...$this->salonProps($request),
         ];

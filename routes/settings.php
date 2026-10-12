@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\AvatarController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\PushSubscriptionController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,14 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('throttle:10,1')
         ->name('avatar.store');
     Route::delete('settings/avatar', [AvatarController::class, 'destroy'])->name('avatar.destroy');
+
+    // The browser calls these itself when the person allows or stops notifications.
+    Route::post('settings/notificaciones', [PushSubscriptionController::class, 'store'])
+        ->middleware('throttle:20,1,push-subscribe')
+        ->name('push.store');
+    Route::delete('settings/notificaciones', [PushSubscriptionController::class, 'destroy'])
+        ->middleware('throttle:20,1,push-unsubscribe')
+        ->name('push.destroy');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

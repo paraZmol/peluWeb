@@ -2,6 +2,7 @@ import { Form, Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
+import { PushToggle } from '@/components/push-toggle';
 import { AvatarUploader } from '@/components/profile/avatar-uploader';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -186,6 +187,8 @@ export default function Profile({
                     )}
                 </Form>
             </div>
+
+            <PushToggle className="rounded-xl border p-5" />
 
             <DeleteUser />
         </>
