@@ -9,6 +9,8 @@ export type ReportTotals = {
     profitCents: number;
     /** Already taken off what the services brought in. */
     discountsCents: number;
+    /** What promotions took off, apart from the manual discounts; also already off. */
+    promotionsCents: number;
     visits: number;
 };
 

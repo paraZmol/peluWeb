@@ -35,7 +35,14 @@ export function IncomeSources({ totals }: { totals: ReportTotals }) {
             )}
 
             <dl className="flex flex-col gap-3 border-t pt-4 text-sm">
-                <Aside label="Descuentos" cents={totals.discountsCents}>
+                <Aside label="Promociones" cents={totals.promotionsCents}>
+                    Lo que tus promociones rebajaron o regalaron: ya está
+                    restado de los servicios.
+                </Aside>
+                <Aside
+                    label="Descuentos manuales"
+                    cents={totals.discountsCents}
+                >
                     Lo que se rebajó al cobrar: ya está restado de los
                     servicios.
                 </Aside>

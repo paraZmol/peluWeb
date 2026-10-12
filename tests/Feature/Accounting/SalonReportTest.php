@@ -119,6 +119,7 @@ it('adds up income, expenses and profit for a day', function () {
         'expensesCents' => 11230,
         'profitCents' => 9550 - 11230,
         'discountsCents' => 500,
+        'promotionsCents' => 0,
         'visits' => 2,
     ])->and($report['previous']['incomeCents'])->toBe(3500)
         ->and($report['previous']['profitCents'])->toBe(3500);

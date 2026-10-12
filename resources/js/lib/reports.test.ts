@@ -30,6 +30,7 @@ const totals = {
     expensesCents: 0,
     profitCents: 0,
     discountsCents: 0,
+    promotionsCents: 0,
     visits: 0,
 };
 
