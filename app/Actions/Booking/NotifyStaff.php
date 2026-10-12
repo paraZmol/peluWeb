@@ -27,7 +27,7 @@ class NotifyStaff
             return;
         }
 
-        $user = Staff::withoutGlobalScope('salon')->with('user')->find($booking->staff_id)?->user;
+        $user = Staff::withoutGlobalScope('salon')->where('salon_id', $booking->salon_id)->with('user')->find($booking->staff_id)?->user;
 
         if ($user === null || $user->id === auth()->id()) {
             return;
@@ -44,7 +44,7 @@ class NotifyStaff
             'salon' => $salon->name,
             'when' => $booking->starts_at->setTimezone($salon->timezone)->isoFormat(self::WHEN),
             'services' => BookingService::query()->where('booking_id', $booking->id)->orderBy('position')->pluck('name')->implode(', '),
-            'client' => (string) SalonClient::withoutGlobalScope('salon')->whereKey($booking->salon_client_id)->value('name'),
+            'client' => (string) SalonClient::withoutGlobalScope('salon')->where('salon_id', $booking->salon_id)->whereKey($booking->salon_client_id)->value('name'),
             'url' => route('agenda.index', ['fecha' => $booking->starts_at->setTimezone($salon->timezone)->toDateString()]),
             'code' => $booking->code,
         ]));

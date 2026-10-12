@@ -83,7 +83,21 @@ export async function pushState(): Promise<PushState> {
         return 'denied';
     }
 
-    return (await worker.pushManager.getSubscription()) === null ? 'off' : 'on';
+    const subscription = await worker.pushManager.getSubscription();
+
+    if (subscription === null) {
+        return 'off';
+    }
+
+    // On for the browser is not on for this account: someone else may have
+    // switched it on here. Saying so again hands the device to who is signed in.
+    try {
+        await call(store(), subscription.toJSON());
+    } catch {
+        return 'off';
+    }
+
+    return 'on';
 }
 
 /** Asks the person, subscribes the device and tells the server. */
@@ -115,13 +129,23 @@ export async function enablePush(publicKey: string): Promise<PushState> {
     return 'on';
 }
 
+/**
+ * Signing out: this device stops getting the person's notifications. Never
+ * holds the sign-out back: whatever fails here, the push service reports
+ * the device as gone on the next send and the server forgets it.
+ */
+export function releasePush() {
+    void disablePush().catch(() => {});
+}
+
 export async function disablePush(): Promise<PushState> {
     const subscription =
         (await (await registration())?.pushManager.getSubscription()) ?? null;
 
     if (subscription !== null) {
-        await call(destroy(), { endpoint: subscription.endpoint });
+        // The browser first: even if the server cannot be told, nothing arrives.
         await subscription.unsubscribe();
+        await call(destroy(), { endpoint: subscription.endpoint });
     }
 
     return 'off';

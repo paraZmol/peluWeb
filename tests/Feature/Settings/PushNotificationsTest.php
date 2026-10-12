@@ -32,6 +32,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 const FCM = 'https://fcm.googleapis.com/fcm/send/';
 
+/** The shape a browser sends: a 65-byte point and a 16-byte secret, in base64url. */
+const PUSH_KEYS = ['p256dh' => 'B'.'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'auth' => 'bbbbbbbbbbbbbbbbbbbbbb'];
+
 /** Records what would have gone to a push service. */
 function fakePush(PushResult $answer = PushResult::Sent): object
 {
@@ -63,7 +66,7 @@ function device(User $user, string $name): PushSubscription
 {
     test()->actingAs($user)->postJson(route('push.store'), [
         'endpoint' => FCM.$name,
-        'keys' => ['p256dh' => 'clave-publica-'.$name, 'auth' => 'secreto-'.$name],
+        'keys' => PUSH_KEYS,
     ])->assertCreated();
 
     return PushSubscription::query()->where('endpoint_hash', PushSubscription::hashOf(FCM.$name))->firstOrFail();
@@ -106,13 +109,17 @@ it('keeps a device for whoever is signed in on it, and only real push services',
         ->and($device->refresh()->user_id)->toBe($this->ana->id);
 
     // The server posts to this address later: never to a host of the person's choosing.
-    foreach (['https://example.com/push', 'http://fcm.googleapis.com/fcm/send/x', 'https://fcm.googleapis.com.evil.test/x', 'https://127.0.0.1/x'] as $endpoint) {
-        $this->actingAs($this->maria)->postJson(route('push.store'), ['endpoint' => $endpoint, 'keys' => ['p256dh' => 'a', 'auth' => 'b']])
+    foreach (['https://example.com/push', 'http://fcm.googleapis.com/fcm/send/x', 'https://fcm.googleapis.com.evil.test/x', 'https://127.0.0.1/x', 'https://fcm.googleapis.com:22/x', 'https://alguien@fcm.googleapis.com/x'] as $endpoint) {
+        $this->actingAs($this->maria)->postJson(route('push.store'), ['endpoint' => $endpoint, 'keys' => PUSH_KEYS])
             ->assertUnprocessable();
     }
 
+    // Keys that could never be encrypted for are not kept.
+    $this->actingAs($this->maria)->postJson(route('push.store'), ['endpoint' => FCM.'otro', 'keys' => ['p256dh' => 'a', 'auth' => 'b']])
+        ->assertUnprocessable();
+
     auth()->logout();
-    $this->postJson(route('push.store'), ['endpoint' => FCM.'x', 'keys' => ['p256dh' => 'a', 'auth' => 'b']])->assertUnauthorized();
+    $this->postJson(route('push.store'), ['endpoint' => FCM.'x', 'keys' => PUSH_KEYS])->assertUnauthorized();
 });
 
 it('lets a person remove their own device, never another person\'s', function () {

@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { releasePush } from '@/lib/push';
 import { forgetOfflineCopies } from '@/lib/pwa';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
@@ -23,6 +24,7 @@ export function UserMenuContent({ user }: Props) {
     const handleLogout = () => {
         cleanup();
         forgetOfflineCopies();
+        releasePush();
         router.flushAll();
     };
 

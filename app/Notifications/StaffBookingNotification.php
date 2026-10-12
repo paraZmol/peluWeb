@@ -17,6 +17,9 @@ class StaffBookingNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    /** Ten devices at ten seconds each at the very worst. */
+    public int $timeout = 120;
+
     /**
      * @param  array{salon: string, when: string, services: string, client: string, url: string, code: string}  $booking
      */

@@ -19,6 +19,9 @@ class BookingNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    /** Ten devices at ten seconds each at the very worst. */
+    public int $timeout = 120;
+
     /**
      * @param  array{salon: string, when: string, services: string, staff: string, address: string|null, url: string}  $booking
      * @param  list<string>  $notes  extra lines for this occasion (deposit, refund), already plain text

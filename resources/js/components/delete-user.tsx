@@ -1,3 +1,4 @@
+import { releasePush } from '@/lib/push';
 import { forgetOfflineCopies } from '@/lib/pwa';
 import { Form } from '@inertiajs/react';
 import { TriangleAlert } from 'lucide-react';
@@ -88,7 +89,10 @@ export default function DeleteUser() {
                             }}
                             onError={() => passwordInput.current?.focus()}
                             // The account is gone: so is the copy of its bookings on this device.
-                            onSuccess={forgetOfflineCopies}
+                            onSuccess={() => {
+                                forgetOfflineCopies();
+                                releasePush();
+                            }}
                             resetOnSuccess
                             className="space-y-6"
                         >

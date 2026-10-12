@@ -25,14 +25,19 @@ class PushSubscriptionRequest extends FormRequest
     {
         return [
             'endpoint' => ['required', 'string', 'max:2000', 'url:https', function (string $attribute, mixed $value, Closure $fail): void {
-                $host = is_string($value) ? parse_url($value, PHP_URL_HOST) : null;
+                $url = is_string($value) ? parse_url($value) : false;
+                $host = is_array($url) ? ($url['host'] ?? null) : null;
+                // Only the service's own door: another port or a "user@" has no reason to be there.
+                $isPlain = is_array($url) && ! isset($url['user']) && ! isset($url['pass']) && ($url['port'] ?? 443) === 443;
 
-                if (! is_string($host) || preg_match(self::PUSH_HOSTS, $host) !== 1) {
+                if (! is_string($host) || ! $isPlain || preg_match(self::PUSH_HOSTS, $host) !== 1) {
                     $fail('Este navegador no es compatible con las notificaciones.');
                 }
             }],
-            'keys.p256dh' => ['required', 'string', 'max:255'],
-            'keys.auth' => ['required', 'string', 'max:255'],
+            // An uncompressed P-256 point (65 bytes) and a 16-byte secret, in base64url:
+            // anything else could never be encrypted for and would fail on every send.
+            'keys.p256dh' => ['required', 'string', 'regex:/^B[A-Za-z0-9_-]{86}=?$/'],
+            'keys.auth' => ['required', 'string', 'regex:/^[A-Za-z0-9_-]{22}(==)?$/'],
         ];
     }
 }

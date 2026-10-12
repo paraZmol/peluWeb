@@ -4,6 +4,7 @@ namespace App\Support\Push;
 
 use App\Enums\PushResult;
 use App\Models\PushSubscription;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
@@ -17,6 +18,10 @@ class WebPushSender implements PushSender
 {
     /** A booking's news is stale after a day: the push service drops it then. */
     private const int TTL_SECONDS = 86400;
+
+    private const int CONNECT_SECONDS = 5;
+
+    private const int TOTAL_SECONDS = 10;
 
     public function isConfigured(): bool
     {
@@ -50,10 +55,27 @@ class WebPushSender implements PushSender
 
     private function client(): WebPush
     {
-        return new WebPush(['VAPID' => [
-            'subject' => (string) config('services.webpush.subject'),
-            'publicKey' => (string) config('services.webpush.public_key'),
-            'privateKey' => (string) config('services.webpush.private_key'),
-        ]]);
+        return new WebPush(
+            ['VAPID' => [
+                'subject' => $this->subject(),
+                'publicKey' => (string) config('services.webpush.public_key'),
+                'privateKey' => (string) config('services.webpush.private_key'),
+            ]],
+            [],
+            new Client(['connect_timeout' => self::CONNECT_SECONDS, 'timeout' => self::TOTAL_SECONDS, 'allow_redirects' => false]),
+        );
+    }
+
+    /**
+     * Who to write to about these messages: push services refuse a
+     * subject that is not a mailbox or an https address.
+     */
+    private function subject(): string
+    {
+        $subject = (string) config('services.webpush.subject');
+
+        return str_starts_with($subject, 'mailto:') || str_starts_with($subject, 'https://')
+            ? $subject
+            : 'mailto:'.config('mail.from.address');
     }
 }
