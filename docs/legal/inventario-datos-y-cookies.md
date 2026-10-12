@@ -78,6 +78,9 @@ y `sidebar_state` (requisito L16).
 | `appearance` | `localStorage` | Tema elegido | Hasta que se borra | Sí, preferencia |
 | `peluweb:reserva:{salón}` | `sessionStorage` | Lo elegido en el asistente de reserva (servicios, profesional, hora, nota) para recuperarlo tras iniciar sesión | Hasta cerrar la pestaña; el asistente lo descarta a los 30 min | Sí |
 | Marca de celebración por reserva | `sessionStorage` | Que ya se mostró la animación de "reserva creada" | Un solo uso | Sí |
+| `install-dismissed` | `localStorage` | Que la persona dijo "Ahora no" al aviso de instalar la app | Hasta que se borra | Sí, preferencia |
+| Caché `static-v1` (service worker, paso 6.4) | Cache Storage | Archivos de la aplicación (código, estilos, fuentes, íconos) y la página "sin conexión"; nada personal | Hasta la siguiente versión | Sí, funcionamiento sin conexión |
+| Caché `pages-v1` (service worker, paso 6.4) | Cache Storage | Copia de "Mis reservas" y de cada reserva abierta, tal como se vieron la última vez (**datos de la persona: salón, fecha, servicios, precio**) | Hasta cerrar sesión, que la borra; o hasta la siguiente versión | Sí, para ver las reservas sin conexión. No guarda "Mis datos" (alergias, fotos) ni nada del panel del salón |
 | Panel del super admin (Filament) | `localStorage` | Preferencias del panel (**no revisado en detalle**) | — | Solo lo usa el super admin |
 
 ## 5. Conclusión

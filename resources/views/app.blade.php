@@ -44,7 +44,13 @@
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="apple-touch-icon" href="{{ $appIcon ?? '/apple-touch-icon.png' }}">
+        {{-- Installable app: a salon's page installs with that salon's name and logo. --}}
+        <link rel="manifest" href="{{ $manifest ?? route('manifest', absolute: false) }}">
+        <meta name="theme-color" content="#faf8f5" media="(prefers-color-scheme: light)">
+        <meta name="theme-color" content="#0b0f14" media="(prefers-color-scheme: dark)">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="{{ $appTitle ?? config('app.name') }}">
 
         @fonts
 

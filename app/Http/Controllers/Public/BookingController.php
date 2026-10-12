@@ -59,7 +59,7 @@ class BookingController extends Controller
             'viewer' => $this->viewer($request->user()),
             'preselectedServiceId' => $request->integer('servicio') ?: null,
             'repeat' => $this->repeat($request, $salon, $services, $staff),
-        ]);
+        ])->withViewData(SalonPageController::installData($salon));
     }
 
     /**

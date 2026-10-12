@@ -4,6 +4,7 @@ import { OpeningHours } from '@/components/public/opening-hours';
 import { PhotoGallery } from '@/components/public/photo-gallery';
 import { PreviewBanner } from '@/components/public/preview-banner';
 import { Reveal } from '@/components/public/reveal';
+import { InstallApp } from '@/components/install-app';
 import { ReviewsSection } from '@/components/public/reviews-section';
 import { SalonFooter } from '@/components/public/salon-footer';
 import { SalonHero } from '@/components/public/salon-hero';
@@ -106,6 +107,7 @@ export default function Salon({ salon, reviews }: Props) {
                             />
                         </Reveal>
                     )}
+                    <InstallApp name={salon.name} />
                 </aside>
             </div>
 

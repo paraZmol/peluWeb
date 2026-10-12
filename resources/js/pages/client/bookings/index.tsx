@@ -3,9 +3,10 @@ import { CalendarDays, ChevronRight, Repeat } from 'lucide-react';
 import { BookAgainLink } from '@/components/booking/book-again-link';
 import { ClientBookingCard } from '@/components/booking/client-booking-card';
 import type { ClientBooking } from '@/components/booking/types';
+import { InstallApp } from '@/components/install-app';
+import { MyDataLink } from '@/components/my-data/my-data-link';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { index } from '@/routes/bookings';
-import { index as myData } from '@/routes/my-data';
 import { create as bookAgain } from '@/routes/salons/booking';
 
 type Props = { bookings: ClientBooking[] };
@@ -133,15 +134,9 @@ export default function BookingsIndex({ bookings }: Props) {
                     </ul>
                 )}
 
-                <p className="text-sm text-muted-foreground">
-                    ¿Qué guardan de ti los salones?{' '}
-                    <Link
-                        href={myData()}
-                        className="inline-flex min-h-11 items-center rounded-md font-medium text-brand-text underline-offset-4 outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                        Ver mis datos en cada salón
-                    </Link>
-                </p>
+                <InstallApp />
+
+                <MyDataLink />
             </div>
         </>
     );

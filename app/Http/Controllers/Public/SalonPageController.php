@@ -61,7 +61,21 @@ class SalonPageController extends Controller
             'salon' => new PublicSalonResource($salon, $content, $preview),
             // Null unless the salon shows its reviews.
             'reviews' => app(SalonReviews::class)->forPublic($salon),
-        ])->withViewData(['meta' => $this->meta($salon)]);
+        ])->withViewData(['meta' => $this->meta($salon), ...self::installData($salon)]);
+    }
+
+    /**
+     * Installing from a salon's page puts that salon on the home screen.
+     *
+     * @return array{manifest: string, appIcon: string, appTitle: string}
+     */
+    public static function installData(Salon $salon): array
+    {
+        return [
+            'manifest' => route('salons.manifest', $salon, absolute: false),
+            'appIcon' => route('salons.icon', [$salon, 192], absolute: false),
+            'appTitle' => $salon->name,
+        ];
     }
 
     /**

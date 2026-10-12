@@ -27,6 +27,7 @@ use App\Http\Controllers\Owner\ServiceController;
 use App\Http\Controllers\Owner\StaffController;
 use App\Http\Controllers\Owner\TeamController;
 use App\Http\Controllers\Public\BookingController;
+use App\Http\Controllers\Public\ManifestController;
 use App\Http\Controllers\Public\SalonPageController;
 use App\Http\Controllers\Public\SamplePhotoController;
 use App\Http\Controllers\Staff\AgendaBookingController;
@@ -67,6 +68,14 @@ Route::get('img/muestra/{file}', [SamplePhotoController::class, 'show'])
     ])
     ->middleware('throttle:300,1,samples')
     ->name('samples.show');
+
+// Installable app: the platform's manifest, and each salon's own name and logo.
+Route::get('manifest.webmanifest', [ManifestController::class, 'platform'])->name('manifest');
+Route::get('s/{salon:slug}/manifest.webmanifest', [ManifestController::class, 'salon'])->name('salons.manifest');
+Route::get('s/{salon:slug}/icono-{size}.png', [ManifestController::class, 'icon'])
+    ->whereNumber('size')
+    ->middleware('throttle:120,1,salon-icon')
+    ->name('salons.icon');
 
 // Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
 // Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
