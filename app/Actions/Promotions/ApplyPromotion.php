@@ -12,6 +12,7 @@ use App\Models\Salon;
 use App\Models\SalonClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Prices a quote under the salon's best promotion for that visit, if any
@@ -32,14 +33,60 @@ class ApplyPromotion
     public function handle(Salon $salon, ?SalonClient $client, BookingQuote $quote, CarbonImmutable $startsAt, bool $underLock = false): BookingQuote
     {
         $localStart = $startsAt->setTimezone($salon->timezone);
-        $running = Promotion::withoutGlobalScope('salon')
+
+        return $this->pick($this->running($salon, $localStart->toDateString()), $client, $quote, $localStart, $underLock);
+    }
+
+    /**
+     * What the best promotion would take off this selection at each of
+     * those starts of one day, for the time picker to mark them. Not under
+     * any lock: the booking itself counts the places again.
+     *
+     * @param  list<int>  $starts  Unix seconds (UTC), all on the same day of the salon's calendar
+     * @return array<int, array{name: string, cents: int}> by start; a start without a promotion is left out
+     */
+    public function forStarts(Salon $salon, ?SalonClient $client, BookingQuote $quote, array $starts): array
+    {
+        if ($starts === []) {
+            return [];
+        }
+
+        $first = CarbonImmutable::createFromTimestampUTC($starts[0])->setTimezone($salon->timezone);
+        $running = $this->running($salon, $first->toDateString());
+        $marked = [];
+
+        foreach ($running->isEmpty() ? [] : $starts as $start) {
+            $priced = $this->pick($running, $client, $quote, CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone), false);
+
+            if ($priced->promotion !== null) {
+                $marked[$start] = ['name' => $priced->promotion->name, 'cents' => $priced->promotionCents()];
+            }
+        }
+
+        return $marked;
+    }
+
+    /**
+     * The salon's promotions on offer for visits of that day.
+     *
+     * @return Collection<int, Promotion> by id
+     */
+    private function running(Salon $salon, string $day): Collection
+    {
+        return Promotion::withoutGlobalScope('salon')
             ->where('salon_id', $salon->id)
-            ->runningOn($localStart->toDateString())
+            ->runningOn($day)
             ->with(['services', 'giftService'])
             ->get()
             ->filter(fn (Promotion $promotion): bool => $promotion->isIntact())
             ->keyBy('id');
+    }
 
+    /**
+     * @param  Collection<int, Promotion>  $running
+     */
+    private function pick(Collection $running, ?SalonClient $client, BookingQuote $quote, CarbonImmutable $localStart, bool $underLock): BookingQuote
+    {
         if ($running->isEmpty()) {
             return $quote;
         }

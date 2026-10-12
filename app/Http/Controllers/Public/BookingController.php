@@ -6,6 +6,8 @@ use App\Actions\Booking\CreateBooking;
 use App\Actions\Booking\FindAvailableSlots;
 use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\ResolveSalonClient;
+use App\Actions\Promotions\ApplyPromotion;
+use App\Actions\Promotions\PublicPromotions;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\ClientLevel;
@@ -59,13 +61,14 @@ class BookingController extends Controller
             'viewer' => $this->viewer($request->user()),
             'preselectedServiceId' => $request->integer('servicio') ?: null,
             'repeat' => $this->repeat($request, $salon, $services, $staff),
+            'promotions' => app(PublicPromotions::class)->handle($salon)['items'],
         ])->withViewData(SalonPageController::installData($salon));
     }
 
     /**
      * Free starts of one day for the selection, plus what it costs.
      */
-    public function availability(AvailabilityRequest $request, Salon $salon): JsonResponse
+    public function availability(AvailabilityRequest $request, Salon $salon, ApplyPromotion $promotions): JsonResponse
     {
         abort_if($salon->status === SalonStatus::Suspended, 404);
 
@@ -77,8 +80,15 @@ class BookingController extends Controller
             $salon, $selections, $staff, $request->localDate($salon->timezone), $level, CarbonImmutable::now(),
         );
 
+        $cheapest = AvailabilityPayload::cheapest($quotes);
+        $client = $request->user() === null ? null : $this->clients->forUser($salon, $request->user());
+
         return response()->json([
-            'slots' => AvailabilityPayload::slots(array_keys($slots), $salon),
+            'slots' => AvailabilityPayload::slots(
+                array_keys($slots),
+                $salon,
+                $cheapest === null ? [] : $promotions->forStarts($salon, $client, $cheapest, array_keys($slots)),
+            ),
             'quote' => AvailabilityPayload::quote($quotes, $salon->depositPercentFor($level === ClientLevel::Vip)),
         ]);
     }

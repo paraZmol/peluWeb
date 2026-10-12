@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Actions\Promotions\PublicPromotions;
 use App\Actions\Reviews\SalonReviews;
 use App\Data\Salon\PublicSalonContent;
 use App\Data\Salon\SalonPreview;
@@ -62,6 +63,8 @@ class SalonPageController extends Controller
             'salon' => new PublicSalonResource($salon, $content, $preview),
             // Null unless the salon shows its reviews.
             'reviews' => app(SalonReviews::class)->forPublic($salon),
+            // What it is running today; `shared` when the visitor came by a promotion's link.
+            'promotions' => app(PublicPromotions::class)->handle($salon, $request->filled('promo') ? $request->string('promo')->limit(16, '')->toString() : null),
         ])->withViewData(['meta' => $this->meta($salon), ...self::installData($salon)]);
     }
 

@@ -76,14 +76,18 @@ class NotifyClient
      */
     private function notes(Booking $booking, BookingNotice $notice, Salon $salon): array
     {
+        // What the promotion took off: said in every mail about the booking.
+        $promotion = $booking->promotion_cents === 0 ? []
+            : ["Promoción {$booking->promotion_name}: −S/ ".Money::toAmount($booking->promotion_cents).'. Total: S/ '.Money::toAmount($booking->price_cents).'.'];
+
         if ($booking->deposit_cents === 0) {
-            return [];
+            return $promotion;
         }
 
         $deposit = 'S/ '.Money::toAmount($booking->deposit_cents);
         $isPaid = $booking->deposit_paid_at !== null;
 
-        return match (true) {
+        return [...$promotion, ...match (true) {
             $notice === BookingNotice::Received && $booking->hold_expires_at !== null => [
                 "Seña: {$deposit}. Envíala antes de las ".$booking->hold_expires_at->setTimezone($salon->timezone)->isoFormat('h:mm a').' para conservar el horario.',
             ],
@@ -91,6 +95,6 @@ class NotifyClient
             $notice === BookingNotice::Cancelled && $isPaid && $booking->deposit_refundable === true => ["El salón te devolverá la seña de {$deposit}."],
             $notice === BookingNotice::Cancelled && $isPaid => ["La seña de {$deposit} no se devuelve: la cancelación llegó fuera del plazo del salón."],
             default => [],
-        };
+        }];
     }
 }

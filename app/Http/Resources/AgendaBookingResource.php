@@ -59,6 +59,11 @@ class AgendaBookingResource extends JsonResource
             'staffName' => $this->staff->name,
             'services' => $this->services->pluck('name')->values(),
             'price' => Money::toAmount($this->price_cents),
+            // The promotion that set its price, as it was called then.
+            'promotion' => $this->promotion_cents === 0 ? null : [
+                'name' => $this->promotion_name,
+                'saved' => Money::toAmount($this->promotion_cents),
+            ],
             'deposit' => $this->deposit_cents === 0 ? null : [
                 'amount' => Money::toAmount($this->deposit_cents),
                 'isPaid' => $this->deposit_paid_at !== null,

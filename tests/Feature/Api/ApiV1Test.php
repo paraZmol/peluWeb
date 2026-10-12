@@ -185,7 +185,7 @@ describe('a salon and its free times', function () {
     it('lists the free starts of a day with the quote', function () {
         $response = $this->getJson('/api/v1/salons/barberia-lucho/availability?'.http_build_query(['date' => '2026-10-09', 'services' => [['id' => $this->cut->id]]]))
             ->assertOk()
-            ->assertJsonPath('slots.0', ['start' => apiAt('09:00'), 'time' => '09:00'])
+            ->assertJsonPath('slots.0', ['start' => apiAt('09:00'), 'time' => '09:00', 'promotion' => null])
             ->assertJsonPath('quote.price', '35.00');
 
         expect(collect($response->json('slots'))->pluck('time'))->toContain('17:30')->not->toContain('18:00');

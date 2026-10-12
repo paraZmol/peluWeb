@@ -56,8 +56,16 @@ class ClientBookingResource extends JsonResource
             'services' => $this->services->map(fn (BookingService $service) => [
                 'name' => $service->name,
                 'price' => Money::toAmount($service->price_cents),
+                // Its normal price, when a promotion changed what is charged.
+                'listPrice' => $service->list_price_cents !== null && $service->list_price_cents !== $service->price_cents
+                    ? Money::toAmount($service->list_price_cents) : null,
             ])->values(),
             'price' => Money::toAmount($this->price_cents),
+            // The promotion that set its price, as it was called then.
+            'promotion' => $this->promotion_cents === 0 ? null : [
+                'name' => $this->promotion_name,
+                'saved' => Money::toAmount($this->promotion_cents),
+            ],
             // A note the team wrote is theirs; the client sees only their own.
             'note' => $this->source === BookingSource::Client ? $this->client_note : null,
             'deposit' => $this->deposit_cents === 0 ? null : [
