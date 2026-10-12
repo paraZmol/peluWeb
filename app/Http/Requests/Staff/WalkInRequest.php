@@ -28,7 +28,7 @@ class WalkInRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:'.WalkIn::NAME_MAX_LENGTH, self::PLAIN_TEXT],
-            'service_id' => ['nullable', 'integer', Rule::exists('services', 'id')->where('salon_id', $salonId)->where('is_active', true)],
+            'service_id' => ['nullable', 'integer', Rule::exists('services', 'id')->where('salon_id', $salonId)->where('is_active', true)->whereNull('deleted_at')],
             'staff_id' => ['nullable', 'integer', Rule::exists('staff', 'id')->where('salon_id', $salonId)->where('is_active', true)->whereNull('deleted_at')],
         ];
     }

@@ -10,6 +10,7 @@ use App\Models\ClientPhoto;
 use App\Models\Review;
 use App\Models\SalonClient;
 use App\Models\User;
+use App\Models\WaitlistEntry;
 use App\Support\Images\ImageStore;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +84,9 @@ class ClientDataRights
 
         // What they wrote stays as an opinion of the salon, without their name.
         Review::withoutGlobalScope('salon')->whereIn('salon_client_id', $files->modelKeys())->update(['author_name' => Review::ANONYMOUS]);
+
+        // Their places on waiting lists go too: nobody is left to tell.
+        WaitlistEntry::withoutGlobalScope('salon')->whereIn('salon_client_id', $files->modelKeys())->delete();
 
         foreach ($files as $client) {
             foreach (ConsentKind::cases() as $kind) {

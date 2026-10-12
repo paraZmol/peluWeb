@@ -2,6 +2,7 @@
 
 namespace App\Actions\Waitlist;
 
+use App\Enums\SalonStatus;
 use App\Enums\WaitlistStatus;
 use App\Models\Salon;
 use App\Models\Service;
@@ -36,8 +37,8 @@ class MyWaitlist
             ->pluck('name', 'id');
 
         return $entries
-            // A closed salon takes its list with it.
-            ->filter(fn (WaitlistEntry $entry): bool => $salons->has($entry->salon_id))
+            // A closed or suspended salon takes its list with it.
+            ->filter(fn (WaitlistEntry $entry): bool => $salons->get($entry->salon_id)?->status !== SalonStatus::Suspended && $salons->has($entry->salon_id))
             ->map(function (WaitlistEntry $entry) use ($salons, $services): array {
                 /** @var Salon $salon */
                 $salon = $salons->get($entry->salon_id);

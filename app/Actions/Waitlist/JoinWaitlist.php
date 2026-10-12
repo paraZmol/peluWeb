@@ -9,6 +9,7 @@ use App\Models\SalonClient;
 use App\Models\Staff;
 use App\Models\WaitlistEntry;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +19,21 @@ use Illuminate\Support\Facades\DB;
 class JoinWaitlist
 {
     public function __construct(private readonly FindAvailableSlots $slots) {}
+
+    /**
+     * Two taps at once from a new account both try to create it: the
+     * second one finds the first.
+     */
+    private function firstRecord(SalonClient $client): SalonClient
+    {
+        try {
+            $client->save();
+
+            return $client;
+        } catch (UniqueConstraintViolationException) {
+            return SalonClient::withoutGlobalScope('salon')->where('salon_id', $client->salon_id)->where('user_id', $client->user_id)->firstOrFail();
+        }
+    }
 
     /**
      * @param  list<array{service_id: int, variant_id: int|null}>  $selections
@@ -38,6 +54,11 @@ class JoinWaitlist
             throw WaitlistException::thereAreTimes();
         }
 
+        // Someone who never booked here has no record yet: this is their first.
+        if (! $client->exists) {
+            $client = $this->firstRecord($client);
+        }
+
         return DB::transaction(function () use ($client, $selections, $staff, $localDate): WaitlistEntry {
             // The person's own row: two taps at once count the same places.
             SalonClient::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($client->id);
@@ -49,6 +70,12 @@ class JoinWaitlist
 
             if ($mine->count() >= WaitlistEntry::MAX_PER_CLIENT) {
                 throw WaitlistException::tooMany(WaitlistEntry::MAX_PER_CLIENT);
+            }
+
+            $thatDay = WaitlistEntry::withoutGlobalScope('salon')->where('salon_id', $client->salon_id)->active()->whereDate('date', $localDate->toDateString());
+
+            if ($thatDay->count() >= WaitlistEntry::MAX_PER_DAY) {
+                throw WaitlistException::dayIsFull();
             }
 
             $entry = new WaitlistEntry;

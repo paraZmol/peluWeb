@@ -36,6 +36,12 @@ class WaitlistEntry extends Model
     /** How long a freed time is theirs to take before the next person is told. */
     public const int OFFER_MINUTES = 30;
 
+    /** Turns someone may let go by before their place is closed. */
+    public const int MAX_OFFERS = 3;
+
+    /** People one salon's list takes for one day. */
+    public const int MAX_PER_DAY = 30;
+
     /**
      * @return array<string, string>
      */

@@ -32,6 +32,11 @@ class WaitlistException extends BusinessRuleException
         return new self('Esa persona ya salió de la fila.');
     }
 
+    public static function dayIsFull(): self
+    {
+        return new self('La lista de espera de ese día ya está completa. Prueba con otro día.');
+    }
+
     public static function dayOutOfRange(): self
     {
         return new self('Ese día ya pasó o todavía no se puede reservar.');

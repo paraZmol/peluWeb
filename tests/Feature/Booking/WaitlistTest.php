@@ -2,7 +2,9 @@
 
 use App\Actions\Booking\ChangeBookingStatus;
 use App\Actions\Booking\CreateBooking;
+use App\Actions\Salon\ClientDataRights;
 use App\Actions\Salon\CreateSalon;
+use App\Actions\Waitlist\OfferFreedSlots;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\BusinessType;
@@ -204,4 +206,48 @@ it('holds at most three places per person in a salon', function () {
     $join('2026-10-29')->assertInertiaFlash('toast.type', 'error');
 
     expect(WaitlistEntry::withoutGlobalScope('salon')->count())->toBe(WaitlistEntry::MAX_PER_CLIENT);
+});
+
+it('takes on the list someone who never booked at the salon', function () {
+    $nueva = User::factory()->create(['name' => 'Nora Nueva']);
+
+    joinWaitlist($nueva)->assertSessionHasNoErrors()->assertInertiaFlash('toast.type', 'success');
+
+    $record = SalonClient::withoutGlobalScope('salon')->where('user_id', $nueva->id)->sole();
+    expect(placeOf($nueva)->salon_client_id)->toBe($record->id)->and($record->is_vip)->toBeFalse();
+});
+
+it('closes the place of who let three turns go by, and of an account that is gone', function () {
+    joinWaitlist($this->maria);
+    joinWaitlist($this->vera);
+    app(ChangeBookingStatus::class)->cancel($this->first, $this->owner, byClient: false);
+
+    // Vera deletes her account: María is told, not a ghost.
+    app(ClientDataRights::class)->forgetEverywhere($this->vera);
+    sweep('2026-10-07 08:05');
+    Notification::assertSentTo($this->maria, WaitlistNotification::class);
+
+    // María lets it go by three times: her place closes.
+    sweep('2026-10-07 08:36');
+    sweep('2026-10-07 09:07');
+    sweep('2026-10-07 09:38');
+    sweep('2026-10-07 10:09');
+
+    expect(placeOf($this->maria)->status)->toBe(WaitlistStatus::Expired)
+        ->and(placeOf($this->maria)->offers_count)->toBe(WaitlistEntry::MAX_OFFERS);
+    Notification::assertSentToTimes($this->maria, WaitlistNotification::class, WaitlistEntry::MAX_OFFERS);
+});
+
+it('does not bring back a place the person left while the lists were being read', function () {
+    joinWaitlist($this->maria);
+    $place = placeOf($this->maria);
+    app(ChangeBookingStatus::class)->cancel($this->first, $this->owner, byClient: false);
+
+    // The run read her as waiting; she leaves before it writes.
+    $stale = WaitlistEntry::withoutGlobalScope('salon')->with('client.user')->findOrFail($place->id);
+    $this->actingAs($this->maria)->delete(route('waitlist.destroy', $place->id));
+    $move = new ReflectionMethod(OfferFreedSlots::class, 'move');
+
+    expect($move->invoke(app(OfferFreedSlots::class), $stale, WaitlistStatus::Offered))->toBeFalse()
+        ->and($place->refresh()->status)->toBe(WaitlistStatus::Cancelled);
 });
