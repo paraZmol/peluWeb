@@ -17,6 +17,7 @@ use App\Models\SalonPhoto;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Support\Images\ImageStore;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -62,6 +63,15 @@ class SalonPageController extends Controller
             // Null unless the salon shows its reviews.
             'reviews' => app(SalonReviews::class)->forPublic($salon),
         ])->withViewData(['meta' => $this->meta($salon), ...self::installData($salon)]);
+    }
+
+    /**
+     * The link a salon shares for one promotion: its page, with that
+     * promotion pointed at. The page decides what to say when it is over.
+     */
+    public function promotion(Salon $salon, string $code): RedirectResponse
+    {
+        return to_route('salons.show', ['salon' => $salon->slug, 'promo' => $code]);
     }
 
     /**

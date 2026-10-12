@@ -13,6 +13,14 @@ class SalonPolicy
         return $user->membershipIn($salon)?->isOwner() ?? false;
     }
 
+    /**
+     * Promotions change what the salon charges: owners only.
+     */
+    public function managePromotions(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->isOwner() ?? false;
+    }
+
     public function manageServices(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageServices) ?? false;

@@ -16,6 +16,7 @@ use App\Http\Controllers\Owner\ExpenseController;
 use App\Http\Controllers\Owner\HolidayController;
 use App\Http\Controllers\Owner\InvitationController;
 use App\Http\Controllers\Owner\MemberController;
+use App\Http\Controllers\Owner\PromotionController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\ReportExportController;
 use App\Http\Controllers\Owner\ReviewController;
@@ -113,6 +114,13 @@ Route::get('s/{salon:slug}/icono-{size}.png', [ManifestController::class, 'icon'
     ])
     ->middleware('throttle:120,1,salon-icon')
     ->name('salons.icon');
+
+// A promotion's own link: opens the salon's page with it on top. An ended
+// or unknown one still lands on the page, never on a 404.
+Route::get('s/{salon:slug}/promo/{code}', [SalonPageController::class, 'promotion'])
+    ->where('code', '[a-z0-9]{6,16}')
+    ->middleware('throttle:120,1,salon-page')
+    ->name('salons.promotions.show');
 
 // Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
 // Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
@@ -256,6 +264,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('gastos-categorias', [ExpenseCategoryController::class, 'store'])->name('expenses.categories.store');
         Route::put('gastos-categorias/{category}', [ExpenseCategoryController::class, 'update'])->name('expenses.categories.update');
         Route::delete('gastos-categorias/{category}', [ExpenseCategoryController::class, 'destroy'])->name('expenses.categories.destroy');
+
+        Route::get('promociones', [PromotionController::class, 'index'])->name('promotions.index');
+        Route::post('promociones', [PromotionController::class, 'store'])->middleware('throttle:30,1,promotions')->name('promotions.store');
+        Route::put('promociones/{promotion}', [PromotionController::class, 'update'])->middleware('throttle:30,1,promotions')->name('promotions.update');
+        Route::post('promociones/{promotion}/publicar', [PromotionController::class, 'publish'])->name('promotions.publish');
+        Route::post('promociones/{promotion}/pausar', [PromotionController::class, 'pause'])->name('promotions.pause');
+        Route::post('promociones/{promotion}/duplicar', [PromotionController::class, 'duplicate'])->name('promotions.duplicate');
+        Route::delete('promociones/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
 
         Route::get('servicios', [ServiceController::class, 'index'])->name('services.index');
         Route::post('servicios', [ServiceController::class, 'store'])->name('services.store');
