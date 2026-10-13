@@ -21,7 +21,7 @@ export function NextSlot({ slot, selected, onPick }: Props) {
     return (
         <button
             type="button"
-            aria-label={`Próximo horario libre: ${time}`}
+            aria-label={`Próximo horario libre: ${time}${slot.promotion ? ', con promo' : ''}`}
             aria-pressed={selected === null ? undefined : isSelected}
             onClick={() => onPick(slot)}
             className={cn(
@@ -51,6 +51,16 @@ export function NextSlot({ slot, selected, onPick }: Props) {
                 </span>
                 <span className="text-xl leading-tight font-extrabold tabular-nums">
                     {time}
+                    {slot.promotion && (
+                        <span
+                            className={cn(
+                                'ml-2 text-xs font-semibold',
+                                !isSelected && 'text-brand-text',
+                            )}
+                        >
+                            con promo
+                        </span>
+                    )}
                 </span>
             </span>
             <span

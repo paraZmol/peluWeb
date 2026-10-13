@@ -75,6 +75,8 @@ class PublicPromotions
 
                 return [
                     'serviceId' => $service->id,
+                    // Add-ons are not on the salon's public list: the card names them itself.
+                    'name' => $service->name,
                     'normal' => Money::toAmount($normal),
                     'promo' => Money::toAmount($priced->priceCents),
                     'isFrom' => $service->variants->isNotEmpty(),

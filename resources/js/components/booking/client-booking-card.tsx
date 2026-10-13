@@ -4,6 +4,7 @@ import { SalonMark } from '@/components/public/salon-mark';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { formatDate, formatPrice, formatTime } from '@/lib/format';
 import { show } from '@/routes/bookings';
+import { PromotionLine } from './promotion-line';
 import { StatusBadge } from './status-badge';
 import type { ClientBooking } from './types';
 
@@ -49,6 +50,12 @@ export function ClientBookingCard({ booking }: { booking: ClientBooking }) {
                             {formatPrice(booking.price)}
                         </span>
                     </p>
+                    {booking.promotion && (
+                        <PromotionLine
+                            name={booking.promotion.name}
+                            amount={booking.promotion.saved}
+                        />
+                    )}
                     {booking.canReview && (
                         <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-brand-text">
                             <Star className="size-4 shrink-0" aria-hidden />

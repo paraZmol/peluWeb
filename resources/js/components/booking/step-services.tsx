@@ -1,5 +1,7 @@
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { MAX_SERVICES } from '@/hooks/use-booking-wizard';
+import { bestOffers, claimedGift, giftToOffer } from '@/lib/promo-offers';
+import { GiftOffer } from './gift-offer';
 import { ServiceOption } from './service-option';
 import type { BookableSalon } from './types';
 
@@ -16,6 +18,21 @@ export function StepServices({
     empty = 'Este salón todavía no tiene servicios para reservar en línea.',
 }: Props) {
     const isFull = wizard.selections.length >= MAX_SERVICES;
+    const chosenIds = wizard.chosen.map((service) => service.id);
+    const offers = bestOffers(wizard.promotions);
+    const claimed = claimedGift(wizard.promotions, chosenIds);
+    // Only a gift that can be booked here is worth offering.
+    const offered = [giftToOffer(wizard.promotions, chosenIds)].find((gift) =>
+        wizard.services.some((service) => service.id === gift?.serviceId),
+    );
+    const gift = claimed ?? offered ?? null;
+    const addGift = () => {
+        const service = wizard.services.find((s) => s.id === gift?.serviceId);
+
+        if (service) {
+            wizard.toggleService(service);
+        }
+    };
 
     if (wizard.services.length === 0) {
         return (
@@ -42,7 +59,17 @@ export function StepServices({
                                 disabled={
                                     isFull && !wizard.isSelected(service.id)
                                 }
-                            />
+                                offer={offers.get(service.id)}
+                                isGift={claimed?.serviceId === service.id}
+                            >
+                                {gift?.giverId === service.id && (
+                                    <GiftOffer
+                                        gift={gift}
+                                        isClaimed={claimed !== null}
+                                        onAdd={isFull ? null : addGift}
+                                    />
+                                )}
+                            </ServiceOption>
                         ))}
                     </ul>
                 </section>

@@ -1,6 +1,7 @@
 import { MessageCircle, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useSalonTheme } from '@/components/salon/brand-theme';
+import type { ServiceOffer } from '@/lib/promo-offers';
 import { PRIMARY_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import { SectionHeading } from './section-heading';
@@ -13,6 +14,8 @@ type Props = {
     whatsappUrl: string | null;
     /** The salon's photos, lent to the first card of each group (photo-card). */
     photos: PublicPhoto[];
+    /** By service: its price with the best promotion that lowers it. */
+    offers?: Map<number, ServiceOffer>;
 };
 
 export function ServiceList({
@@ -20,6 +23,7 @@ export function ServiceList({
     bookingUrl,
     whatsappUrl,
     photos,
+    offers,
 }: Props) {
     const { layout } = useSalonTheme();
     const [filter, setFilter] = useState<string | null>(null);
@@ -113,6 +117,7 @@ export function ServiceList({
                     group={group}
                     bookingUrl={bookingUrl}
                     photoUrl={photoFor(group)}
+                    offers={offers}
                 />
             ))}
         </section>

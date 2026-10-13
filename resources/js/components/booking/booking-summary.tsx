@@ -1,8 +1,10 @@
 import { Clock, MapPin, User } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { formatPrice, formatTime } from '@/lib/format';
+import { formatTime } from '@/lib/format';
 import { DateTile } from './date-tile';
 import { PickedTime } from './picked-time';
+import { SummaryMoney } from './summary-money';
+import type { SummaryItem } from './summary-money';
 
 const longDateFormat = new Intl.DateTimeFormat('es-PE', {
     weekday: 'long',
@@ -26,10 +28,14 @@ type Props = {
     staffLabel?: string;
     duration?: string;
     address?: string | null;
-    items: { name: string; price?: string }[];
+    items: SummaryItem[];
     total: string | null;
     /** e.g. "desde" when the price depends on who attends. */
     totalPrefix?: string;
+    /** The total without the promotion, shown crossed out. */
+    listTotal?: string | null;
+    /** The promotion applied and what it takes off. */
+    promotion?: { name: string; amount: string } | null;
     footer?: ReactNode;
     /** The time was tapped a moment ago: let it land with a short motion. */
     timeJustPicked?: boolean;
@@ -47,6 +53,8 @@ export function BookingSummary({
     items,
     total,
     totalPrefix,
+    listTotal,
+    promotion,
     footer,
     timeJustPicked = false,
 }: Props) {
@@ -94,37 +102,13 @@ export function BookingSummary({
             </div>
 
             <div className="flex flex-col gap-3 border-t p-4 sm:px-5">
-                <ul className="flex flex-col gap-1.5">
-                    {items.map((item) => (
-                        <li
-                            key={item.name}
-                            className="flex justify-between gap-3"
-                        >
-                            <span className="min-w-0 break-words">
-                                {item.name}
-                            </span>
-                            {item.price && (
-                                <span className="shrink-0 text-muted-foreground tabular-nums">
-                                    {formatPrice(item.price)}
-                                </span>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-
-                {total !== null && (
-                    <div className="flex items-baseline justify-between border-t border-dashed pt-3">
-                        <dt className="font-medium">Total</dt>
-                        <dd className="text-xl font-extrabold tabular-nums">
-                            {totalPrefix && (
-                                <span className="text-sm font-normal text-muted-foreground">
-                                    {totalPrefix}{' '}
-                                </span>
-                            )}
-                            {formatPrice(total)}
-                        </dd>
-                    </div>
-                )}
+                <SummaryMoney
+                    items={items}
+                    total={total}
+                    totalPrefix={totalPrefix}
+                    listTotal={listTotal}
+                    promotion={promotion}
+                />
                 {footer}
             </div>
         </dl>

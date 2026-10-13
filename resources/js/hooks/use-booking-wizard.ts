@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 import { formatTime, sumAmounts } from '@/lib/format';
+import { fromCents, toCents } from '@/lib/money';
+import {
+    askedPromotion,
+    bestSavingCents,
+    promotionSelections,
+} from '@/lib/promo-offers';
 import type {
     BookableSalon,
     BookableService,
@@ -7,6 +13,7 @@ import type {
     Selection,
     Slot,
 } from '@/components/booking/types';
+import type { PublicPromotion } from '@/components/public/types';
 
 export const MAX_SERVICES = 5;
 export const STEPS = ['Servicios', 'Profesional', 'Día y hora', 'Confirmar'];
@@ -70,6 +77,11 @@ type Options = {
     persist?: boolean;
     /** A link that asks for a day ("?fecha="): the times start on it. */
     startDate?: string | null;
+    /**
+     * What the salon runs today: tags, the gift offer and the "desde". A
+     * link that names one ("?promo=") starts with its services.
+     */
+    promotions?: PublicPromotion[];
 };
 
 export function useBookingWizard({
@@ -79,10 +91,15 @@ export function useBookingWizard({
     resume = false,
     persist = true,
     startDate = null,
+    promotions = [],
 }: Options) {
     const services = salon.serviceGroups.flatMap((group) => group.services);
     const find = (id: number): BookableService | undefined =>
         services.find((service) => service.id === id);
+    const startPromotion =
+        typeof window === 'undefined'
+            ? undefined
+            : askedPromotion(window.location.search, promotions);
 
     const [state, setState] = useState<State>(() => {
         const repeated = (repeat?.selections ?? []).flatMap((selection) => {
@@ -113,13 +130,18 @@ export function useBookingWizard({
         }
 
         const preselected = find(preselectedServiceId ?? 0);
+        const promoted = promotionSelections(startPromotion, services);
 
         return {
             ...EMPTY,
-            selections:
-                preselected && preselected.variants.length === 0
+            selections: [
+                ...promoted,
+                ...(preselected &&
+                preselected.variants.length === 0 &&
+                !promoted.some((s) => s.serviceId === preselected.id)
                     ? [{ serviceId: preselected.id, variantId: null }]
-                    : [],
+                    : []),
+            ],
         };
     });
     // Forward/back, so the step transition slides the right way.
@@ -128,10 +150,13 @@ export function useBookingWizard({
     // After mount, not in the initial state: the server render has no storage.
     // Also without `resume`: the phone's back button leaves the wizard, and
     // coming back should not mean starting over. A link that asks for
-    // something specific (a service, repeating a booking) wins.
+    // something specific (a service, a promotion, repeating a booking) wins,
+    // except over what was kept to sign in: that is the same visit.
     useEffect(() => {
         const asksForSomething =
-            preselectedServiceId !== null || repeat !== null;
+            preselectedServiceId !== null ||
+            repeat !== null ||
+            (startPromotion !== undefined && !resume);
         const saved = persist && !asksForSomething ? restore(salon.slug) : null;
         const isFresh =
             saved !== null && Date.now() - saved.savedAt < RESTORE_WINDOW_MS;
@@ -215,25 +240,35 @@ export function useBookingWizard({
         .map((s) => find(s.serviceId))
         .filter((service): service is BookableService => service !== undefined);
 
+    const estimate = sumAmounts(
+        state.selections.map((selection) => {
+            const service = find(selection.serviceId);
+            const variant = service?.variants.find(
+                (v) => v.id === selection.variantId,
+            );
+
+            return variant?.price ?? service?.price ?? '0';
+        }),
+    );
+    const savingCents = bestSavingCents(
+        promotions,
+        chosen.map((service) => service.id),
+    );
+
     return {
         ...state,
         direction,
         services,
         chosen,
+        promotions,
         // Only who performs every chosen service can take the visit.
         eligibleStaff: salon.staff.filter((person) =>
             chosen.every((service) => service.staffIds.includes(person.id)),
         ),
-        // Lowest price it could cost: the chosen option, else the base price.
-        estimate: sumAmounts(
-            state.selections.map((selection) => {
-                const service = find(selection.serviceId);
-                const variant = service?.variants.find(
-                    (v) => v.id === selection.variantId,
-                );
-
-                return variant?.price ?? service?.price ?? '0';
-            }),
+        // Lowest price it could cost: the chosen option, else the base
+        // price, with the best promotion the selection may get.
+        estimate: fromCents(
+            Math.max(0, (toCents(estimate) ?? 0) - savingCents),
         ),
         hasOnlyAddons:
             chosen.length > 0 && chosen.every((service) => service.isAddon),

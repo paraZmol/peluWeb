@@ -14,6 +14,7 @@ import type {
     Viewer,
 } from '@/components/booking/types';
 import { WizardHeader } from '@/components/booking/wizard-header';
+import type { PublicPromotion } from '@/components/public/types';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { ThemeBackdrop } from '@/components/salon/theme-backdrop';
 import { useAvailability } from '@/hooks/use-availability';
@@ -30,6 +31,7 @@ type Props = {
     viewer: Viewer;
     preselectedServiceId: number | null;
     repeat: RepeatBooking | null;
+    promotions?: PublicPromotion[];
 };
 
 export default function Booking({
@@ -39,6 +41,7 @@ export default function Booking({
     viewer,
     preselectedServiceId,
     repeat,
+    promotions = [],
 }: Props) {
     const search = typeof window === 'undefined' ? '' : window.location.search;
     const wizard = useBookingWizard({
@@ -47,6 +50,7 @@ export default function Booking({
         repeat,
         resume: new URLSearchParams(search).has('continuar'),
         startDate: askedDay(search, days),
+        promotions,
     });
     const firstOpenDay = days.find((day) => !day.closed)?.date ?? null;
     const availability = useAvailability({

@@ -11,6 +11,7 @@ import { ReviewForm } from '@/components/reviews/review-form';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { usePageTemplate } from '@/hooks/use-page-template';
+import { bookedPromotion } from '@/lib/promo-offers';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { cancel, index } from '@/routes/bookings';
 
@@ -72,6 +73,7 @@ export default function BookingShow({ booking, days }: Props) {
                         address={salon.address}
                         items={booking.services}
                         total={booking.price}
+                        {...bookedPromotion(booking.price, booking.promotion)}
                         footer={
                             <p className="text-xs text-muted-foreground">
                                 Código de reserva:{' '}

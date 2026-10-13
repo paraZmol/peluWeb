@@ -1,6 +1,7 @@
-import { CalendarX, Moon, RotateCw, Sun, Sunrise } from 'lucide-react';
+import { CalendarX, Moon, RotateCw, Sun, Sunrise, Tag } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { slotsPromotionNote } from '@/lib/promo-offers';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { NextSlot } from './next-slot';
 import { SLOT_GRID, SlotPeriod } from './slot-period';
@@ -51,6 +52,8 @@ export function SlotGrid({
     selected = null,
     empty,
 }: Props) {
+    const promotionNote = slots ? slotsPromotionNote(slots) : null;
+
     return (
         <>
             {isLoading && (
@@ -86,6 +89,16 @@ export function SlotGrid({
                     <CalendarX className="size-6 text-brand-text" aria-hidden />
                     {empty}
                 </div>
+            )}
+
+            {promotionNote && (
+                <p className="flex items-start gap-2.5 rounded-xl border border-brand-line bg-brand-soft p-3.5 text-sm font-medium">
+                    <Tag
+                        className="mt-0.5 size-4 shrink-0 text-brand-text"
+                        aria-hidden
+                    />
+                    {promotionNote}
+                </p>
             )}
 
             {slots && slots.length > 1 && (

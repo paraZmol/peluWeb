@@ -62,7 +62,17 @@ export type Slot = {
     start: number;
     /** "HH:MM" on the salon's clock. */
     time: string;
+    /**
+     * The promotion a booking at this start gets and what it takes off the
+     * quoted price. The server already weighed days, hours and places left.
+     */
+    promotion?: SlotPromotion | null;
 };
+
+export type SlotPromotion = { name: string; saves: string };
+
+/** The promotion that set a booking's price, as it was called then. */
+export type BookingPromotion = { name: string; saved: string };
 
 export type Quote = {
     price: string;
@@ -104,8 +114,10 @@ export type ClientBooking = {
     isUpcoming: boolean;
     isVip: boolean;
     staffName: string;
-    services: { name: string; price: string }[];
+    /** `listPrice`: the normal price, when a promotion changed what is charged. */
+    services: { name: string; price: string; listPrice: string | null }[];
     price: string;
+    promotion: BookingPromotion | null;
     note: string | null;
     deposit: {
         amount: string;
@@ -188,6 +200,8 @@ export type AgendaBooking = {
     staffName: string;
     services: string[];
     price: string;
+    /** Already inside `price`; apart from the discount given at the till. */
+    promotion: BookingPromotion | null;
     deposit: { amount: string; isPaid: boolean; isRefunded: boolean } | null;
     /** Price minus the deposit already paid: what is left to collect. */
     balance: string;

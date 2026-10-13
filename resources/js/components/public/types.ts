@@ -80,3 +80,42 @@ export type PublicSalon = {
     openingHours: PublicOpeningHours | null;
     serviceGroups: PublicServiceGroup[];
 };
+
+/** What one included service costs with a promotion, from its catalogue price. */
+export type PromotionPrice = {
+    serviceId: number;
+    name: string;
+    normal: string;
+    promo: string;
+    /** It has options: both prices are the lowest ones ("desde"). */
+    isFrom: boolean;
+};
+
+/** A promotion the salon is running today, as visitors read it. */
+export type PublicPromotion = {
+    id: number;
+    name: string;
+    /** The campaign it belongs to ("Halloween"), above the title. */
+    overline: string | null;
+    mechanic: 'discount' | 'gift';
+    /** "Y-m-d": the last day a visit can use it. */
+    endsOn: string;
+    /** "lunes y martes, de 10:00 a 16:00"; null when it holds at any time. */
+    when: string | null;
+    finePrint: string;
+    /** Discount: the services it lowers. Gift: the ones that earn it. */
+    serviceIds: number[];
+    prices: PromotionPrice[];
+    gift: {
+        serviceId: number;
+        name: string;
+        price: string;
+        minutes: number;
+    } | null;
+};
+
+export type PublicPromotions = {
+    items: PublicPromotion[];
+    /** Set when the visitor came through a promotion's own link. */
+    shared: { id: number | null; hasEnded: boolean } | null;
+};

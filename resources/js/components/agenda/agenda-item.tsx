@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react';
+import { PromotionLine } from '@/components/booking/promotion-line';
 import { StatusBadge } from '@/components/booking/status-badge';
 import type {
     AgendaBooking,
@@ -68,6 +69,13 @@ export function AgendaItem({
                             {formatPrice(booking.price)}
                         </span>
                     </p>
+                    {booking.promotion && (
+                        <PromotionLine
+                            name={booking.promotion.name}
+                            amount={booking.promotion.saved}
+                            className="mt-1"
+                        />
+                    )}
                     {showStaff && (
                         <p className="text-sm text-muted-foreground">
                             Con {booking.staffName}

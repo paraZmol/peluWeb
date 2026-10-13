@@ -15,10 +15,14 @@ use App\Enums\BookingSource;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\ClientPhotoKind;
+use App\Enums\PromotionMechanic;
+use App\Enums\PromotionStatus;
 use App\Enums\SalonPermission;
+use App\Enums\SalonTheme;
 use App\Enums\ServiceCategory;
 use App\Enums\WaitlistStatus;
 use App\Models\Booking;
+use App\Models\Promotion;
 use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\SalonMember;
@@ -90,9 +94,10 @@ class E2eSeeder extends Seeder
         $till = $this->seedTillSalon();
         $files = $this->seedClientFileSalon();
         $waitlist = $this->seedWaitlistSalon();
+        $offers = $this->seedOffersSalon();
 
         // Factories skip what CreateSalon gives every real salon.
-        foreach ([$first, $second, $showcase, $till, $files, $permissions, $waitlist, ...$this->seedReviewSalons(), ...$this->seedPromotionSalons()] as $salon) {
+        foreach ([$first, $second, $showcase, $till, $files, $permissions, $waitlist, $offers, ...$this->seedReviewSalons(), ...$this->seedPromotionSalons()] as $salon) {
             app(ManageExpenseCategories::class)->createDefaults($salon);
         }
     }
@@ -349,6 +354,82 @@ class E2eSeeder extends Seeder
         }
 
         return $salons;
+    }
+
+    /**
+     * What a client sees of the promotions: a salon with two of them running
+     * and one person per Playwright project to book with. A discount that
+     * holds only from 9 to 18, so every day has times with and without it,
+     * and a gift earned by another service: each promotion on its own
+     * service, so which one a booking gets never depends on a tie.
+     */
+    private function seedOffersSalon(): Salon
+    {
+        $owner = User::factory()->create(['name' => 'Olivia Ofertas', 'email' => 'ofertas-duena@example.com']);
+        $salon = Salon::factory()->ownedBy($owner)->create([
+            'name' => 'Salón Ofertas',
+            'slug' => 'salon-ofertas',
+            'theme' => SalonTheme::Vibrante,
+            'brand_color' => '#E11D48',
+            'deposit_percent' => 30,
+            'payment_instructions' => 'Yape al 987 654 321 a nombre de Salón Ofertas.',
+        ]);
+        $staff = Staff::factory()->for($salon)->linkedTo($owner)->working([1, 2, 3, 4, 5, 6, 7], '07:00', '22:00')->create(['name' => 'Olivia Ofertas']);
+        $this->showcasePhotos($salon, [$staff, 3992875]);
+
+        $services = [];
+
+        foreach ([['Corte de oferta', 4000, 30, false], ['Barba de oferta', 2000, 20, false], ['Lavado de oferta', 1000, 10, true]] as $position => [$name, $priceCents, $minutes, $isAddon]) {
+            $services[] = $service = Service::factory()->for($salon)->create([
+                'name' => $name,
+                'price_cents' => $priceCents,
+                'active_minutes' => $minutes,
+                'is_addon' => $isAddon,
+                'position' => $position,
+            ]);
+            $staff->services()->attach($service->id);
+        }
+
+        [$cut, $beard, $wash] = $services;
+        $today = $salon->localNow()->startOfDay();
+        $running = [
+            'salon_id' => $salon->id,
+            'status' => PromotionStatus::Published,
+            'starts_on' => $today->subDay()->toDateString(),
+            'ends_on' => $today->addDays(20)->toDateString(),
+            'published_at' => now(),
+        ];
+
+        $discount = new Promotion;
+        $discount->forceFill([
+            ...$running,
+            'mechanic' => PromotionMechanic::Discount,
+            'card' => 'quiet_hours',
+            'name' => '25 % menos en Corte de oferta',
+            'percent' => 25,
+            'from_minute' => 9 * 60,
+            'to_minute' => 18 * 60,
+            'share_code' => 'ofertacorte',
+        ])->save();
+        $discount->services()->sync([$cut->id]);
+
+        $gift = new Promotion;
+        $gift->forceFill([
+            ...$running,
+            'mechanic' => PromotionMechanic::Gift,
+            'card' => 'season',
+            'name' => 'Lavado de oferta gratis con tu Barba de oferta',
+            'overline' => 'Regreso a clases',
+            'gift_service_id' => $wash->id,
+            'share_code' => 'ofertaregalo',
+        ])->save();
+        $gift->services()->sync([$beard->id]);
+
+        foreach (['Oferta Movil' => 'ofertas-movil@example.com', 'Oferta Escritorio' => 'ofertas-escritorio@example.com'] as $name => $email) {
+            User::factory()->create(['name' => $name, 'email' => $email]);
+        }
+
+        return $salon;
     }
 
     /**

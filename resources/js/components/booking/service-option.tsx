@@ -1,13 +1,23 @@
 import { Check, Clock } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { PromoTag } from '@/components/public/promo-tag';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { formatMinutes, formatPrice } from '@/lib/format';
+import type { ServiceOffer } from '@/lib/promo-offers';
 import { cn } from '@/lib/utils';
+import { OptionPrice } from './option-price';
 import type { BookableService } from './types';
 
 type Props = {
     service: BookableService;
     wizard: BookingWizard;
     disabled: boolean;
+    /** Its price with the salon's best promotion, when one lowers it. */
+    offer?: ServiceOffer;
+    /** Chosen as the gift of a promotion. */
+    isGift?: boolean;
+    /** Under the service once chosen: the gift it earns. */
+    children?: ReactNode;
 };
 
 /** Lowest price it can cost: its cheapest option, else its own price. */
@@ -20,7 +30,14 @@ function priceFrom(service: BookableService): string {
 }
 
 /** A service to tick, with its options once chosen. */
-export function ServiceOption({ service, wizard, disabled }: Props) {
+export function ServiceOption({
+    service,
+    wizard,
+    disabled,
+    offer,
+    isGift = false,
+    children,
+}: Props) {
     const selected = wizard.isSelected(service.id);
     const variantId = wizard.selections.find(
         (selection) => selection.serviceId === service.id,
@@ -62,6 +79,12 @@ export function ServiceOption({ service, wizard, disabled }: Props) {
                                 adicional
                             </span>
                         )}
+                        {(offer || isGift) && (
+                            <PromoTag
+                                label={isGift ? 'Regalo' : 'Promo'}
+                                className="ml-2"
+                            />
+                        )}
                     </span>
                     {service.description && (
                         <span className="line-clamp-2 text-sm text-muted-foreground">
@@ -73,14 +96,12 @@ export function ServiceOption({ service, wizard, disabled }: Props) {
                         {formatMinutes(service.minutes)}
                     </span>
                 </span>
-                <span className="shrink-0 text-right font-bold tabular-nums">
-                    {service.variants.length > 0 && (
-                        <span className="block text-xs font-normal text-muted-foreground">
-                            desde
-                        </span>
-                    )}
-                    {formatPrice(priceFrom(service))}
-                </span>
+                <OptionPrice
+                    price={priceFrom(service)}
+                    hasOptions={service.variants.length > 0}
+                    offer={offer}
+                    isGift={isGift}
+                />
             </button>
 
             {selected && service.variants.length > 0 && (
@@ -110,6 +131,7 @@ export function ServiceOption({ service, wizard, disabled }: Props) {
                     ))}
                 </div>
             )}
+            {children}
         </li>
     );
 }

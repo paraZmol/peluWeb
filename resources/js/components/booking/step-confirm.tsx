@@ -7,6 +7,7 @@ import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { markBookingCelebration } from '@/lib/celebration';
 import { flashFailed, flashMessage } from '@/lib/flash';
 import { formatMinutes, formatPrice } from '@/lib/format';
+import { promotedTotal } from '@/lib/promo-offers';
 import { store } from '@/routes/salons/booking';
 import { BookingSummary } from './booking-summary';
 import { ConfirmAction } from './confirm-action';
@@ -28,6 +29,9 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
     if (!slot || !date) {
         return null;
     }
+
+    // The chosen time says whether a promotion applies and what it saves.
+    const money = quote ? promotedTotal(quote, slot.promotion) : null;
 
     const confirm = () =>
         router.post(
@@ -86,11 +90,13 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                         : undefined
                 }
                 items={wizard.chosen.map((service) => ({ name: service.name }))}
-                total={quote?.price ?? null}
+                total={money?.total ?? null}
                 totalPrefix={quote?.priceVaries ? 'desde' : undefined}
+                listTotal={money?.listTotal}
+                promotion={money?.promotion}
             />
 
-            {quote && quote.depositPercent > 0 && (
+            {quote && money && quote.depositPercent > 0 && (
                 <p className="flex items-start gap-3 rounded-xl border border-brand-line bg-brand-soft p-4 text-sm">
                     <Wallet
                         className="mt-0.5 size-5 shrink-0 text-brand-text"
@@ -99,7 +105,7 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                     <span>
                         Para confirmar, el salón pide una seña de{' '}
                         <strong className="whitespace-nowrap tabular-nums">
-                            {formatPrice(quote.deposit)}
+                            {formatPrice(money.deposit)}
                         </strong>{' '}
                         ({quote.depositPercent}%). Te diremos cómo enviarla al
                         terminar.
