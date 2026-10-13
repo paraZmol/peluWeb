@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import {
     Armchair,
+    BadgePercent,
     BookHeart,
     CalendarClock,
     CalendarDays,
@@ -39,6 +40,7 @@ import { index as clients } from '@/routes/clients';
 import { index as commissions } from '@/routes/commissions';
 import { index as expenses } from '@/routes/expenses';
 import { index as myData } from '@/routes/my-data';
+import { index as promotions } from '@/routes/promotions';
 import { index as reports } from '@/routes/reports';
 import { index as reviews } from '@/routes/reviews';
 import { edit as editSalon } from '@/routes/salon';
@@ -81,6 +83,16 @@ export function AppSidebar() {
         // Same permission as "Mi salón": the server asks for `update` on the salon.
         ...(can('manage_salon_profile')
             ? [{ title: 'Reseñas', href: reviews(), icon: Star }]
+            : []),
+        // Only the owner creates, pauses and edits promotions.
+        ...(isOwner
+            ? [
+                  {
+                      title: 'Promociones',
+                      href: promotions(),
+                      icon: BadgePercent,
+                  },
+              ]
             : []),
         ...(can('manage_cash')
             ? [

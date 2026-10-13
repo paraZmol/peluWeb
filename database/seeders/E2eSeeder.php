@@ -92,7 +92,7 @@ class E2eSeeder extends Seeder
         $waitlist = $this->seedWaitlistSalon();
 
         // Factories skip what CreateSalon gives every real salon.
-        foreach ([$first, $second, $showcase, $till, $files, $permissions, $waitlist, ...$this->seedReviewSalons()] as $salon) {
+        foreach ([$first, $second, $showcase, $till, $files, $permissions, $waitlist, ...$this->seedReviewSalons(), ...$this->seedPromotionSalons()] as $salon) {
             app(ManageExpenseCategories::class)->createDefaults($salon);
         }
     }
@@ -298,6 +298,52 @@ class E2eSeeder extends Seeder
             $status->start($visit, $owner);
             $status->complete($visit, $owner, new Checkout(parts: ['cash' => 3500]));
             CarbonImmutable::setTestNow();
+
+            $salons[] = $salon;
+        }
+
+        return $salons;
+    }
+
+    /**
+     * Promotions: a salon per Playwright project (each publishes its own,
+     * and a salon runs three at most), with a brand color of its own (a
+     * vivid one, a dark one), a deposit, two services and a short add-on
+     * with one price, the kind that can be given away.
+     *
+     * @return list<Salon>
+     */
+    private function seedPromotionSalons(): array
+    {
+        $salons = [];
+
+        foreach (['movil' => ['Prisca Movil', '#E11D48'], 'escritorio' => ['Prisca Escritorio', '#1F2937']] as $project => [$ownerName, $brandColor]) {
+            $owner = User::factory()->create(['name' => $ownerName, 'email' => "promos-duena-{$project}@example.com"]);
+            $salon = Salon::factory()->ownedBy($owner)->create([
+                'name' => 'Salón Promos '.ucfirst($project),
+                'slug' => "salon-promos-{$project}",
+                'brand_color' => $brandColor,
+                'deposit_percent' => 30,
+                'payment_instructions' => 'Yape al 987 654 321 a nombre de Salón Promos.',
+            ]);
+            $staff = Staff::factory()->for($salon)->linkedTo($owner)->working([1, 2, 3, 4, 5, 6, 7], '00:00', '23:55')->create(['name' => $ownerName]);
+
+            $catalog = [
+                ['Corte de promo', 3500, 30, false],
+                ['Barba de promo', 2000, 20, false],
+                ['Lavado de promo', 1000, 10, true],
+            ];
+
+            foreach ($catalog as $position => [$name, $priceCents, $minutes, $isAddon]) {
+                $service = Service::factory()->for($salon)->create([
+                    'name' => $name,
+                    'price_cents' => $priceCents,
+                    'active_minutes' => $minutes,
+                    'is_addon' => $isAddon,
+                    'position' => $position,
+                ]);
+                $staff->services()->attach($service->id);
+            }
 
             $salons[] = $salon;
         }
