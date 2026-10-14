@@ -40,7 +40,7 @@ test.describe('Promociones: lo que ve el cliente', () => {
         const discount = card(page, DISCOUNT);
         await expect(discount).toContainText('Precio normal S/ 40.00');
         await expect(discount).toContainText('Con promoción S/ 30.00');
-        await expect(discount).toContainText('de 09:00 a 18:00');
+        await expect(discount).toContainText('de 9:00 a. m. a 6:00 p. m.');
         // How long it runs is read without opening the conditions.
         await expect(discount).toContainText(/Válido del \d.* de \d{4}/);
         await expect(discount).not.toContainText('Aplica a:');
@@ -206,7 +206,7 @@ test.describe('Promociones: lo que ve el cliente', () => {
         ).toBeVisible();
         await expect(
             page.getByText(
-                `${DISCOUNT} vale solo de 09:00 a 18:00. Los horarios que la tienen dicen «con promo».`,
+                `${DISCOUNT} vale solo de 9:00 a. m. a 6:00 p. m. Los horarios que la tienen dicen «con promo».`,
             ),
         ).toBeVisible();
         await page.getByRole('radio').nth(1).click();

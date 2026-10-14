@@ -54,9 +54,11 @@ export default function WalkIns({
                     className="flex flex-col gap-3"
                 >
                     <h2 id="walk-ins-open" className="font-semibold">
-                        {waiting.length === 1
-                            ? '1 persona en espera'
-                            : `${waiting.length} personas en espera`}
+                        {waiting.length === 0
+                            ? 'En espera'
+                            : waiting.length === 1
+                              ? '1 persona en espera'
+                              : `${waiting.length} personas en espera`}
                     </h2>
                     {open.length === 0 ? (
                         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center text-muted-foreground">

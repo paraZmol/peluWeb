@@ -36,10 +36,16 @@ type Came = 'booker' | 'companion';
  */
 export function DropCompanionDialog({ booking, companion }: Props) {
     const portalTheme = usePortalTheme();
-    const [came, setCame] = useState<Came>('booker');
+    // Nobody is picked for the team: a wrong default would charge the wrong one.
+    const [came, setCame] = useState<Came | null>(null);
     const [sending, setSending] = useState(false);
     const submit = (event: FormEvent) => {
         event.preventDefault();
+
+        if (!came) {
+            return;
+        }
+
         router.post(
             dropCompanion.url(booking.id),
             { came },
@@ -54,7 +60,7 @@ export function DropCompanionDialog({ booking, companion }: Props) {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="col-span-2 sm:col-auto">
                     <UserMinus aria-hidden /> Llegó una sola persona
                 </Button>
             </DialogTrigger>
@@ -65,11 +71,17 @@ export function DropCompanionDialog({ booking, companion }: Props) {
                 <form onSubmit={submit} className="flex flex-col gap-4">
                     <DialogHeader className="pr-8 text-left">
                         <DialogTitle>¿Quién vino?</DialogTitle>
-                        <DialogDescription>
-                            La promoción deja de aplicar. Se cobra a precio
-                            normal solo el servicio de quien vino. La seña
-                            pagada se descuenta. Díselo antes de empezar.
-                            Quedará registrado que lo hiciste tú.
+                        <DialogDescription asChild>
+                            <div className="flex flex-col gap-1.5">
+                                <p>
+                                    Se cobra a precio normal solo a quien vino.
+                                    La seña pagada se descuenta.
+                                </p>
+                                <p>Avísale antes de quitar la promoción.</p>
+                                <p className="text-xs">
+                                    Quedará registrado que lo hiciste tú.
+                                </p>
+                            </div>
                         </DialogDescription>
                     </DialogHeader>
                     <RadioPills
@@ -80,7 +92,7 @@ export function DropCompanionDialog({ booking, companion }: Props) {
                             { value: 'booker', label: booking.client.name },
                             { value: 'companion', label: companion },
                         ]}
-                        value={came}
+                        value={came ?? ''}
                         onChange={(value) => setCame(value as Came)}
                     />
                     <DialogFooter className="gap-2 [&_button]:h-12 sm:[&_button]:h-10">
@@ -89,7 +101,7 @@ export function DropCompanionDialog({ booking, companion }: Props) {
                                 Volver
                             </Button>
                         </DialogClose>
-                        <Button type="submit" disabled={sending}>
+                        <Button type="submit" disabled={sending || !came}>
                             {sending && <Spinner />}
                             Quitar y cobrar precio normal
                         </Button>

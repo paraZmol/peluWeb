@@ -88,6 +88,7 @@ export default function BookingCreate({ salon, days, promotions = [] }: Props) {
                                 salon={salon}
                                 wizard={wizard}
                                 empty="Todavía no hay servicios activos para agendar. Agrégalos en Servicios."
+                                voice="staff"
                             />
                         )}
                         {wizard.step === 1 && <StepStaff wizard={wizard} />}
@@ -110,7 +111,7 @@ export default function BookingCreate({ salon, days, promotions = [] }: Props) {
             </div>
 
             {wizard.step === 0 && wizard.chosen.length > 0 && (
-                <SelectionBar wizard={wizard} inline />
+                <SelectionBar wizard={wizard} inline voice="staff" />
             )}
         </>
     );

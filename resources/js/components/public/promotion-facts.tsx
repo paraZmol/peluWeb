@@ -1,5 +1,6 @@
 import { CalendarDays, Clock, Ticket, UserRound } from 'lucide-react';
 import { staffNamesOf } from '@/lib/promo-staff';
+import { shortWhen } from '@/lib/promo-when';
 import { list, quotaLabel } from '@/lib/promotions';
 import type { PublicPromotion } from './types';
 
@@ -13,6 +14,7 @@ type Props = {
 export function PromotionFacts({ promotion, hidesWhen }: Props) {
     const quota = quotaLabel(promotion.quota);
     const staffNames = staffNamesOf(promotion);
+    const when = shortWhen(promotion.when);
 
     return (
         <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
@@ -25,12 +27,10 @@ export function PromotionFacts({ promotion, hidesWhen }: Props) {
                     Con {list(staffNames)}
                 </li>
             )}
-            {promotion.when && !hidesWhen && (
+            {when && !hidesWhen && (
                 <li className="flex items-start gap-2">
                     <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
-                    <span className="first-letter:uppercase">
-                        {promotion.when}
-                    </span>
+                    <span className="first-letter:uppercase">{when}</span>
                 </li>
             )}
             <li className="flex items-start gap-2">

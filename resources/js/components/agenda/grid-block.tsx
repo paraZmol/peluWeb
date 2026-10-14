@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import type { PanInfo } from 'motion/react';
 import { useRef } from 'react';
 import type { AgendaBooking } from '@/components/booking/types';
+import { servicesLine } from '@/lib/companion';
 import { formatTime } from '@/lib/format';
 import type { Placed } from '@/lib/time-grid';
 import { cn } from '@/lib/utils';
@@ -106,7 +107,7 @@ export function GridBlock({
             )}
             {height >= THREE_LINES_PX && (
                 <span className="block truncate opacity-80">
-                    {booking.services.join(', ')}
+                    {servicesLine(booking.services)}
                 </span>
             )}
         </motion.button>

@@ -10,6 +10,7 @@ import type { PublicPromotion } from '@/components/public/types';
 import { sumAmounts } from './format';
 import { fromCents, toCents } from './money';
 import { staffNamesOf, staffPriceNote } from './promo-staff';
+import { shortWhen } from './promo-when';
 import { depositCents, PAIR_FREE, PAIR_HALF, percentPrice } from './promotions';
 
 /*
@@ -372,9 +373,11 @@ export function limitedPromotionHint(
     }
 
     const [first] = limited;
+    // "… 6:00 p. m." already ends the sentence.
+    const when = (shortWhen(first.when) ?? first.when ?? '').replace(/\.$/, '');
 
     return limited.length === 1
-        ? `${first.name} vale solo ${first.when}. Los horarios que la tienen dicen «con promo».`
+        ? `${first.name} vale solo ${when}. Los horarios que la tienen dicen «con promo».`
         : 'Hay promociones que valen solo algunos días u horas. Los horarios que las tienen dicen «con promo».';
 }
 

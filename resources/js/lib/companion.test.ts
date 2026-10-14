@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { PromotionService } from '@/components/promotions/types';
 import type { PublicPromotion } from '@/components/public/types';
-import { bookedLines, keptCompanion, withCompanion } from './companion';
+import {
+    bookedLines,
+    keptCompanion,
+    servicesLine,
+    withCompanion,
+} from './companion';
 import { bestOffers, pairPercent, pairSavingCents } from './promo-offers';
 import {
     newPromotionFields,
@@ -214,5 +219,18 @@ describe('the wizard', () => {
         expect(
             keptCompanion([{ serviceId: CUT, variantId: 9 }], lucia),
         ).toEqual(lucia);
+    });
+});
+
+describe('servicesLine', () => {
+    it('reads the line of who comes along as the same service twice', () => {
+        expect(servicesLine(['Corte', 'Corte · para Lucía'])).toBe(
+            'Corte ×2 (también para Lucía)',
+        );
+        expect(servicesLine(['Corte', 'Barba'])).toBe('Corte, Barba');
+    });
+
+    it('keeps the line as it is when only who came along is left', () => {
+        expect(servicesLine(['Corte · para Lucía'])).toBe('Corte · para Lucía');
     });
 });

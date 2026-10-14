@@ -124,9 +124,10 @@
     --accent-foreground: #1f1b18;
     --destructive: #b42318;
     --destructive-foreground: #b42318;
-    --success: #15803d;
+    /* Dark enough to stay ≥ 4.5:1 as small text on their own 10–15 % tint. */
+    --success: #11703a;
     --success-foreground: #ffffff;
-    --warning: #b45309;
+    --warning: #a14a0a;
     --warning-foreground: #ffffff;
     --border: #e8e2db;
     --border-strong: #d6cdc3;
@@ -747,6 +748,14 @@
     }
 }
 
+/* Secondary text over a brand tint: the muted gray can fall under 4.5:1
+   against a dark or vivid brand, so there it is the text color at 80 %. */
+.bg-brand-soft,
+:checked ~ .peer-checked\:bg-brand-soft,
+:checked ~ .peer-checked\:bg-primary\/10 {
+    --muted-foreground: color-mix(in oklab, var(--foreground) 80%, transparent);
+}
+
 /* ==========================================================================
    5. Skins: one class per surface role, each template fills the tokens.
    Never combine a skin with bg-*, border-* or shadow-* on the same element.
@@ -935,8 +944,8 @@
         --primary: #8f5e45;
         --primary-foreground: #ffffff;
         --destructive-foreground: #b42318;
-        --success: #15803d;
-        --warning: #b45309;
+        --success: #11703a;
+        --warning: #a14a0a;
         --border: #e8e2db;
         --border-strong: #d6cdc3;
         --elevation-1: none;

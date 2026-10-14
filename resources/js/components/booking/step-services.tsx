@@ -2,6 +2,7 @@ import { Info } from 'lucide-react';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { MAX_SERVICES } from '@/hooks/use-booking-wizard';
 import { useComboBreaks } from '@/hooks/use-combo-breaks';
+import type { CompanionVoice } from '@/lib/companion';
 import { bestOffers, claimedGift, giftToOffer } from '@/lib/promo-offers';
 import { CompanionOffer } from './companion-offer';
 import { GiftOffer } from './gift-offer';
@@ -13,12 +14,15 @@ type Props = {
     wizard: BookingWizard;
     /** What to say when there is nothing to choose from. */
     empty?: string;
+    /** Who reads it: the person booking, or the team booking for someone. */
+    voice?: CompanionVoice;
 };
 
 export function StepServices({
     salon,
     wizard,
     empty = 'Este salón todavía no tiene servicios para reservar en línea.',
+    voice = 'client',
 }: Props) {
     const isFull = wizard.selections.length >= MAX_SERVICES;
     const chosenIds = wizard.chosen.map((service) => service.id);
@@ -87,6 +91,7 @@ export function StepServices({
                                             <CompanionOffer
                                                 wizard={wizard}
                                                 service={service}
+                                                voice={voice}
                                             />
                                         )}
                                     {comboBreak && (

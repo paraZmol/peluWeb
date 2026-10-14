@@ -8,7 +8,7 @@ import { login, watchForErrors } from './support';
 // "Lavado de promo" (S/ 10).
 const PHONE = { width: 390, height: 844 };
 const DISCOUNT = '20 % menos en Corte de promo';
-const QUIET_HOURS = 'lunes, martes y miércoles, de 10:00 a 16:00';
+const QUIET_HOURS = 'lun a mié, 10:00 a. m. a 4:00 p. m.';
 const QUIET_STARTS =
     'lunes, martes y miércoles, en citas que empiecen entre las 10:00 y las 16:00';
 
@@ -545,7 +545,7 @@ test.describe('Promociones del salón', () => {
             .getByRole('listitem', { name: title });
         await expect(offer).toContainText('Vienen dos, el segundo gratis');
         await expect(offer).toContainText('Se cobra entero el de mayor precio');
-        await expect(offer).toContainText('Solo lunes');
+        await expect(offer).toContainText(/Solo (lun|de )/);
         if (process.env.E2E_SHOTS) {
             await offer.scrollIntoViewIfNeeded();
             await offer.screenshot({ path: shot('card') });
@@ -563,7 +563,9 @@ test.describe('Promociones del salón', () => {
             guest.getByRole('button', { name: 'Continuar' }),
         ).toBeDisabled();
         await name.fill('Lucía');
-        await expect(guest.getByText('2 servicios')).toBeVisible();
+        await expect(
+            guest.getByText('1 servicio para 2 personas'),
+        ).toBeVisible();
         expect(await hasHorizontalScroll(guest)).toBe(false);
         if (process.env.E2E_SHOTS) {
             await guest.screenshot({ path: shot('wizard'), fullPage: true });
@@ -608,14 +610,20 @@ test.describe('Promociones del salón', () => {
             .getByRole('button', { name: 'Llegó una sola persona' })
             .click();
         const who = page.getByRole('dialog', { name: '¿Quién vino?' });
-        await expect(who).toContainText('La promoción deja de aplicar.');
+        await expect(who).toContainText(
+            'Se cobra a precio normal solo a quien vino.',
+        );
         await expect(who.getByRole('radio', { name: 'Lucía' })).toBeVisible();
         if (process.env.E2E_SHOTS) {
             await page.screenshot({ path: shot('agenda') });
         }
-        await who
-            .getByRole('button', { name: 'Quitar y cobrar precio normal' })
-            .click();
+        // Nobody is picked beforehand: the team says who came.
+        const drop = who.getByRole('button', {
+            name: 'Quitar y cobrar precio normal',
+        });
+        await expect(drop).toBeDisabled();
+        await who.locator('label').first().click();
+        await drop.click();
         await expect(
             page.getByText(
                 'Listo: se cobra solo a quien vino, a precio normal.',

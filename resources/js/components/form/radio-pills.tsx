@@ -30,7 +30,7 @@ export function RadioPills({
                 )}
             >
                 {options.map((option) => (
-                    <label key={option.value} className="cursor-pointer">
+                    <label key={option.value} className="grid cursor-pointer">
                         <input
                             type="radio"
                             name={name}
@@ -41,7 +41,7 @@ export function RadioPills({
                         />
                         <span
                             className={cn(
-                                'flex min-h-11 items-center justify-center rounded-xl border bg-card px-2 text-center text-sm transition-colors',
+                                'flex h-full min-h-11 items-center justify-center rounded-xl border bg-card px-2 py-1.5 text-center text-sm break-words transition-colors',
                                 'peer-checked:border-primary peer-checked:bg-primary/10 peer-focus-visible:ring-2 peer-focus-visible:ring-ring',
                             )}
                         >

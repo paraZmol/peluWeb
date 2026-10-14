@@ -6,6 +6,7 @@ import type {
     BookingDay,
     StaffOption,
 } from '@/components/booking/types';
+import { servicesLine } from '@/lib/companion';
 import { formatPrice, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { AgendaActions } from './agenda-actions';
@@ -64,7 +65,7 @@ export function AgendaItem({
                         )}
                     </p>
                     <p className="text-sm break-words text-muted-foreground">
-                        {booking.services.join(', ')} ·{' '}
+                        {servicesLine(booking.services)} ·{' '}
                         <span className="whitespace-nowrap tabular-nums">
                             {formatPrice(booking.price)}
                         </span>

@@ -1,5 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
+import type { CompanionVoice } from '@/lib/companion';
+import { COMPANION_COPY } from '@/lib/companion';
 import { formatPrice } from '@/lib/format';
 import { PRIMARY_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
@@ -10,13 +12,24 @@ type Props = {
     inline?: boolean;
     /** Width of the content it lines up with. */
     wide?: boolean;
+    voice?: CompanionVoice;
 };
 
-/** Running total and the way forward, fixed in the thumb zone. */
-export function SelectionBar({ wizard, inline = false, wide = false }: Props) {
-    // Who comes along has a service of their own.
-    const count = wizard.chosen.length + (wizard.companion ? 1 : 0);
+/** "2 servicios"; with someone coming along, "1 servicio para 2 personas". */
+function countLabel(wizard: BookingWizard): string {
+    const count = wizard.chosen.length;
+    const services = `${count} ${count === 1 ? 'servicio' : 'servicios'}`;
 
+    return wizard.companion ? `${services} para 2 personas` : services;
+}
+
+/** Running total and the way forward, fixed in the thumb zone. */
+export function SelectionBar({
+    wizard,
+    inline = false,
+    wide = false,
+    voice = 'client',
+}: Props) {
     return (
         <div
             className={cn(
@@ -33,8 +46,8 @@ export function SelectionBar({ wizard, inline = false, wide = false }: Props) {
                 <p className="min-w-0 flex-1 text-sm" role="status">
                     <span className="block text-muted-foreground">
                         {wizard.needsCompanionName
-                            ? 'Falta el nombre de quien te acompaña'
-                            : `${count} ${count === 1 ? 'servicio' : 'servicios'}`}
+                            ? COMPANION_COPY[voice].missing
+                            : countLabel(wizard)}
                     </span>
                     <span className="text-lg font-bold tabular-nums">
                         <span className="text-sm font-normal text-muted-foreground">

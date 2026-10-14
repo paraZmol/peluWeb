@@ -1,5 +1,6 @@
 import { CalendarDays, Clock, UserRound } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
+import { shortWhen } from '@/lib/promo-when';
 import { dateRange, list } from '@/lib/promotions';
 import { PromotionActions } from './promotion-actions';
 import { PromotionStateTag } from './promotion-state-tag';
@@ -32,6 +33,7 @@ function Figure({ label, value }: { label: string; value: string }) {
 /** One promotion of the salon: what it says, where it stands, what it brought. */
 export function PromotionCard({ promotion, team, onEdit, onShare }: Props) {
     const { results } = promotion;
+    const when = shortWhen(promotion.when);
     const staffNames = team
         .filter((person) => promotion.form.staff?.includes(person.id))
         .map((person) => person.name);
@@ -70,12 +72,10 @@ export function PromotionCard({ promotion, team, onEdit, onShare }: Props) {
                         {dateRange(promotion.startsOn, promotion.endsOn)}
                     </span>
                 </p>
-                {promotion.when && (
+                {when && (
                     <p className="flex items-start gap-2">
                         <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
-                        <span className="first-letter:uppercase">
-                            {promotion.when}
-                        </span>
+                        <span className="first-letter:uppercase">{when}</span>
                     </p>
                 )}
                 {staffNames.length > 0 && (

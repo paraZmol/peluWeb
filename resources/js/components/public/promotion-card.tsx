@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ArrowRight, Clock, Gift, Layers, Percent, Users } from 'lucide-react';
 import { pairPercent } from '@/lib/promo-offers';
+import { shortWhen } from '@/lib/promo-when';
 import { PAIR_FREE } from '@/lib/promotions';
 import { PRIMARY_ACTION, SOFT_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,7 @@ export function PromotionCard({
     const Icon = ICONS[promotion.mechanic];
     // The 2x1 free is only for some days and hours: said by the title.
     const whenByTitle = pairPercent(promotion) === PAIR_FREE;
+    const when = shortWhen(promotion.when);
 
     return (
         <li
@@ -79,14 +81,14 @@ export function PromotionCard({
                             {promotion.summary}
                         </p>
                     )}
-                    {whenByTitle && promotion.when && (
+                    {whenByTitle && when && (
                         <p className="flex items-start gap-2 font-semibold text-brand-text">
                             <Clock
                                 className="mt-0.5 size-4 shrink-0"
                                 aria-hidden
                             />
                             <span className="first-letter:uppercase">
-                                Solo {promotion.when}
+                                Solo {when}
                             </span>
                         </p>
                     )}

@@ -168,7 +168,7 @@ describe('limitedPromotionHint', () => {
 
     it('names the promotion, when it holds and how its times are marked', () => {
         expect(limitedPromotionHint([quiet, gift], [CUT])).toBe(
-            '25 % menos en Corte vale solo de 09:00 a 18:00. Los horarios que la tienen dicen «con promo».',
+            '25 % menos en Corte vale solo de 9:00 a. m. a 6:00 p. m. Los horarios que la tienen dicen «con promo».',
         );
     });
 

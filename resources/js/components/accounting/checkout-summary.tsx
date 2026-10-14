@@ -1,4 +1,5 @@
 import type { AgendaBooking } from '@/components/booking/types';
+import { servicesLine } from '@/lib/companion';
 import { formatCents, formatPrice, sumAmounts } from '@/lib/format';
 import { toCents } from '@/lib/money';
 
@@ -33,7 +34,9 @@ export function CheckoutSummary({ booking, discountCents, totalCents }: Props) {
     return (
         <div className="rounded-xl border bg-card">
             <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 p-4 text-sm">
-                <dt className="break-words">{booking.services.join(', ')}</dt>
+                <dt className="break-words">
+                    {servicesLine(booking.services)}
+                </dt>
                 <dd className="text-right whitespace-nowrap tabular-nums">
                     {formatPrice(
                         promotion

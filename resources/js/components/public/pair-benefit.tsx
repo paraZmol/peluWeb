@@ -52,8 +52,14 @@ export function PairBenefit({ promotion, serviceNames }: Props) {
                                 para dos:
                             </span>{' '}
                             {price.isFrom && 'desde '}
-                            {formatPrice(price.normal)} +{' '}
-                            {isFree ? 'gratis' : formatPrice(fromCents(second))}
+                            <span className="whitespace-nowrap">
+                                {formatPrice(price.normal)} +
+                            </span>{' '}
+                            <span className="whitespace-nowrap">
+                                {isFree
+                                    ? 'gratis'
+                                    : formatPrice(fromCents(second))}
+                            </span>
                         </li>
                     );
                 })}
