@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Actions\Accounting\RefundDeposit;
 use App\Actions\Booking\ChangeBookingStatus;
+use App\Actions\Booking\DropCompanion;
 use App\Http\Controllers\Owner\SalonAreaController;
 use App\Http\Requests\Staff\CompleteBookingRequest;
 use App\Http\Requests\Staff\PaymentMethodRequest;
@@ -44,6 +45,16 @@ class BookingStatusController extends SalonAreaController
         $this->status->complete($booking, $request->user(), $checkout);
 
         return $this->done('Cita completada y cobrada.');
+    }
+
+    public function dropCompanion(Request $request, Booking $booking, DropCompanion $drop): RedirectResponse
+    {
+        $this->authorize('manage', $booking);
+        // Who came: the one who booked, or the one coming along.
+        $came = $request->validate(['came' => ['required', 'in:booker,companion']])['came'];
+        $drop->handle($booking, $came === 'companion', $request->user());
+
+        return $this->done('Listo: se cobra solo a quien vino, a precio normal.');
     }
 
     public function noShow(Request $request, Booking $booking): RedirectResponse

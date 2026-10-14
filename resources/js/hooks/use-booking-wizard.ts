@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { formatTime, sumAmounts } from '@/lib/format';
+import { bookedLines, keptCompanion, pairOffer } from '@/lib/companion';
+import type { Companion } from '@/lib/companion';
 import { fromCents, toCents } from '@/lib/money';
 import {
     askedPromotion,
     bestSavingCents,
+    pairSavingCents,
     promotionSelections,
 } from '@/lib/promo-offers';
 import type {
@@ -23,6 +26,8 @@ const TIME_STEP = 2;
 type State = {
     step: number;
     selections: Selection[];
+    /** "Ven con alguien": who comes along for the same service. */
+    companion: Companion | null;
     /** null = whoever is free. */
     staffId: number | null;
     date: string | null;
@@ -42,6 +47,7 @@ const RESTORE_WINDOW_MS = 30 * 60 * 1000;
 const EMPTY: State = {
     step: 0,
     selections: [],
+    companion: null,
     staffId: null,
     date: null,
     slot: null,
@@ -102,10 +108,14 @@ export function useBookingWizard({
             : askedPromotion(window.location.search, promotions);
 
     const [state, setState] = useState<State>(() => {
+        // Who came along then comes along again, with their name written.
+        const companionLine = repeat?.selections.find((s) => s.companion);
         const repeated = (repeat?.selections ?? []).flatMap((selection) => {
             const service = find(selection.serviceId);
 
-            return service ? [{ service, variantId: selection.variantId }] : [];
+            return service && !selection.companion
+                ? [{ service, variantId: selection.variantId }]
+                : [];
         });
 
         if (repeated.length > 0) {
@@ -124,6 +134,13 @@ export function useBookingWizard({
                     // always needs one.
                     variantId: variantId ?? service.variants[0]?.id ?? null,
                 })),
+                companion: companionLine?.companion
+                    ? {
+                          serviceId: companionLine.serviceId,
+                          name: companionLine.companion,
+                          variantId: companionLine.variantId,
+                      }
+                    : null,
                 staffId,
                 step: staffId === null ? 1 : 2,
             };
@@ -131,9 +148,15 @@ export function useBookingWizard({
 
         const preselected = find(preselectedServiceId ?? 0);
         const promoted = promotionSelections(startPromotion, services);
+        // From a "Ven con alguien": it starts asking who comes along.
+        const companion =
+            startPromotion?.mechanic === 'pair' && promoted.length === 1
+                ? { ...promoted[0], name: '' }
+                : null;
 
         return {
             ...EMPTY,
+            companion,
             selections: [
                 ...promoted,
                 ...(preselected &&
@@ -211,7 +234,25 @@ export function useBookingWizard({
 
     /** Changing services invalidates the professional and the time chosen. */
     const setSelections = (selections: Selection[]) =>
-        patch({ selections, staffId: null, slot: null });
+        setState((current) => ({
+            ...current,
+            selections,
+            companion: keptCompanion(selections, current.companion),
+            staffId: null,
+            slot: null,
+        }));
+
+    const companion = keptCompanion(state.selections, state.companion);
+    const pair = pairOffer(state.selections, promotions);
+    const priceOf = (selection: Selection): string => {
+        const service = find(selection.serviceId);
+        const variant = service?.variants.find(
+            (v) => v.id === selection.variantId,
+        );
+
+        return variant?.price ?? service?.price ?? '0';
+    };
+    const lines = bookedLines(state.selections, companion);
 
     const toggleService = (service: BookableService) => {
         if (isSelected(service.id)) {
@@ -240,19 +281,15 @@ export function useBookingWizard({
         .map((s) => find(s.serviceId))
         .filter((service): service is BookableService => service !== undefined);
 
-    const estimate = sumAmounts(
-        state.selections.map((selection) => {
-            const service = find(selection.serviceId);
-            const variant = service?.variants.find(
-                (v) => v.id === selection.variantId,
-            );
-
-            return variant?.price ?? service?.price ?? '0';
-        }),
-    );
-    const savingCents = bestSavingCents(
-        promotions,
-        chosen.map((service) => service.id),
+    const estimate = sumAmounts(lines.map(priceOf));
+    const savingCents = Math.max(
+        bestSavingCents(
+            promotions,
+            chosen.map((service) => service.id),
+        ),
+        pair && lines.length === 2
+            ? pairSavingCents(pair, [priceOf(lines[0]), priceOf(lines[1])])
+            : 0,
     );
 
     return {
@@ -261,6 +298,28 @@ export function useBookingWizard({
         services,
         chosen,
         promotions,
+        /** What is asked for and booked, with the line of who comes along. */
+        lines,
+        /** The "Ven con alguien" the selection can take, if any. */
+        pair,
+        companion,
+        /** "Ven con alguien" is on, and who comes along has no name yet. */
+        needsCompanionName: companion !== null && companion.name.trim() === '',
+        /** On or off; on, it starts with the same option as the first. */
+        toggleCompanion: () =>
+            patch({
+                companion: companion
+                    ? null
+                    : { ...state.selections[0], name: '' },
+                staffId: null,
+                slot: null,
+            }),
+        setCompanion: (changes: Partial<Companion>) =>
+            companion &&
+            patch({
+                companion: { ...companion, ...changes },
+                slot: null,
+            }),
         // Only who performs every chosen service can take the visit.
         eligibleStaff: salon.staff.filter((person) =>
             chosen.every((service) => service.staffIds.includes(person.id)),

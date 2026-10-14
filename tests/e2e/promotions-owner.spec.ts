@@ -370,4 +370,179 @@ test.describe('Promociones del salón', () => {
         expect(await hasHorizontalScroll(guest)).toBe(false);
         await guest.close();
     });
+
+    test('la dueña publica un 2x1, alguien reserva con quien le acompaña y en la agenda llega una sola persona', async ({
+        page,
+        browser,
+    }, testInfo) => {
+        test.setTimeout(180_000);
+        const isPhone = testInfo.project.name === 'movil';
+        const assertNoErrors = watchForErrors(page);
+        const title = '2x1 en Corte de promo';
+        const owner = isPhone ? 'Prisca Movil' : 'Prisca Escritorio';
+        const shot = (name: string) =>
+            `storage/app/shots/promo-pair-${name}-${testInfo.project.name}.png`;
+
+        if (isPhone) {
+            await page.setViewportSize(PHONE);
+        }
+
+        await login(
+            page,
+            `promos-duena-${testInfo.project.name}@example.com`,
+            'password',
+        );
+        await expect(page).toHaveURL(/dashboard$/);
+        await page.goto('/promociones');
+        const startNew = page.getByRole('button', { name: 'Nueva promoción' });
+
+        if (await startNew.isVisible()) {
+            await startNew.click();
+        }
+
+        await page.getByRole('button', { name: /^Ven con alguien/ }).click();
+        const sheet = page.getByRole('dialog', { name: 'Ven con alguien' });
+        // Only services with one fixed price: no add-ons.
+        await expect(
+            sheet.getByRole('checkbox', { name: /Lavado de promo/ }),
+        ).toHaveCount(0);
+        await sheet.getByRole('checkbox', { name: /Corte de promo/ }).check();
+        await expect(
+            sheet.getByRole('radio', { name: /Segundo a mitad de precio/ }),
+        ).toBeChecked();
+        const preview = sheet.getByRole('region', { name: 'Vista previa' });
+        await expect(preview).toContainText(
+            'Segundo Corte de promo a mitad de precio',
+        );
+        await expect(preview).toContainText(
+            'Quien atiende hace dos servicios y comisiona sobre S/ 52.50.',
+        );
+        await expect(
+            sheet.getByRole('checkbox', { name: 'Lunes' }),
+        ).toHaveCount(0);
+
+        // Free: days and hours open, proposed and required; every day here.
+        await sheet.getByText('2x1, el segundo gratis').click();
+        await expect(
+            sheet.getByRole('checkbox', { name: 'Lunes' }),
+        ).toBeChecked();
+        for (const day of ['Jueves', 'Viernes', 'Sábado', 'Domingo']) {
+            await sheet
+                .getByRole('checkbox', { name: day })
+                .check({ force: true });
+        }
+        await sheet.getByLabel('Desde las').fill('00:00');
+        await sheet.getByLabel('Hasta las').fill('23:30');
+        await expect(preview).toContainText(title);
+        await expect(preview).toContainText(
+            'Si eligen opciones de distinto precio, se cobra entero el de mayor precio y el otro es gratis.',
+        );
+        await expect(preview).toContainText(
+            'Quien atiende hace dos servicios y comisiona sobre S/ 35.',
+        );
+        expect(await hasHorizontalScroll(page)).toBe(false);
+        if (process.env.E2E_SHOTS) {
+            await page.screenshot({ path: shot('form'), fullPage: true });
+        }
+
+        await sheet.getByRole('button', { name: 'Publicar' }).click();
+        await expect(page.getByText('Promoción publicada.')).toBeVisible();
+        await expect(card(page, title)).toContainText('Activa');
+        assertNoErrors();
+
+        // Someone books it for two: the name of who comes along, nothing more.
+        const guest = await browser.newPage(
+            isPhone ? { viewport: PHONE } : undefined,
+        );
+        await login(
+            guest,
+            `ofertas-${testInfo.project.name}@example.com`,
+            'password',
+        );
+        await expect(guest).toHaveURL(/dashboard$/);
+        await guest.goto(`/s/salon-promos-${testInfo.project.name}`);
+        const offer = guest
+            .getByRole('region', { name: 'Promociones' })
+            .getByRole('listitem', { name: title });
+        await expect(offer).toContainText('Vienen dos, el segundo gratis');
+        await expect(offer).toContainText('Se cobra entero el de mayor precio');
+        await expect(offer).toContainText('Solo lunes');
+        if (process.env.E2E_SHOTS) {
+            await offer.scrollIntoViewIfNeeded();
+            await offer.screenshot({ path: shot('card') });
+        }
+        await offer
+            .getByRole('link', { name: /^Reservar con esta promo/ })
+            .click();
+        await expect(guest).toHaveURL(/\/reservar\?promo=\d+$/);
+        await expect(
+            guest.getByRole('button', { name: /Corte de promo/ }),
+        ).toHaveAttribute('aria-pressed', 'true');
+        const name = guest.getByLabel('¿Cómo se llama quien te acompaña?');
+        await expect(name).toBeVisible();
+        await expect(
+            guest.getByRole('button', { name: 'Continuar' }),
+        ).toBeDisabled();
+        await name.fill('Lucía');
+        await expect(guest.getByText('2 servicios')).toBeVisible();
+        expect(await hasHorizontalScroll(guest)).toBe(false);
+        if (process.env.E2E_SHOTS) {
+            await guest.screenshot({ path: shot('wizard'), fullPage: true });
+        }
+
+        await guest.getByRole('button', { name: 'Continuar' }).click();
+        await guest.getByRole('button', { name: new RegExp(owner) }).click();
+        await guest.getByRole('radio').nth(1).click();
+        await guest
+            .getByRole('button', { name: /^\d{1,2}:\d{2} [ap]\. m\./ })
+            .first()
+            .click();
+        await expect(
+            guest.getByRole('heading', { name: 'Revisa y confirma' }),
+        ).toBeVisible();
+        await expect(
+            guest.getByText('Corte de promo · para Lucía'),
+        ).toBeVisible();
+        await expect(
+            guest.getByText(`Les atiende ${owner}, uno después del otro.`),
+        ).toBeVisible();
+        if (process.env.E2E_SHOTS) {
+            await guest.screenshot({ path: shot('confirm'), fullPage: true });
+        }
+        await guest.getByRole('button', { name: 'Confirmar reserva' }).click();
+        await expect(guest).toHaveURL(/\/mis-reservas\/[A-Z0-9]{8}$/);
+        await expect(guest.getByText(/para Lucía/).first()).toBeVisible();
+        const day = await guest.evaluate(() =>
+            new Date(Date.now() + 86_400_000).toLocaleDateString('en-CA', {
+                timeZone: 'America/Lima',
+            }),
+        );
+        await guest.close();
+
+        // Only one came: the team says who, and the other line goes.
+        await page.goto(`/agenda?fecha=${day}`);
+        const visit = page
+            .getByRole('article')
+            .filter({ hasText: 'para Lucía' })
+            .first();
+        await visit
+            .getByRole('button', { name: 'Llegó una sola persona' })
+            .click();
+        const who = page.getByRole('dialog', { name: '¿Quién vino?' });
+        await expect(who).toContainText('La promoción deja de aplicar.');
+        await expect(who.getByRole('radio', { name: 'Lucía' })).toBeVisible();
+        if (process.env.E2E_SHOTS) {
+            await page.screenshot({ path: shot('agenda') });
+        }
+        await who
+            .getByRole('button', { name: 'Quitar y cobrar precio normal' })
+            .click();
+        await expect(
+            page.getByText(
+                'Listo: se cobra solo a quien vino, a precio normal.',
+            ),
+        ).toBeVisible();
+        await expect(page.getByText('para Lucía')).toHaveCount(0);
+        assertNoErrors();
+    });
 });

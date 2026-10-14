@@ -51,11 +51,21 @@ export type Viewer = {
 
 /** Services and professional of an earlier booking, to start the wizard from. */
 export type RepeatBooking = {
-    selections: { serviceId: number; variantId: number | null }[];
+    /** `companion`: the second line of a "Ven con alguien", with its name. */
+    selections: {
+        serviceId: number;
+        variantId: number | null;
+        companion?: string | null;
+    }[];
     staffId: number | null;
 };
 
-export type Selection = { serviceId: number; variantId: number | null };
+export type Selection = {
+    serviceId: number;
+    variantId: number | null;
+    /** "Ven con alguien": the name of who this second line is for. */
+    companion?: string;
+};
 
 export type Slot = {
     /** Unix seconds (UTC): sent back as-is when booking. */
@@ -204,6 +214,11 @@ export type AgendaBooking = {
     staffId: number;
     staffName: string;
     services: string[];
+    /**
+     * "Ven con alguien": who comes along, while the visit still has both
+     * lines; the team may take one off when only one person came.
+     */
+    companion?: string | null;
     price: string;
     /** Already inside `price`; apart from the discount given at the till. */
     promotion: BookingPromotion | null;

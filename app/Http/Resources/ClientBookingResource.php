@@ -54,7 +54,7 @@ class ClientBookingResource extends JsonResource
             'isVip' => $this->is_vip,
             'staffName' => $this->staff->name,
             'services' => $this->services->map(fn (BookingService $service) => [
-                'name' => $service->name,
+                'name' => $service->displayName(),
                 'price' => Money::toAmount($service->price_cents),
                 // Its normal price, when a promotion changed what is charged.
                 'listPrice' => $service->list_price_cents !== null && $service->list_price_cents !== $service->price_cents
@@ -119,7 +119,7 @@ class ClientBookingResource extends JsonResource
      */
     private function depositMessage(CarbonImmutable $start): string
     {
-        $services = $this->services->pluck('name')->join(', ');
+        $services = $this->services->map(fn (BookingService $service): string => $service->displayName())->join(', ');
         $amount = Money::toAmount($this->deposit_cents);
 
         return "Hola, soy {$this->client->name}. Reservé {$services} para el {$start->format('d/m/Y')} a las {$start->format('g:i a')} "

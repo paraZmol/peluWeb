@@ -39,7 +39,7 @@ export default function BookingCreate({ salon, days, promotions = [] }: Props) {
     const firstOpenDay = days.find((day) => !day.closed)?.date ?? null;
     const availability = useAvailability({
         url: availabilityRoute.url(),
-        selections: wizard.selections,
+        selections: wizard.lines,
         staffId: wizard.staffId,
         refresh: wizard.refresh,
         // Nothing to ask until a professional was chosen.

@@ -97,7 +97,28 @@ final readonly class PromotionTerms
             PromotionMechanic::Gift => $this->gift($items),
             PromotionMechanic::Discount => $this->percent !== null ? $this->percentOff($items) : $this->amountOff($items),
             PromotionMechanic::Combo => $this->combo($items),
+            PromotionMechanic::Pair => $this->pair($items),
         };
+    }
+
+    /**
+     * Two lines of one included service: the cheaper one at its percent
+     * off (50, or 100 for free); the dearer one is paid whole.
+     *
+     * @param  list<QuoteItem>  $items
+     * @return list<QuoteItem>
+     */
+    private function pair(array $items): array
+    {
+        if (count($items) !== 2 || $items[0]->serviceId !== $items[1]->serviceId || ! in_array($items[0]->serviceId, $this->serviceIds, true)) {
+            return $items;
+        }
+
+        $cheaper = $items[1]->priceCents < $items[0]->priceCents ? 1 : 0;
+        $discounted = intdiv($items[$cheaper]->priceCents * (100 - (int) $this->percent), 100);
+        $items[$cheaper] = $items[$cheaper]->chargedAt($discounted - $discounted % self::ROUNDING_CENTS);
+
+        return $items;
     }
 
     /**

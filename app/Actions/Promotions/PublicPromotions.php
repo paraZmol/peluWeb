@@ -4,6 +4,7 @@ namespace App\Actions\Promotions;
 
 use App\Data\Booking\QuoteItem;
 use App\Domain\Promotions\PromotionCopy;
+use App\Enums\PromotionMechanic;
 use App\Models\Promotion;
 use App\Models\Salon;
 use App\Models\Service;
@@ -100,6 +101,8 @@ class PublicPromotions
                 'price' => Money::toAmount($gift->price_cents),
                 'minutes' => $gift->active_minutes + $gift->idle_minutes + $gift->finish_minutes,
             ],
+            // "Ven con alguien": the second one at half price (50) or free (100).
+            'pair' => $promotion->mechanic === PromotionMechanic::Pair ? ['percent' => $promotion->percent] : null,
             // "Por separado S/ 55: ahorras S/ 10"; all of them go into the booking.
             'combo' => $combo === null ? null : [
                 'price' => Money::toAmount($combo->priceCents()),

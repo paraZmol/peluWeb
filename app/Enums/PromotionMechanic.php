@@ -17,12 +17,16 @@ enum PromotionMechanic: string
     /** Two or three services together save a fixed amount, shared among them. */
     case Combo = 'combo';
 
+    /** "Ven con alguien": the same service twice, the cheaper one at half price or free. */
+    case Pair = 'pair';
+
     public function label(): string
     {
         return match ($this) {
             self::Discount => 'Descuento',
             self::Gift => 'Servicio de regalo',
             self::Combo => 'Combo',
+            self::Pair => 'Ven con alguien',
         };
     }
 }

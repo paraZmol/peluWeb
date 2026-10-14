@@ -140,7 +140,7 @@ class BookingController extends Controller
      *
      * @param  Collection<int, Service>  $services  the salon's active services
      * @param  Collection<int, Staff>  $staff  the salon's active professionals
-     * @return array{selections: list<array{serviceId: int, variantId: int|null}>, staffId: int|null}|null
+     * @return array{selections: list<array{serviceId: int, variantId: int|null, companion: string|null}>, staffId: int|null}|null
      */
     private function repeat(Request $request, Salon $salon, Collection $services, Collection $staff): ?array
     {
@@ -172,6 +172,9 @@ class BookingController extends Controller
                 $selections[] = [
                     'serviceId' => $service->id,
                     'variantId' => $service->variants->firstWhere('id', $booked->service_variant_id)?->id,
+                    // "Ven con alguien": without it the repeated pair reads as a
+                    // duplicate. Alone (only one of them came), it is just a visit.
+                    'companion' => $booking->services->count() === 2 ? $booked->companion_name : null,
                 ];
             }
         }

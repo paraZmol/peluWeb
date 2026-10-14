@@ -327,6 +327,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('agenda/{booking}/confirmar', [BookingStatusController::class, 'confirm'])->name('agenda.bookings.confirm');
         Route::post('agenda/{booking}/iniciar', [BookingStatusController::class, 'start'])->name('agenda.bookings.start');
         Route::post('agenda/{booking}/completar', [BookingStatusController::class, 'complete'])->name('agenda.bookings.complete');
+        Route::post('agenda/{booking}/vino-solo-uno', [BookingStatusController::class, 'dropCompanion'])->name('agenda.bookings.drop-companion');
         Route::post('agenda/{booking}/no-vino', [BookingStatusController::class, 'noShow'])->name('agenda.bookings.no-show');
         Route::post('agenda/{booking}/cancelar', [BookingStatusController::class, 'cancel'])->name('agenda.bookings.cancel');
         Route::post('agenda/{booking}/devolver-sena', [BookingStatusController::class, 'refundDeposit'])->name('agenda.bookings.refund-deposit');

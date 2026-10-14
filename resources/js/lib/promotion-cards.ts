@@ -11,7 +11,7 @@ import {
     COMBO_MIN_SERVICES,
     suggestedComboCents,
 } from './promotion-combo';
-import { addDays, soles } from './promotions';
+import { addDays, PAIR_HALF, soles } from './promotions';
 
 /*
  | The cards a promotion starts from (docs/promociones.md, "Fichas"):
@@ -29,6 +29,18 @@ const QUIET_HOURS = {
     from: '10:00',
     to: '16:00',
 };
+
+/** The days and hours "Horas flojas" proposes, for any form that needs some. */
+export function quietHoursFields(): Pick<
+    PromotionFields,
+    'weekdays' | 'from_time' | 'to_time'
+> {
+    return {
+        weekdays: QUIET_HOURS.weekdays,
+        from_time: QUIET_HOURS.from,
+        to_time: QUIET_HOURS.to,
+    };
+}
 
 /**
  * Cards that run longer than the default. "Primera visita" runs a month:
@@ -113,8 +125,8 @@ export function occasionDefaults(
 }
 
 function mechanicOf(card: PromotionCardKind): PromotionFields['mechanic'] {
-    if (card === 'combo') {
-        return 'combo';
+    if (card === 'combo' || card === 'pair') {
+        return card;
     }
 
     return card === 'gift' ? 'gift' : 'discount';
@@ -133,7 +145,8 @@ export function newPromotionFields(
         mechanic: mechanicOf(card),
         services: [],
         benefit: 'percent',
-        percent: String(DEFAULT_PERCENT),
+        // "Ven con alguien" starts at the second one half price.
+        percent: String(card === 'pair' ? PAIR_HALF : DEFAULT_PERCENT),
         amount: '',
         combo_price: '',
         gift_service_id: null,
@@ -191,8 +204,11 @@ export function savedPromotionFields(
 export function promotionPayload(fields: PromotionFields, publish: boolean) {
     const isGift = fields.mechanic === 'gift';
     const isCombo = fields.mechanic === 'combo';
-    const isPercent = !isGift && !isCombo && fields.benefit === 'percent';
-    const isAmount = !isGift && !isCombo && fields.benefit === 'amount';
+    const isPair = fields.mechanic === 'pair';
+    const isPercent =
+        isPair || (!isGift && !isCombo && fields.benefit === 'percent');
+    const isAmount =
+        !isGift && !isCombo && !isPair && fields.benefit === 'amount';
     const text = (value: string) => (value.trim() === '' ? null : value.trim());
 
     return {
@@ -230,6 +246,15 @@ export function giftCandidates(
         );
 }
 
+/** What can be booked for two: one fixed price, no add-ons. */
+export function pairCandidates(
+    services: PromotionService[],
+): PromotionService[] {
+    return services.filter(
+        (service) => !service.requiresEvaluation && !service.isAddon,
+    );
+}
+
 export type CardOffer = {
     card: PromotionCardKind;
     title: string;
@@ -253,7 +278,7 @@ function comboExample(services: PromotionService[]): string | null {
     return `${pair.map((service) => service.name).join(' + ')} ${comboIsFrom(pair) ? 'desde' : 'por'} S/ ${soles(price)}`;
 }
 
-/** The six cards, each with an example made of the salon's own services. */
+/** The seven cards, each with an example made of the salon's own services. */
 export function cardOffers(
     services: PromotionService[],
     today: string,
@@ -263,6 +288,7 @@ export function cardOffers(
         (service) => service.id !== main?.id,
     );
     const discount = main ? `${DEFAULT_PERCENT} % menos en ${main.name}` : null;
+    const [pairService] = pairCandidates(services);
 
     return [
         {
@@ -304,6 +330,14 @@ export function cardOffers(
             title: 'Combo',
             pitch: 'Dos o tres servicios juntos a un precio cerrado, más bajo que por separado.',
             example: comboExample(services),
+        },
+        {
+            card: 'pair',
+            title: 'Ven con alguien',
+            pitch: 'Dos personas, el mismo servicio, una cita.',
+            example: pairService
+                ? `Segundo ${pairService.name} a mitad de precio`
+                : null,
         },
     ];
 }

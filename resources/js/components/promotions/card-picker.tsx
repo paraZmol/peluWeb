@@ -6,6 +6,7 @@ import {
     Percent,
     Sunrise,
     UserPlus,
+    Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
@@ -19,6 +20,7 @@ const ICONS: Record<PromotionCardKind, LucideIcon> = {
     season: CalendarHeart,
     first_visit: UserPlus,
     combo: Layers,
+    pair: Users,
 };
 
 type Props = {

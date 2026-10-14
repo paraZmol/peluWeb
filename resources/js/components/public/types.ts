@@ -102,7 +102,7 @@ export type PublicPromotion = {
     summary: string | null;
     /** The campaign it belongs to ("Halloween"), above the title. */
     overline: string | null;
-    mechanic: 'discount' | 'gift' | 'combo';
+    mechanic: 'discount' | 'gift' | 'combo' | 'pair';
     /** "Y-m-d": the last day a visit can use it. */
     endsOn: string;
     /** "del 5 al 18 de octubre de 2026": the visits it is valid for. */
@@ -129,6 +129,11 @@ export type PublicPromotion = {
      * a professional may change it). Its `prices` hold only all together.
      */
     combo: PromotionCombo | null;
+    /**
+     * "Ven con alguien": what the second one gets off (50 or 100). Until the
+     * server sends it, read from the system's title (`pairPercent`).
+     */
+    pair?: { percent: number } | null;
 };
 
 export type PromotionCombo = {

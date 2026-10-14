@@ -34,6 +34,8 @@ final class PromotionCopy
             $terms->mechanic === PromotionMechanic::Combo && $combo === null => 'Combo '.implode(' + ', $serviceNames),
             $terms->mechanic === PromotionMechanic::Combo => implode(' + ', $serviceNames)
                 .($combo->isFrom ? ' desde S/ ' : ' por S/ ').self::soles($combo->priceCents()),
+            $terms->mechanic === PromotionMechanic::Pair && $terms->percent === 100 => "2x1 en {$services}",
+            $terms->mechanic === PromotionMechanic::Pair => "Segundo {$services} a mitad de precio",
             $terms->mechanic === PromotionMechanic::Gift => "{$giftName} gratis con tu {$services}",
             $terms->percent !== null => "{$terms->percent} % menos en {$services}",
             default => 'S/ '.self::soles((int) $terms->amountCents)." menos en {$services}",
@@ -71,7 +73,13 @@ final class PromotionCopy
             $parts[] = 'Una por cliente.';
         }
 
-        if ($terms->mechanic === PromotionMechanic::Combo) {
+        if ($terms->mechanic === PromotionMechanic::Pair) {
+            $parts[] = 'Vale para dos personas que reservan juntas, en una sola reserva, el mismo servicio, atendidas una después de otra por la misma persona del equipo. '
+                .'Si eligen opciones de distinto precio, se cobra entero el de mayor precio y el otro '.($terms->percent === 100 ? 'es gratis' : 'va a mitad de precio').'. '
+                .'Al reservar se pide solo el nombre de quien acompaña. '
+                .'Si llega una sola persona, la promoción no aplica: se cobra a precio normal solo el servicio de quien vino y la seña pagada se descuenta de ese monto. '
+                .'El beneficio no se cambia por dinero ni se pasa a otra cita.';
+        } elseif ($terms->mechanic === PromotionMechanic::Combo) {
             $parts[] = 'El precio del combo es por '.self::list($serviceNames).' juntos, en la misma cita y atendidos por una sola persona del equipo. '
                 .'Si eliges una opción o un profesional con un precio más alto, pagas esa diferencia y sigues ahorrando S/ '.self::soles((int) $terms->amountCents).'. '
                 .'Si quitas uno de los servicios, el combo no aplica y los demás se cobran a su precio normal.';

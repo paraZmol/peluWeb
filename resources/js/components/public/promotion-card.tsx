@@ -1,22 +1,16 @@
 import { Link } from '@inertiajs/react';
-import {
-    ArrowRight,
-    CalendarDays,
-    Clock,
-    Gift,
-    Layers,
-    Percent,
-    Ticket,
-} from 'lucide-react';
-import { quotaLabel } from '@/lib/promotions';
+import { ArrowRight, Clock, Gift, Layers, Percent, Users } from 'lucide-react';
+import { pairPercent } from '@/lib/promo-offers';
+import { PAIR_FREE } from '@/lib/promotions';
 import { PRIMARY_ACTION, SOFT_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import { create as bookingWizard } from '@/routes/salons/booking';
 import { PromotionBenefit } from './promotion-benefit';
+import { PromotionFacts } from './promotion-facts';
 import { PromotionTerms } from './promotion-terms';
 import type { PublicPromotion } from './types';
 
-const ICONS = { discount: Percent, gift: Gift, combo: Layers };
+const ICONS = { discount: Percent, gift: Gift, combo: Layers, pair: Users };
 
 type Props = {
     promotion: PublicPromotion;
@@ -40,8 +34,9 @@ export function PromotionCard({
     isFeatured,
     className,
 }: Props) {
-    const quota = quotaLabel(promotion.quota);
     const Icon = ICONS[promotion.mechanic];
+    // The 2x1 free is only for some days and hours: said by the title.
+    const whenByTitle = pairPercent(promotion) === PAIR_FREE;
 
     return (
         <li
@@ -84,6 +79,17 @@ export function PromotionCard({
                             {promotion.summary}
                         </p>
                     )}
+                    {whenByTitle && promotion.when && (
+                        <p className="flex items-start gap-2 font-semibold text-brand-text">
+                            <Clock
+                                className="mt-0.5 size-4 shrink-0"
+                                aria-hidden
+                            />
+                            <span className="first-letter:uppercase">
+                                Solo {promotion.when}
+                            </span>
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -92,32 +98,7 @@ export function PromotionCard({
                 serviceNames={serviceNames}
             />
 
-            <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-                {promotion.when && (
-                    <li className="flex items-start gap-2">
-                        <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
-                        <span className="first-letter:uppercase">
-                            {promotion.when}
-                        </span>
-                    </li>
-                )}
-                <li className="flex items-start gap-2">
-                    <CalendarDays
-                        className="mt-0.5 size-4 shrink-0"
-                        aria-hidden
-                    />
-                    Válido {promotion.period}
-                </li>
-                {quota && (
-                    <li className="flex items-start gap-2 tabular-nums">
-                        <Ticket
-                            className="mt-0.5 size-4 shrink-0"
-                            aria-hidden
-                        />
-                        {quota}
-                    </li>
-                )}
-            </ul>
+            <PromotionFacts promotion={promotion} hidesWhen={whenByTitle} />
 
             <div className="mt-auto flex flex-col gap-1">
                 <PromotionTerms text={promotion.finePrint} />

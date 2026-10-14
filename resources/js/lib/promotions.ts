@@ -38,6 +38,11 @@ const MONTHS = [
 /** With more services than this, the title says "y más" after the first two. */
 const NAMES_IN_TITLE = 2;
 
+/** "Ven con alguien": the second one free (the other choice is half price). */
+export const PAIR_FREE = 100;
+
+export const PAIR_HALF = 50;
+
 /** Prices with a promotion are rounded down to this. */
 const ROUNDING_CENTS = 10;
 
@@ -135,6 +140,11 @@ export function promotionTitle(
         title = `Combo ${serviceNames.join(' + ')}`;
     } else if (terms.mechanic === 'combo') {
         title = `${serviceNames.join(' + ')}${terms.combo?.isFrom ? ' desde' : ' por'} S/ ${soles(terms.combo?.priceCents ?? 0)}`;
+    } else if (terms.mechanic === 'pair') {
+        title =
+            terms.percent === PAIR_FREE
+                ? `2x1 en ${services}`
+                : `Segundo ${services} a mitad de precio`;
     } else if (terms.mechanic === 'gift') {
         title = `${giftName} gratis con tu ${services}`;
     } else if (terms.percent !== null) {
@@ -201,10 +211,25 @@ function comboTerms(terms: CopyTerms, serviceNames: string[]): string {
     );
 }
 
+/** Two people, one service each, one after the other; who pays what. */
+function pairTerms(terms: CopyTerms): string {
+    return (
+        'Vale para dos personas que reservan juntas, en una sola reserva, el mismo servicio, atendidas una después de otra por la misma persona del equipo. ' +
+        `Si eligen opciones de distinto precio, se cobra entero el de mayor precio y el otro ${terms.percent === PAIR_FREE ? 'es gratis' : 'va a mitad de precio'}. ` +
+        'Al reservar se pide solo el nombre de quien acompaña. ' +
+        'Si llega una sola persona, la promoción no aplica: se cobra a precio normal solo el servicio de quien vino y la seña pagada se descuenta de ese monto. ' +
+        'El beneficio no se cambia por dinero ni se pasa a otra cita.'
+    );
+}
+
 /** What an amount off says: it is given once, whatever is booked. */
 function savingTerms(terms: CopyTerms, serviceNames: string[]): string | null {
     if (terms.mechanic === 'combo') {
         return comboTerms(terms, serviceNames);
+    }
+
+    if (terms.mechanic === 'pair') {
+        return pairTerms(terms);
     }
 
     return terms.amountCents !== null && serviceNames.length > 1

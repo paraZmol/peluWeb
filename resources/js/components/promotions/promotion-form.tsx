@@ -1,11 +1,13 @@
 import { usePromotionForm } from '@/hooks/use-promotion-form';
 import type { PromotionTarget } from '@/hooks/use-promotion-form';
 import { giftCandidates } from '@/lib/promotion-cards';
+import { PAIR_FREE } from '@/lib/promotions';
 import { BenefitField } from './benefit-field';
 import { ComboFields } from './combo-fields';
 import { DateFields } from './date-fields';
 import { MoreOptions } from './more-options';
 import { OccasionField } from './occasion-field';
+import { PairFields } from './pair-fields';
 import { PromotionFormFooter } from './promotion-form-footer';
 import { PromotionPreviewPanel } from './promotion-preview';
 import { ServiceChecklist } from './service-checklist';
@@ -28,7 +30,11 @@ export function PromotionForm({ target, context, onSaved }: Props) {
     const { services, limits, today } = context;
     const isGift = data.mechanic === 'gift';
     const isCombo = data.mechanic === 'combo';
+    const isPair = data.mechanic === 'pair';
     const isQuietHours = data.card === 'quiet_hours';
+    // Days and hours already in the form: "Horas flojas" and the 2x1 free.
+    const hasWhen =
+        isQuietHours || (isPair && Number(data.percent) === PAIR_FREE);
     const isDraft = !target.promotion || target.promotion.state === 'draft';
 
     return (
@@ -44,9 +50,9 @@ export function PromotionForm({ target, context, onSaved }: Props) {
                 <div className="flex flex-col gap-6">
                     {data.card === 'season' && <OccasionField form={form} />}
 
-                    {isCombo ? (
-                        <ComboFields form={form} services={services} />
-                    ) : (
+                    {isPair && <PairFields form={form} services={services} />}
+                    {isCombo && <ComboFields form={form} services={services} />}
+                    {!isPair && !isCombo && (
                         <>
                             <ServiceChecklist
                                 name="services"
@@ -110,7 +116,7 @@ export function PromotionForm({ target, context, onSaved }: Props) {
                         maxDays={limits.maxDays}
                     />
 
-                    <MoreOptions form={form} hidesWhen={isQuietHours} />
+                    <MoreOptions form={form} hidesWhen={hasWhen} />
                 </div>
 
                 <div className="lg:sticky lg:top-0">

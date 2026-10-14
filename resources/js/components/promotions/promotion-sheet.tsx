@@ -38,6 +38,10 @@ const HEADINGS: Record<PromotionCardKind, { title: string; lead: string }> = {
         title: 'Combo',
         lead: 'Dos o tres servicios juntos, en la misma cita, a un precio cerrado más bajo que por separado.',
     },
+    pair: {
+        title: 'Ven con alguien',
+        lead: 'Dos personas, el mismo servicio, una cita: una después de la otra, con la misma persona del equipo.',
+    },
 };
 
 type Props = {

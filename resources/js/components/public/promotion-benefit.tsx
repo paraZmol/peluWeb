@@ -1,4 +1,5 @@
 import { formatPrice } from '@/lib/format';
+import { PairBenefit } from './pair-benefit';
 import { PromotionPrices } from './promotion-prices';
 import type { PublicPromotion } from './types';
 
@@ -24,6 +25,12 @@ export function PromotionBenefit({ promotion, serviceNames }: Props) {
                     Ahorras {formatPrice(gift.price)}
                 </span>
             </p>
+        );
+    }
+
+    if (promotion.mechanic === 'pair') {
+        return (
+            <PairBenefit promotion={promotion} serviceNames={serviceNames} />
         );
     }
 

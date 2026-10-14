@@ -60,7 +60,7 @@ class QuoteBooking
 
             if ($own->count() === $services->count()) {
                 $quotes[$person->id] = new BookingQuote(array_map(
-                    fn (array $selection): QuoteItem => $this->item($services[$selection['service_id']], $selection['variant_id'], $own[$selection['service_id']]),
+                    fn (array $selection): QuoteItem => $this->item($services[$selection['service_id']], $selection, $own[$selection['service_id']]),
                     $selections,
                 ));
             }
@@ -71,16 +71,23 @@ class QuoteBooking
 
     /**
      * The selected services, checked: active, of this salon, not repeated
-     * and not only add-ons.
+     * and not only add-ons. The one repeat allowed is "Ven con alguien":
+     * exactly two lines of one service, the second for who comes along.
      *
-     * @param  list<array{service_id: int, variant_id: int|null}>  $selections
+     * @param  list<array{service_id: int, variant_id: int|null, companion?: string|null}>  $selections
      * @return Collection<int, Service> keyed by id
      */
     private function services(Salon $salon, array $selections): Collection
     {
-        $ids = array_column($selections, 'service_id');
+        $ids = array_values(array_unique(array_column($selections, 'service_id')));
+        $companions = array_values(array_filter(array_map(fn (array $selection): ?string => $selection['companion'] ?? null, $selections)));
+        $isPair = count($selections) === 2 && count($ids) === 1 && ($selections[0]['companion'] ?? null) === null && $companions !== [];
 
-        if ($ids === [] || count($ids) !== count(array_unique($ids))) {
+        if ($companions !== [] && ! $isPair) {
+            throw BookingException::companionNeedsSameService();
+        }
+
+        if ($ids === [] || (count($ids) !== count($selections) && ! $isPair)) {
             throw BookingException::serviceUnavailable();
         }
 
@@ -112,9 +119,12 @@ class QuoteBooking
      * time; otherwise the professional's own price wins over the salon's.
      * The professional's own working time always applies.
      */
-    private function item(Service $service, ?int $variantId, stdClass $pivot): QuoteItem
+    /**
+     * @param  array{service_id: int, variant_id: int|null, companion?: string|null}  $selection
+     */
+    private function item(Service $service, array $selection, stdClass $pivot): QuoteItem
     {
-        $variant = $this->variant($service, $variantId);
+        $variant = $this->variant($service, $selection['variant_id']);
         $active = (int) ($pivot->active_minutes ?? $service->active_minutes) + ($variant->extra_minutes ?? 0);
 
         return new QuoteItem(
@@ -125,6 +135,7 @@ class QuoteBooking
             idleMinutes: $service->idle_minutes,
             finishMinutes: $service->finish_minutes,
             variantId: $variant?->id,
+            companion: $selection['companion'] ?? null,
         );
     }
 

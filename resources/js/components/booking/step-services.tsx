@@ -3,6 +3,7 @@ import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { MAX_SERVICES } from '@/hooks/use-booking-wizard';
 import { useComboBreaks } from '@/hooks/use-combo-breaks';
 import { bestOffers, claimedGift, giftToOffer } from '@/lib/promo-offers';
+import { CompanionOffer } from './companion-offer';
 import { GiftOffer } from './gift-offer';
 import { ServiceOption } from './service-option';
 import type { BookableSalon } from './types';
@@ -81,6 +82,13 @@ export function StepServices({
                                             onAdd={isFull ? null : addGift}
                                         />
                                     )}
+                                    {(wizard.pair || wizard.companion) &&
+                                        wizard.isSelected(service.id) && (
+                                            <CompanionOffer
+                                                wizard={wizard}
+                                                service={service}
+                                            />
+                                        )}
                                     {comboBreak && (
                                         <p
                                             role="status"

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $booking_id
  * @property int|null $service_id
  * @property int|null $service_variant_id
+ * @property string|null $companion_name Who comes along, on their line of "Ven con alguien".
  * @property string $name
  * @property int $price_cents What is charged for it.
  * @property int|null $list_price_cents Its normal price; differs under a promotion.
@@ -26,6 +27,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class BookingService extends Model
 {
+    /**
+     * Its name as the team and the client read it: with who it is for,
+     * on the line of who comes along. Reports group by the bare name.
+     */
+    public function displayName(): string
+    {
+        return $this->companion_name === null ? $this->name : "{$this->name} · para {$this->companion_name}";
+    }
+
     /**
      * @return BelongsTo<Booking, $this>
      */

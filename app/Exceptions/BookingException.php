@@ -17,6 +17,21 @@ class BookingException extends BusinessRuleException
         return new self('Uno de los servicios ya no está disponible. Vuelve a elegir.');
     }
 
+    public static function noCompanionToDrop(): self
+    {
+        return new self('Esta cita no tiene a nadie más anotado, o ya terminó.');
+    }
+
+    public static function depositAboveWhatIsLeft(): self
+    {
+        return new self('La seña ya pagada es mayor que el precio normal de quien vino: cobra la cita tal como se reservó.');
+    }
+
+    public static function companionNeedsSameService(): self
+    {
+        return new self('Quien te acompaña reserva el mismo servicio que tú, y la reserva lleva solo esos dos. Para algo más, haz otra reserva.');
+    }
+
     public static function onlyAddons(): self
     {
         return new self('Los adicionales se reservan junto con otro servicio.');

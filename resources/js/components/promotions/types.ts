@@ -5,9 +5,10 @@ export type PromotionCardKind =
     | 'quiet_hours'
     | 'season'
     | 'first_visit'
-    | 'combo';
+    | 'combo'
+    | 'pair';
 
-export type PromotionMechanic = 'discount' | 'gift' | 'combo';
+export type PromotionMechanic = 'discount' | 'gift' | 'combo' | 'pair';
 
 export type PromotionState =
     | 'draft'
@@ -34,7 +35,7 @@ export type PromotionService = {
     basePrice?: string;
     /** It has options: a combo with it is announced "desde". */
     hasOptions?: boolean;
-    /** Needs an evaluation first: it cannot go in a combo. */
+    /** Needs an evaluation first: it cannot go in a combo nor in a pair. */
     requiresEvaluation?: boolean;
 };
 
@@ -107,7 +108,10 @@ export type PromotionFields = {
     card: PromotionCardKind;
     mechanic: PromotionMechanic;
     services: number[];
-    /** Which of the two the discount is written as. */
+    /**
+     * Which of the two the discount is written as. "Ven con alguien" uses
+     * `percent` only: 50 (the second at half price) or 100 (free).
+     */
     benefit: 'percent' | 'amount';
     percent: string;
     amount: string;

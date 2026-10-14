@@ -14,7 +14,8 @@ type Props = {
 
 /** Running total and the way forward, fixed in the thumb zone. */
 export function SelectionBar({ wizard, inline = false, wide = false }: Props) {
-    const count = wizard.chosen.length;
+    // Who comes along has a service of their own.
+    const count = wizard.chosen.length + (wizard.companion ? 1 : 0);
 
     return (
         <div
@@ -31,7 +32,9 @@ export function SelectionBar({ wizard, inline = false, wide = false }: Props) {
             >
                 <p className="min-w-0 flex-1 text-sm" role="status">
                     <span className="block text-muted-foreground">
-                        {count} {count === 1 ? 'servicio' : 'servicios'}
+                        {wizard.needsCompanionName
+                            ? 'Falta el nombre de quien te acompaña'
+                            : `${count} ${count === 1 ? 'servicio' : 'servicios'}`}
                     </span>
                     <span className="text-lg font-bold tabular-nums">
                         <span className="text-sm font-normal text-muted-foreground">
@@ -44,7 +47,9 @@ export function SelectionBar({ wizard, inline = false, wide = false }: Props) {
                     type="button"
                     className={cn(PRIMARY_ACTION, 'px-8')}
                     disabled={
-                        wizard.chosen.length === 0 || wizard.hasOnlyAddons
+                        wizard.chosen.length === 0 ||
+                        wizard.hasOnlyAddons ||
+                        wizard.needsCompanionName
                     }
                     onClick={() => wizard.goTo(1)}
                 >

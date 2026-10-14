@@ -140,6 +140,38 @@ imagen descargable para Instagram.
   de cada uno). Un combo que nadie del equipo hace completo no se puede crear ni se anuncia.
 - Gana la promoción de mayor ahorro, como siempre. Un solo profesional por reserva.
 
+### Ven con alguien (2x1) (segunda entrega; reglas elegidas por el usuario el 2026-10-14)
+- Propuesta de `marketing-advisor`; el usuario eligió las tres opciones recomendadas.
+- Dos personas, **el mismo servicio**, el mismo profesional, una después de otra, en **una sola
+  reserva** de exactamente dos líneas. Cada persona elige su opción (corto y largo); se cobra
+  entero el más caro y se rebaja el más barato.
+- Beneficio a elegir: **"el segundo a mitad de precio"** (marcado; cualquier horario) o **"2x1,
+  el segundo gratis"** (días y horas obligatorios, como Horas flojas). Mecánica `pair` con
+  `percent` 50 o 100 sobre la línea más barata (la mitad se redondea hacia abajo a 10 céntimos).
+- Servicios: de precio fijo (sin "requiere evaluación"), no adicionales. Uno o varios incluidos:
+  vale cualquiera de ellos repetido.
+- **Quien acompaña: solo su nombre**, obligatorio, guardado en su línea (`booking_services.
+  companion_name`); sin teléfono ni ficha. La reserva, la seña, "una por cliente" y la reseña son
+  de quien reserva; quien acompaña no cuenta como visita propia.
+- **Si llega una sola persona** (corregido tras `legal-compliance`): el salón dice **quién vino**
+  (quien reservó o quien acompaña); se quita la otra línea y se cobra a precio normal solo el
+  servicio de quien vino. La seña pagada se descuenta de ese monto; no es cancelación ni
+  inasistencia. El historial guarda quién lo hizo, sin el nombre de quien acompañaba. El tiempo
+  reservado no cambia.
+- Mover y cancelar: las dos líneas van juntas. Seña sobre el total con promoción. Un cupo es una
+  reserva.
+- Títulos: "2x1 en {servicio}" / "Segundo {servicio} a mitad de precio"; la tarjeta dice sin
+  abrir condiciones "Se cobra entero el de mayor precio" y, en la modalidad gratis, sus días y
+  horas. Letra chica extra (revisada por `legal-compliance` el 2026-10-14): "Vale para dos
+  personas que reservan juntas, en una sola reserva, el mismo servicio, atendidas una después de
+  otra por la misma persona del equipo. Si eligen opciones de distinto precio, se cobra entero el
+  de mayor precio y el otro es gratis [va a mitad de precio]. Al reservar se pide solo el nombre
+  de quien acompaña. Si llega una sola persona, la promoción no aplica: se cobra a precio normal
+  solo el servicio de quien vino y la seña pagada se descuenta de ese monto. El beneficio no se
+  cambia por dinero ni se pasa a otra cita."
+- Junto al campo del nombre: "Nombre de quien te acompaña: solo el nombre o como prefiera que lo
+  llamen. Lo verán el salón y tú, únicamente para esta cita. Avísale que lo compartes."
+
 ### Horas flojas
 - Los campos de Descuento con días y horas a la vista y obligatorios (por defecto lunes a
   miércoles, 10:00–16:00, 20 %, 30 días).

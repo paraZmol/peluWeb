@@ -4,6 +4,7 @@ namespace App\Actions\Salon;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\BookingService;
 use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Support\Money;
@@ -95,7 +96,7 @@ class ClientProfile
             'status' => $booking->status->value,
             'statusLabel' => $booking->status->label(),
             'staffName' => $booking->staff->name,
-            'services' => $booking->services->pluck('name')->all(),
+            'services' => $booking->services->map(fn (BookingService $service): string => $service->displayName())->all(),
             'note' => $booking->client_note,
             'charged' => $showsMoney && $booking->charged_cents !== null ? Money::toAmount($booking->charged_cents) : null,
         ];

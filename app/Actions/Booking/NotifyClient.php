@@ -55,7 +55,8 @@ class NotifyClient
         $user->notify(new BookingNotification($notice, [
             'salon' => $salon->name,
             'when' => ucfirst($start->isoFormat(self::WHEN)),
-            'services' => BookingService::query()->where('booking_id', $booking->id)->orderBy('position')->pluck('name')->implode(', '),
+            'services' => BookingService::query()->where('booking_id', $booking->id)->orderBy('position')->get()
+                ->map(fn (BookingService $service): string => $service->displayName())->implode(', '),
             'staff' => (string) Staff::withoutGlobalScope('salon')->withTrashed()->whereKey($booking->staff_id)->value('name'),
             'address' => $this->address($salon),
             'url' => route('bookings.show', $booking->code),

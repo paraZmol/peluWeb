@@ -13,6 +13,7 @@ import {
     amountPrice,
     depositCents,
     list,
+    PAIR_FREE,
     percentPrice,
     promotionFinePrint,
     promotionTitle,
@@ -103,7 +104,8 @@ function termsOf(
     }
 
     const isGift = fields.mechanic === 'gift';
-    const isPercent = !isGift && fields.benefit === 'percent';
+    const isPercent =
+        fields.mechanic === 'pair' || (!isGift && fields.benefit === 'percent');
     const percent = isPercent ? Number(fields.percent) : null;
     const amountCents =
         isGift || isPercent ? null : (toCents(fields.amount) ?? 0);
@@ -189,6 +191,34 @@ function comboSummary(names: string[], line: PreviewLine): string[] {
     ];
 }
 
+/** The same service twice: the first paid whole, the second with the benefit. */
+function pairLines(service: PromotionService, percent: number): PreviewLine[] {
+    return [
+        {
+            name: service.name,
+            normalCents: cents(service),
+            promoCents: cents(service),
+            isGift: false,
+        },
+        {
+            name: `${service.name} · quien acompaña`,
+            normalCents: cents(service),
+            promoCents: percentPrice(cents(service), percent),
+            isGift: percent === PAIR_FREE,
+        },
+    ];
+}
+
+function pairSummary(lines: PreviewLine[]): string[] {
+    const paid = lines.reduce((total, line) => total + line.promoCents, 0);
+    const normal = lines.reduce((total, line) => total + line.normalCents, 0);
+
+    return [
+        `Dos personas pagan S/ ${soles(paid)} en vez de S/ ${soles(normal)}.`,
+        `Quien atiende hace dos servicios y comisiona sobre S/ ${soles(paid)}.`,
+    ];
+}
+
 function giftLines(main: PromotionService, gift: PromotionService) {
     return [
         {
@@ -236,10 +266,13 @@ export function previewOf(
         isGift: false,
     });
     const isCombo = terms.mechanic === 'combo';
+    const isPair = terms.mechanic === 'pair';
     let lines = chosen.map(priced);
 
     if (isCombo) {
         lines = comboLines(names, terms);
+    } else if (isPair) {
+        lines = pairLines(chosen[0], terms.percent ?? 0);
     } else if (gift) {
         lines = giftLines(chosen[0], gift);
     }
@@ -249,15 +282,17 @@ export function previewOf(
         chosen.length > 1 && !isCombo ? [`Ejemplo con ${first.name}:`] : [];
     const summary = isCombo
         ? comboSummary(names, first)
-        : gift
-          ? [
-                `El cliente paga S/ ${soles(first.normalCents)} por ${first.name} y recibe ${gift.name} (S/ ${soles(cents(gift))}) sin costo.`,
-                'Quien atiende no comisiona por el servicio de regalo.',
-            ]
-          : [
-                `El cliente paga S/ ${soles(first.promoCents)} en vez de S/ ${soles(first.normalCents)}.`,
-                `Quien atiende comisiona sobre S/ ${soles(first.promoCents)}.`,
-            ];
+        : isPair
+          ? pairSummary(lines)
+          : gift
+            ? [
+                  `El cliente paga S/ ${soles(first.normalCents)} por ${first.name} y recibe ${gift.name} (S/ ${soles(cents(gift))}) sin costo.`,
+                  'Quien atiende no comisiona por el servicio de regalo.',
+              ]
+            : [
+                  `El cliente paga S/ ${soles(first.promoCents)} en vez de S/ ${soles(first.normalCents)}.`,
+                  `Quien atiende comisiona sobre S/ ${soles(first.promoCents)}.`,
+              ];
     const once =
         terms.amountCents !== null && chosen.length > 1 && !isCombo
             ? ['El monto se descuenta una sola vez por reserva.']
@@ -283,7 +318,12 @@ export function previewOf(
         summary: [
             ...example,
             ...summary,
-            ...deposit(first.promoCents, depositPercent),
+            ...deposit(
+                isPair
+                    ? lines.reduce((total, line) => total + line.promoCents, 0)
+                    : first.promoCents,
+                depositPercent,
+            ),
             ...once,
         ],
     };

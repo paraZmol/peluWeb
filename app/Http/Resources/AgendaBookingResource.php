@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\BookingService;
 use App\Support\Images\ImageStore;
 use App\Support\Money;
 use App\Support\WhatsApp;
@@ -57,7 +58,9 @@ class AgendaBookingResource extends JsonResource
             ],
             'staffId' => $this->staff_id,
             'staffName' => $this->staff->name,
-            'services' => $this->services->pluck('name')->values(),
+            'services' => $this->services->map(fn (BookingService $service): string => $service->displayName())->values(),
+            // "Ven con alguien": who comes along; the team may take them off if only one comes.
+            'companion' => $this->services->count() === 2 ? $this->services->firstWhere('companion_name', '!==', null)?->companion_name : null,
             'price' => Money::toAmount($this->price_cents),
             // The promotion that set its price, as it was called then.
             'promotion' => $this->promotion_cents === 0 ? null : [

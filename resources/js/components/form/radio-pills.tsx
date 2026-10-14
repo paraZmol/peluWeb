@@ -7,14 +7,28 @@ type Props = {
     options: Option[];
     value: string;
     onChange: (value: string) => void;
+    /** Two for longer labels (people's names); three by default. */
+    columns?: 2 | 3;
 };
 
 /** A short, controlled single choice shown as tappable pills. */
-export function RadioPills({ legend, name, options, value, onChange }: Props) {
+export function RadioPills({
+    legend,
+    name,
+    options,
+    value,
+    onChange,
+    columns = 3,
+}: Props) {
     return (
         <fieldset className="grid gap-2">
             <legend className="mb-2 text-sm font-medium">{legend}</legend>
-            <div className="grid grid-cols-3 gap-2">
+            <div
+                className={cn(
+                    'grid gap-2',
+                    columns === 2 ? 'grid-cols-2' : 'grid-cols-3',
+                )}
+            >
                 {options.map((option) => (
                     <label key={option.value} className="cursor-pointer">
                         <input

@@ -9,7 +9,7 @@ import type {
 import type { PublicPromotion } from '@/components/public/types';
 import { sumAmounts } from './format';
 import { fromCents, toCents } from './money';
-import { depositCents } from './promotions';
+import { depositCents, PAIR_FREE, PAIR_HALF, percentPrice } from './promotions';
 
 /*
  | What a visitor is told about the salon's promotions before the server
@@ -31,6 +31,8 @@ export type ServiceOffer = {
      * price is crossed out, only the combo is named.
      */
     isCombo?: boolean;
+    /** Its own word on the tag ("2x1"), instead of "Promo" or "Combo". */
+    label?: string;
 };
 
 /** Goes with a price that only some times of the week get. */
@@ -38,7 +40,7 @@ export const LIMITED_PRICE_NOTE = 'en horarios con promo';
 
 /** The word on a service with an offer: a combo is not a price of its own. */
 export function offerLabel(offer: ServiceOffer): string {
-    return offer.isCombo ? 'Combo' : 'Promo';
+    return offer.label ?? (offer.isCombo ? 'Combo' : 'Promo');
 }
 
 /** The mark of a time with a promotion; a first-visit one says so. */
@@ -55,10 +57,13 @@ export function bestOffers(
     promotions: PublicPromotion[],
 ): Map<number, ServiceOffer> {
     const offers = new Map<number, ServiceOffer>();
-    const combos = promotions.filter((promotion) => promotion.combo);
+    // Only together with something else: alone, a service keeps its price.
+    const together = promotions.filter(
+        (promotion) => promotion.combo || promotion.mechanic === 'pair',
+    );
 
     const priced = promotions
-        .filter((promotion) => !promotion.combo)
+        .filter((promotion) => !together.includes(promotion))
         .flatMap((promotion) =>
             promotion.prices.map((price) => ({
                 ...price,
@@ -75,7 +80,9 @@ export function bestOffers(
         }
     }
 
-    for (const promotion of combos) {
+    for (const promotion of together) {
+        const percent = pairPercent(promotion);
+
         for (const price of promotion.prices) {
             if (!offers.has(price.serviceId)) {
                 offers.set(price.serviceId, {
@@ -84,12 +91,58 @@ export function bestOffers(
                     isFrom: price.isFrom,
                     isLimited: promotion.when !== null,
                     isCombo: true,
+                    ...(percent !== null && {
+                        label: percent === PAIR_FREE ? '2x1' : 'Para dos',
+                    }),
                 });
             }
         }
     }
 
     return offers;
+}
+
+/**
+ * "Ven con alguien": what the second one gets off (50 or 100); null for
+ * any other kind. Without the number from the server, the system's own
+ * title says it: only the free one is "2x1 en …".
+ */
+export function pairPercent(promotion: PublicPromotion): number | null {
+    if (promotion.mechanic !== 'pair') {
+        return null;
+    }
+
+    if (promotion.pair) {
+        return promotion.pair.percent;
+    }
+
+    return (promotion.summary ?? promotion.name).startsWith('2x1')
+        ? PAIR_FREE
+        : PAIR_HALF;
+}
+
+/** The "Ven con alguien" that takes a service, the free one first. */
+export function pairFor(
+    promotions: PublicPromotion[],
+    serviceId: number,
+): PublicPromotion | undefined {
+    return promotions
+        .filter(
+            (promotion) =>
+                pairPercent(promotion) !== null &&
+                promotion.serviceIds.includes(serviceId),
+        )
+        .sort((a, b) => (pairPercent(b) ?? 0) - (pairPercent(a) ?? 0))[0];
+}
+
+/** What two of the same save: the cheaper one, at its percentage off. */
+export function pairSavingCents(
+    promotion: PublicPromotion,
+    prices: [string, string],
+): number {
+    const cheaper = Math.min(cents(prices[0]), cents(prices[1]));
+
+    return cheaper - percentPrice(cheaper, pairPercent(promotion) ?? 0);
 }
 
 /** Every service of a combo is chosen: only then does it apply. */
@@ -213,6 +266,11 @@ export function bestSavingCents(
                 : 0;
         }
 
+        if (promotion.mechanic === 'pair') {
+            // Counted by the wizard, which knows who comes along.
+            return 0;
+        }
+
         if (promotion.gift) {
             return claimedGift([promotion], chosenIds)
                 ? cents(promotion.gift.price)
@@ -243,6 +301,7 @@ function promotedServices(
         return gift && included.length > 0 ? [included[0], gift] : [];
     }
 
+    // "Ven con alguien": one service, and the wizard asks who comes along.
     return included.length === 1 ? included : [];
 }
 

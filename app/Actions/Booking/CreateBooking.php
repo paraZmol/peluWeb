@@ -202,6 +202,7 @@ class CreateBooking
             $service->booking_id = $booking->id;
             $service->service_id = $item->serviceId;
             $service->service_variant_id = $item->variantId;
+            $service->companion_name = $item->companion;
             $service->name = $item->name;
             $service->price_cents = $item->priceCents;
             $service->list_price_cents = $item->normalPriceCents();

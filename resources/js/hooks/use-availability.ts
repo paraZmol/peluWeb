@@ -30,6 +30,10 @@ function queryString({ selections, staffId, date, refresh }: Query): string {
                 String(selection.variantId),
             );
         }
+
+        if (selection.companion) {
+            params.set(`services[${index}][companion]`, selection.companion);
+        }
     });
 
     if (staffId !== null) {

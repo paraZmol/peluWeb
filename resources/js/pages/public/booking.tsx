@@ -55,7 +55,7 @@ export default function Booking({
     const firstOpenDay = days.find((day) => !day.closed)?.date ?? null;
     const availability = useAvailability({
         url: availabilityRoute.url(salon.slug),
-        selections: wizard.selections,
+        selections: wizard.lines,
         staffId: wizard.staffId,
         refresh: wizard.refresh,
         // Nothing to ask until a professional was chosen.

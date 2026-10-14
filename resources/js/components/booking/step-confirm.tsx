@@ -1,16 +1,17 @@
 import { router } from '@inertiajs/react';
-import { Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { markBookingCelebration } from '@/lib/celebration';
+import { withCompanion } from '@/lib/companion';
 import { flashFailed, flashMessage } from '@/lib/flash';
-import { formatMinutes, formatPrice } from '@/lib/format';
+import { formatMinutes } from '@/lib/format';
 import { promotedTotal } from '@/lib/promo-offers';
 import { store } from '@/routes/salons/booking';
 import { BookingSummary } from './booking-summary';
 import { ConfirmAction } from './confirm-action';
+import { DepositNotice } from './deposit-notice';
 import type { BookableSalon, Quote, Viewer } from './types';
 
 type Props = {
@@ -37,9 +38,10 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
         router.post(
             store(salon.slug),
             {
-                services: wizard.selections.map((selection) => ({
+                services: wizard.lines.map((selection) => ({
                     id: selection.serviceId,
                     variant: selection.variantId,
+                    companion: selection.companion ?? null,
                 })),
                 staff: wizard.staffId,
                 start: slot.start,
@@ -92,7 +94,15 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                         ? `${quote.minutesVary ? 'Desde ' : ''}${formatMinutes(quote.minutes)}`
                         : undefined
                 }
-                items={wizard.chosen.map((service) => ({ name: service.name }))}
+                items={withCompanion(wizard.chosen, wizard.companion)}
+                footer={
+                    wizard.companion && (
+                        <p className="text-sm text-muted-foreground">
+                            Les atiende {staff?.name ?? 'la misma persona'}, uno
+                            después del otro.
+                        </p>
+                    )
+                }
                 total={money?.total ?? null}
                 totalPrefix={quote?.priceVaries ? 'desde' : undefined}
                 listTotal={money?.listTotal}
@@ -100,20 +110,10 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
             />
 
             {quote && money && quote.depositPercent > 0 && (
-                <p className="flex items-start gap-3 rounded-xl border border-brand-line bg-brand-soft p-4 text-sm">
-                    <Wallet
-                        className="mt-0.5 size-5 shrink-0 text-brand-text"
-                        aria-hidden
-                    />
-                    <span>
-                        Para confirmar, el salón pide una seña de{' '}
-                        <strong className="whitespace-nowrap tabular-nums">
-                            {formatPrice(money.deposit)}
-                        </strong>{' '}
-                        ({quote.depositPercent}%). Te diremos cómo enviarla al
-                        terminar.
-                    </span>
-                </p>
+                <DepositNotice
+                    amount={money.deposit}
+                    percent={quote.depositPercent}
+                />
             )}
 
             <div className="grid gap-2">

@@ -48,9 +48,10 @@ export function StepClient({ salon, wizard, quote }: Props) {
         router.post(
             store(),
             {
-                services: wizard.selections.map((selection) => ({
+                services: wizard.lines.map((selection) => ({
                     id: selection.serviceId,
                     variant: selection.variantId,
+                    companion: selection.companion ?? null,
                 })),
                 staff: wizard.staffId,
                 start: slot.start,

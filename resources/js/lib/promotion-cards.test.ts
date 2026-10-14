@@ -218,6 +218,7 @@ describe('cards and gifts', () => {
             'Halloween · 20 % menos en Corte',
             '20 % menos en Corte en tu primera visita',
             'Corte + Tinte por S/ 139',
+            'Segundo Corte a mitad de precio',
         ]);
     });
 

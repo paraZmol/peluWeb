@@ -2,12 +2,13 @@ import { Check, Clock } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { PromoTag } from '@/components/public/promo-tag';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
-import { formatMinutes, formatPrice } from '@/lib/format';
+import { formatMinutes } from '@/lib/format';
 import { offerLabel } from '@/lib/promo-offers';
 import type { ServiceOffer } from '@/lib/promo-offers';
 import { cn } from '@/lib/utils';
 import { OptionPrice } from './option-price';
 import type { BookableService } from './types';
+import { VariantChips } from './variant-chips';
 
 type Props = {
     service: BookableService;
@@ -110,31 +111,13 @@ export function ServiceOption({
             </button>
 
             {selected && service.variants.length > 0 && (
-                <div
-                    role="radiogroup"
-                    aria-label={`Opciones de ${service.name}`}
-                    className="flex flex-wrap gap-2 px-4 pb-4 sm:pl-14"
-                >
-                    {service.variants.map((variant) => (
-                        <button
-                            key={variant.id}
-                            type="button"
-                            role="radio"
-                            aria-checked={variantId === variant.id}
-                            onClick={() =>
-                                wizard.chooseVariant(service.id, variant.id)
-                            }
-                            className={cn(
-                                'min-h-11 rounded-full px-4 text-sm font-medium tabular-nums outline-none focus-visible:ring-[3px] focus-visible:ring-ring',
-                                variantId === variant.id
-                                    ? 'skin-primary'
-                                    : 'skin-chip',
-                            )}
-                        >
-                            {variant.label} · {formatPrice(variant.price)}
-                        </button>
-                    ))}
-                </div>
+                <VariantChips
+                    label={`Opciones de ${service.name}`}
+                    variants={service.variants}
+                    value={variantId}
+                    onChange={(id) => wizard.chooseVariant(service.id, id)}
+                    className="px-4 pb-4 sm:pl-14"
+                />
             )}
             {children}
         </li>

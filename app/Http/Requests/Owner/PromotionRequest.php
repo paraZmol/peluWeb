@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Owner;
 
-use App\Actions\Promotions\SavePromotion;
 use App\Concerns\ComboPromotionRules;
 use App\Concerns\SalonValidationRules;
 use App\Data\Promotions\PromotionDraft;
@@ -22,7 +21,7 @@ class PromotionRequest extends FormRequest
     use ComboPromotionRules, SalonValidationRules;
 
     /** The cards a promotion starts from; they only shape the form. */
-    public const array CARDS = ['discount', 'gift', 'quiet_hours', 'season', 'first_visit', 'combo'];
+    public const array CARDS = ['discount', 'gift', 'quiet_hours', 'season', 'first_visit', 'combo', 'pair'];
 
     /** Cards that can only be a discount. */
     private const array DISCOUNT_CARDS = ['quiet_hours', 'first_visit'];
@@ -53,7 +52,9 @@ class PromotionRequest extends FormRequest
             ->where('salon_id', app(CurrentSalon::class)->get()?->id)
             ->where('is_active', true)
             ->whereNull('deleted_at');
-        $isQuietHours = $this->input('card') === 'quiet_hours';
+        $isPair = $this->input('card') === 'pair';
+        // The second one free only fills hours that would stay empty.
+        $isQuietHours = $this->input('card') === 'quiet_hours' || ($isPair && (int) $this->input('percent') === self::PAIR_FREE);
         $isGift = $this->input('mechanic') === PromotionMechanic::Gift->value;
         $isCombo = $this->input('card') === 'combo';
         $noDiscount = $isGift || $isCombo;
@@ -63,8 +64,9 @@ class PromotionRequest extends FormRequest
             'mechanic' => ['required', Rule::enum(PromotionMechanic::class), Rule::in($this->mechanicsFor($this->string('card')->toString()))],
             'services' => ['required', 'array', 'list', $isCombo ? 'min:'.self::COMBO_MIN_SERVICES : 'min:1', $isCombo ? 'max:'.self::COMBO_MAX_SERVICES : 'max:100'],
             'services.*' => ['integer', 'distinct', $ownService()],
-            'percent' => ['nullable', 'integer', 'min:'.self::MIN_PERCENT, 'max:'.self::MAX_PERCENT, $noDiscount ? 'prohibited' : 'required_without:amount', 'prohibits:amount'],
-            'amount' => ['nullable', 'numeric', 'min:1', 'max:9999', 'decimal:0,2', $noDiscount ? 'prohibited' : 'required_without:percent'],
+            'percent' => $isPair ? ['required', 'integer', Rule::in([self::PAIR_HALF, self::PAIR_FREE])]
+                : ['nullable', 'integer', 'min:'.self::MIN_PERCENT, 'max:'.self::MAX_PERCENT, $noDiscount ? 'prohibited' : 'required_without:amount', 'prohibits:amount'],
+            'amount' => ['nullable', 'numeric', 'min:1', 'max:9999', 'decimal:0,2', $noDiscount || $isPair ? 'prohibited' : 'required_without:percent'],
             'combo_price' => [$isCombo ? 'required' : 'prohibited', 'nullable', 'numeric', 'min:1', 'max:99999', 'decimal:0,2'],
             'gift_service_id' => [$isGift ? 'required' : 'prohibited', 'nullable', 'integer', $ownService()],
             'starts_on' => ['required', 'date_format:Y-m-d'],
@@ -113,23 +115,15 @@ class PromotionRequest extends FormRequest
             }
 
             $this->checkGift($validator);
-            if ($this->filled('combo_price') && ! $this->keepsBookedSaving()) {
+
+            if ($this->input('card') === 'pair') {
+                $this->checkPair($validator, $services);
+            }
+
+            if ($this->filled('combo_price') && ! $this->keepsBookedSaving($this->amountCents())) {
                 $this->checkCombo($validator, $services, Money::toCents($this->input('combo_price')));
             }
         }];
-    }
-
-    /**
-     * A combo with bookings keeps the saving they were promised: prices
-     * that moved since must not stop the owner from giving it a later end.
-     */
-    private function keepsBookedSaving(): bool
-    {
-        $promotion = $this->route('promotion');
-
-        return $promotion instanceof Promotion
-            && $promotion->amount_cents === $this->amountCents()
-            && app(SavePromotion::class)->hasBookings($promotion);
     }
 
     /**
@@ -141,6 +135,7 @@ class PromotionRequest extends FormRequest
     {
         return match (true) {
             $card === 'combo' => [PromotionMechanic::Combo->value],
+            $card === 'pair' => [PromotionMechanic::Pair->value],
             in_array($card, self::DISCOUNT_CARDS, true) => [PromotionMechanic::Discount->value],
             default => [PromotionMechanic::Discount->value, PromotionMechanic::Gift->value],
         };

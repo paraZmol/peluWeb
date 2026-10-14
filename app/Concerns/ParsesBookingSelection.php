@@ -23,23 +23,27 @@ trait ParsesBookingSelection
     {
         return [
             'services' => ['required', 'array', 'list', 'max:'.QuoteBooking::MAX_SERVICES],
-            'services.*.id' => ['required', 'integer', 'distinct'],
+            // A service may repeat only for who comes along: QuoteBooking checks it.
+            'services.*.id' => ['required', 'integer'],
             'services.*.variant' => ['nullable', 'integer'],
+            // Only a name: one line, plain words.
+            'services.*.companion' => ['nullable', 'string', 'max:60', 'not_regex:/[\p{Cc}\p{Cf}<>]/u'],
             'staff' => ['nullable', 'integer'],
         ];
     }
 
     /**
-     * @return list<array{service_id: int, variant_id: int|null}>
+     * @return list<array{service_id: int, variant_id: int|null, companion?: string|null}>
      */
     public function selections(): array
     {
-        /** @var list<array{id: int|string, variant?: int|string|null}> $services */
+        /** @var list<array{id: int|string, variant?: int|string|null, companion?: string|null}> $services */
         $services = $this->validated('services');
 
         return array_map(fn (array $service): array => [
             'service_id' => (int) $service['id'],
             'variant_id' => isset($service['variant']) ? (int) $service['variant'] : null,
+            'companion' => filled($service['companion'] ?? null) ? trim((string) $service['companion']) : null,
         ], $services);
     }
 
