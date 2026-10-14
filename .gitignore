@@ -50,3 +50,6 @@ yarn-error.log
 
 # Per-machine Claude settings and session files
 /.claude/settings.local.json
+
+# Crash dumps of Windows tools (git bash grep)
+*.stackdump
