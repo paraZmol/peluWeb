@@ -16,7 +16,8 @@ type Props = {
 /**
  * What the salon has on offer today, above its services. Coming through a
  * promotion's own link, the page opens here: that one first and raised, or
- * the word that it is over and the way to book at the normal price.
+ * the word that it is no longer on offer (over, paused or out of places)
+ * and the way to book at the normal price.
  */
 export function PromotionStrip({ promotions, salon }: Props) {
     const { items, shared } = promotions;
@@ -78,7 +79,7 @@ export function PromotionStrip({ promotions, salon }: Props) {
                     </span>
                     <p className="min-w-0 flex-1">
                         <strong className="block text-lg">
-                            Esta promoción terminó.
+                            Esta promoción ya no está disponible.
                         </strong>
                         <span className="text-muted-foreground">
                             Puedes reservar al precio normal.

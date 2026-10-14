@@ -4,6 +4,7 @@ namespace App\Actions\Promotions;
 
 use App\Data\Promotions\PromotionDraft;
 use App\Domain\Promotions\PromotionCopy;
+use App\Enums\BookingStatus;
 use App\Enums\PromotionStatus;
 use App\Exceptions\PromotionException;
 use App\Models\Booking;
@@ -31,8 +32,14 @@ class SavePromotion
                 $promotion->salon_id = $salon->id;
                 $promotion->status = PromotionStatus::Draft;
                 $promotion->share_code = $this->newShareCode();
-            } elseif ($this->hasBookings($promotion)) {
-                return $this->amend($promotion, $draft);
+            } else {
+                // Locked first: a booking being made right now is either
+                // counted here or waits for these changes.
+                $promotion = Promotion::withoutGlobalScope('salon')->lockForUpdate()->findOrFail($promotion->id);
+
+                if ($this->hasBookings($promotion)) {
+                    return $this->amend($promotion, $draft);
+                }
             }
 
             $promotion->forceFill([
@@ -65,7 +72,9 @@ class SavePromotion
 
     public function hasBookings(Promotion $promotion): bool
     {
-        return Booking::withoutGlobalScope('salon')->where('promotion_id', $promotion->id)->exists();
+        // A cancelled booking, or one whose hold ran out, was promised nothing.
+        return Booking::withoutGlobalScope('salon')->where('promotion_id', $promotion->id)
+            ->whereNotIn('status', [BookingStatus::Cancelled, BookingStatus::Expired])->sharedLock()->exists();
     }
 
     /**

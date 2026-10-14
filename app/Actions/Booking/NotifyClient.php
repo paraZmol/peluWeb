@@ -89,7 +89,7 @@ class NotifyClient
 
         return [...$promotion, ...match (true) {
             $notice === BookingNotice::Received && $booking->hold_expires_at !== null => [
-                "Seña: {$deposit}. Envíala antes de las ".$booking->hold_expires_at->setTimezone($salon->timezone)->isoFormat('h:mm a').' para conservar el horario.',
+                "Seña: {$deposit}. Envíala antes de las ".$booking->hold_expires_at->setTimezone($salon->timezone)->isoFormat('h:mm a').' para conservar el horario'.($booking->promotion_cents > 0 ? ' y el precio de la promoción' : '').'.',
             ],
             $notice === BookingNotice::Confirmed && $isPaid => ["Seña recibida: {$deposit}."],
             $notice === BookingNotice::Cancelled && $isPaid && $booking->deposit_refundable === true => ["El salón te devolverá la seña de {$deposit}."],

@@ -118,7 +118,7 @@ function giftLines(main: PromotionService, gift: PromotionService) {
  */
 export function previewOf(
     fields: PromotionFields,
-    { services, depositPercent }: PromotionContext,
+    { services, depositPercent, salonName }: PromotionContext,
 ): PromotionPreview | null {
     const terms = termsOf(fields);
     const title = autoTitle(fields, services);
@@ -163,12 +163,17 @@ export function previewOf(
             fields.card === 'season' ? fields.overline.trim() || null : null,
         title: fields.name.trim() || title,
         lines,
-        finePrint: promotionFinePrint(
-            terms,
-            names,
-            fields.quota.trim() === '' ? null : Number(fields.quota),
-            fields.once_per_client,
-        ),
+        finePrint: promotionFinePrint(terms, names, {
+            salonName,
+            quota: fields.quota.trim() === '' ? null : Number(fields.quota),
+            isOncePerClient: fields.once_per_client,
+            hasDeposit: depositPercent > 0,
+            gift: gift && {
+                name: gift.name,
+                priceCents: cents(gift),
+                minutes: gift.minutes,
+            },
+        }),
         summary: [
             ...example,
             ...summary,

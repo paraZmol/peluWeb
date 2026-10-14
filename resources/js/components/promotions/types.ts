@@ -43,6 +43,10 @@ export type Promotion = {
     /** "2026-10-07", on the salon's calendar. */
     startsOn: string;
     endsOn: string;
+    /** "del 5 al 18 de octubre de 2026". */
+    period: string;
+    /** The title the system writes; null when the name is that already. */
+    summary: string | null;
     finePrint: string;
     /** "lunes, martes y miércoles, de 10:00 a 16:00"; null when always. */
     when: string | null;
@@ -77,6 +81,8 @@ export type PromotionContext = {
     /** Today on the salon's calendar. */
     today: string;
     depositPercent: number;
+    /** Whose promotion it is: the fine print opens with it. */
+    salonName: string;
 };
 
 /** What is being typed. Numbers stay as text until they are sent. */

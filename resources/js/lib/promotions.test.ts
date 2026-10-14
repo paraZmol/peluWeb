@@ -7,11 +7,13 @@ import {
     instagramText,
     percentPrice,
     promotionFinePrint,
+    promotionPeriod,
     promotionTitle,
     promotionWhen,
+    quotaLabel,
     whatsappShareUrl,
 } from './promotions';
-import type { CopyTerms } from './promotions';
+import type { CopyTerms, PromotionFacts } from './promotions';
 
 // The same cases as tests/Unit/Promotions/PromotionCopyTest.php: both
 // sides must write the same words.
@@ -63,18 +65,29 @@ describe('promotionTitle', () => {
 });
 
 describe('promotionFinePrint', () => {
+    const facts: PromotionFacts = {
+        salonName: 'Estudio Luz',
+        quota: null,
+        isOncePerClient: false,
+        hasDeposit: false,
+    };
+    const closing = (deposit: string) =>
+        'Si cambias tu cita, la promoción se mantiene solo si la nueva fecha y hora cumplen estas condiciones. ' +
+        deposit +
+        'Con reserva previa. No se suma a otras promociones: si tu cita cumple más de una, se aplica la de mayor ahorro. ' +
+        'Precios finales en soles, con impuestos incluidos.';
+
     it('writes the fine print in full, the same way every time', () => {
         expect(
             promotionFinePrint(
                 terms('discount', { percent: 20 }),
                 ['Corte', 'Barba'],
-                null,
-                false,
+                facts,
             ),
         ).toBe(
-            'Válido para citas del 5 de octubre al 18 de octubre. Aplica a: Corte, Barba. ' +
-                'Sin límite de cupos, sujeto a horarios disponibles. ' +
-                'Con reserva previa. No acumulable con otras promociones. Precios en soles con IGV incluido.',
+            'Promoción de Estudio Luz. Válido para citas del 5 al 18 de octubre de 2026. Aplica a: Corte, Barba. ' +
+                'Sin límite de cupos: vale para todas las citas que se reserven dentro de estas fechas, mientras haya horarios libres. ' +
+                closing(''),
         );
 
         const quiet = terms('discount', {
@@ -84,18 +97,57 @@ describe('promotionFinePrint', () => {
             toTime: '16:00',
         });
 
-        expect(promotionFinePrint(quiet, ['Corte'], 30, true)).toBe(
-            'Válido para citas del 5 de octubre al 18 de octubre. Aplica a: Corte. ' +
-                'Solo lunes, martes y miércoles, de 10:00 a 16:00. Cupos: 30. Una por cliente. ' +
-                'Con reserva previa. No acumulable con otras promociones. Precios en soles con IGV incluido.',
+        expect(
+            promotionFinePrint(quiet, ['Corte'], {
+                ...facts,
+                quota: 30,
+                isOncePerClient: true,
+                hasDeposit: true,
+            }),
+        ).toBe(
+            'Promoción de Estudio Luz. Válido para citas del 5 al 18 de octubre de 2026. Aplica a: Corte. ' +
+                'Solo lunes, martes y miércoles, en citas que empiecen entre las 10:00 y las 16:00. Cupos: 30 reservas. Una por cliente. ' +
+                closing(
+                    'El precio con promoción se reserva hasta el plazo para enviar la seña. ',
+                ),
         );
     });
 
-    it('adds what a gift is not', () => {
+    it('says a fixed amount comes off once, when it covers more than one service', () => {
+        const amount = terms('discount', { amountCents: 1000 });
+        const once =
+            'El descuento de S/ 10 se aplica una sola vez por reserva.';
+
         expect(
-            promotionFinePrint(terms('gift'), ['Corte'], null, false),
+            promotionFinePrint(amount, ['Manicure', 'Pedicure'], facts),
+        ).toContain(once);
+        expect(promotionFinePrint(amount, ['Manicure'], facts)).not.toContain(
+            once,
+        );
+    });
+
+    it('says what a gift is worth, what it adds and what it is not', () => {
+        expect(
+            promotionFinePrint(terms('gift'), ['Corte'], {
+                ...facts,
+                gift: { name: 'Rasurado', priceCents: 1200, minutes: 15 },
+            }),
         ).toContain(
-            'El servicio de regalo se realiza en la misma cita y no es canjeable por dinero ni por otro servicio.',
+            'El regalo (Rasurado, precio normal S/ 12) se hace en la misma cita y alarga la cita 15 min. No se cambia por dinero ni por otro servicio.',
+        );
+    });
+});
+
+describe('promotionPeriod', () => {
+    it('writes the dates with the year, and each month when they differ', () => {
+        expect(promotionPeriod('2026-10-05', '2026-10-18')).toBe(
+            'del 5 al 18 de octubre de 2026',
+        );
+        expect(promotionPeriod('2026-10-20', '2026-11-08')).toBe(
+            'del 20 de octubre al 8 de noviembre de 2026',
+        );
+        expect(promotionPeriod('2026-12-15', '2027-01-10')).toBe(
+            'del 15 de diciembre de 2026 al 10 de enero de 2027',
         );
     });
 });
@@ -155,20 +207,45 @@ describe('sharing', () => {
     const promotion = {
         name: '20 % menos en Corte',
         overline: 'Halloween',
-        startsOn: '2026-10-21',
-        endsOn: '2026-10-31',
+        summary: null,
+        period: 'del 21 al 31 de octubre de 2026',
         shareUrl: 'https://peluweb.test/salon/p/abc',
+        form: { quota: null },
     };
 
-    it('sends the title and the link through WhatsApp', () => {
+    it('sends the title, the dates and the link through WhatsApp', () => {
         expect(whatsappShareUrl(promotion)).toBe(
-            `https://wa.me/?text=${encodeURIComponent('Halloween · 20 % menos en Corte\nhttps://peluweb.test/salon/p/abc')}`,
+            `https://wa.me/?text=${encodeURIComponent('Halloween · 20 % menos en Corte\nVálido del 21 al 31 de octubre de 2026.\nCondiciones y reserva: https://peluweb.test/salon/p/abc')}`,
         );
     });
 
-    it('writes a caption with title, dates and link', () => {
-        expect(instagramText({ ...promotion, overline: null })).toBe(
-            '20 % menos en Corte\nDel 21 de octubre al 31 de octubre.\nReserva aquí: https://peluweb.test/salon/p/abc',
+    it('writes a caption with title, dates, places and link', () => {
+        expect(
+            instagramText({
+                ...promotion,
+                overline: null,
+                form: { quota: 30 },
+            }),
+        ).toBe(
+            '20 % menos en Corte\nVálido del 21 al 31 de octubre de 2026.\nCupos: 30 reservas.\nCondiciones y reserva: https://peluweb.test/salon/p/abc',
         );
+    });
+
+    it('says what it does under a title of the salon’s own', () => {
+        expect(
+            instagramText({
+                ...promotion,
+                name: 'Noche de brujas',
+                overline: null,
+                summary: '20 % menos en Corte',
+            }),
+        ).toBe(
+            'Noche de brujas\n20 % menos en Corte.\nVálido del 21 al 31 de octubre de 2026.\nCondiciones y reserva: https://peluweb.test/salon/p/abc',
+        );
+    });
+
+    it('counts a single place in the singular', () => {
+        expect(quotaLabel(1)).toBe('Cupos: 1 reserva');
+        expect(quotaLabel(null)).toBeNull();
     });
 });

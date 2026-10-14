@@ -12,10 +12,13 @@ import type {
     PromotionContext,
 } from '@/components/promotions/types';
 import { Button } from '@/components/ui/button';
+import { useCurrentSalon } from '@/hooks/use-current-salon';
 import type { PromotionTarget } from '@/hooks/use-promotion-form';
 import { index } from '@/routes/promotions';
 
-type Props = PromotionContext & { promotions: Promotion[] };
+type Props = Omit<PromotionContext, 'salonName'> & {
+    promotions: Promotion[];
+};
 
 /** What each dialog shows stays while it closes, so its content does not flip. */
 type Open = {
@@ -26,7 +29,9 @@ type Open = {
     shared?: Promotion;
 };
 
-export default function Promotions({ promotions, ...context }: Props) {
+export default function Promotions({ promotions, ...props }: Props) {
+    const { currentSalon } = useCurrentSalon();
+    const context = { ...props, salonName: currentSalon?.name ?? '' };
     const [open, setOpen] = useState<Open>({
         isPicking: false,
         isFilling: false,

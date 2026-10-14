@@ -44,6 +44,9 @@ export function StepConfirm({ salon, wizard, quote, viewer }: Props) {
                 staff: wizard.staffId,
                 start: slot.start,
                 note: wizard.note || null,
+                // The price on this screen has a promotion in it: the server
+                // refuses rather than book at another one.
+                expects_promotion: slot.promotion !== null,
             },
             {
                 preserveState: true,

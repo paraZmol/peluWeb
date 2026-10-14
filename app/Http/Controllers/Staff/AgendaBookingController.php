@@ -7,6 +7,7 @@ use App\Actions\Booking\FindAvailableSlots;
 use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\ResolveSalonClient;
 use App\Actions\Promotions\ApplyPromotion;
+use App\Actions\Promotions\PublicPromotions;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\ClientLevel;
@@ -56,6 +57,8 @@ class AgendaBookingController extends SalonAreaController
         return Inertia::render('staff/booking-create', [
             'salon' => new BookableSalonResource($salon, $services, $staff, $this->finder->performers($staff)),
             'days' => $days->handle($salon, ClientLevel::Team, self::DAYS_AHEAD),
+            // The same ones a client sees: who books for them quotes the same prices.
+            'promotions' => app(PublicPromotions::class)->handle($salon)['items'],
         ]);
     }
 

@@ -1,4 +1,5 @@
 import { formatPrice } from '@/lib/format';
+import { LIMITED_PRICE_NOTE } from '@/lib/promo-offers';
 import type { ServiceOffer } from '@/lib/promo-offers';
 import type { PublicService } from '../types';
 
@@ -10,7 +11,10 @@ type Props = {
     fromClassName: string;
 };
 
-/** A service's price; with a promotion, the normal one crossed out first. */
+/**
+ * A service's price; with a promotion, the normal one crossed out first
+ * and, when only some times get it, a word saying so.
+ */
 export function RowPrice({ service, offer, fromClassName }: Props) {
     return (
         <>
@@ -29,6 +33,11 @@ export function RowPrice({ service, offer, fromClassName }: Props) {
             <span className={offer && 'text-brand-text'}>
                 {formatPrice(offer?.promo ?? service.priceFrom)}
             </span>
+            {offer?.isLimited && (
+                <span className="block text-xs font-normal whitespace-nowrap text-muted-foreground">
+                    {LIMITED_PRICE_NOTE}
+                </span>
+            )}
         </>
     );
 }

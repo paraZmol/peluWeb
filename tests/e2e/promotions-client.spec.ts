@@ -37,10 +37,15 @@ test.describe('Promociones: lo que ve el cliente', () => {
         await expect(discount).toContainText('Precio normal S/ 40.00');
         await expect(discount).toContainText('Con promoción S/ 30.00');
         await expect(discount).toContainText('de 09:00 a 18:00');
-        await expect(discount).toContainText('Hasta el');
+        // How long it runs is read without opening the conditions.
+        await expect(discount).toContainText(/Válido del \d.* de \d{4}/);
         await expect(discount).not.toContainText('Aplica a:');
         await discount.getByRole('button', { name: 'Ver condiciones' }).click();
+        await expect(discount).toContainText('Promoción de Salón Ofertas.');
         await expect(discount).toContainText('Aplica a: Corte de oferta.');
+        await expect(discount).toContainText(
+            'Solo en citas que empiecen entre las 09:00 y las 18:00.',
+        );
 
         const gift = card(page, GIFT);
         await expect(gift).toContainText('Regreso a clases');
@@ -60,6 +65,8 @@ test.describe('Promociones: lo que ve el cliente', () => {
         await expect(cut).toContainText('Promo');
         await expect(cut).toContainText('Precio normal S/ 40.00');
         await expect(cut).toContainText('Con promoción S/ 30.00');
+        // It holds from 9 to 18 only: the price says not every time gets it.
+        await expect(cut).toContainText('en horarios con promo');
         await expect(
             services
                 .getByRole('listitem')
@@ -70,7 +77,7 @@ test.describe('Promociones: lo que ve el cliente', () => {
         assertNoErrors();
     });
 
-    test('el enlace de una promoción la muestra primero y destacada; uno que no existe dice que terminó', async ({
+    test('el enlace de una promoción la muestra primero y destacada; uno que no existe dice que ya no está disponible', async ({
         page,
     }) => {
         const assertNoErrors = watchForErrors(page);
@@ -83,12 +90,16 @@ test.describe('Promociones: lo que ve el cliente', () => {
         await expect(first).toContainText('Tu promoción');
         await expect(strip(page).getByText('Tu promoción')).toHaveCount(1);
         await expect(first).toBeInViewport();
-        await expect(page.getByText('Esta promoción terminó.')).toHaveCount(0);
+        await expect(
+            page.getByText('Esta promoción ya no está disponible.'),
+        ).toHaveCount(0);
 
         // A code that never was (or one that is over): never an error page.
         await page.goto(`${SALON}/promo/noexiste99`);
         const ended = strip(page).getByRole('status');
-        await expect(ended).toContainText('Esta promoción terminó.');
+        await expect(ended).toContainText(
+            'Esta promoción ya no está disponible.',
+        );
         await expect(ended).toContainText('Puedes reservar al precio normal.');
         await expect(
             ended.getByRole('link', { name: 'Reservar cita' }),
@@ -122,8 +133,9 @@ test.describe('Promociones: lo que ve el cliente', () => {
         ).toBeVisible();
         // The cut is cheaper with the other promotion, and says so.
         await expect(option(page, 'Corte de oferta')).toContainText(
-            'Con promoción S/ 30.00',
+            'Con promoción S/ 30.00en horarios con promo',
         );
+        await expect(wash).not.toContainText('en horarios con promo');
         await expect(page.getByText('desde S/ 20.00')).toBeVisible();
 
         // Without what earns it, the gift costs what it costs.
@@ -179,6 +191,11 @@ test.describe('Promociones: lo que ve el cliente', () => {
         // Tomorrow: from 7 to 22, so some times have it and some do not.
         await expect(
             page.getByRole('heading', { name: '¿Cuándo?' }),
+        ).toBeVisible();
+        await expect(
+            page.getByText(
+                `${DISCOUNT} vale solo de 09:00 a 18:00. Los horarios que la tienen dicen «con promo».`,
+            ),
         ).toBeVisible();
         await page.getByRole('radio').nth(1).click();
         await expect(
@@ -265,6 +282,9 @@ test.describe('Promociones: lo que ve el cliente', () => {
         // Ticked by default: booked at the promotion's price.
         await chooseUntilClient();
         await expect(toggle).toBeChecked();
+        await expect(toggle).toHaveAccessibleDescription(
+            'Si la desmarcas, la cita se cobra al precio normal. Díselo a la persona antes de guardar.',
+        );
         await expect(summary).toContainText(PROMOTION_LINE);
         await expect(summary).toContainText('Precio normal S/ 40.00S/ 30.00');
         await page

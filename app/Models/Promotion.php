@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\BelongsToSalon;
+use App\Domain\Promotions\PromotionFacts;
 use App\Domain\Promotions\PromotionTerms;
 use App\Enums\PromotionMechanic;
 use App\Enums\PromotionStatus;
@@ -109,6 +110,25 @@ class Promotion extends Model
         return $this->services->isNotEmpty()
             && $this->services->every($isOffered)
             && ($this->mechanic !== PromotionMechanic::Gift || $isOffered($this->giftService));
+    }
+
+    /**
+     * What its fine print says besides the terms. Takes the salon: it is
+     * also read where none is current.
+     */
+    public function facts(Salon $salon): PromotionFacts
+    {
+        $gift = $this->giftService;
+
+        return new PromotionFacts(
+            salonName: $salon->name,
+            quota: $this->quota,
+            oncePerClient: $this->once_per_client,
+            giftName: $gift?->name,
+            giftPriceCents: $gift?->price_cents,
+            giftMinutes: $gift === null ? null : $gift->active_minutes + $gift->idle_minutes + $gift->finish_minutes,
+            hasDeposit: $salon->deposit_percent > 0,
+        );
     }
 
     public function terms(): PromotionTerms

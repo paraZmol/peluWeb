@@ -31,7 +31,10 @@ class SalonPromotions
     {
         $today = $salon->localNow()->toDateString();
         $promotions = Promotion::withoutGlobalScope('salon')->where('salon_id', $salon->id)
-            ->with(['services', 'giftService'])->latest('id')->limit(self::LIMIT)->get();
+            ->with(['services', 'giftService'])
+            // The ones that can still apply first: drafts never push them out of the list.
+            ->orderByRaw('status = ? desc', [PromotionStatus::Published->value])
+            ->latest('id')->limit(self::LIMIT)->get();
         $results = $this->results($promotions);
 
         return $promotions->map(fn (Promotion $promotion): array => $this->card($promotion, $salon, $today, $results->get($promotion->id)))->values()->all();
@@ -61,6 +64,7 @@ class SalonPromotions
         $names = array_values($promotion->services->sortBy('position')->map(fn (Service $service): string => $service->name)->all());
         $state = $this->state($promotion, $today);
         $from = $promotion->from_minute;
+        $written = PromotionCopy::title($promotion->terms(), $names, $promotion->giftService?->name);
         $clock = fn (?int $minute): ?string => $minute === null ? null : sprintf('%02d:%02d', intdiv($minute, 60), $minute % 60);
 
         return [
@@ -68,12 +72,15 @@ class SalonPromotions
             'card' => $promotion->card,
             'mechanic' => $promotion->mechanic->value,
             'name' => $promotion->name,
+            // Goes with a title the owner typed wherever it is shared.
+            'summary' => $written === $promotion->name ? null : $written,
             'overline' => $promotion->overline,
             'state' => $state->value,
             'stateLabel' => $state->label(),
             'startsOn' => $promotion->starts_on->toDateString(),
             'endsOn' => $promotion->ends_on->toDateString(),
-            'finePrint' => PromotionCopy::finePrint($promotion->terms(), $names, $promotion->quota, $promotion->once_per_client),
+            'finePrint' => PromotionCopy::finePrint($promotion->terms(), $names, $promotion->facts($salon)),
+            'period' => PromotionCopy::period($promotion->starts_on->toDateString(), $promotion->ends_on->toDateString()),
             'when' => PromotionCopy::when($promotion->terms()),
             'shareUrl' => route('salons.promotions.show', [$salon->slug, $promotion->share_code]),
             // Bookings were promised what it says: most of it can no longer change.

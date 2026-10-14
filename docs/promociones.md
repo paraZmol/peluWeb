@@ -49,19 +49,31 @@ imagen descargable para Instagram.
 - **Máximo 3 promociones activas** por salón. En todos los planes y en la prueba gratis.
 - **Quién**: crear, pausar y editar es solo del dueño. En reservas creadas por el personal la
   promoción aparece premarcada y se puede quitar.
-- **Letra chica**, armada sola y no editable: "Válido para citas del {inicio} al {fin}. Aplica a:
-  {servicios}. [Solo {días}, de {hora} a {hora}.] [Cupos: {n}. | Sin límite de cupos, sujeto a
-  horarios disponibles.] [Una por cliente.] Con reserva previa. No acumulable con otras
-  promociones. Precios en soles con IGV incluido." (Art. 14 de la Ley 29571, citado de memoria:
-  **confirmar con el texto legal antes del paso 9.4**; si piden un número de cupos, el campo pasa
-  a obligatorio con 30 por defecto.)
+- **Letra chica**, armada sola y no editable (versión del 2026-10-13, tras la revisión de
+  `legal-compliance`; la escribe `PromotionCopy::finePrint` y dice todo lo que el motor aplica):
+  "Promoción de {salón}. Válido para citas del {día} al {día} de {mes} de {año}. Aplica a:
+  {servicios}. [Solo {días}, en citas que empiecen entre las {hora} y las {hora}.] [Cupos: {n}
+  reservas. | Sin límite de cupos: vale para todas las citas que se reserven dentro de estas
+  fechas, mientras haya horarios libres.] [Una por cliente.] [El descuento de S/ {monto} se aplica
+  una sola vez por reserva.] [El regalo ({servicio}, precio normal S/ {precio}) se hace en la
+  misma cita y alarga la cita {n} min. No se cambia por dinero ni por otro servicio.] Si cambias
+  tu cita, la promoción se mantiene solo si la nueva fecha y hora cumplen estas condiciones. [El
+  precio con promoción se reserva hasta el plazo para enviar la seña.] Con reserva previa. No se
+  suma a otras promociones: si tu cita cumple más de una, se aplica la de mayor ahorro. Precios
+  finales en soles, con impuestos incluidos." Borrador: **lo confirma un abogado antes del paso
+  9.4**; si pide un número de cupos, el campo pasa a obligatorio con 30 por defecto.
+- **Lo que se anuncia** (2026-10-13): una promoción con los cupos agotados deja de anunciarse (su
+  enlace dice que ya no está disponible); la duración y los cupos se leen en la tarjeta y en los
+  textos para compartir sin abrir las condiciones; un título escrito por el salón va siempre
+  acompañado del título automático; y una reserva nunca se guarda a un precio distinto del que
+  la persona vio al confirmar (si la promoción se fue, no se crea y se le pide elegir de nuevo).
 
 ### Precisiones del motor (2026-10-12, tras el ataque de `booking-breaker`)
 - Los cupos y "una por cliente" se cuentan con la fila de la promoción bloqueada y con lecturas
   bloqueantes: una lectura normal contaría con la foto anterior a la espera del bloqueo.
 - Una reserva cuya retención venció devolvió su cupo. Si otra reserva lo tomó, "Seña recibida" se
-  rechaza con un mensaje que pide cancelarla y crear una nueva a precio normal (igual que cuando
-  alguien tomó el horario).
+  rechaza con un mensaje que pide avisar a la persona: si acepta el precio normal, cancelar y
+  crear una nueva; si no, devolverle la seña completa.
 - El monto fijo solo se aplica a un servicio que cueste **más** que el monto con ese profesional o
   esa variante (nunca deja un servicio gratis) y el resultado se redondea hacia abajo a 10 céntimos.
 - El porcentaje nunca redondea un servicio a S/ 0.
@@ -89,8 +101,7 @@ imagen descargable para Instagram.
   cita). Desde el enlace de la promoción, A y B llegan marcados.
 - Reglas: B entra como una línea más, S/ 0 cobrado y precio normal guardado; la duración incluye
   a B; solo profesionales que hacen A y B; si se quita A, B vuelve a precio normal; un regalo por
-  reserva. Letra chica extra: "El servicio de regalo se realiza en la misma cita y no es
-  canjeable por dinero ni por otro servicio."
+  reserva. Letra chica extra: la frase del regalo de la sección "Letra chica".
 
 ### Horas flojas
 - Los campos de Descuento con días y horas a la vista y obligatorios (por defecto lunes a

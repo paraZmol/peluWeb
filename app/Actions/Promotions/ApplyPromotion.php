@@ -52,11 +52,13 @@ class ApplyPromotion
         }
 
         $first = CarbonImmutable::createFromTimestampUTC($starts[0])->setTimezone($salon->timezone);
-        $running = $this->running($salon, $first->toDateString());
+        // Places do not depend on the time of day: counted once for all of them.
+        $running = $this->running($salon, $first->toDateString())
+            ->filter(fn (Promotion $promotion): bool => $this->hasRoom($promotion, $client, false));
         $marked = [];
 
         foreach ($running->isEmpty() ? [] : $starts as $start) {
-            $priced = $this->pick($running, $client, $quote, CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone), false);
+            $priced = $this->pick($running, $client, $quote, CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone), false, countPlaces: false);
 
             if ($priced->promotion !== null) {
                 $marked[$start] = ['name' => $priced->promotion->name, 'cents' => $priced->promotionCents()];
@@ -85,7 +87,7 @@ class ApplyPromotion
     /**
      * @param  Collection<int, Promotion>  $running
      */
-    private function pick(Collection $running, ?SalonClient $client, BookingQuote $quote, CarbonImmutable $localStart, bool $underLock): BookingQuote
+    private function pick(Collection $running, ?SalonClient $client, BookingQuote $quote, CarbonImmutable $localStart, bool $underLock, bool $countPlaces = true): BookingQuote
     {
         if ($running->isEmpty()) {
             return $quote;
@@ -101,7 +103,7 @@ class ApplyPromotion
             /** @var Promotion $promotion */
             $promotion = $running->get($terms->id);
 
-            if ($this->hasRoom($promotion, $client, $underLock)) {
+            if (! $countPlaces || $this->hasRoom($promotion, $client, $underLock)) {
                 return $quote->withPromotion($terms);
             }
         }
@@ -130,6 +132,15 @@ class ApplyPromotion
 
         return ($promotion->quota === null || $others()->count() < $promotion->quota)
             && (! $promotion->once_per_client || $others()->where('salon_client_id', $booking->salon_client_id)->count() === 0);
+    }
+
+    /**
+     * Whether anyone could still get it: for what is advertised to the
+     * public, not for a booking (that one counts again, under the lock).
+     */
+    public function hasPlacesLeft(Promotion $promotion): bool
+    {
+        return $promotion->quota === null || $this->taken($promotion, false)->count() < $promotion->quota;
     }
 
     /**

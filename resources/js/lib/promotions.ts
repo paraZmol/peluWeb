@@ -68,11 +68,39 @@ export function soles(cents: number): string {
     return cents % 100 === 0 ? String(cents / 100) : fromCents(cents);
 }
 
-/** "2026-10-05" → "5 de octubre". */
-function longDay(date: string): string {
-    const [, month, day] = date.split('-').map(Number);
+/** The service given away: its name, its normal price and how long it takes. */
+export type GiftFacts = { name: string; priceCents: number; minutes: number };
 
-    return `${day} de ${MONTHS[month - 1]}`;
+/**
+ * What the fine print says besides the terms: whose it is and the limits
+ * the salon set on it (App\Domain\Promotions\PromotionFacts).
+ */
+export type PromotionFacts = {
+    salonName: string;
+    /** Bookings it takes; null = no limit. */
+    quota: number | null;
+    isOncePerClient: boolean;
+    /** The salon asks for a deposit: the price is held until it is due. */
+    hasDeposit: boolean;
+    gift?: GiftFacts | null;
+};
+
+/**
+ * "del 5 al 18 de octubre de 2026"; with the month, and the year, of each
+ * end when they differ.
+ */
+export function promotionPeriod(startsOn: string, endsOn: string): string {
+    const [fromYear, fromMonth, fromDay] = startsOn.split('-').map(Number);
+    const [toYear, toMonth, toDay] = endsOn.split('-').map(Number);
+    const to = `${toDay} de ${MONTHS[toMonth - 1]} de ${toYear}`;
+
+    if (fromYear !== toYear) {
+        return `del ${fromDay} de ${MONTHS[fromMonth - 1]} de ${fromYear} al ${to}`;
+    }
+
+    return fromMonth !== toMonth
+        ? `del ${fromDay} de ${MONTHS[fromMonth - 1]} al ${to}`
+        : `del ${fromDay} al ${to}`;
 }
 
 /** "20 % menos en Corte", "S/ 10 menos en Manicure", "Rasurado gratis con tu Corte". */
@@ -95,47 +123,76 @@ export function promotionTitle(
         : `S/ ${soles(terms.amountCents ?? 0)} menos en ${services}`;
 }
 
-/** "lunes, martes y miércoles, de 10:00 a 16:00"; null when it names neither. */
-export function promotionWhen(terms: CopyTerms): string | null {
-    const days =
-        terms.weekdays === null || terms.weekdays.length === 0
-            ? null
-            : list(
-                  [...terms.weekdays]
-                      .sort((a, b) => a - b)
-                      .map((day) => WEEKDAYS[day - 1]),
-              );
-    const hours =
-        terms.fromTime === null || terms.toTime === null
-            ? null
-            : `de ${terms.fromTime} a ${terms.toTime}`;
-
-    return days !== null && hours !== null
-        ? `${days}, ${hours}`
-        : (days ?? hours);
+/** "lunes, martes y miércoles"; null for every day. */
+function daysOf(terms: CopyTerms): string | null {
+    return terms.weekdays === null || terms.weekdays.length === 0
+        ? null
+        : list(
+              [...terms.weekdays]
+                  .sort((a, b) => a - b)
+                  .map((day) => WEEKDAYS[day - 1]),
+          );
 }
 
-/** What it is valid for, said in full and the same way every time. */
+/** The days and the hours, each when it is named; null with neither. */
+function daysAndHours(
+    terms: CopyTerms,
+    hours: (from: string, to: string) => string,
+): string | null {
+    const days = daysOf(terms);
+    const between =
+        terms.fromTime === null || terms.toTime === null
+            ? null
+            : hours(terms.fromTime, terms.toTime);
+
+    return days !== null && between !== null
+        ? `${days}, ${between}`
+        : (days ?? between);
+}
+
+/** "lunes, martes y miércoles, de 10:00 a 16:00"; null when it names neither. */
+export function promotionWhen(terms: CopyTerms): string | null {
+    return daysAndHours(terms, (from, to) => `de ${from} a ${to}`);
+}
+
+/** What the gift is worth and what taking it means for the visit. */
+function giftTerms({ name, priceCents, minutes }: GiftFacts): string {
+    return `El regalo (${name}, precio normal S/ ${soles(priceCents)}) se hace en la misma cita y alarga la cita ${minutes} min. No se cambia por dinero ni por otro servicio.`;
+}
+
+/**
+ * What it is valid for, said in full and the same way every time: whose it
+ * is, how long it runs, how many it takes and every limit the engine applies.
+ */
 export function promotionFinePrint(
     terms: CopyTerms,
     serviceNames: string[],
-    quota: number | null,
-    isOncePerClient: boolean,
+    facts: PromotionFacts,
 ): string {
-    const when = promotionWhen(terms);
+    // By when the visit starts: that is how the engine reads the hours.
+    const when = daysAndHours(
+        terms,
+        (from, to) => `en citas que empiecen entre las ${from} y las ${to}`,
+    );
 
     return [
-        `Válido para citas del ${longDay(terms.startsOn)} al ${longDay(terms.endsOn)}.`,
+        `Promoción de ${facts.salonName}.`,
+        `Válido para citas ${promotionPeriod(terms.startsOn, terms.endsOn)}.`,
         `Aplica a: ${serviceNames.join(', ')}.`,
         when === null ? null : `Solo ${when}.`,
-        quota === null
-            ? 'Sin límite de cupos, sujeto a horarios disponibles.'
-            : `Cupos: ${quota}.`,
-        isOncePerClient ? 'Una por cliente.' : null,
-        terms.mechanic === 'gift'
-            ? 'El servicio de regalo se realiza en la misma cita y no es canjeable por dinero ni por otro servicio.'
+        facts.quota === null
+            ? 'Sin límite de cupos: vale para todas las citas que se reserven dentro de estas fechas, mientras haya horarios libres.'
+            : `${quotaLabel(facts.quota)}.`,
+        facts.isOncePerClient ? 'Una por cliente.' : null,
+        terms.amountCents !== null && serviceNames.length > 1
+            ? `El descuento de S/ ${soles(terms.amountCents)} se aplica una sola vez por reserva.`
             : null,
-        'Con reserva previa. No acumulable con otras promociones. Precios en soles con IGV incluido.',
+        terms.mechanic === 'gift' && facts.gift ? giftTerms(facts.gift) : null,
+        'Si cambias tu cita, la promoción se mantiene solo si la nueva fecha y hora cumplen estas condiciones.',
+        facts.hasDeposit
+            ? 'El precio con promoción se reserva hasta el plazo para enviar la seña.'
+            : null,
+        'Con reserva previa. No se suma a otras promociones: si tu cita cumple más de una, se aplica la de mayor ahorro. Precios finales en soles, con impuestos incluidos.',
     ]
         .filter((part) => part !== null)
         .join(' ');
@@ -189,30 +246,55 @@ export function dateRange(startsOn: string, endsOn: string): string {
     return `${shortDay(startsOn)} – ${shortDay(endsOn)}`;
 }
 
-type Shared = Pick<
-    Promotion,
-    'name' | 'overline' | 'startsOn' | 'endsOn' | 'shareUrl'
->;
+type Titled = Pick<Promotion, 'name' | 'overline'>;
+
+/** What the words to share a promotion are written from. */
+export type SharedPromotion = Titled &
+    Pick<Promotion, 'period' | 'shareUrl' | 'summary'> & {
+        form: Pick<Promotion['form'], 'quota'>;
+    };
 
 /** "Halloween · 20 % menos en Corte": the campaign goes before the title. */
-export function fullTitle(promotion: Pick<Shared, 'name' | 'overline'>) {
+export function fullTitle(promotion: Titled): string {
     return promotion.overline
         ? `${promotion.overline} · ${promotion.name}`
         : promotion.name;
 }
 
-/** Opens WhatsApp with the title and the link, to pick who gets it. */
-export function whatsappShareUrl(promotion: Shared): string {
-    const text = `${fullTitle(promotion)}\n${promotion.shareUrl}`;
+/** "Cupos: 30 reservas"; null without a limit. */
+export function quotaLabel(quota: number | null): string | null {
+    if (quota === null) {
+        return null;
+    }
 
-    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+    return `Cupos: ${quota} ${quota === 1 ? 'reserva' : 'reservas'}`;
 }
 
-/** A caption to paste under a post: title, dates and where to book. */
-export function instagramText(promotion: Shared): string {
+/**
+ * What goes with a shared promotion wherever it is posted: its title, how
+ * long it runs, how many it takes and where its conditions are.
+ */
+function shareText(promotion: SharedPromotion): string {
+    const quota = quotaLabel(promotion.form.quota);
+
     return [
         fullTitle(promotion),
-        `Del ${longDay(promotion.startsOn)} al ${longDay(promotion.endsOn)}.`,
-        `Reserva aquí: ${promotion.shareUrl}`,
-    ].join('\n');
+        // Under a title of the salon's own, what it does.
+        promotion.summary === null ? null : `${promotion.summary}.`,
+        `Válido ${promotion.period}.`,
+        quota === null ? null : `${quota}.`,
+        `Condiciones y reserva: ${promotion.shareUrl}`,
+    ]
+        .filter((line) => line !== null)
+        .join('\n');
+}
+
+/** Opens WhatsApp with the words and the link, to pick who gets it. */
+export function whatsappShareUrl(promotion: SharedPromotion): string {
+    return `https://wa.me/?text=${encodeURIComponent(shareText(promotion))}`;
+}
+
+/** A caption to paste under a post. */
+export function instagramText(promotion: SharedPromotion): string {
+    return shareText(promotion);
 }

@@ -8,6 +8,8 @@ import { login, watchForErrors } from './support';
 const PHONE = { width: 390, height: 844 };
 const DISCOUNT = '20 % menos en Corte de promo';
 const QUIET_HOURS = 'lunes, martes y miércoles, de 10:00 a 16:00';
+const QUIET_STARTS =
+    'lunes, martes y miércoles, en citas que empiecen entre las 10:00 y las 16:00';
 
 async function hasHorizontalScroll(page: Page): Promise<boolean> {
     return page.evaluate(
@@ -87,7 +89,14 @@ test.describe('Promociones del salón', () => {
             'Quien atiende comisiona sobre S/ 28.',
         );
         await expect(preview).toContainText('Seña: S/ 8.40.');
+        // The fine print says whose it is, and that the salon asks a deposit.
+        await expect(preview).toContainText(
+            `Promoción de Salón Promos ${isPhone ? 'Movil' : 'Escritorio'}.`,
+        );
         await expect(preview).toContainText('Aplica a: Corte de promo.');
+        await expect(preview).toContainText(
+            'El precio con promoción se reserva hasta el plazo para enviar la seña.',
+        );
         expect(await hasHorizontalScroll(page)).toBe(false);
 
         await sheet.getByRole('button', { name: 'Publicar' }).click();
@@ -110,14 +119,39 @@ test.describe('Promociones del salón', () => {
         ).toContain(`/salon-promos-${testInfo.project.name}/`);
         await expect(
             share.getByRole('link', { name: 'Enviar por WhatsApp' }),
-        ).toHaveAttribute('href', /^https:\/\/wa\.me\/\?text=20/);
+        ).toHaveAttribute(
+            'href',
+            /^https:\/\/wa\.me\/\?text=20.*V%C3%A1lido%20del.*Condiciones%20y%20reserva/,
+        );
         await page.keyboard.press('Escape');
         await expect(share).toHaveCount(0);
+
+        // Pausing asks first, saying what it means; "Volver" leaves it running.
+        await card(page, DISCOUNT)
+            .getByRole('button', { name: 'Pausar' })
+            .click();
+        const pausing = page.getByRole('dialog', {
+            name: '¿Pausar esta promoción?',
+        });
+        await expect(pausing).toContainText('Deja de ofrecerse desde ahora.');
+        await expect(pausing).toContainText(
+            'Las reservas ya hechas conservan su precio',
+        );
+        await expect(pausing).toContainText(
+            'quien tenga el enlace verá que ya no está disponible',
+        );
+        expect(await hasHorizontalScroll(page)).toBe(false);
+        await pausing.getByRole('button', { name: 'Volver' }).click();
+        await expect(pausing).toHaveCount(0);
+        await expect(card(page, DISCOUNT)).toContainText('Activa');
 
         // Paused, then copied: the copy is a draft that can be thrown away.
         await card(page, DISCOUNT)
             .getByRole('button', { name: 'Pausar' })
             .click();
+        await pausing.getByRole('button', { name: 'Sí, pausar' }).click();
+        await expect(page.getByText(/^Promoción en pausa\./)).toBeVisible();
+        await expect(pausing).toHaveCount(0);
         await expect(card(page, DISCOUNT)).toContainText('Pausada');
 
         await card(page, DISCOUNT)
@@ -146,7 +180,7 @@ test.describe('Promociones del salón', () => {
         await quiet.getByRole('checkbox', { name: /Barba de promo/ }).check();
         await expect(
             quiet.getByRole('region', { name: 'Vista previa' }),
-        ).toContainText(`Solo ${QUIET_HOURS}.`);
+        ).toContainText(`Solo ${QUIET_STARTS}.`);
         await quiet.getByRole('button', { name: 'Guardar borrador' }).click();
         await expect(page.getByText('Promoción guardada.')).toBeVisible();
 

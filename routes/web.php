@@ -268,10 +268,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('promociones', [PromotionController::class, 'index'])->name('promotions.index');
         Route::post('promociones', [PromotionController::class, 'store'])->middleware('throttle:30,1,promotions')->name('promotions.store');
         Route::put('promociones/{promotion}', [PromotionController::class, 'update'])->middleware('throttle:30,1,promotions')->name('promotions.update');
-        Route::post('promociones/{promotion}/publicar', [PromotionController::class, 'publish'])->name('promotions.publish');
-        Route::post('promociones/{promotion}/pausar', [PromotionController::class, 'pause'])->name('promotions.pause');
-        Route::post('promociones/{promotion}/duplicar', [PromotionController::class, 'duplicate'])->name('promotions.duplicate');
-        Route::delete('promociones/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
+        Route::post('promociones/{promotion}/publicar', [PromotionController::class, 'publish'])->middleware('throttle:30,1,promotions')->name('promotions.publish');
+        Route::post('promociones/{promotion}/pausar', [PromotionController::class, 'pause'])->middleware('throttle:30,1,promotions')->name('promotions.pause');
+        Route::post('promociones/{promotion}/duplicar', [PromotionController::class, 'duplicate'])->middleware('throttle:30,1,promotions')->name('promotions.duplicate');
+        Route::delete('promociones/{promotion}', [PromotionController::class, 'destroy'])->middleware('throttle:30,1,promotions')->name('promotions.destroy');
 
         Route::get('servicios', [ServiceController::class, 'index'])->name('services.index');
         Route::post('servicios', [ServiceController::class, 'store'])->name('services.store');

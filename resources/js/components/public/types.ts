@@ -95,11 +95,20 @@ export type PromotionPrice = {
 export type PublicPromotion = {
     id: number;
     name: string;
+    /**
+     * What it does, in the system's words ("20 % menos en Corte"), under a
+     * title the salon typed; null when the title already says it.
+     */
+    summary: string | null;
     /** The campaign it belongs to ("Halloween"), above the title. */
     overline: string | null;
     mechanic: 'discount' | 'gift';
     /** "Y-m-d": the last day a visit can use it. */
     endsOn: string;
+    /** "del 5 al 18 de octubre de 2026": the visits it is valid for. */
+    period: string;
+    /** Bookings it takes; null without a limit. */
+    quota: number | null;
     /** "lunes y martes, de 10:00 a 16:00"; null when it holds at any time. */
     when: string | null;
     finePrint: string;
@@ -116,6 +125,9 @@ export type PublicPromotion = {
 
 export type PublicPromotions = {
     items: PublicPromotion[];
-    /** Set when the visitor came through a promotion's own link. */
+    /**
+     * Set when the visitor came through a promotion's own link. `hasEnded`:
+     * it is not on offer (over, paused, out of places or never was).
+     */
     shared: { id: number | null; hasEnded: boolean } | null;
 };

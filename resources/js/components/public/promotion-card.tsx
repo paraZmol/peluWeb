@@ -1,6 +1,14 @@
 import { Link } from '@inertiajs/react';
-import { ArrowRight, CalendarDays, Clock, Gift, Percent } from 'lucide-react';
-import { formatLongDate, formatPrice } from '@/lib/format';
+import {
+    ArrowRight,
+    CalendarDays,
+    Clock,
+    Gift,
+    Percent,
+    Ticket,
+} from 'lucide-react';
+import { formatPrice } from '@/lib/format';
+import { quotaLabel } from '@/lib/promotions';
 import { PRIMARY_ACTION, SOFT_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import { create as bookingWizard } from '@/routes/salons/booking';
@@ -19,7 +27,10 @@ type Props = {
     className?: string;
 };
 
-/** One promotion as the visitor reads it: what, how much, until when. */
+/**
+ * One promotion as the visitor reads it: what, how much, when and for how
+ * many, all of it without opening the conditions.
+ */
 export function PromotionCard({
     promotion,
     serviceNames,
@@ -28,6 +39,7 @@ export function PromotionCard({
     className,
 }: Props) {
     const { gift } = promotion;
+    const quota = quotaLabel(promotion.quota);
     const Icon = gift ? Gift : Percent;
 
     return (
@@ -66,6 +78,11 @@ export function PromotionCard({
                     <h3 className="display-type text-title-3 break-words">
                         {promotion.name}
                     </h3>
+                    {promotion.summary && (
+                        <p className="font-semibold break-words">
+                            {promotion.summary}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -97,8 +114,17 @@ export function PromotionCard({
                         className="mt-0.5 size-4 shrink-0"
                         aria-hidden
                     />
-                    Hasta el {formatLongDate(promotion.endsOn)}
+                    Válido {promotion.period}
                 </li>
+                {quota && (
+                    <li className="flex items-start gap-2 tabular-nums">
+                        <Ticket
+                            className="mt-0.5 size-4 shrink-0"
+                            aria-hidden
+                        />
+                        {quota}
+                    </li>
+                )}
             </ul>
 
             <div className="mt-auto flex flex-col gap-1">

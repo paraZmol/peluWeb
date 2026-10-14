@@ -136,6 +136,27 @@ it('stops marking the starts once the promotion has no places left', function ()
     expect($marked())->toBe(0);
 });
 
+it('stops advertising a promotion once nobody could get it', function () {
+    $promotion = publicPromo(['quota' => 1, 'name' => 'Martes de Corte']);
+    $shown = fn () => $this->get(route('salons.show', ['salon' => $this->salon->slug, 'promo' => $promotion->share_code]));
+
+    $shown()->assertInertia(fn (Assert $page) => $page
+        ->has('promotions.items', 1)
+        ->where('promotions.items.0.quota', 1)
+        ->where('promotions.items.0.period', 'del 5 al 18 de octubre de 2026')
+        // Their own title never hides what it does.
+        ->where('promotions.items.0.summary', '20 % menos en Corte'));
+
+    $this->actingAs($this->maria)->post(route('salons.booking.store', $this->salon), [
+        'services' => [['id' => $this->cut->id]],
+        'start' => CarbonImmutable::parse('2026-10-07 10:00', 'America/Lima')->getTimestamp(),
+    ])->assertSessionHasNoErrors();
+    auth()->logout();
+
+    // The shared link says it is over instead of promising a price.
+    $shown()->assertInertia(fn (Assert $page) => $page->has('promotions.items', 0)->where('promotions.shared.hasEnded', true));
+});
+
 it('tells the client what the promotion took off, on the booking and in the mail', function () {
     publicPromo();
 
@@ -170,4 +191,33 @@ it('lets the team book at the normal price on purpose', function () {
 
     $prices = Booking::withoutGlobalScope('salon')->orderBy('starts_at')->pluck('price_cents')->all();
     expect($prices)->toBe([2800, 3500]);
+});
+
+it('books nothing, and says so, when the promotion they confirmed is gone', function () {
+    $promotion = publicPromo();
+    $book = fn (array $with = []) => $this->actingAs($this->maria)->post(route('salons.booking.store', $this->salon), [
+        'services' => [['id' => $this->cut->id]],
+        'start' => CarbonImmutable::parse('2026-10-07 10:00', 'America/Lima')->getTimestamp(),
+        ...$with,
+    ]);
+
+    // Paused between seeing the price and confirming it.
+    $promotion->forceFill(['status' => PromotionStatus::Paused])->save();
+    $book(['expects_promotion' => true])->assertInertiaFlash('toast.type', 'error')
+        // Sent back to the times: the wizard reads "horario" in what failed.
+        ->assertInertiaFlash('toast.message', 'La promoción ya no está disponible para ese horario. Elige el horario de nuevo: verás el precio actualizado antes de confirmar.');
+    expect(Booking::withoutGlobalScope('salon')->count())->toBe(0);
+
+    // Having seen the normal price, they book at it.
+    $book(['expects_promotion' => false])->assertSessionHasNoErrors();
+    expect(Booking::withoutGlobalScope('salon')->sole()->price_cents)->toBe(3500);
+});
+
+it('takes a shared code only in the shape codes have', function () {
+    publicPromo();
+
+    $this->get('/s/'.$this->salon->slug.'?promo[]=x')->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('promotions.shared', null));
+    $this->get('/s/'.$this->salon->slug.'?promo=%3Cscript%3E')->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('promotions.shared', null));
 });

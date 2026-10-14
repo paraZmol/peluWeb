@@ -16,6 +16,8 @@ use App\Support\Money;
  */
 class PublicPromotions
 {
+    public function __construct(private readonly ApplyPromotion $apply) {}
+
     /**
      * @param  string|null  $sharedCode  the code of a shared link, when the visitor came through one
      * @return array{items: array<int, array<string, mixed>>, shared: array{id: int|null, hasEnded: bool}|null}
@@ -30,13 +32,14 @@ class PublicPromotions
             ->orderBy('ends_on')
             ->orderBy('id')
             ->get()
-            ->filter(fn (Promotion $promotion): bool => $promotion->isIntact())
+            // One with no places left is not advertised: nobody could get it.
+            ->filter(fn (Promotion $promotion): bool => $promotion->isIntact() && $this->apply->hasPlacesLeft($promotion))
             ->values();
 
-        $shared = $sharedCode === null ? null : $running->firstWhere('share_code', $sharedCode);
+        $shared = $sharedCode === null ? null : $running->first(fn (Promotion $promotion): bool => $promotion->share_code === $sharedCode);
 
         return [
-            'items' => $running->map(fn (Promotion $promotion): array => $this->item($promotion))->all(),
+            'items' => $running->map(fn (Promotion $promotion): array => $this->item($promotion, $salon))->all(),
             // A link to one that is over, or that never was, still lands on the
             // page: it says so and offers to book at the normal price.
             'shared' => $sharedCode === null ? null : ['id' => $shared?->id, 'hasEnded' => $shared === null],
@@ -46,26 +49,28 @@ class PublicPromotions
     /**
      * @return array<string, mixed>
      */
-    private function item(Promotion $promotion): array
+    private function item(Promotion $promotion, Salon $salon): array
     {
         $terms = $promotion->terms();
         $services = $promotion->services->sortBy('position')->values();
+        $names = array_values($services->map(fn (Service $service): string => $service->name)->all());
         $gift = $promotion->giftService;
+        $written = PromotionCopy::title($terms, $names, $gift?->name);
 
         return [
             'id' => $promotion->id,
             'name' => $promotion->name,
+            // What it does, in the system's words, under a title the owner typed.
+            'summary' => $written === $promotion->name ? null : $written,
             'overline' => $promotion->overline,
             'mechanic' => $promotion->mechanic->value,
             'endsOn' => $promotion->ends_on->toDateString(),
+            // Read without opening the conditions: how long it runs and how many it takes.
+            'period' => PromotionCopy::period($terms->startsOn, $terms->endsOn),
+            'quota' => $promotion->quota,
             // "lunes a miércoles, de 10:00 a 16:00"; null when it holds every day and hour.
             'when' => PromotionCopy::when($terms),
-            'finePrint' => PromotionCopy::finePrint(
-                $terms,
-                array_values($services->map(fn (Service $service): string => $service->name)->all()),
-                $promotion->quota,
-                $promotion->once_per_client,
-            ),
+            'finePrint' => PromotionCopy::finePrint($terms, $names, $promotion->facts($salon)),
             'serviceIds' => $services->modelKeys(),
             // What each included service costs with it, from its catalogue price:
             // a professional's own price or a chosen option may change it.

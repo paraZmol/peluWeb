@@ -20,7 +20,16 @@ import { depositCents } from './promotions';
 const cents = (amount: string): number => toCents(amount) ?? 0;
 
 /** What a service costs normally and with the best promotion that lowers it. */
-export type ServiceOffer = { normal: string; promo: string; isFrom: boolean };
+export type ServiceOffer = {
+    normal: string;
+    promo: string;
+    isFrom: boolean;
+    /** The promotion holds only on some days or hours: not every time gets it. */
+    isLimited: boolean;
+};
+
+/** Goes with a price that only some times of the week get. */
+export const LIMITED_PRICE_NOTE = 'en horarios con promo';
 
 /**
  * The lowest promotional price of each service. A service that only earns
@@ -31,9 +40,14 @@ export function bestOffers(
 ): Map<number, ServiceOffer> {
     const offers = new Map<number, ServiceOffer>();
 
-    for (const { serviceId, ...offer } of promotions.flatMap(
-        (promotion) => promotion.prices,
-    )) {
+    const priced = promotions.flatMap((promotion) =>
+        promotion.prices.map((price) => ({
+            ...price,
+            isLimited: promotion.when !== null,
+        })),
+    );
+
+    for (const { serviceId, ...offer } of priced) {
         const current = offers.get(serviceId);
         const lowers = cents(offer.promo) < cents(offer.normal);
 
@@ -157,6 +171,32 @@ export function promotionSelections(
         serviceId: service.id,
         variantId: service.variants[0]?.id ?? null,
     }));
+}
+
+/**
+ * What to know before picking a day and a time, when a promotion of the
+ * chosen services holds only on some: which ones, and how they are marked.
+ * Null when none of them is limited.
+ */
+export function limitedPromotionHint(
+    promotions: PublicPromotion[],
+    chosenIds: number[],
+): string | null {
+    const limited = promotions.filter(
+        (promotion) =>
+            promotion.when !== null &&
+            promotion.serviceIds.some((id) => chosenIds.includes(id)),
+    );
+
+    if (limited.length === 0) {
+        return null;
+    }
+
+    const [first] = limited;
+
+    return limited.length === 1
+        ? `${first.name} vale solo ${first.when}. Los horarios que la tienen dicen «con promo».`
+        : 'Hay promociones que valen solo algunos días u horas. Los horarios que las tienen dicen «con promo».';
 }
 
 /** The promotion a link asks the wizard to start from ("?promo=12"). */

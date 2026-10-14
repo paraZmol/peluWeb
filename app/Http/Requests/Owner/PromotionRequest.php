@@ -26,9 +26,16 @@ class PromotionRequest extends FormRequest
 
     public const int MAX_PERCENT = 70;
 
+    /** No line breaks, control or text-direction characters. */
+    private const string ONE_LINE = 'not_regex:/[\p{Cc}\p{Cf}]/u';
+
+    private const string NO_LINKS = 'not_regex:/(:\/\/|www\.)/i';
+
     public function authorize(): bool
     {
-        return true;
+        $salon = app(CurrentSalon::class)->get();
+
+        return $salon !== null && ($this->user()?->can('managePromotions', $salon) ?? false);
     }
 
     /**
@@ -60,8 +67,9 @@ class PromotionRequest extends FormRequest
             'to_time' => [$isQuietHours ? 'required' : 'nullable', 'date_format:H:i', 'required_with:from_time', 'different:from_time'],
             'quota' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'once_per_client' => ['boolean'],
-            'name' => ['nullable', 'string', 'max:120', self::PLAIN_TEXT],
-            'overline' => ['nullable', 'string', 'max:60', self::PLAIN_TEXT],
+            // One line of plain words: it goes into mails, shared texts and bookings.
+            'name' => ['nullable', 'string', 'max:120', self::PLAIN_TEXT, self::ONE_LINE, self::NO_LINKS],
+            'overline' => ['nullable', 'string', 'max:60', self::PLAIN_TEXT, self::ONE_LINE, self::NO_LINKS],
         ];
     }
 

@@ -20,6 +20,7 @@ final readonly class NewBooking
      * @param  SalonClient  $client  may be new and unsaved: it is stored together with the booking
      * @param  Staff|null  $staff  null = whoever is free
      * @param  bool  $withPromotion  false when the team books at the normal price on purpose
+     * @param  bool  $expectsPromotion  the client confirmed a price with a promotion: without one, nothing is booked
      */
     public function __construct(
         public Salon $salon,
@@ -31,5 +32,6 @@ final readonly class NewBooking
         public ?User $actor = null,
         public ?string $note = null,
         public bool $withPromotion = true,
+        public bool $expectsPromotion = false,
     ) {}
 }

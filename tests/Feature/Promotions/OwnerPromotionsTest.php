@@ -85,7 +85,7 @@ it('saves a draft with the title the system writes, and publishes it', function 
         ->where('promotions.0.state', 'active')
         ->where('promotions.0.stateLabel', 'Activa')
         ->where('promotions.0.isLocked', false)
-        ->where('promotions.0.finePrint', fn (string $text) => str_contains($text, 'Válido para citas del 7 de octubre al 21 de octubre.') && str_contains($text, 'Aplica a: Corte, Barba.'))
+        ->where('promotions.0.finePrint', fn (string $text) => str_contains($text, 'Válido para citas del 7 al 21 de octubre de 2026.') && str_contains($text, 'Aplica a: Corte, Barba.'))
         ->where('promotions.0.shareUrl', route('salons.promotions.show', [$this->salon->slug, $promotion->share_code]))
         ->has('services')
         ->where('limits.maxActive', 3));
@@ -251,4 +251,38 @@ it('sends a shared link to the salon\'s page, never to a 404', function () {
         ->assertRedirect(route('salons.show', ['salon' => $this->salon->slug, 'promo' => lastPromo()->share_code]));
     $this->get(route('salons.promotions.show', [$this->salon->slug, 'yanoexiste']))
         ->assertRedirect(route('salons.show', ['salon' => $this->salon->slug, 'promo' => 'yanoexiste']));
+});
+
+it('counts a published one again when its end is moved to a later day', function () {
+    savePromo(['publish' => true, 'name' => 'Vieja', 'starts_on' => '2026-10-07', 'ends_on' => '2026-10-08']);
+    $old = lastPromo();
+    $this->travelTo(CarbonImmutable::parse('2026-10-12 08:00', 'America/Lima'));
+    foreach (range(1, 3) as $number) {
+        savePromo(['publish' => true, 'name' => "Nueva {$number}", 'starts_on' => '2026-10-12', 'ends_on' => '2026-10-20'])->assertInertiaFlash('toast.type', 'success');
+    }
+
+    // Over, so it did not count; back to life it would be the fourth.
+    $this->actingAs($this->owner)->put(route('promotions.update', $old), promoForm(['name' => 'Vieja', 'starts_on' => '2026-10-07', 'ends_on' => '2026-10-25']))
+        ->assertInertiaFlash('toast.type', 'error');
+
+    expect($old->refresh()->ends_on->toDateString())->toBe('2026-10-08');
+});
+
+it('takes a title of one line of plain words', function (string $name) {
+    savePromo(['name' => $name])->assertSessionHasErrors('name');
+})->with([
+    'a line break' => ["Promo\nSegunda línea"],
+    'a link' => ['Gana S/ 500 en https://sitio.test'],
+    'a link without its scheme' => ['Entra a www.sitio.test'],
+    'text turned backwards' => ["Promo \u{202E}atrap"],
+]);
+
+it('keeps another salon from pausing it', function () {
+    savePromo(['publish' => true]);
+    $otherOwner = User::factory()->create();
+    app(CreateSalon::class)->handle($otherOwner, 'Otro Salón', BusinessType::Unisex, Clientele::Everyone);
+
+    $this->actingAs($otherOwner)->post(route('promotions.pause', lastPromo()->id))->assertNotFound();
+
+    expect(lastPromo()->status)->toBe(PromotionStatus::Published);
 });

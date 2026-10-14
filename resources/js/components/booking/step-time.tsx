@@ -1,6 +1,8 @@
+import { Tag } from 'lucide-react';
 import { useEffect } from 'react';
 import type { useAvailability } from '@/hooks/use-availability';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
+import { limitedPromotionHint } from '@/lib/promo-offers';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { DayStrip, toDate } from './day-strip';
 import { SlotGrid } from './slot-grid';
@@ -22,6 +24,10 @@ export function StepTime({ days, wizard, availability, waitlist }: Props) {
     const date = wizard.date ?? firstOpen;
     const { slots, error, isLoading, retry } = availability;
     const { chooseDate } = wizard;
+    const promotionHint = limitedPromotionHint(
+        wizard.promotions,
+        wizard.chosen.map((service) => service.id),
+    );
 
     // Start on the first day the salon opens, so the list is never empty by default.
     useEffect(() => {
@@ -51,6 +57,15 @@ export function StepTime({ days, wizard, availability, waitlist }: Props) {
                     className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm"
                 >
                     {wizard.notice}
+                </p>
+            )}
+            {promotionHint && (
+                <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Tag
+                        className="mt-0.5 size-4 shrink-0 text-brand-text"
+                        aria-hidden
+                    />
+                    {promotionHint}
                 </p>
             )}
             <div className="flex flex-col gap-2">

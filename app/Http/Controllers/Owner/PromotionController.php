@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Owner;
 use App\Actions\Promotions\ChangePromotionStatus;
 use App\Actions\Promotions\SalonPromotions;
 use App\Actions\Promotions\SavePromotion;
+use App\Enums\PromotionStatus;
 use App\Http\Requests\Owner\PromotionRequest;
 use App\Models\Promotion;
 use App\Models\Service;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -61,7 +63,17 @@ class PromotionController extends SalonAreaController
     {
         $salon = $this->salon(self::ABILITY);
 
-        return $this->saved($request, $status, $save->handle($salon, $request->draft(), $promotion));
+        // One transaction: a later end date on a published one counts against
+        // the three at a time, or nothing of it is saved.
+        return DB::transaction(function () use ($request, $status, $save, $salon, $promotion): RedirectResponse {
+            $saved = $save->handle($salon, $request->draft(), $promotion);
+
+            if ($saved->status === PromotionStatus::Published) {
+                $status->publish($salon, $saved);
+            }
+
+            return $this->saved($request, $status, $saved);
+        });
     }
 
     public function publish(Promotion $promotion, ChangePromotionStatus $status): RedirectResponse

@@ -64,8 +64,19 @@ class SalonPageController extends Controller
             // Null unless the salon shows its reviews.
             'reviews' => app(SalonReviews::class)->forPublic($salon),
             // What it is running today; `shared` when the visitor came by a promotion's link.
-            'promotions' => app(PublicPromotions::class)->handle($salon, $request->filled('promo') ? $request->string('promo')->limit(16, '')->toString() : null),
+            'promotions' => app(PublicPromotions::class)->handle($salon, self::sharedCode($request)),
         ])->withViewData(['meta' => $this->meta($salon), ...self::installData($salon)]);
+    }
+
+    /**
+     * The code of a shared promotion, only in the shape codes have: an
+     * array or anything else in its place is no code at all.
+     */
+    private static function sharedCode(Request $request): ?string
+    {
+        $code = $request->query('promo');
+
+        return is_string($code) && preg_match('/^[a-z0-9]{6,16}$/', $code) === 1 ? $code : null;
     }
 
     /**

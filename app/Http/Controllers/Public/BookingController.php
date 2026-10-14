@@ -113,6 +113,7 @@ class BookingController extends Controller
             source: BookingSource::Client,
             actor: $user,
             note: $request->validated('note'),
+            expectsPromotion: $request->boolean('expects_promotion'),
         ));
 
         Inertia::flash('toast', [

@@ -8,6 +8,7 @@ import {
     bookedPromotion,
     claimedGift,
     giftToOffer,
+    limitedPromotionHint,
     promotedTotal,
     promotionSelections,
     slotsPromotionNote,
@@ -24,7 +25,10 @@ function promo(with_: Partial<PublicPromotion>): PublicPromotion {
         name: '25 % menos en Corte',
         overline: null,
         mechanic: 'discount',
+        summary: null,
         endsOn: '2026-10-31',
+        period: 'del 5 al 31 de octubre de 2026',
+        quota: null,
         when: null,
         finePrint: '',
         serviceIds: [CUT],
@@ -115,7 +119,37 @@ describe('bestOffers', () => {
             normal: '40.00',
             promo: '30.00',
             isFrom: false,
+            isLimited: false,
         });
+    });
+
+    it('says when the price holds only on some days or hours', () => {
+        const quiet = promo({ when: 'de 09:00 a 18:00' });
+
+        expect(bestOffers([quiet]).get(CUT)?.isLimited).toBe(true);
+    });
+});
+
+describe('limitedPromotionHint', () => {
+    const quiet = promo({ when: 'de 09:00 a 18:00' });
+
+    it('says nothing when no promotion of the chosen services is limited', () => {
+        expect(limitedPromotionHint([discount, gift], [CUT, BEARD])).toBeNull();
+        expect(limitedPromotionHint([quiet], [BEARD])).toBeNull();
+    });
+
+    it('names the promotion, when it holds and how its times are marked', () => {
+        expect(limitedPromotionHint([quiet, gift], [CUT])).toBe(
+            '25 % menos en Corte vale solo de 09:00 a 18:00. Los horarios que la tienen dicen «con promo».',
+        );
+    });
+
+    it('does not name one when several are limited', () => {
+        const other = promo({ id: 14, when: 'lunes' });
+
+        expect(limitedPromotionHint([quiet, other], [CUT])).toBe(
+            'Hay promociones que valen solo algunos días u horas. Los horarios que las tienen dicen «con promo».',
+        );
     });
 });
 

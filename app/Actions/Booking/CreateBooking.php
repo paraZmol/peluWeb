@@ -168,6 +168,12 @@ class CreateBooking
             $quote = $this->quote->promote($data->salon, $client, $quote, $data->startsAt, underLock: true);
         }
 
+        // Its last place went, or it was paused, since they saw the price:
+        // they are told, not charged more than what they confirmed.
+        if ($data->expectsPromotion && $quote->promotion === null) {
+            throw BookingException::promotionGone();
+        }
+
         $deposit = $this->depositCents($data, $client, $quote->priceCents());
 
         $booking = new Booking;

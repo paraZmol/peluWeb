@@ -38,6 +38,7 @@ const context = {
     limits: { minPercent: 5, maxPercent: 70, maxDays: 90, maxActive: 3 },
     today: '2026-10-12',
     depositPercent: 30,
+    salonName: 'Estudio Luz',
 };
 
 const occasion = (key: string) => OCCASIONS.find((one) => one.key === key)!;
@@ -202,7 +203,10 @@ describe('previewOf', () => {
             'Seña: S/ 8.40.',
         ]);
         expect(preview?.finePrint).toContain(
-            'Válido para citas del 12 de octubre al 26 de octubre. Aplica a: Corte.',
+            'Promoción de Estudio Luz. Válido para citas del 12 al 26 de octubre de 2026. Aplica a: Corte.',
+        );
+        expect(preview?.finePrint).toContain(
+            'El precio con promoción se reserva hasta el plazo para enviar la seña.',
         );
     });
 
@@ -213,6 +217,7 @@ describe('previewOf', () => {
         );
 
         expect(preview?.summary).toHaveLength(2);
+        expect(preview?.finePrint).not.toContain('seña');
     });
 
     it('gives the gift at S/ 0 and warns about the commission', () => {
@@ -233,6 +238,9 @@ describe('previewOf', () => {
         });
         expect(preview?.summary).toContain(
             'Quien atiende no comisiona por el servicio de regalo.',
+        );
+        expect(preview?.finePrint).toContain(
+            'El regalo (Lavado, precio normal S/ 10) se hace en la misma cita y alarga la cita 10 min.',
         );
     });
 

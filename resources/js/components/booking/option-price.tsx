@@ -1,4 +1,5 @@
 import { formatPrice } from '@/lib/format';
+import { LIMITED_PRICE_NOTE } from '@/lib/promo-offers';
 import type { ServiceOffer } from '@/lib/promo-offers';
 
 type Props = {
@@ -32,6 +33,11 @@ export function OptionPrice({ price, hasOptions, offer, isGift }: Props) {
                 {normal && <span className="sr-only">Con promoción </span>}
                 {isGift ? 'Gratis' : formatPrice(offer?.promo ?? price)}
             </span>
+            {!isGift && offer?.isLimited && (
+                <span className="block text-xs font-normal text-muted-foreground">
+                    {LIMITED_PRICE_NOTE}
+                </span>
+            )}
         </span>
     );
 }

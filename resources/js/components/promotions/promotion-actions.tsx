@@ -56,14 +56,20 @@ export function PromotionActions({ promotion, onEdit, onShare }: Props) {
                 </Button>
             )}
             {PAUSABLE.includes(state) && (
-                <Button
-                    type="button"
-                    variant="ghost"
-                    disabled={isBusy}
-                    onClick={() => act(pause.url(id))}
-                >
-                    <Pause aria-hidden /> Pausar
-                </Button>
+                <ConfirmRemoveDialog
+                    triggerLabel="Pausar"
+                    trigger={
+                        <Button type="button" variant="ghost">
+                            <Pause aria-hidden /> Pausar
+                        </Button>
+                    }
+                    title="¿Pausar esta promoción?"
+                    description={`${promotion.name}. Deja de ofrecerse desde ahora. Las reservas ya hechas conservan su precio, y quien tenga el enlace verá que ya no está disponible.`}
+                    confirmLabel="Sí, pausar"
+                    tone="default"
+                    themed
+                    form={pause.form(id)}
+                />
             )}
             <Button
                 type="button"
