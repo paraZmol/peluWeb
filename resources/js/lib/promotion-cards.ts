@@ -7,7 +7,7 @@ import type {
 import { addDays } from './promotions';
 
 /*
- | The four cards a promotion starts from (docs/promociones.md, "Fichas"):
+ | The cards a promotion starts from (docs/promociones.md, "Fichas"):
  | what each one proposes before the owner types anything.
  */
 
@@ -21,6 +21,15 @@ const QUIET_HOURS = {
     weekdays: [1, 2, 3],
     from: '10:00',
     to: '16:00',
+};
+
+/**
+ * Cards that run longer than the default. "Primera visita" runs a month:
+ * newcomers take longer to hear of it.
+ */
+const CARD_DAYS: Partial<Record<PromotionCardKind, number>> = {
+    quiet_hours: QUIET_HOURS.days,
+    first_visit: 30,
 };
 
 /** A campaign starts this many days before its date. */
@@ -113,7 +122,7 @@ export function newPromotionFields(
         amount: '',
         gift_service_id: null,
         starts_on: today,
-        ends_on: addDays(today, isQuiet ? QUIET_HOURS.days : DEFAULT_DAYS),
+        ends_on: addDays(today, CARD_DAYS[card] ?? DEFAULT_DAYS),
         weekdays: isQuiet ? QUIET_HOURS.weekdays : [],
         from_time: isQuiet ? QUIET_HOURS.from : '',
         to_time: isQuiet ? QUIET_HOURS.to : '',
@@ -208,7 +217,7 @@ export type CardOffer = {
     example: string | null;
 };
 
-/** The four cards, each with an example made of the salon's own services. */
+/** The five cards, each with an example made of the salon's own services. */
 export function cardOffers(
     services: PromotionService[],
     today: string,
@@ -247,6 +256,12 @@ export function cardOffers(
             pitch: 'Una fecha especial con su nombre y sus días ya puestos.',
             example:
                 discount && `${upcomingOccasion(today).label} · ${discount}`,
+        },
+        {
+            card: 'first_visit',
+            title: 'Primera visita',
+            pitch: 'Un descuento para atraer clientes nuevos: vale solo en su primera cita.',
+            example: discount && `${discount} en tu primera visita`,
         },
     ];
 }

@@ -11,7 +11,8 @@ use App\Enums\PromotionMechanic;
 final readonly class PromotionDraft
 {
     /**
-     * @param  string  $card  the card they started from: discount, gift, quiet_hours or season
+     * @param  string  $card  the card they started from: discount, gift, quiet_hours, season or first_visit
+     * @param  bool  $newClientsOnly  "Primera visita": only for someone who never booked at the salon
      * @param  list<int>  $serviceIds  services of this salon
      * @param  string  $startsOn  "Y-m-d" on the salon's calendar
      * @param  list<int>|null  $weekdays  ISO weekdays; null = every day
@@ -34,5 +35,6 @@ final readonly class PromotionDraft
         public bool $oncePerClient = false,
         public ?string $name = null,
         public ?string $overline = null,
+        public bool $newClientsOnly = false,
     ) {}
 }

@@ -29,12 +29,13 @@ final class PromotionCopy
     public static function title(PromotionTerms $terms, array $serviceNames, ?string $giftName = null): string
     {
         $services = self::names($serviceNames);
-
-        return match (true) {
+        $title = match (true) {
             $terms->mechanic === PromotionMechanic::Gift => "{$giftName} gratis con tu {$services}",
             $terms->percent !== null => "{$terms->percent} % menos en {$services}",
             default => 'S/ '.self::soles((int) $terms->amountCents)." menos en {$services}",
         };
+
+        return $terms->newClientsOnly ? "{$title} en tu primera visita" : $title;
     }
 
     /**
@@ -60,7 +61,9 @@ final class PromotionCopy
             ? 'Sin límite de cupos: vale para todas las citas que se reserven dentro de estas fechas, mientras haya horarios libres.'
             : "Cupos: {$facts->quota} ".($facts->quota === 1 ? 'reserva' : 'reservas').'.';
 
-        if ($facts->oncePerClient) {
+        if ($terms->newClientsOnly) {
+            $parts[] = "Solo para la primera visita: vale si nunca tuviste una cita en {$facts->salonName}, ni tienes otra reservada.";
+        } elseif ($facts->oncePerClient) {
             $parts[] = 'Una por cliente.';
         }
 

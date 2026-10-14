@@ -64,6 +64,7 @@ function termsOf(fields: PromotionFields): CopyTerms | null {
         weekdays: fields.weekdays.length === 0 ? null : fields.weekdays,
         fromTime: fields.from_time || null,
         toTime: fields.to_time || null,
+        newClientsOnly: fields.card === 'first_visit',
     };
 }
 

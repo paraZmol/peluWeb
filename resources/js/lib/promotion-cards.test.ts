@@ -105,6 +105,16 @@ describe('newPromotionFields', () => {
         });
     });
 
+    it('proposes a first-visit discount for thirty days, every day and hour', () => {
+        expect(newPromotionFields('first_visit', '2026-10-12')).toMatchObject({
+            mechanic: 'discount',
+            percent: '20',
+            ends_on: '2026-11-11',
+            weekdays: [],
+            once_per_client: false,
+        });
+    });
+
     it('fills a campaign with the next occasion', () => {
         expect(newPromotionFields('season', '2026-10-12')).toMatchObject({
             occasion: 'halloween',
@@ -170,6 +180,7 @@ describe('cards and gifts', () => {
             'Lavado gratis con tu Corte',
             '20 % menos en Corte, de lunes a miércoles de 10:00 a 16:00',
             'Halloween · 20 % menos en Corte',
+            '20 % menos en Corte en tu primera visita',
         ]);
     });
 
@@ -242,6 +253,22 @@ describe('previewOf', () => {
         expect(preview?.finePrint).toContain(
             'El regalo (Lavado, precio normal S/ 10) se hace en la misma cita y alarga la cita 10 min.',
         );
+    });
+
+    it('says a first visit in the title and who may use it in the fine print', () => {
+        const preview = previewOf(
+            {
+                ...newPromotionFields('first_visit', '2026-10-12'),
+                services: [1],
+            },
+            context,
+        );
+
+        expect(preview?.title).toBe('20 % menos en Corte en tu primera visita');
+        expect(preview?.finePrint).toContain(
+            'Solo para la primera visita: vale si nunca tuviste una cita en Estudio Luz, ni tienes otra reservada.',
+        );
+        expect(preview?.finePrint).not.toContain('Una por cliente.');
     });
 
     it('keeps the title the owner typed', () => {

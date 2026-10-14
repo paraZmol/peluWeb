@@ -4,6 +4,7 @@ import {
     Gift,
     Percent,
     Sunrise,
+    UserPlus,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
@@ -15,6 +16,7 @@ const ICONS: Record<PromotionCardKind, LucideIcon> = {
     gift: Gift,
     quiet_hours: Sunrise,
     season: CalendarHeart,
+    first_visit: UserPlus,
 };
 
 type Props = {
@@ -24,8 +26,9 @@ type Props = {
 };
 
 /**
- * The four kinds of promotion, each with an example written with the
+ * The kinds of promotion, each with an example written with the
  * salon's own services. Picking one opens its form already filled in.
+ * An odd one out at the end takes the whole row.
  */
 export function CardPicker({ services, today, onPick }: Props) {
     const reduceMotion = useReducedMotion();
@@ -38,6 +41,7 @@ export function CardPicker({ services, today, onPick }: Props) {
                 return (
                     <motion.li
                         key={offer.card}
+                        className="sm:odd:last:col-span-2"
                         initial={reduceMotion ? false : { opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{

@@ -53,6 +53,8 @@ export type CopyTerms = {
     /** "10:00"; null for any hour. */
     fromTime: string | null;
     toTime: string | null;
+    /** "Primera visita": only for someone who never had a booking at the salon. */
+    newClientsOnly: boolean;
 };
 
 /** "A", "A y B", "A, B y C". */
@@ -103,7 +105,10 @@ export function promotionPeriod(startsOn: string, endsOn: string): string {
         : `del ${fromDay} al ${to}`;
 }
 
-/** "20 % menos en Corte", "S/ 10 menos en Manicure", "Rasurado gratis con tu Corte". */
+/**
+ * "20 % menos en Corte", "S/ 10 menos en Manicure", "Rasurado gratis con
+ * tu Corte"; "… en tu primera visita" when only newcomers get it.
+ */
 export function promotionTitle(
     terms: CopyTerms,
     serviceNames: string[],
@@ -113,14 +118,26 @@ export function promotionTitle(
         serviceNames.length > NAMES_IN_TITLE
             ? `${serviceNames.slice(0, NAMES_IN_TITLE).join(', ')} y más`
             : list(serviceNames);
+    let title: string;
 
     if (terms.mechanic === 'gift') {
-        return `${giftName} gratis con tu ${services}`;
+        title = `${giftName} gratis con tu ${services}`;
+    } else if (terms.percent !== null) {
+        title = `${terms.percent} % menos en ${services}`;
+    } else {
+        title = `S/ ${soles(terms.amountCents ?? 0)} menos en ${services}`;
     }
 
-    return terms.percent !== null
-        ? `${terms.percent} % menos en ${services}`
-        : `S/ ${soles(terms.amountCents ?? 0)} menos en ${services}`;
+    return terms.newClientsOnly ? `${title} en tu primera visita` : title;
+}
+
+/** Who may use it beyond the dates: newcomers only, or once each. */
+function whoMayUseIt(terms: CopyTerms, facts: PromotionFacts): string | null {
+    if (terms.newClientsOnly) {
+        return `Solo para la primera visita: vale si nunca tuviste una cita en ${facts.salonName}, ni tienes otra reservada.`;
+    }
+
+    return facts.isOncePerClient ? 'Una por cliente.' : null;
 }
 
 /** "lunes, martes y miércoles"; null for every day. */
@@ -183,7 +200,7 @@ export function promotionFinePrint(
         facts.quota === null
             ? 'Sin límite de cupos: vale para todas las citas que se reserven dentro de estas fechas, mientras haya horarios libres.'
             : `${quotaLabel(facts.quota)}.`,
-        facts.isOncePerClient ? 'Una por cliente.' : null,
+        whoMayUseIt(terms, facts),
         terms.amountCents !== null && serviceNames.length > 1
             ? `El descuento de S/ ${soles(terms.amountCents)} se aplica una sola vez por reserva.`
             : null,

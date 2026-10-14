@@ -19,7 +19,7 @@ type Props = {
     onPick: (card: PromotionCardKind) => void;
 };
 
-/** "Nueva promoción": the four cards to start from (a sheet on a phone). */
+/** "Nueva promoción": the cards to start from (a sheet on a phone). */
 export function NewPromotionDialog({
     open,
     onClose,

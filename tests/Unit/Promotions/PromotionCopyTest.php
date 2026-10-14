@@ -55,6 +55,15 @@ it('writes the fine print in full, the same way every time', function () {
     );
 });
 
+it('says a first visit is for someone who never came, in the title and in the fine print', function () {
+    $first = copyTerms(PromotionMechanic::Discount, ['percent' => 20, 'newClientsOnly' => true]);
+    $text = PromotionCopy::finePrint($first, ['Corte'], new PromotionFacts('Estudio Luz', quota: 10));
+
+    expect(PromotionCopy::title($first, ['Corte']))->toBe('20 % menos en Corte en tu primera visita')
+        ->and($text)->toContain('Cupos: 10 reservas. Solo para la primera visita: vale si nunca tuviste una cita en Estudio Luz, ni tienes otra reservada. Si cambias')
+        ->and($text)->not->toContain('Una por cliente.');
+});
+
 it('says a fixed amount comes off once, when it covers more than one service', function () {
     $amount = copyTerms(PromotionMechanic::Discount, ['amountCents' => 1000]);
     $once = 'El descuento de S/ 10 se aplica una sola vez por reserva.';

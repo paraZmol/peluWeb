@@ -30,6 +30,7 @@ function terms(
         weekdays: null,
         fromTime: null,
         toTime: null,
+        newClientsOnly: false,
         ...overrides,
     };
 }
@@ -61,6 +62,21 @@ describe('promotionTitle', () => {
         expect(promotionTitle(terms('gift'), ['Corte'], 'Rasurado')).toBe(
             'Rasurado gratis con tu Corte',
         );
+    });
+
+    it('says when it is only for the first visit', () => {
+        expect(
+            promotionTitle(
+                terms('discount', { percent: 20, newClientsOnly: true }),
+                ['Corte'],
+            ),
+        ).toBe('20 % menos en Corte en tu primera visita');
+        expect(
+            promotionTitle(
+                terms('discount', { amountCents: 1000, newClientsOnly: true }),
+                ['Manicure'],
+            ),
+        ).toBe('S/ 10 menos en Manicure en tu primera visita');
     });
 });
 
@@ -110,6 +126,20 @@ describe('promotionFinePrint', () => {
                 closing(
                     'El precio con promoción se reserva hasta el plazo para enviar la seña. ',
                 ),
+        );
+    });
+
+    it('says only someone new may use it, instead of once each', () => {
+        expect(
+            promotionFinePrint(
+                terms('discount', { percent: 20, newClientsOnly: true }),
+                ['Corte'],
+                { ...facts, quota: 10, isOncePerClient: true },
+            ),
+        ).toBe(
+            'Promoción de Estudio Luz. Válido para citas del 5 al 18 de octubre de 2026. Aplica a: Corte. ' +
+                'Cupos: 10 reservas. Solo para la primera visita: vale si nunca tuviste una cita en Estudio Luz, ni tienes otra reservada. ' +
+                closing(''),
         );
     });
 

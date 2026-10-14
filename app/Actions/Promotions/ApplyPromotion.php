@@ -130,8 +130,16 @@ class ApplyPromotion
 
         $others = fn (): Builder => $this->taken($promotion, underLock: true)->where('id', '!=', $booking->id);
 
+        // A first visit no longer: while its hold was out, the client
+        // booked again (and that booking may have taken the price too).
+        // Locking reads, without the client's row: it comes before the
+        // booking in the lock order, and the booking is already held.
+        $ownOthers = fn (): Builder => $this->live(Booking::withoutGlobalScope('salon')->where('salon_client_id', $booking->salon_client_id), underLock: true)
+            ->where('id', '!=', $booking->id);
+
         return ($promotion->quota === null || $others()->count() < $promotion->quota)
-            && (! $promotion->once_per_client || $others()->where('salon_client_id', $booking->salon_client_id)->count() === 0);
+            && (! $promotion->once_per_client || $others()->where('salon_client_id', $booking->salon_client_id)->count() === 0)
+            && (! $promotion->new_clients_only || ! $ownOthers()->exists());
     }
 
     /**
@@ -150,12 +158,20 @@ class ApplyPromotion
      */
     private function hasRoom(Promotion $promotion, ?SalonClient $client, bool $underLock): bool
     {
+        // Asked before the promotion is locked: the client's row comes first.
+        $isNewcomer = $promotion->new_clients_only ? $this->isNewcomer($client, $underLock) : null;
+
+        if ($isNewcomer === false) {
+            return false;
+        }
+
         if ($underLock) {
             // The row as it is now: it may have been paused, or its places
             // changed, since it was read above.
             $promotion = Promotion::withoutGlobalScope('salon')->whereKey($promotion->id)->lockForUpdate()->first();
 
-            if ($promotion === null || $promotion->status !== PromotionStatus::Published) {
+            // Turned into a first-visit one meanwhile: not given unasked.
+            if ($promotion === null || $promotion->status !== PromotionStatus::Published || ($promotion->new_clients_only && $isNewcomer !== true)) {
                 return false;
             }
         }
@@ -175,14 +191,67 @@ class ApplyPromotion
     }
 
     /**
+     * Never booked at this salon: no booking of theirs other than a
+     * cancelled one or one whose hold ran out. A visit missed counts, and
+     * so does one still ahead (two "first" visits are not two).
+     */
+    private function isNewcomer(?SalonClient $client, bool $underLock): bool
+    {
+        if ($client === null || ! $client->exists) {
+            return true;
+        }
+
+        if ($underLock) {
+            // Serialises two first bookings of one person at once.
+            SalonClient::withoutGlobalScope('salon')->whereKey($client->id)->lockForUpdate()->first();
+        }
+
+        return ! $this->live(Booking::withoutGlobalScope('salon')->whereIn('salon_client_id', $this->samePerson($client, $underLock)), $underLock)->exists();
+    }
+
+    /**
+     * Their records at this salon: one person may have two (booked once
+     * by phone at the desk and once online), found by account or phone.
+     * Under the lock a locking read: a plain one would read the snapshot
+     * taken before this booking waited, and miss a record committed since.
+     *
+     * @return list<int>
+     */
+    private function samePerson(SalonClient $client, bool $underLock): array
+    {
+        $others = SalonClient::withoutGlobalScope('salon')
+            ->where('salon_id', $client->salon_id)
+            ->where(fn (Builder $same) => $same
+                ->whereKey($client->id)
+                ->when($client->user_id !== null, fn (Builder $query) => $query->orWhere('user_id', $client->user_id))
+                ->when(filled($client->phone), fn (Builder $query) => $query->orWhere('phone', $client->phone)))
+            ->when($underLock, fn (Builder $query) => $query->sharedLock())
+            ->pluck('id')
+            ->all();
+
+        return array_values(array_unique([$client->id, ...$others]));
+    }
+
+    /**
      * The bookings holding a place of it.
      *
      * @return Builder<Booking>
      */
     private function taken(Promotion $promotion, bool $underLock): Builder
     {
-        return Booking::withoutGlobalScope('salon')
-            ->where('promotion_id', $promotion->id)
+        return $this->live(Booking::withoutGlobalScope('salon')->where('promotion_id', $promotion->id), $underLock);
+    }
+
+    /**
+     * Only bookings that still hold something: not cancelled, not expired,
+     * and not a pending one whose hold ran out.
+     *
+     * @param  Builder<Booking>  $bookings
+     * @return Builder<Booking>
+     */
+    private function live(Builder $bookings, bool $underLock): Builder
+    {
+        return $bookings
             ->whereNotIn('status', [BookingStatus::Cancelled, BookingStatus::Expired])
             ->where(fn (Builder $live) => $live
                 ->where('status', '!=', BookingStatus::Pending)

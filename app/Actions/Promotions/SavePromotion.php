@@ -55,6 +55,7 @@ class SavePromotion
                 'gift_service_id' => $draft->giftServiceId,
                 'quota' => $draft->quota,
                 'once_per_client' => $draft->oncePerClient,
+                'new_clients_only' => $draft->newClientsOnly,
                 'overline' => $draft->overline,
                 // Filled below, once its services are known.
                 'name' => $draft->name ?? '',
@@ -123,7 +124,8 @@ class SavePromotion
             && $promotion->weekdays === $draft->weekdays
             && [$promotion->from_minute, $promotion->to_minute] === [$draft->fromMinute, $draft->toMinute]
             && [$promotion->percent, $promotion->amount_cents, $promotion->gift_service_id] === [$draft->percent, $draft->amountCents, $draft->giftServiceId]
-            && $promotion->once_per_client === $draft->oncePerClient;
+            && $promotion->once_per_client === $draft->oncePerClient
+            && $promotion->new_clients_only === $draft->newClientsOnly;
     }
 
     public function newShareCode(): string

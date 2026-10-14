@@ -20,7 +20,10 @@ class PromotionRequest extends FormRequest
     use SalonValidationRules;
 
     /** The cards a promotion starts from; they only shape the form. */
-    public const array CARDS = ['discount', 'gift', 'quiet_hours', 'season'];
+    public const array CARDS = ['discount', 'gift', 'quiet_hours', 'season', 'first_visit'];
+
+    /** Cards that can only be a discount. */
+    private const array DISCOUNT_CARDS = ['quiet_hours', 'first_visit'];
 
     public const int MIN_PERCENT = 5;
 
@@ -53,7 +56,7 @@ class PromotionRequest extends FormRequest
 
         return [
             'card' => ['required', Rule::in(self::CARDS)],
-            'mechanic' => ['required', Rule::enum(PromotionMechanic::class), $isQuietHours ? Rule::in([PromotionMechanic::Discount->value]) : 'string'],
+            'mechanic' => ['required', Rule::enum(PromotionMechanic::class), in_array($this->input('card'), self::DISCOUNT_CARDS, true) ? Rule::in([PromotionMechanic::Discount->value]) : 'string'],
             'services' => ['required', 'array', 'list', 'min:1', 'max:100'],
             'services.*' => ['integer', 'distinct', $ownService()],
             'percent' => ['nullable', 'integer', 'min:'.self::MIN_PERCENT, 'max:'.self::MAX_PERCENT, $isGift ? 'prohibited' : 'required_without:amount', 'prohibits:amount'],
@@ -159,9 +162,11 @@ class PromotionRequest extends FormRequest
             fromMinute: $minutes('from_time'),
             toMinute: $minutes('to_time'),
             quota: $this->filled('quota') ? $this->integer('quota') : null,
-            oncePerClient: $this->boolean('once_per_client'),
+            // A first visit is one per client already: the flag would only count it twice.
+            oncePerClient: $this->string('card')->toString() !== 'first_visit' && $this->boolean('once_per_client'),
             name: $this->filled('name') ? $this->string('name')->trim()->toString() : null,
             overline: $this->filled('overline') ? $this->string('overline')->trim()->toString() : null,
+            newClientsOnly: $this->string('card')->toString() === 'first_visit',
         );
     }
 }

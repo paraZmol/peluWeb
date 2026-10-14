@@ -30,6 +30,10 @@ const HEADINGS: Record<PromotionCardKind, { title: string; lead: string }> = {
         title: 'Campaña de temporada',
         lead: 'Elige la ocasión: ponemos su nombre y sus fechas, y tú decides qué ofreces.',
     },
+    first_visit: {
+        title: 'Primera visita',
+        lead: 'Un descuento solo para quien nunca tuvo una cita en tu salón. Sirve para atraer clientes nuevos.',
+    },
 };
 
 type Props = {

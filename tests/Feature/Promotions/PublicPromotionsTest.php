@@ -205,7 +205,7 @@ it('books nothing, and says so, when the promotion they confirmed is gone', func
     $promotion->forceFill(['status' => PromotionStatus::Paused])->save();
     $book(['expects_promotion' => true])->assertInertiaFlash('toast.type', 'error')
         // Sent back to the times: the wizard reads "horario" in what failed.
-        ->assertInertiaFlash('toast.message', 'La promoción ya no está disponible para ese horario. Elige el horario de nuevo: verás el precio actualizado antes de confirmar.');
+        ->assertInertiaFlash('toast.message', 'La promoción ya no aplica a esta reserva en ese horario: se agotó, se pausó o es solo para la primera visita. Elige el horario de nuevo: verás el precio que te corresponde antes de confirmar.');
     expect(Booking::withoutGlobalScope('salon')->count())->toBe(0);
 
     // Having seen the normal price, they book at it.

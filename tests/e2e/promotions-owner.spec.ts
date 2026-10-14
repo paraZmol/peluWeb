@@ -191,4 +191,60 @@ test.describe('Promociones del salón', () => {
 
         assertNoErrors();
     });
+
+    test('la dueña publica una «Primera visita» para clientes nuevos', async ({
+        page,
+    }, testInfo) => {
+        const isPhone = testInfo.project.name === 'movil';
+        const assertNoErrors = watchForErrors(page);
+        const title = '15 % menos en Barba de promo en tu primera visita';
+
+        if (isPhone) {
+            await page.setViewportSize(PHONE);
+        }
+
+        await login(
+            page,
+            `promos-duena-${testInfo.project.name}@example.com`,
+            'password',
+        );
+        await expect(page).toHaveURL(/dashboard$/);
+        await page.goto('/promociones');
+        await expect(
+            page.getByRole('heading', { name: 'Promociones', level: 1 }),
+        ).toBeVisible();
+
+        // Run on its own the list is empty and the cards are on the page.
+        const startNew = page.getByRole('button', { name: 'Nueva promoción' });
+
+        if (await startNew.isVisible()) {
+            await startNew.click();
+        }
+
+        await page.getByRole('button', { name: /^Primera visita/ }).click();
+        const sheet = page.getByRole('dialog', { name: 'Primera visita' });
+        await sheet.getByRole('checkbox', { name: /Barba de promo/ }).check();
+        await sheet.getByRole('textbox', { name: 'Porcentaje' }).fill('15');
+
+        // Once per client by definition: no box to tick, a line that says so.
+        await sheet.getByRole('button', { name: 'Más opciones' }).click();
+        await expect(
+            sheet.getByRole('checkbox', { name: 'Una por cliente' }),
+        ).toHaveCount(0);
+        await expect(sheet).toContainText('Ya es una por cliente');
+
+        const preview = sheet.getByRole('region', { name: 'Vista previa' });
+        await expect(preview).toContainText(title);
+        await expect(preview).toContainText(
+            `Solo para la primera visita: vale si nunca tuviste una cita en Salón Promos ${isPhone ? 'Movil' : 'Escritorio'}, ni tienes otra reservada.`,
+        );
+        await expect(preview).not.toContainText('Una por cliente.');
+        expect(await hasHorizontalScroll(page)).toBe(false);
+
+        await sheet.getByRole('button', { name: 'Publicar' }).click();
+        await expect(page.getByText('Promoción publicada.')).toBeVisible();
+        await expect(card(page, title)).toContainText('Activa');
+
+        assertNoErrors();
+    });
 });

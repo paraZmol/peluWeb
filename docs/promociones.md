@@ -18,7 +18,12 @@ reservar: sin códigos y sin que nadie la "aplique" a mano. El precio queda cong
    o Servicio de regalo; nombre y fechas ya sugeridos (10 días antes y hasta el día).
 
 ### Segunda entrega, en orden
-Primera visita (Descuento con condición "cliente nuevo") → Combo a precio cerrado → 2x1 (una
+Primera visita (Descuento con condición "cliente nuevo"; *construida el 2026-10-14*: quinta
+tarjeta, solo descuento; "nuevo" = sin ninguna reserva en el salón salvo canceladas o con la
+retención vencida, así que cuentan las pasadas, las no asistidas y las próximas; se comprueba en
+el servidor con la fila del cliente bloqueada; a un visitante sin sesión se le muestran los
+horarios con promo y, si al entrar resulta que ya vino, la reserva no se crea y se le pide elegir
+de nuevo para ver su precio) → Combo a precio cerrado → 2x1 (una
 reserva, un profesional, dos turnos seguidos del mismo servicio, se paga el más caro; exige que
 `QuoteBooking` admita el servicio repetido y anotar a quien acompaña) → filtro por profesional →
 imagen descargable para Instagram.
@@ -54,7 +59,8 @@ imagen descargable para Instagram.
   "Promoción de {salón}. Válido para citas del {día} al {día} de {mes} de {año}. Aplica a:
   {servicios}. [Solo {días}, en citas que empiecen entre las {hora} y las {hora}.] [Cupos: {n}
   reservas. | Sin límite de cupos: vale para todas las citas que se reserven dentro de estas
-  fechas, mientras haya horarios libres.] [Una por cliente.] [El descuento de S/ {monto} se aplica
+  fechas, mientras haya horarios libres.] [Solo para la primera visita: vale si nunca tuviste una
+  cita en {salón}, ni tienes otra reservada. | Una por cliente.] [El descuento de S/ {monto} se aplica
   una sola vez por reserva.] [El regalo ({servicio}, precio normal S/ {precio}) se hace en la
   misma cita y alarga la cita {n} min. No se cambia por dinero ni por otro servicio.] Si cambias
   tu cita, la promoción se mantiene solo si la nueva fecha y hora cumplen estas condiciones. [El

@@ -73,15 +73,22 @@ export function MoreOptions({ form, hidesWhen }: Props) {
                     <InputError message={errors.quota} />
                 </div>
 
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
-                    <Checkbox
-                        checked={data.once_per_client}
-                        onCheckedChange={(isChecked) =>
-                            setData('once_per_client', isChecked === true)
-                        }
-                    />
-                    Una por cliente
-                </label>
+                {data.card === 'first_visit' ? (
+                    <p className="text-sm text-muted-foreground">
+                        Ya es una por cliente: solo vale para quien nunca tuvo
+                        una cita en tu salón.
+                    </p>
+                ) : (
+                    <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+                        <Checkbox
+                            checked={data.once_per_client}
+                            onCheckedChange={(isChecked) =>
+                                setData('once_per_client', isChecked === true)
+                            }
+                        />
+                        Una por cliente
+                    </label>
+                )}
 
                 <div className="grid gap-2">
                     <Label htmlFor="promotion-name">

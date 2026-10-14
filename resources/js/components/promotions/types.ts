@@ -1,5 +1,10 @@
 /** The card a promotion starts from: it only shapes the form. */
-export type PromotionCardKind = 'discount' | 'gift' | 'quiet_hours' | 'season';
+export type PromotionCardKind =
+    | 'discount'
+    | 'gift'
+    | 'quiet_hours'
+    | 'season'
+    | 'first_visit';
 
 export type PromotionMechanic = 'discount' | 'gift';
 

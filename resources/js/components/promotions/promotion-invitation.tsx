@@ -12,7 +12,7 @@ type Props = {
 };
 
 /**
- * A salon without promotions yet: the four cards as the invitation. With
+ * A salon without promotions yet: the cards as the invitation. With
  * no services there is nothing to promote, so it sends there first.
  */
 export function PromotionInvitation({ services, today, onPick }: Props) {

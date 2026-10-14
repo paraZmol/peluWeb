@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $gift_service_id
  * @property int|null $quota
  * @property bool $once_per_client
+ * @property bool $new_clients_only Only for someone who never had a booking at the salon.
  * @property string $audience
  * @property string $share_code
  * @property CarbonImmutable|null $published_at
@@ -64,6 +65,7 @@ class Promotion extends Model
             'ends_on' => 'immutable_date:Y-m-d',
             'weekdays' => 'array',
             'once_per_client' => 'boolean',
+            'new_clients_only' => 'boolean',
             'published_at' => 'immutable_datetime',
         ];
     }
@@ -146,6 +148,7 @@ class Promotion extends Model
             percent: $this->percent,
             amountCents: $this->amount_cents,
             giftServiceId: $this->gift_service_id,
+            newClientsOnly: $this->new_clients_only,
         );
     }
 }

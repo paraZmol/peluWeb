@@ -21,6 +21,7 @@ final readonly class PromotionTerms
      * @param  string  $startsOn  first day of visits it covers, "Y-m-d" on the salon's calendar
      * @param  list<int>|null  $weekdays  ISO weekdays (1 = Monday); null = every day
      * @param  int|null  $fromMinute  minutes from midnight the visit may start in; null = any time
+     * @param  bool  $newClientsOnly  only for someone who never had a booking at the salon (checked by ApplyPromotion)
      */
     public function __construct(
         public int $id,
@@ -35,6 +36,7 @@ final readonly class PromotionTerms
         public ?int $percent = null,
         public ?int $amountCents = null,
         public ?int $giftServiceId = null,
+        public bool $newClientsOnly = false,
     ) {}
 
     /**
