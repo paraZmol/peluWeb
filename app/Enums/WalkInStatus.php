@@ -32,14 +32,15 @@ enum WalkInStatus: string
 
     /**
      * What the team may do next: call, attend or note that they left; a
-     * called person may go back to waiting. Closed places stay closed.
+     * called person may go back to waiting, and so may a closed place
+     * closed by mistake (only the same day; see ManageWalkIns::move).
      */
     public function canBecome(self $next): bool
     {
         return match ($this) {
             self::Waiting => in_array($next, [self::Called, self::Attended, self::Left], true),
             self::Called => in_array($next, [self::Waiting, self::Attended, self::Left], true),
-            self::Attended, self::Left => false,
+            self::Attended, self::Left => $next === self::Waiting,
         };
     }
 }

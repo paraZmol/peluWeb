@@ -38,11 +38,7 @@ class ManageWalkIns
     public function add(Salon $salon, array $data, ?User $by): WalkIn
     {
         $day = $salon->localNow()->toDateString();
-        $open = WalkIn::query()->whereDate('day', $day)->whereIn('status', [WalkInStatus::Waiting, WalkInStatus::Called])->count();
-
-        if ($open >= WalkIn::MAX_OPEN) {
-            throw WaitlistException::lineIsFull(WalkIn::MAX_OPEN);
-        }
+        $this->ensureRoomIn($day);
 
         $walkIn = new WalkIn;
         $walkIn->salon_id = $salon->id;
@@ -57,10 +53,21 @@ class ManageWalkIns
         return $walkIn;
     }
 
-    public function move(WalkIn $walkIn, WalkInStatus $next): WalkIn
+    public function move(Salon $salon, WalkIn $walkIn, WalkInStatus $next): WalkIn
     {
         if (! $walkIn->status->canBecome($next)) {
             throw WaitlistException::placeIsClosed();
+        }
+
+        if (! $walkIn->status->isOpen()) {
+            // Undoing a close by mistake: only in today's line, and only with room in it.
+            $today = $salon->localNow()->toDateString();
+
+            if ($walkIn->day->toDateString() !== $today) {
+                throw WaitlistException::placeIsClosed();
+            }
+
+            $this->ensureRoomIn($today);
         }
 
         $now = CarbonImmutable::now();
@@ -70,5 +77,14 @@ class ManageWalkIns
         $walkIn->save();
 
         return $walkIn;
+    }
+
+    private function ensureRoomIn(string $day): void
+    {
+        $open = WalkIn::query()->whereDate('day', $day)->whereIn('status', [WalkInStatus::Waiting, WalkInStatus::Called])->count();
+
+        if ($open >= WalkIn::MAX_OPEN) {
+            throw WaitlistException::lineIsFull(WalkIn::MAX_OPEN);
+        }
     }
 }

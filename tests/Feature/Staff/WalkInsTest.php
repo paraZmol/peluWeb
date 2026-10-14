@@ -76,10 +76,34 @@ it('lets anyone of the team add who walks in and move them along the line', func
     $move('attended')->assertSessionHasNoErrors();
     expect($luis->refresh()->status)->toBe(WalkInStatus::Attended)->and($luis->closed_at)->not->toBeNull();
 
-    // Closed stays closed, and a made-up status is refused.
-    $move('waiting')->assertInertiaFlash('toast.type', 'error');
+    // A closed place only goes back to waiting, and a made-up status is refused.
+    $move('called')->assertInertiaFlash('toast.type', 'error');
     $move('vip')->assertSessionHasErrors('status');
     expect($luis->refresh()->status)->toBe(WalkInStatus::Attended);
+});
+
+it('undoes a close by mistake the same day, while the line has room', function () {
+    $this->actingAs($this->member)->post(route('walk-ins.store'), ['name' => 'Luis']);
+    $luis = WalkIn::withoutGlobalScope('salon')->sole();
+    $move = fn (string $status) => $this->actingAs($this->member)->patch(route('walk-ins.update', $luis), ['status' => $status]);
+
+    $move('left')->assertSessionHasNoErrors();
+    $move('waiting')->assertSessionHasNoErrors();
+    expect($luis->refresh())->status->toBe(WalkInStatus::Waiting)->closed_at->toBeNull();
+
+    // A full line has no room to take them back.
+    $move('left');
+    WalkIn::query()->insert(array_fill(0, WalkIn::MAX_OPEN, [
+        'salon_id' => $this->barber->id, 'day' => '2026-10-07', 'name' => 'Otra persona', 'status' => WalkInStatus::Waiting->value,
+        'created_at' => now(), 'updated_at' => now(),
+    ]));
+    $move('waiting')->assertInertiaFlash('toast.type', 'error');
+    WalkIn::withoutGlobalScope('salon')->whereKeyNot($luis->id)->delete();
+
+    // Yesterday's line is over.
+    $this->travelTo(CarbonImmutable::parse('2026-10-08 09:00', 'America/Lima'));
+    $move('waiting')->assertInertiaFlash('toast.type', 'error');
+    expect($luis->refresh()->status)->toBe(WalkInStatus::Left);
 });
 
 it('starts the line over each day', function () {

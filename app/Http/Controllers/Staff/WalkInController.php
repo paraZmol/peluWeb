@@ -60,12 +60,12 @@ class WalkInController extends SalonAreaController
 
     public function update(Request $request, WalkIn $walkIn): RedirectResponse
     {
-        $this->lineSalon();
+        $salon = $this->lineSalon();
         $next = WalkInStatus::from($request->validate([
             'status' => ['required', Rule::enum(WalkInStatus::class)],
         ])['status']);
 
-        $this->line->move($walkIn, $next);
+        $this->line->move($salon, $walkIn, $next);
 
         return back();
     }
