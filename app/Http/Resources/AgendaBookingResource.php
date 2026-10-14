@@ -60,7 +60,9 @@ class AgendaBookingResource extends JsonResource
             'staffName' => $this->staff->name,
             'services' => $this->services->map(fn (BookingService $service): string => $service->displayName())->values(),
             // "Ven con alguien": who comes along; the team may take them off if only one comes.
-            'companion' => $this->services->count() === 2 ? $this->services->firstWhere('companion_name', '!==', null)?->companion_name : null,
+            // Only for who handles money: taking them off changes what is charged.
+            'companion' => $this->services->count() === 2 && ($request->user()?->can('confirmDeposit', $booking) ?? false)
+                ? $this->services->firstWhere('companion_name', '!==', null)?->companion_name : null,
             'price' => Money::toAmount($this->price_cents),
             // The promotion that set its price, as it was called then.
             'promotion' => $this->promotion_cents === 0 ? null : [

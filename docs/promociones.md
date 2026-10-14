@@ -157,7 +157,11 @@ imagen descargable para Instagram.
   (quien reservó o quien acompaña); se quita la otra línea y se cobra a precio normal solo el
   servicio de quien vino. La seña pagada se descuenta de ese monto; no es cancelación ni
   inasistencia. El historial guarda quién lo hizo, sin el nombre de quien acompañaba. El tiempo
-  reservado no cambia.
+  reservado no cambia. Como baja lo que se cobra, exige el **permiso de caja** (igual que un
+  descuento; auditoría del 2026-10-14).
+- **El nombre de quien acompaña** no va en la URL de disponibilidad (solo una marca), no se
+  guarda en la lista de espera, no admite enlaces y se borra **30 días después de la cita** (y al
+  borrar la cuenta de quien reservó).
 - Mover y cancelar: las dos líneas van juntas. Seña sobre el total con promoción. Un cupo es una
   reserva.
 - Títulos: "2x1 en {servicio}" / "Segundo {servicio} a mitad de precio"; la tarjeta dice sin

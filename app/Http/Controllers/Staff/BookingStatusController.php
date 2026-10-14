@@ -49,7 +49,8 @@ class BookingStatusController extends SalonAreaController
 
     public function dropCompanion(Request $request, Booking $booking, DropCompanion $drop): RedirectResponse
     {
-        $this->authorize('manage', $booking);
+        // It changes what is charged: like a discount, it takes the cash permission.
+        $this->authorize('confirmDeposit', $booking);
         // Who came: the one who booked, or the one coming along.
         $came = $request->validate(['came' => ['required', 'in:booker,companion']])['came'];
         $drop->handle($booking, $came === 'companion', $request->user());

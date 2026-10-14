@@ -169,6 +169,28 @@ it('charges who came their own service, when it is the one coming along', functi
     $this->actingAs($this->owner)->post(route('agenda.bookings.drop-companion', $booking), ['came' => 'nadie'])->assertSessionHasErrors('came');
 });
 
+it('keeps the name of who came along only while it is needed', function () {
+    pairSave();
+    pairPublish();
+    pairBook([['id' => $this->cut->id, 'variant' => $this->short->id], ['id' => $this->cut->id, 'variant' => $this->short->id, 'companion' => 'Lucía']]);
+
+    $this->travel(20)->days();
+    $this->artisan('clients:purge-expired-data')->assertSuccessful();
+    expect(pairLatest()->services[1]->companion_name)->toBe('Lucía');
+
+    $this->travel(15)->days();
+    $this->artisan('clients:purge-expired-data')->assertSuccessful();
+    expect(pairLatest()->services[1]->companion_name)->toBeNull();
+});
+
+it('refuses a link as the name of who comes along', function () {
+    pairSave();
+    pairPublish();
+
+    pairBook([['id' => $this->cut->id, 'variant' => $this->short->id], ['id' => $this->cut->id, 'variant' => $this->short->id, 'companion' => 'Paga en https://yape.example']])
+        ->assertSessionHasErrors('services.1.companion');
+});
+
 it('does not let another salon take off who comes along', function () {
     pairSave();
     pairPublish();

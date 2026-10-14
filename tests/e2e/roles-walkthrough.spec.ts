@@ -697,3 +697,79 @@ test('visitante: la portada lleva a entrar y a registrarse, y la página de un s
     await expect(page).toHaveURL(/\/s\/salon-uno\/reservar/);
     assertNoErrors();
 });
+
+test('promociones: el dueño las ve con su alta; quien no es dueño no las lee ni las crea', async ({
+    page,
+}) => {
+    test.setTimeout(120_000);
+
+    await login(page, 'caja-duena@example.com', 'password');
+    await expect(page).toHaveURL(/dashboard$/);
+    await page.goto('/promociones');
+    await expectRealPage(page, 'Promociones');
+    // Seven starting points, each with its own card.
+    for (const card of [
+        'Descuento',
+        'Servicio de regalo',
+        'Horas flojas',
+        'Campaña de temporada',
+        'Primera visita',
+        'Combo',
+        'Ven con alguien',
+    ]) {
+        await expect(
+            page.locator('main').getByText(card, { exact: true }).first(),
+            `tarjeta «${card}»`,
+        ).toBeVisible();
+    }
+
+    for (const account of [
+        'con-caja@example.com',
+        'sin-caja@example.com',
+        'cliente@example.com',
+    ]) {
+        await page.context().clearCookies();
+        await login(page, account, 'password');
+        await expect(page).toHaveURL(/dashboard$/);
+        const read = await page.request.get('/promociones', {
+            maxRedirects: 0,
+        });
+        expect(read.status(), `leer promociones: ${account}`).not.toBe(200);
+        const write = await page.request.post('/promociones', {
+            maxRedirects: 0,
+            data: { name: 'Intruso' },
+        });
+        expect(
+            [302, 401, 403, 404, 419],
+            `crear promociones: ${account} (${write.status()})`,
+        ).toContain(write.status());
+        expect(write.status()).not.toBe(200);
+    }
+});
+
+test('avisos en este dispositivo: el personal y el cliente los encuentran en Ajustes', async ({
+    page,
+}) => {
+    test.setTimeout(120_000);
+
+    for (const account of ['sin-caja@example.com', 'cliente@example.com']) {
+        await page.context().clearCookies();
+        await login(page, account, 'password');
+        await expect(page).toHaveURL(/dashboard$/);
+        await page.goto('/settings/profile');
+        await expect(
+            page.getByRole('region', { name: 'Avisos en este dispositivo' }),
+        ).toBeVisible();
+    }
+});
+
+test('fila sin cita: se abre desde el menú donde el salón la usa y no existe donde no', async ({
+    page,
+}) => {
+    await login(page, 'permisos-duena@example.com', 'password');
+    await expect(page).toHaveURL(/dashboard$/);
+    expect(await menuTitles(page)).not.toContain('Fila sin cita');
+    await closeMenu(page);
+    const response = await page.request.get('/fila', { maxRedirects: 0 });
+    expect(response.status(), '/fila sin la fila activada').not.toBe(200);
+});

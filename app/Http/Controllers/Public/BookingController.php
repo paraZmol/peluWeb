@@ -166,8 +166,10 @@ class BookingController extends Controller
 
         foreach ($booking->services as $booked) {
             $service = $services->firstWhere('id', $booked->service_id);
+            // Its companion's name already erased (it is kept 30 days): repeat it for one.
+            $isNamelessRepeat = $booked->companion_name === null && in_array($booked->service_id, array_column($selections, 'serviceId'), true);
 
-            if ($service !== null) {
+            if ($service !== null && ! $isNamelessRepeat) {
                 // The option booked then, if the service still offers it.
                 $selections[] = [
                     'serviceId' => $service->id,

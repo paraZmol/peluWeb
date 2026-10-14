@@ -27,7 +27,8 @@ trait ParsesBookingSelection
             'services.*.id' => ['required', 'integer'],
             'services.*.variant' => ['nullable', 'integer'],
             // Only a name: one line, plain words.
-            'services.*.companion' => ['nullable', 'string', 'max:60', 'not_regex:/[\p{Cc}\p{Cf}<>]/u'],
+            // No links either: it reaches the team's push notices and the agenda.
+            'services.*.companion' => ['nullable', 'string', 'max:60', 'not_regex:/[\p{Cc}\p{Cf}<>\[\]{}]/u', 'not_regex:/(:\/\/|www\.)/i'],
             'staff' => ['nullable', 'integer'],
         ];
     }

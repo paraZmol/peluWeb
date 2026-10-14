@@ -295,7 +295,9 @@ describe('when only one of them comes', function () {
         expect(pbLatest()->services)->toHaveCount(2)->and(pbLatest()->price_cents)->toBe(6250);
     })->with(['completed', 'cancelled', 'no_show', 'expired']);
 
-    it('lets the professional of the visit do it, and not a colleague who only sees their own agenda', function () {
+    // Security audit, 2026-10-14: it lowers what is charged, like a discount,
+    // so it takes the cash permission — not even the professional of the visit.
+    it('takes the cash permission: not the professional of the visit, nor a colleague', function () {
         pbPromote();
         pbBook(pbTwo())->assertSessionHasNoErrors();
         $colleague = User::factory()->create();
@@ -303,10 +305,21 @@ describe('when only one of them comes', function () {
         SalonMember::factory()->for($this->salon)->create(['user_id' => $colleague->id]);
 
         pbDrop(pbLatest(), 'booker', $colleague)->assertForbidden();
+        pbDrop(pbLatest(), 'booker', $this->anaUser)->assertForbidden();
         expect(pbLatest()->services)->toHaveCount(2);
 
-        pbDrop(pbLatest(), 'booker', $this->anaUser)->assertSessionHasNoErrors();
+        pbDrop(pbLatest(), 'booker', $this->owner)->assertSessionHasNoErrors();
         expect(pbLatest()->services)->toHaveCount(1);
+    });
+
+    it('shows who comes along on the agenda only to who may take them off', function () {
+        pbPromote();
+        pbBook(pbTwo())->assertSessionHasNoErrors();
+        $companionFor = fn (User $viewer) => $this->actingAs($viewer)->get(route('agenda.index', ['date' => '2026-10-07']))
+            ->assertOk()->inertiaProps('bookings.0.companion');
+
+        expect($companionFor($this->owner))->toBe('Lucía')
+            ->and($companionFor($this->anaUser))->toBeNull();
     });
 
     it('commissions on what is charged for each person', function () {

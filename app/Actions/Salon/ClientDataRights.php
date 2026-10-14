@@ -5,6 +5,8 @@ namespace App\Actions\Salon;
 use App\Data\Salon\ConsentProof;
 use App\Enums\ConsentAction;
 use App\Enums\ConsentKind;
+use App\Models\Booking;
+use App\Models\BookingService;
 use App\Models\ClientConsent;
 use App\Models\ClientPhoto;
 use App\Models\Review;
@@ -84,6 +86,10 @@ class ClientDataRights
 
         // What they wrote stays as an opinion of the salon, without their name.
         Review::withoutGlobalScope('salon')->whereIn('salon_client_id', $files->modelKeys())->update(['author_name' => Review::ANONYMOUS]);
+
+        // The names of who came along with them: nobody is left to ask about them.
+        BookingService::query()->whereIn('booking_id', Booking::withoutGlobalScope('salon')->select('id')->whereIn('salon_client_id', $files->modelKeys()))
+            ->whereNotNull('companion_name')->update(['companion_name' => null]);
 
         // Their places on waiting lists go too: nobody is left to tell.
         WaitlistEntry::withoutGlobalScope('salon')->whereIn('salon_client_id', $files->modelKeys())->delete();

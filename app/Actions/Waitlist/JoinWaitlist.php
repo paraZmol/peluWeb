@@ -83,7 +83,8 @@ class JoinWaitlist
             $entry->salon_client_id = $client->id;
             $entry->staff_id = $staff?->id;
             $entry->date = $localDate;
-            $entry->selections = $selections;
+            // Without the name of who would come along: a third person's, and not needed to wait.
+            $entry->selections = array_map(fn (array $selection): array => ['service_id' => $selection['service_id'], 'variant_id' => $selection['variant_id']], $selections);
             $entry->save();
 
             return $entry;
