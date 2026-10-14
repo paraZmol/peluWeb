@@ -9,6 +9,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { PromotionForm } from '@/hooks/use-promotion-form';
+import { StaffField } from './staff-field';
+import type { TeamMember } from './types';
 import { WhenFields } from './when-fields';
 
 export const MAX_NAME = 120;
@@ -17,14 +19,15 @@ type Props = {
     form: PromotionForm;
     /** Days and hours already sit in the form itself ("Horas flojas"). */
     hidesWhen: boolean;
+    team: TeamMember[];
 };
 
 /** What most promotions leave as it comes: folded until someone asks. */
-export function MoreOptions({ form, hidesWhen }: Props) {
+export function MoreOptions({ form, hidesWhen, team }: Props) {
     const { data, setData, errors } = form;
     // An error inside must be seen: it opens unfolded.
-    const hasError = ['weekdays', 'from_time', 'to_time', 'quota', 'name'].some(
-        (field) => errors[field],
+    const hasError = Object.keys(errors).some((field) =>
+        /^(weekdays|from_time|to_time|quota|name|staff)/.test(field),
     );
 
     return (
@@ -72,6 +75,8 @@ export function MoreOptions({ form, hidesWhen }: Props) {
                     </p>
                     <InputError message={errors.quota} />
                 </div>
+
+                <StaffField form={form} team={team} />
 
                 {data.card === 'first_visit' ? (
                     <p className="text-sm text-muted-foreground">

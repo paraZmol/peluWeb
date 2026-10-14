@@ -71,6 +71,9 @@ test.describe('Promociones: lo que ve el cliente', () => {
         await expect(cut).toContainText('Con promoción S/ 30.00');
         // It holds from 9 to 18 only: the price says not every time gets it.
         await expect(cut).toContainText('en horarios con promo');
+        // With the whole team: neither the card nor the price names anyone.
+        await expect(cut).not.toContainText('con Olivia');
+        await expect(discount).not.toContainText('Con Olivia');
         await expect(
             services
                 .getByRole('listitem')
@@ -190,6 +193,11 @@ test.describe('Promociones: lo que ve el cliente', () => {
             'false',
         );
         await page.getByRole('button', { name: 'Continuar' }).click();
+        // It holds with anyone of the team: no one is marked for it.
+        await expect(
+            page.getByRole('button', { name: /Olivia Ofertas/ }),
+        ).not.toContainText('con promo');
+        await expect(page.getByText(/vale solo con/)).toHaveCount(0);
         await page.getByRole('button', { name: /Olivia Ofertas/ }).click();
 
         // Tomorrow: from 7 to 22, so some times have it and some do not.

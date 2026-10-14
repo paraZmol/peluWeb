@@ -45,6 +45,7 @@ use Illuminate\Support\Facades\DB;
  * @property CarbonImmutable|null $published_at
  * @property-read Collection<int, Service> $services
  * @property-read Service|null $giftService
+ * @property-read Collection<int, Staff> $staff
  */
 class Promotion extends Model
 {
@@ -97,6 +98,42 @@ class Promotion extends Model
     }
 
     /**
+     * The professionals it holds with; none = all of the team.
+     *
+     * @return BelongsToMany<Staff, $this>
+     */
+    public function staff(): BelongsToMany
+    {
+        // Removed ones too: losing its only professional must not open it
+        // to the whole team.
+        return $this->belongsToMany(Staff::class)->withoutGlobalScope('salon')->withTrashed();
+    }
+
+    /**
+     * The ones of its professionals who can still be chosen, in the
+     * team's order. Empty for a promotion of all of the team.
+     *
+     * @return Collection<int, Staff>
+     */
+    public function bookableStaff(): Collection
+    {
+        return $this->staff->filter(fn (Staff $person): bool => $person->is_active && ! $person->trashed())->sortBy('position')->values();
+    }
+
+    /**
+     * @return list<int>|null null when it holds with all of the team
+     */
+    public function staffIds(): ?array
+    {
+        $ids = $this->relationLoaded('staff') ? $this->staff->modelKeys() : $this->staff()->pluck('staff.id')->all();
+
+        $ids = array_map(intval(...), $ids);
+        sort($ids);
+
+        return $ids === [] ? null : $ids;
+    }
+
+    /**
      * @return BelongsTo<Service, $this>
      */
     public function giftService(): BelongsTo
@@ -105,8 +142,9 @@ class Promotion extends Model
     }
 
     /**
-     * Every service it names is still on offer. When one is switched off
-     * the promotion stops applying until the owner looks at it.
+     * Every service it names is still on offer, and so is one of its
+     * professionals when it has some. When one is switched off the
+     * promotion stops applying until the owner looks at it.
      */
     public function isIntact(): bool
     {
@@ -114,7 +152,9 @@ class Promotion extends Model
 
         return $this->services->isNotEmpty()
             && $this->services->every($isOffered)
-            && ($this->mechanic !== PromotionMechanic::Gift || $isOffered($this->giftService));
+            && ($this->mechanic !== PromotionMechanic::Gift || $isOffered($this->giftService))
+            // Only with some of the team: one of them must still be there.
+            && ($this->staffIds() === null || $this->bookableStaff()->isNotEmpty());
     }
 
     /**
@@ -133,6 +173,7 @@ class Promotion extends Model
             giftPriceCents: $gift?->price_cents,
             giftMinutes: $gift === null ? null : $gift->active_minutes + $gift->idle_minutes + $gift->finish_minutes,
             hasDeposit: $salon->deposit_percent > 0,
+            staffNames: array_values($this->bookableStaff()->pluck('name')->all()),
         );
     }
 
@@ -159,7 +200,7 @@ class Promotion extends Model
      */
     public function comboPrice(): ?ComboPrice
     {
-        return $this->mechanic === PromotionMechanic::Combo ? self::priceCombo($this->services, (int) $this->amount_cents) : null;
+        return $this->mechanic === PromotionMechanic::Combo ? self::priceCombo($this->services, (int) $this->amount_cents, $this->staffIds()) : null;
     }
 
     /**
@@ -168,13 +209,15 @@ class Promotion extends Model
      * announced can be booked. Not bookable when nobody does them all.
      *
      * @param  Collection<int, Service>  $services
+     * @param  list<int>|null  $staffIds  only with these professionals; null = all of the team
      */
-    public static function priceCombo(Collection $services, int $savingCents): ComboPrice
+    public static function priceCombo(Collection $services, int $savingCents, ?array $staffIds = null): ComboPrice
     {
         $services->loadMissing('variants');
         $byStaff = DB::table('service_staff')
             ->join('staff', 'staff.id', '=', 'service_staff.staff_id')
             ->whereIn('service_staff.service_id', $services->modelKeys())
+            ->when($staffIds !== null, fn ($query) => $query->whereIn('service_staff.staff_id', (array) $staffIds))
             ->where('staff.is_active', true)
             ->whereNull('staff.deleted_at')
             ->get(['service_staff.staff_id', 'service_staff.service_id', 'service_staff.price_cents'])
@@ -209,6 +252,7 @@ class Promotion extends Model
             amountCents: $this->amount_cents,
             giftServiceId: $this->gift_service_id,
             newClientsOnly: $this->new_clients_only,
+            staffIds: $this->staffIds(),
         );
     }
 }

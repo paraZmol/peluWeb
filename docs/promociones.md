@@ -172,6 +172,16 @@ imagen descargable para Instagram.
 - Junto al campo del nombre: "Nombre de quien te acompaña: solo el nombre o como prefiera que lo
   llamen. Lo verán el salón y tú, únicamente para esta cita. Avísale que lo compartes."
 
+### Filtro por profesional (segunda entrega, 2026-10-14)
+- En «Más opciones» de cualquier tarjeta: "Solo con…" y la lista del equipo; ninguna marcada =
+  todo el equipo. Se guarda en `promotion_staff`.
+- Aplica solo cuando quien reserva **elige** a una de esas personas (o el personal reserva con
+  ella). Con «Cualquiera» no aplica: el precio mostrado no puede depender de a quién se asigna
+  después. Los horarios se marcan "con promo" solo con esa persona elegida.
+- Tarjeta pública: "Con {nombres}". Letra chica: "Solo con {nombres}: al reservar, elige a una
+  de estas personas." Solo el salón puede pasar la cita a otra persona del equipo, y entonces el
+  precio se mantiene, como al mover cualquier cita con promoción.
+
 ### Horas flojas
 - Los campos de Descuento con días y horas a la vista y obligatorios (por defecto lunes a
   miércoles, 10:00–16:00, 20 %, 30 días).

@@ -14,8 +14,18 @@ final readonly class BookingQuote
     /**
      * @param  list<QuoteItem>  $items
      * @param  PromotionTerms|null  $promotion  the one already applied to the prices of $items
+     * @param  int|null  $chosenStaffId  the professional the person chose; null for "anyone"
      */
-    public function __construct(public array $items, public ?PromotionTerms $promotion = null) {}
+    public function __construct(public array $items, public ?PromotionTerms $promotion = null, public ?int $chosenStaffId = null) {}
+
+    /**
+     * The same quote, saying whom the person chose: a promotion of some of
+     * the team holds only then.
+     */
+    public function chosenWith(?int $staffId): self
+    {
+        return new self($this->items, $this->promotion, $staffId);
+    }
 
     /**
      * What the client pays, any promotion already taken off.
@@ -41,7 +51,7 @@ final readonly class BookingQuote
     {
         $normal = array_map(fn (QuoteItem $item): QuoteItem => $item->chargedAt($item->normalPriceCents()), $this->items);
 
-        return new self($promotion->price($normal), $promotion);
+        return new self($promotion->price($normal), $promotion, $this->chosenStaffId);
     }
 
     public function shape(): BookingShape

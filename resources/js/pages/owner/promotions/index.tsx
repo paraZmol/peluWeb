@@ -15,9 +15,12 @@ import { Button } from '@/components/ui/button';
 import { useCurrentSalon } from '@/hooks/use-current-salon';
 import type { PromotionTarget } from '@/hooks/use-promotion-form';
 import { index } from '@/routes/promotions';
+import type { SalonTheme } from '@/types';
 
 type Props = Omit<PromotionContext, 'salonName'> & {
     promotions: Promotion[];
+    /** The template of the salon's page, for the image to share. */
+    theme?: SalonTheme;
 };
 
 /** What each dialog shows stays while it closes, so its content does not flip. */
@@ -29,7 +32,7 @@ type Open = {
     shared?: Promotion;
 };
 
-export default function Promotions({ promotions, ...props }: Props) {
+export default function Promotions({ promotions, theme, ...props }: Props) {
     const { currentSalon } = useCurrentSalon();
     const context = { ...props, salonName: currentSalon?.name ?? '' };
     const [open, setOpen] = useState<Open>({
@@ -77,6 +80,7 @@ export default function Promotions({ promotions, ...props }: Props) {
                             <PromotionCard
                                 key={promotion.id}
                                 promotion={promotion}
+                                team={context.team}
                                 onEdit={(one) =>
                                     fill({ card: one.card, promotion: one })
                                 }
@@ -106,6 +110,8 @@ export default function Promotions({ promotions, ...props }: Props) {
                 open={open.isSharing}
                 onClose={() => change({ isSharing: false })}
                 promotion={open.shared}
+                context={context}
+                theme={theme}
             />
         </>
     );

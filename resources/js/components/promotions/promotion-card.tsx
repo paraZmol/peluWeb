@@ -1,12 +1,14 @@
-import { CalendarDays, Clock } from 'lucide-react';
+import { CalendarDays, Clock, UserRound } from 'lucide-react';
 import { formatPrice } from '@/lib/format';
-import { dateRange } from '@/lib/promotions';
+import { dateRange, list } from '@/lib/promotions';
 import { PromotionActions } from './promotion-actions';
 import { PromotionStateTag } from './promotion-state-tag';
-import type { Promotion } from './types';
+import type { Promotion, TeamMember } from './types';
 
 type Props = {
     promotion: Promotion;
+    /** To name who it is limited to. */
+    team: TeamMember[];
     onEdit: (promotion: Promotion) => void;
     onShare: (promotion: Promotion) => void;
 };
@@ -28,8 +30,11 @@ function Figure({ label, value }: { label: string; value: string }) {
 }
 
 /** One promotion of the salon: what it says, where it stands, what it brought. */
-export function PromotionCard({ promotion, onEdit, onShare }: Props) {
+export function PromotionCard({ promotion, team, onEdit, onShare }: Props) {
     const { results } = promotion;
+    const staffNames = team
+        .filter((person) => promotion.form.staff?.includes(person.id))
+        .map((person) => person.name);
 
     return (
         <li
@@ -71,6 +76,15 @@ export function PromotionCard({ promotion, onEdit, onShare }: Props) {
                         <span className="first-letter:uppercase">
                             {promotion.when}
                         </span>
+                    </p>
+                )}
+                {staffNames.length > 0 && (
+                    <p className="flex items-start gap-2">
+                        <UserRound
+                            className="mt-0.5 size-4 shrink-0"
+                            aria-hidden
+                        />
+                        <span>Solo con {list(staffNames)}</span>
                     </p>
                 )}
             </div>

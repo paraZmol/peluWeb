@@ -13,7 +13,9 @@ import { useClipboard } from '@/hooks/use-clipboard';
 import { fullTitle, instagramText, whatsappShareUrl } from '@/lib/promotions';
 import { SHEET_ON_PHONE } from '@/lib/sheet';
 import { cn } from '@/lib/utils';
-import type { Promotion } from './types';
+import type { SalonTheme } from '@/types';
+import { PosterButton } from './poster-button';
+import type { Promotion, PromotionContext } from './types';
 
 type Copied = 'link' | 'instagram' | 'failed' | null;
 
@@ -22,10 +24,19 @@ type Props = {
     onClose: () => void;
     /** Stays while the dialog closes, so its title does not flip. */
     promotion?: Promotion;
+    /** For the image: the services, the team and the salon's name. */
+    context: PromotionContext;
+    theme?: SalonTheme;
 };
 
-/** Three ways to take a promotion to where the clients are. */
-export function ShareDialog({ open, onClose, promotion }: Props) {
+/** Four ways to take a promotion to where the clients are. */
+export function ShareDialog({
+    open,
+    onClose,
+    promotion,
+    context,
+    theme,
+}: Props) {
     const portalTheme = usePortalTheme();
     const [, copy] = useClipboard();
     const [copied, setCopied] = useState<Copied>(null);
@@ -93,6 +104,11 @@ export function ShareDialog({ open, onClose, promotion }: Props) {
                                 ? 'Texto copiado'
                                 : 'Copiar texto para Instagram'}
                         </Button>
+                        <PosterButton
+                            promotion={promotion}
+                            context={context}
+                            theme={theme}
+                        />
                         <p role="status" className="min-h-5 text-sm">
                             {copied === 'failed' && (
                                 <span className="text-destructive-foreground">

@@ -36,6 +36,11 @@ const services = [
 
 const context = {
     services,
+    team: [
+        { id: 7, name: 'Ana' },
+        { id: 8, name: 'Luis' },
+        { id: 9, name: 'Eva' },
+    ],
     limits: { minPercent: 5, maxPercent: 70, maxDays: 90, maxActive: 3 },
     today: '2026-10-12',
     depositPercent: 30,
@@ -148,6 +153,15 @@ describe('promotionPayload', () => {
         expect(promotionPayload(fields, false)).not.toHaveProperty('publish');
     });
 
+    it('sends who it is limited to, and none for all of the team', () => {
+        const fields = newPromotionFields('discount', '2026-10-12');
+
+        expect(promotionPayload(fields, false).staff).toEqual([]);
+        expect(
+            promotionPayload({ ...fields, staff: [8, 7] }, false).staff,
+        ).toEqual([8, 7]);
+    });
+
     it('sends only the gift for a gift', () => {
         const fields = {
             ...newPromotionFields('gift', '2026-10-12'),
@@ -257,6 +271,28 @@ describe('previewOf', () => {
         expect(preview?.finePrint).toContain(
             'El precio con promoción se reserva hasta el plazo para enviar la seña.',
         );
+    });
+
+    it('names who it is limited to in the fine print, in the team order', () => {
+        const one = previewOf(
+            { ...discount, services: [1], staff: [8] },
+            context,
+        );
+        const two = previewOf(
+            { ...discount, services: [1], staff: [9, 7] },
+            context,
+        );
+
+        // Right after the places, like PromotionCopy::finePrint.
+        expect(one?.finePrint).toContain(
+            'mientras haya horarios libres. Solo con Luis: al reservar, elige a esa persona.',
+        );
+        expect(two?.finePrint).toContain(
+            'Solo con Ana y Eva: al reservar, elige a una de estas personas.',
+        );
+        expect(
+            previewOf({ ...discount, services: [1] }, context)?.finePrint,
+        ).not.toContain('Solo con');
     });
 
     it('leaves the deposit out when the salon asks for none', () => {

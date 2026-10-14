@@ -87,7 +87,7 @@ class BookingController extends Controller
             'slots' => AvailabilityPayload::slots(
                 array_keys($slots),
                 $salon,
-                $cheapest === null ? [] : $promotions->forStarts($salon, $client, $cheapest, array_keys($slots)),
+                $cheapest === null ? [] : $promotions->forStarts($salon, $client, $cheapest->chosenWith($staff?->id), array_keys($slots)),
             ),
             'quote' => AvailabilityPayload::quote($quotes, $salon->depositPercentFor($level === ClientLevel::Vip)),
         ]);

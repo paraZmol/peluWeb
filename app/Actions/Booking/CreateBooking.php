@@ -165,7 +165,7 @@ class CreateBooking
         // Priced under the lock: the promotion's places are counted with
         // its row locked, after the professional's and the client's.
         if ($data->withPromotion) {
-            $quote = $this->quote->promote($data->salon, $client, $quote, $data->startsAt, underLock: true);
+            $quote = $this->quote->promote($data->salon, $client, $quote->chosenWith($data->staff?->id), $data->startsAt, underLock: true);
         }
 
         // Its last place went, or it was paused, since they saw the price:

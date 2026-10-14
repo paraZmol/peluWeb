@@ -22,6 +22,7 @@ final readonly class PromotionTerms
      * @param  list<int>|null  $weekdays  ISO weekdays (1 = Monday); null = every day
      * @param  int|null  $fromMinute  minutes from midnight the visit may start in; null = any time
      * @param  bool  $newClientsOnly  only for someone who never had a booking at the salon (checked by ApplyPromotion)
+     * @param  list<int>|null  $staffIds  only with these professionals, when chosen; null = all of the team
      */
     public function __construct(
         public int $id,
@@ -37,7 +38,17 @@ final readonly class PromotionTerms
         public ?int $amountCents = null,
         public ?int $giftServiceId = null,
         public bool $newClientsOnly = false,
+        public ?array $staffIds = null,
     ) {}
+
+    /**
+     * Whether it holds with that professional. Limited to some of the
+     * team, it needs one of them chosen: null ("anyone") does not count.
+     */
+    public function allowsStaff(?int $chosenStaffId): bool
+    {
+        return $this->staffIds === null || ($chosenStaffId !== null && in_array($chosenStaffId, $this->staffIds, true));
+    }
 
     /**
      * Whether a visit starting then qualifies: by the date of the visit,

@@ -12,6 +12,7 @@ final readonly class PromotionDraft
 {
     /**
      * @param  string  $card  the card they started from: discount, gift, quiet_hours, season or first_visit
+     * @param  list<int>  $staffIds  only with these professionals; empty = all of the team
      * @param  bool  $newClientsOnly  "Primera visita": only for someone who never booked at the salon
      * @param  list<int>  $serviceIds  services of this salon
      * @param  string  $startsOn  "Y-m-d" on the salon's calendar
@@ -36,5 +37,6 @@ final readonly class PromotionDraft
         public ?string $name = null,
         public ?string $overline = null,
         public bool $newClientsOnly = false,
+        public array $staffIds = [],
     ) {}
 }

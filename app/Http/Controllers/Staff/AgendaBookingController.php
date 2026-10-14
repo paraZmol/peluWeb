@@ -80,7 +80,7 @@ class AgendaBookingController extends SalonAreaController
             'slots' => AvailabilityPayload::slots(
                 array_keys($slots),
                 $salon,
-                $cheapest === null ? [] : $promotions->forStarts($salon, null, $cheapest, array_keys($slots)),
+                $cheapest === null ? [] : $promotions->forStarts($salon, null, $cheapest->chosenWith($staff?->id), array_keys($slots)),
             ),
             'quote' => AvailabilityPayload::quote($quotes, 0),
         ]);

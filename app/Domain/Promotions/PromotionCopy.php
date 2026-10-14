@@ -67,6 +67,10 @@ final class PromotionCopy
             ? 'Sin límite de cupos: vale para todas las citas que se reserven dentro de estas fechas, mientras haya horarios libres.'
             : "Cupos: {$facts->quota} ".($facts->quota === 1 ? 'reserva' : 'reservas').'.';
 
+        if ($facts->staffNames !== []) {
+            $parts[] = 'Solo con '.self::list($facts->staffNames).': al reservar, elige a '.(count($facts->staffNames) === 1 ? 'esa persona.' : 'una de estas personas.');
+        }
+
         if ($terms->newClientsOnly) {
             $parts[] = "Solo para tu primera reserva en {$facts->salonName}: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono.";
         } elseif ($facts->oncePerClient) {

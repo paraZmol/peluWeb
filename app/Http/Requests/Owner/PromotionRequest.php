@@ -75,6 +75,9 @@ class PromotionRequest extends FormRequest
             'weekdays.*' => ['integer', 'distinct', 'between:1,7'],
             'from_time' => [$isQuietHours ? 'required' : 'nullable', 'date_format:H:i', 'required_with:to_time'],
             'to_time' => [$isQuietHours ? 'required' : 'nullable', 'date_format:H:i', 'required_with:from_time', 'different:from_time'],
+            // Only with some of the team; none = all of it. Another salon's professional is "not found".
+            'staff' => ['nullable', 'array', 'list', 'max:50'],
+            'staff.*' => ['integer', 'distinct', Rule::exists('staff', 'id')->where('salon_id', app(CurrentSalon::class)->get()?->id)->where('is_active', true)->whereNull('deleted_at')],
             'quota' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'once_per_client' => ['boolean'],
             // One line of plain words: it goes into mails, shared texts and bookings.
@@ -212,6 +215,7 @@ class PromotionRequest extends FormRequest
             name: $this->filled('name') ? $this->string('name')->trim()->toString() : null,
             overline: $this->filled('overline') ? $this->string('overline')->trim()->toString() : null,
             newClientsOnly: $this->string('card')->toString() === 'first_visit',
+            staffIds: array_values(array_map(intval(...), (array) $this->validated('staff', []))),
         );
     }
 }

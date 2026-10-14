@@ -81,6 +81,8 @@ export type Promotion = {
         to_time: string | null;
         quota: number | null;
         once_per_client: boolean;
+        /** Only with these professionals; empty = all of the team. */
+        staff?: number[];
     };
     results: PromotionResults;
 };
@@ -92,9 +94,14 @@ export type PromotionLimits = {
     maxActive: number;
 };
 
+/** Someone of the active team a promotion can be limited to. */
+export type TeamMember = { id: number; name: string };
+
 /** What the form needs besides the promotion itself. */
 export type PromotionContext = {
     services: PromotionService[];
+    /** The active team, in its order: who "Solo con…" can name. */
+    team: TeamMember[];
     limits: PromotionLimits;
     /** Today on the salon's calendar. */
     today: string;
@@ -125,6 +132,8 @@ export type PromotionFields = {
     to_time: string;
     quota: string;
     once_per_client: boolean;
+    /** Only with these professionals; none ticked = all of the team. */
+    staff: number[];
     name: string;
     /** Key of the occasion picked (season card); empty for none. */
     occasion: string;

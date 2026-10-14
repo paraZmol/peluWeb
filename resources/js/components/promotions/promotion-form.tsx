@@ -116,7 +116,11 @@ export function PromotionForm({ target, context, onSaved }: Props) {
                         maxDays={limits.maxDays}
                     />
 
-                    <MoreOptions form={form} hidesWhen={hasWhen} />
+                    <MoreOptions
+                        form={form}
+                        hidesWhen={hasWhen}
+                        team={context.team}
+                    />
                 </div>
 
                 <div className="lg:sticky lg:top-0">

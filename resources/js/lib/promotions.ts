@@ -98,6 +98,8 @@ export type PromotionFacts = {
     /** The salon asks for a deposit: the price is held until it is due. */
     hasDeposit: boolean;
     gift?: GiftFacts | null;
+    /** Only with these professionals, in the team's order; empty = all of it. */
+    staffNames?: string[];
 };
 
 /**
@@ -163,6 +165,15 @@ function whoMayUseIt(terms: CopyTerms, facts: PromotionFacts): string | null {
     }
 
     return facts.isOncePerClient ? 'Una por cliente.' : null;
+}
+
+/** "Solo con Ana: al reservar, elige a esa persona."; null for all of the team. */
+export function staffTerms(staffNames: string[] = []): string | null {
+    if (staffNames.length === 0) {
+        return null;
+    }
+
+    return `Solo con ${list(staffNames)}: al reservar, elige a ${staffNames.length === 1 ? 'esa persona.' : 'una de estas personas.'}`;
 }
 
 /** "lunes, martes y miércoles"; null for every day. */
@@ -260,6 +271,7 @@ export function promotionFinePrint(
         facts.quota === null
             ? 'Sin límite de cupos: vale para todas las citas que se reserven dentro de estas fechas, mientras haya horarios libres.'
             : `${quotaLabel(facts.quota)}.`,
+        staffTerms(facts.staffNames),
         whoMayUseIt(terms, facts),
         savingTerms(terms, serviceNames),
         terms.mechanic === 'gift' && facts.gift ? giftTerms(facts.gift) : null,

@@ -143,6 +143,33 @@ describe('promotionFinePrint', () => {
         );
     });
 
+    it('names who it holds with, after the places and before who may use it', () => {
+        expect(
+            promotionFinePrint(terms('discount', { percent: 20 }), ['Corte'], {
+                ...facts,
+                quota: 5,
+                isOncePerClient: true,
+                staffNames: ['Leo'],
+            }),
+        ).toContain(
+            'Cupos: 5 reservas. Solo con Leo: al reservar, elige a esa persona. Una por cliente.',
+        );
+        expect(
+            promotionFinePrint(terms('discount', { percent: 20 }), ['Corte'], {
+                ...facts,
+                staffNames: ['Ana', 'Leo', 'Eva'],
+            }),
+        ).toContain(
+            'Solo con Ana, Leo y Eva: al reservar, elige a una de estas personas.',
+        );
+        expect(
+            promotionFinePrint(terms('discount', { percent: 20 }), ['Corte'], {
+                ...facts,
+                staffNames: [],
+            }),
+        ).not.toContain('Solo con');
+    });
+
     it('says a fixed amount comes off once, when it covers more than one service', () => {
         const amount = terms('discount', { amountCents: 1000 });
         const once =

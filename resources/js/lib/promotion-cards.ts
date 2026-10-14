@@ -157,6 +157,7 @@ export function newPromotionFields(
         to_time: isQuiet ? QUIET_HOURS.to : '',
         quota: '',
         once_per_client: false,
+        staff: [],
         name: '',
         occasion: occasion?.key ?? '',
         overline: '',
@@ -191,6 +192,7 @@ export function savedPromotionFields(
         to_time: form.to_time ?? '',
         quota: form.quota === null ? '' : String(form.quota),
         once_per_client: form.once_per_client,
+        staff: form.staff ?? [],
         name,
         occasion:
             promotion.card === 'season'
@@ -228,6 +230,7 @@ export function promotionPayload(fields: PromotionFields, publish: boolean) {
         to_time: text(fields.to_time),
         quota: text(fields.quota),
         once_per_client: fields.once_per_client,
+        staff: fields.staff,
         name: text(fields.name),
         overline: fields.card === 'season' ? text(fields.overline) : null,
         ...(publish ? { publish: true } : {}),

@@ -9,6 +9,7 @@ import type {
 import type { PublicPromotion } from '@/components/public/types';
 import { sumAmounts } from './format';
 import { fromCents, toCents } from './money';
+import { staffNamesOf, staffPriceNote } from './promo-staff';
 import { depositCents, PAIR_FREE, PAIR_HALF, percentPrice } from './promotions';
 
 /*
@@ -33,10 +34,25 @@ export type ServiceOffer = {
     isCombo?: boolean;
     /** Its own word on the tag ("2x1"), instead of "Promo" or "Combo". */
     label?: string;
+    /** Only with these professionals: "Quien esté disponible" pays `normal`. */
+    onlyWith?: string[];
 };
 
 /** Goes with a price that only some times of the week get. */
 export const LIMITED_PRICE_NOTE = 'en horarios con promo';
+
+/**
+ * What goes under a crossed-out price that not every booking gets: "con
+ * Ana", "en horarios con promo" or both. Null when any booking gets it.
+ */
+export function offerNote(offer: ServiceOffer | undefined): string | null {
+    const notes = [
+        staffPriceNote(offer?.onlyWith),
+        offer?.isLimited ? LIMITED_PRICE_NOTE : null,
+    ].filter((note) => note !== null);
+
+    return notes.length === 0 ? null : notes.join(', ');
+}
 
 /** The word on a service with an offer: a combo is not a price of its own. */
 export function offerLabel(offer: ServiceOffer): string {
@@ -68,6 +84,9 @@ export function bestOffers(
             promotion.prices.map((price) => ({
                 ...price,
                 isLimited: promotion.when !== null,
+                ...(staffNamesOf(promotion).length > 0 && {
+                    onlyWith: staffNamesOf(promotion),
+                }),
             })),
         );
 

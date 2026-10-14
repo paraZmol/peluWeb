@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { login, watchForErrors } from './support';
@@ -123,6 +124,25 @@ test.describe('Promociones del salón', () => {
             'href',
             /^https:\/\/wa\.me\/\?text=20.*V%C3%A1lido%20del.*Condiciones%20y%20reserva/,
         );
+
+        // The image for Instagram: a 1080 × 1350 PNG made in the browser.
+        const downloading = page.waitForEvent('download');
+        await share.getByRole('button', { name: 'Descargar imagen' }).click();
+        const download = await downloading;
+        expect(download.suggestedFilename()).toMatch(/^promocion-\d+\.png$/);
+        const image = readFileSync(await download.path());
+        // The PNG header: its signature, then width and height.
+        expect(image.subarray(1, 4).toString()).toBe('PNG');
+        expect(image.readUInt32BE(16)).toBe(1080);
+        expect(image.readUInt32BE(20)).toBe(1350);
+        await expect(
+            share.getByRole('button', { name: 'Descargar imagen' }),
+        ).toBeEnabled();
+        if (process.env.E2E_SHOTS) {
+            await download.saveAs(
+                `storage/app/shots/promo-instagram-${testInfo.project.name}.png`,
+            );
+        }
         await page.keyboard.press('Escape');
         await expect(share).toHaveCount(0);
 
@@ -192,10 +212,12 @@ test.describe('Promociones del salón', () => {
         assertNoErrors();
     });
 
-    test('la dueña publica una «Primera visita» para clientes nuevos', async ({
+    test('la dueña publica una «Primera visita» solo con ella y quien visita la ve con su nombre', async ({
         page,
+        browser,
     }, testInfo) => {
         const isPhone = testInfo.project.name === 'movil';
+        const owner = isPhone ? 'Prisca Movil' : 'Prisca Escritorio';
         const assertNoErrors = watchForErrors(page);
         const title = '15 % menos en Barba de promo en tu primera visita';
 
@@ -239,13 +261,70 @@ test.describe('Promociones del salón', () => {
             `Solo para tu primera reserva en Salón Promos ${isPhone ? 'Movil' : 'Escritorio'}: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada.`,
         );
         await expect(preview).not.toContainText('Una por cliente.');
+
+        // Only with her: the client has to choose her when booking.
+        const staffBox = sheet.getByRole('group', { name: /Solo con/ });
+        await expect(staffBox).toContainText(
+            'Sin marcar a nadie, vale con todo el equipo.',
+        );
+        await staffBox.getByRole('checkbox', { name: owner }).check();
+        await expect(preview).toContainText(
+            `Solo con ${owner}: al reservar, elige a esa persona.`,
+        );
         expect(await hasHorizontalScroll(page)).toBe(false);
+        if (process.env.E2E_SHOTS) {
+            await staffBox.scrollIntoViewIfNeeded();
+            await page.screenshot({
+                path: `storage/app/shots/promo-solo-con-${testInfo.project.name}.png`,
+            });
+        }
 
         await sheet.getByRole('button', { name: 'Publicar' }).click();
         await expect(page.getByText('Promoción publicada.')).toBeVisible();
         await expect(card(page, title)).toContainText('Activa');
-
+        await expect(card(page, title)).toContainText(`Solo con ${owner}`);
         assertNoErrors();
+
+        // Someone who visits: the card and the price name her, and the
+        // wizard starts with her chosen and marked.
+        const guest = await browser.newPage(
+            isPhone ? { viewport: PHONE } : undefined,
+        );
+        await guest.goto(`/s/salon-promos-${testInfo.project.name}`);
+        const offer = guest
+            .getByRole('region', { name: 'Promociones' })
+            .getByRole('listitem', { name: title });
+        await expect(offer).toContainText(`Con ${owner}`);
+        await expect(
+            guest
+                .getByRole('region', { name: 'Servicios' })
+                .getByRole('listitem')
+                .filter({ hasText: 'Barba de promo' }),
+        ).toContainText(`con ${owner}`);
+        await offer
+            .getByRole('link', { name: /^Reservar con esta promo/ })
+            .click();
+        await expect(guest).toHaveURL(/\/reservar\?promo=\d+$/);
+        await expect(
+            guest.getByRole('button', { name: /Barba de promo/ }),
+        ).toContainText(`con ${owner}`);
+        await guest.getByRole('button', { name: 'Continuar' }).click();
+        await expect(
+            guest.getByText(
+                `${title} vale solo con ${owner}: elige a esa persona para tenerla.`,
+            ),
+        ).toBeVisible();
+        await expect(
+            guest.getByRole('button', { name: new RegExp(owner) }),
+        ).toContainText('con promo');
+        expect(await hasHorizontalScroll(guest)).toBe(false);
+        if (process.env.E2E_SHOTS) {
+            await guest.screenshot({
+                path: `storage/app/shots/promo-solo-con-wizard-${testInfo.project.name}.png`,
+                fullPage: true,
+            });
+        }
+        await guest.close();
     });
 
     test('la dueña publica un combo y quien visita lo reserva con los dos servicios marcados', async ({

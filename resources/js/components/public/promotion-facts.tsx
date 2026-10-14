@@ -1,5 +1,6 @@
-import { CalendarDays, Clock, Ticket } from 'lucide-react';
-import { quotaLabel } from '@/lib/promotions';
+import { CalendarDays, Clock, Ticket, UserRound } from 'lucide-react';
+import { staffNamesOf } from '@/lib/promo-staff';
+import { list, quotaLabel } from '@/lib/promotions';
 import type { PublicPromotion } from './types';
 
 type Props = {
@@ -8,12 +9,22 @@ type Props = {
     hidesWhen: boolean;
 };
 
-/** When it holds, how long it runs and how many it takes. */
+/** With whom and when it holds, how long it runs and how many it takes. */
 export function PromotionFacts({ promotion, hidesWhen }: Props) {
     const quota = quotaLabel(promotion.quota);
+    const staffNames = staffNamesOf(promotion);
 
     return (
         <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+            {staffNames.length > 0 && (
+                <li className="flex items-start gap-2 font-semibold text-foreground">
+                    <UserRound
+                        className="mt-0.5 size-4 shrink-0 text-brand-text"
+                        aria-hidden
+                    />
+                    Con {list(staffNames)}
+                </li>
+            )}
             {promotion.when && !hidesWhen && (
                 <li className="flex items-start gap-2">
                     <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />

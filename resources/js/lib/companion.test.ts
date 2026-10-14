@@ -116,6 +116,7 @@ describe('the owner’s form', () => {
         today: '2026-10-12',
         depositPercent: 20,
         salonName: 'Estudio Luz',
+        team: [],
     };
 
     it('offers only services with one fixed price and no add-ons', () => {

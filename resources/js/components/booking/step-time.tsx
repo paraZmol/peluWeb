@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import type { useAvailability } from '@/hooks/use-availability';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { limitedPromotionHint } from '@/lib/promo-offers';
+import { holdsWith } from '@/lib/promo-staff';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { DayStrip, toDate } from './day-strip';
 import { SlotGrid } from './slot-grid';
@@ -25,7 +26,10 @@ export function StepTime({ days, wizard, availability, waitlist }: Props) {
     const { slots, error, isLoading, retry } = availability;
     const { chooseDate } = wizard;
     const promotionHint = limitedPromotionHint(
-        wizard.promotions,
+        // Not one that holds only with someone else of the team.
+        wizard.promotions.filter((promotion) =>
+            holdsWith(promotion, wizard.staffId),
+        ),
         wizard.chosen.map((service) => service.id),
     );
 

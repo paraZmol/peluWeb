@@ -9,6 +9,7 @@ use App\Enums\PromotionStatus;
 use App\Http\Requests\Owner\PromotionRequest;
 use App\Models\Promotion;
 use App\Models\Service;
+use App\Models\Staff;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,9 @@ class PromotionController extends SalonAreaController
                     // One fixed price: the only kind that can be given away.
                     'canBeGift' => $service->variants->isEmpty() && ! $service->requires_evaluation,
                 ])->values(),
+            // Who it may be limited to: the active team.
+            'team' => Staff::query()->where('is_active', true)->orderBy('position')->get(['id', 'name'])
+                ->map(fn (Staff $person): array => ['id' => $person->id, 'name' => $person->name])->values(),
             'limits' => [
                 'minPercent' => PromotionRequest::MIN_PERCENT,
                 'maxPercent' => PromotionRequest::MAX_PERCENT,
@@ -52,6 +56,8 @@ class PromotionController extends SalonAreaController
             ],
             'today' => $salon->localNow()->toDateString(),
             'depositPercent' => $salon->deposit_percent,
+            // The image to share is drawn in the salon's own template.
+            'theme' => $salon->theme->value,
         ]);
     }
 

@@ -1,5 +1,5 @@
 import { formatPrice } from '@/lib/format';
-import { LIMITED_PRICE_NOTE } from '@/lib/promo-offers';
+import { offerNote } from '@/lib/promo-offers';
 import type { ServiceOffer } from '@/lib/promo-offers';
 import type { PublicService } from '../types';
 
@@ -18,6 +18,7 @@ type Props = {
 export function RowPrice({ service, offer: anyOffer, fromClassName }: Props) {
     // A combo's service alone keeps its price: nothing to cross out.
     const offer = anyOffer?.isCombo ? undefined : anyOffer;
+    const note = offerNote(offer);
 
     return (
         <>
@@ -36,9 +37,9 @@ export function RowPrice({ service, offer: anyOffer, fromClassName }: Props) {
             <span className={offer && 'text-brand-text'}>
                 {formatPrice(offer?.promo ?? service.priceFrom)}
             </span>
-            {offer?.isLimited && (
-                <span className="block text-xs font-normal whitespace-nowrap text-muted-foreground">
-                    {LIMITED_PRICE_NOTE}
+            {note && (
+                <span className="block text-xs font-normal text-muted-foreground">
+                    {note}
                 </span>
             )}
         </>

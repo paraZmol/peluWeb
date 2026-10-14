@@ -134,6 +134,11 @@ export type PublicPromotion = {
      * server sends it, read from the system's title (`pairPercent`).
      */
     pair?: { percent: number } | null;
+    /**
+     * Only with these professionals, when chosen; empty = all of the team.
+     * With "Quien esté disponible" it does not hold.
+     */
+    staff?: { id: number; name: string }[];
 };
 
 export type PromotionCombo = {

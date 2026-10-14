@@ -9,6 +9,7 @@ import {
     pairSavingCents,
     promotionSelections,
 } from '@/lib/promo-offers';
+import { holdsWith, soleStaffId } from '@/lib/promo-staff';
 import type {
     BookableSalon,
     BookableService,
@@ -154,9 +155,16 @@ export function useBookingWizard({
                 ? { ...promoted[0], name: '' }
                 : null;
 
+        // A promotion of one professional only starts with them chosen.
+        const staffId = soleStaffId(
+            startPromotion,
+            promoted.flatMap((selection) => find(selection.serviceId) ?? []),
+        );
+
         return {
             ...EMPTY,
             companion,
+            staffId,
             selections: [
                 ...promoted,
                 ...(preselected &&
@@ -282,12 +290,16 @@ export function useBookingWizard({
         .filter((service): service is BookableService => service !== undefined);
 
     const estimate = sumAmounts(lines.map(priceOf));
+    // One limited to some professionals counts only once one of them is chosen.
+    const holding = promotions.filter((promotion) =>
+        holdsWith(promotion, state.staffId),
+    );
     const savingCents = Math.max(
         bestSavingCents(
-            promotions,
+            holding,
             chosen.map((service) => service.id),
         ),
-        pair && lines.length === 2
+        pair && holding.includes(pair) && lines.length === 2
             ? pairSavingCents(pair, [priceOf(lines[0]), priceOf(lines[1])])
             : 0,
     );

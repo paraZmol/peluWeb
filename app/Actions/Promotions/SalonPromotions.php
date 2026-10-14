@@ -31,7 +31,7 @@ class SalonPromotions
     {
         $today = $salon->localNow()->toDateString();
         $promotions = Promotion::withoutGlobalScope('salon')->where('salon_id', $salon->id)
-            ->with(['services', 'giftService'])
+            ->with(['services', 'giftService', 'staff'])
             // The ones that can still apply first: drafts never push them out of the list.
             ->orderByRaw('status = ? desc', [PromotionStatus::Published->value])
             ->latest('id')->limit(self::LIMIT)->get();
@@ -98,6 +98,8 @@ class SalonPromotions
                 'to_time' => $clock($promotion->to_minute),
                 'quota' => $promotion->quota,
                 'once_per_client' => $promotion->once_per_client,
+                // Who can still be chosen: a removed one cannot be sent back.
+                'staff' => $promotion->bookableStaff()->modelKeys(),
             ],
             'results' => [
                 'bookings' => (int) ($result->bookings ?? 0),

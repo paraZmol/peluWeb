@@ -59,6 +59,7 @@ class SavePromotion
                 'name' => $draft->name ?? '',
             ])->save();
             $promotion->services()->sync($draft->serviceIds);
+            $promotion->staff()->sync($draft->staffIds);
 
             if ($draft->name === null) {
                 $promotion->name = $this->title($promotion->refresh());
@@ -120,7 +121,10 @@ class SavePromotion
             && [$promotion->from_minute, $promotion->to_minute] === [$draft->fromMinute, $draft->toMinute]
             && [$promotion->percent, $promotion->amount_cents, $promotion->gift_service_id] === [$draft->percent, $draft->amountCents, $draft->giftServiceId]
             && $promotion->once_per_client === $draft->oncePerClient
-            && $promotion->new_clients_only === $draft->newClientsOnly;
+            && $promotion->new_clients_only === $draft->newClientsOnly
+            // Who is still on the team, as the form shows them: the booked
+            // path below never touches the list, so a removed one stays out.
+            && collect($promotion->bookableStaff()->modelKeys())->sort()->values()->all() === collect($draft->staffIds)->sort()->values()->all();
     }
 
     public function newShareCode(): string

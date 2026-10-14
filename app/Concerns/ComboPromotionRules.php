@@ -44,10 +44,10 @@ trait ComboPromotionRules
             return;
         }
 
-        $combo = Promotion::priceCombo($services, 0);
+        $combo = Promotion::priceCombo($services, 0, $this->comboStaffIds());
 
         if (! $combo->isBookable) {
-            $validator->errors()->add('services', 'Nadie del equipo hace todos estos servicios: el combo no se podría reservar.');
+            $validator->errors()->add('services', 'Nadie del equipo elegido hace todos estos servicios: el combo no se podría reservar.');
 
             return;
         }
@@ -92,6 +92,18 @@ trait ComboPromotionRules
      */
     protected function comboNormalCents(EloquentCollection $services): int
     {
-        return Promotion::priceCombo($services, 0)->normalCents;
+        return Promotion::priceCombo($services, 0, $this->comboStaffIds())->normalCents;
+    }
+
+    /**
+     * "Solo con…": the combo is priced as those professionals charge it.
+     *
+     * @return list<int>|null null = all of the team
+     */
+    private function comboStaffIds(): ?array
+    {
+        $ids = array_values(array_map(intval(...), (array) $this->input('staff', [])));
+
+        return $ids === [] ? null : $ids;
     }
 }

@@ -82,6 +82,7 @@ class ChangePromotionStatus
             $copy->share_code = $this->save->newShareCode();
             $copy->save();
             $copy->services()->sync($promotion->services()->pluck('services.id'));
+            $copy->staff()->sync($promotion->staff()->pluck('staff.id'));
 
             return $copy;
         });

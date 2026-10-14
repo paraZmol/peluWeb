@@ -8,6 +8,7 @@ use App\Enums\PromotionMechanic;
 use App\Models\Promotion;
 use App\Models\Salon;
 use App\Models\Service;
+use App\Models\Staff;
 use App\Support\Money;
 
 /**
@@ -29,7 +30,7 @@ class PublicPromotions
         $running = Promotion::withoutGlobalScope('salon')
             ->where('salon_id', $salon->id)
             ->runningOn($today)
-            ->with(['services.variants', 'giftService'])
+            ->with(['services.variants', 'giftService', 'staff'])
             ->orderBy('ends_on')
             ->orderBy('id')
             ->get()
@@ -101,6 +102,8 @@ class PublicPromotions
                 'price' => Money::toAmount($gift->price_cents),
                 'minutes' => $gift->active_minutes + $gift->idle_minutes + $gift->finish_minutes,
             ],
+            // Only with these professionals, when chosen; empty = all of the team.
+            'staff' => $promotion->bookableStaff()->map(fn (Staff $person): array => ['id' => $person->id, 'name' => $person->name])->all(),
             // "Ven con alguien": the second one at half price (50) or free (100).
             'pair' => $promotion->mechanic === PromotionMechanic::Pair ? ['percent' => $promotion->percent] : null,
             // "Por separado S/ 55: ahorras S/ 10"; all of them go into the booking.

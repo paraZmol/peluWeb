@@ -89,6 +89,13 @@ export function usePromotionForm(
                             id !== data.gift_service_id,
                     ),
             ),
+        toggleStaff: (id: number) =>
+            setData(
+                'staff',
+                data.staff.includes(id)
+                    ? data.staff.filter((one) => one !== id)
+                    : [...data.staff, id],
+            ),
         toggleWeekday: (day: number) =>
             setData(
                 'weekdays',

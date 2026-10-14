@@ -78,7 +78,7 @@ class ApplyPromotion
         return Promotion::withoutGlobalScope('salon')
             ->where('salon_id', $salon->id)
             ->runningOn($day)
-            ->with(['services', 'giftService'])
+            ->with(['services', 'giftService', 'staff'])
             ->get()
             ->filter(fn (Promotion $promotion): bool => $promotion->isIntact())
             ->keyBy('id');
@@ -89,6 +89,9 @@ class ApplyPromotion
      */
     private function pick(Collection $running, ?SalonClient $client, BookingQuote $quote, CarbonImmutable $localStart, bool $underLock, bool $countPlaces = true): BookingQuote
     {
+        // One of some of the team holds only with one of them chosen.
+        $running = $running->filter(fn (Promotion $promotion): bool => $promotion->terms()->allowsStaff($quote->chosenStaffId));
+
         if ($running->isEmpty()) {
             return $quote;
         }

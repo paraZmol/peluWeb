@@ -242,7 +242,7 @@ function giftLines(main: PromotionService, gift: PromotionService) {
  */
 export function previewOf(
     fields: PromotionFields,
-    { services, depositPercent, salonName }: PromotionContext,
+    { services, team, depositPercent, salonName }: PromotionContext,
 ): PromotionPreview | null {
     const terms = termsOf(fields, services);
     const title = autoTitle(fields, services);
@@ -308,6 +308,9 @@ export function previewOf(
             salonName,
             quota: fields.quota.trim() === '' ? null : Number(fields.quota),
             isOncePerClient: fields.once_per_client,
+            staffNames: team
+                .filter((person) => fields.staff.includes(person.id))
+                .map((person) => person.name),
             hasDeposit: depositPercent > 0,
             gift: gift && {
                 name: gift.name,
