@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { PromoTag } from '@/components/public/promo-tag';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { formatMinutes, formatPrice } from '@/lib/format';
+import { offerLabel } from '@/lib/promo-offers';
 import type { ServiceOffer } from '@/lib/promo-offers';
 import { cn } from '@/lib/utils';
 import { OptionPrice } from './option-price';
@@ -81,7 +82,11 @@ export function ServiceOption({
                         )}
                         {(offer || isGift) && (
                             <PromoTag
-                                label={isGift ? 'Regalo' : 'Promo'}
+                                label={
+                                    isGift
+                                        ? 'Regalo'
+                                        : offer && offerLabel(offer)
+                                }
                                 className="ml-2"
                             />
                         )}

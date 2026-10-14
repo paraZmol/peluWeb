@@ -2,6 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import { formatMinutes } from '@/lib/format';
 import { CHIP_ICON } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
+import { offerLabel } from '@/lib/promo-offers';
 import { PromoTag } from '../promo-tag';
 import { RowPrice } from './row-price';
 import type { ServiceRowProps } from './row-props';
@@ -18,7 +19,9 @@ export function ListRow({ service, bookingUrl, offer }: ServiceRowProps) {
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <h4 className="font-semibold break-words">
                     {service.name}
-                    {offer && <PromoTag className="ml-2" />}
+                    {offer && (
+                        <PromoTag label={offerLabel(offer)} className="ml-2" />
+                    )}
                 </h4>
                 <p className="flex flex-wrap items-baseline gap-x-2 text-sm tabular-nums">
                     <span className="text-base font-extrabold">

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Owner;
 
+use App\Actions\Promotions\SavePromotion;
+use App\Concerns\ComboPromotionRules;
 use App\Concerns\SalonValidationRules;
 use App\Data\Promotions\PromotionDraft;
 use App\Enums\PromotionMechanic;
@@ -17,10 +19,10 @@ use Illuminate\Validation\Validator;
 
 class PromotionRequest extends FormRequest
 {
-    use SalonValidationRules;
+    use ComboPromotionRules, SalonValidationRules;
 
     /** The cards a promotion starts from; they only shape the form. */
-    public const array CARDS = ['discount', 'gift', 'quiet_hours', 'season', 'first_visit'];
+    public const array CARDS = ['discount', 'gift', 'quiet_hours', 'season', 'first_visit', 'combo'];
 
     /** Cards that can only be a discount. */
     private const array DISCOUNT_CARDS = ['quiet_hours', 'first_visit'];
@@ -53,14 +55,17 @@ class PromotionRequest extends FormRequest
             ->whereNull('deleted_at');
         $isQuietHours = $this->input('card') === 'quiet_hours';
         $isGift = $this->input('mechanic') === PromotionMechanic::Gift->value;
+        $isCombo = $this->input('card') === 'combo';
+        $noDiscount = $isGift || $isCombo;
 
         return [
             'card' => ['required', Rule::in(self::CARDS)],
-            'mechanic' => ['required', Rule::enum(PromotionMechanic::class), in_array($this->input('card'), self::DISCOUNT_CARDS, true) ? Rule::in([PromotionMechanic::Discount->value]) : 'string'],
-            'services' => ['required', 'array', 'list', 'min:1', 'max:100'],
+            'mechanic' => ['required', Rule::enum(PromotionMechanic::class), Rule::in($this->mechanicsFor($this->string('card')->toString()))],
+            'services' => ['required', 'array', 'list', $isCombo ? 'min:'.self::COMBO_MIN_SERVICES : 'min:1', $isCombo ? 'max:'.self::COMBO_MAX_SERVICES : 'max:100'],
             'services.*' => ['integer', 'distinct', $ownService()],
-            'percent' => ['nullable', 'integer', 'min:'.self::MIN_PERCENT, 'max:'.self::MAX_PERCENT, $isGift ? 'prohibited' : 'required_without:amount', 'prohibits:amount'],
-            'amount' => ['nullable', 'numeric', 'min:1', 'max:9999', 'decimal:0,2', $isGift ? 'prohibited' : 'required_without:percent'],
+            'percent' => ['nullable', 'integer', 'min:'.self::MIN_PERCENT, 'max:'.self::MAX_PERCENT, $noDiscount ? 'prohibited' : 'required_without:amount', 'prohibits:amount'],
+            'amount' => ['nullable', 'numeric', 'min:1', 'max:9999', 'decimal:0,2', $noDiscount ? 'prohibited' : 'required_without:percent'],
+            'combo_price' => [$isCombo ? 'required' : 'prohibited', 'nullable', 'numeric', 'min:1', 'max:99999', 'decimal:0,2'],
             'gift_service_id' => [$isGift ? 'required' : 'prohibited', 'nullable', 'integer', $ownService()],
             'starts_on' => ['required', 'date_format:Y-m-d'],
             'ends_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:starts_on'],
@@ -108,7 +113,37 @@ class PromotionRequest extends FormRequest
             }
 
             $this->checkGift($validator);
+            if ($this->filled('combo_price') && ! $this->keepsBookedSaving()) {
+                $this->checkCombo($validator, $services, Money::toCents($this->input('combo_price')));
+            }
         }];
+    }
+
+    /**
+     * A combo with bookings keeps the saving they were promised: prices
+     * that moved since must not stop the owner from giving it a later end.
+     */
+    private function keepsBookedSaving(): bool
+    {
+        $promotion = $this->route('promotion');
+
+        return $promotion instanceof Promotion
+            && $promotion->amount_cents === $this->amountCents()
+            && app(SavePromotion::class)->hasBookings($promotion);
+    }
+
+    /**
+     * What each card can be: most only a discount, a combo only a combo.
+     *
+     * @return list<string>
+     */
+    private function mechanicsFor(string $card): array
+    {
+        return match (true) {
+            $card === 'combo' => [PromotionMechanic::Combo->value],
+            in_array($card, self::DISCOUNT_CARDS, true) => [PromotionMechanic::Discount->value],
+            default => [PromotionMechanic::Discount->value, PromotionMechanic::Gift->value],
+        };
     }
 
     /**
@@ -137,10 +172,25 @@ class PromotionRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'services' => 'servicios', 'percent' => 'porcentaje', 'amount' => 'monto', 'gift_service_id' => 'servicio de regalo',
+            'services' => 'servicios', 'percent' => 'porcentaje', 'amount' => 'monto', 'combo_price' => 'precio del combo', 'gift_service_id' => 'servicio de regalo',
             'starts_on' => 'fecha de inicio', 'ends_on' => 'fecha de fin', 'weekdays' => 'días', 'from_time' => 'hora de inicio',
             'to_time' => 'hora de fin', 'quota' => 'cupos', 'name' => 'título', 'overline' => 'ocasión',
         ];
+    }
+
+    /**
+     * The amount off; for a combo, its saving against the base prices
+     * today, which is what it keeps saving whatever is chosen.
+     */
+    private function amountCents(): ?int
+    {
+        if ($this->filled('combo_price')) {
+            $services = Service::query()->whereKey($this->input('services'))->with('variants')->get();
+
+            return $this->comboNormalCents($services) - Money::toCents($this->input('combo_price'));
+        }
+
+        return $this->filled('amount') ? Money::toCents($this->input('amount')) : null;
     }
 
     public function draft(): PromotionDraft
@@ -156,7 +206,7 @@ class PromotionRequest extends FormRequest
             startsOn: $this->string('starts_on')->toString(),
             endsOn: $this->string('ends_on')->toString(),
             percent: $this->filled('percent') ? $this->integer('percent') : null,
-            amountCents: $this->filled('amount') ? Money::toCents($this->input('amount')) : null,
+            amountCents: $this->amountCents(),
             giftServiceId: $this->filled('gift_service_id') ? $this->integer('gift_service_id') : null,
             weekdays: $this->filled('weekdays') ? array_values(collect((array) $this->validated('weekdays'))->map(intval(...))->sort()->all()) : null,
             fromMinute: $minutes('from_time'),

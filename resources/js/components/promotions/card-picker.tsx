@@ -2,6 +2,7 @@ import {
     ArrowRight,
     CalendarHeart,
     Gift,
+    Layers,
     Percent,
     Sunrise,
     UserPlus,
@@ -17,6 +18,7 @@ const ICONS: Record<PromotionCardKind, LucideIcon> = {
     quiet_hours: Sunrise,
     season: CalendarHeart,
     first_visit: UserPlus,
+    combo: Layers,
 };
 
 type Props = {

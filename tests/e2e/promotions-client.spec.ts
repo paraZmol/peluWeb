@@ -6,6 +6,10 @@ import { login, watchForErrors } from './support';
 // salon asks a 30 % deposit and runs two promotions. A discount on "Corte de
 // oferta" (S/ 40 → S/ 30) that holds from 9 to 18, and the add-on "Lavado
 // de oferta" (S/ 10, 10 min) as a gift with "Barba de oferta" (S/ 20).
+// A combo is not seeded here: a third promotion in "Salón Ofertas" would
+// change what these tests count. What a visitor sees of one (its card, the
+// "Combo" mark and the wizard with both services ticked) is checked at the
+// end of the combo test in promotions-owner.spec.ts, right after publishing.
 const SALON = '/s/salon-ofertas';
 const DISCOUNT = '25 % menos en Corte de oferta';
 const GIFT = 'Lavado de oferta gratis con tu Barba de oferta';

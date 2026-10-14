@@ -59,8 +59,10 @@ imagen descargable para Instagram.
   "Promoción de {salón}. Válido para citas del {día} al {día} de {mes} de {año}. Aplica a:
   {servicios}. [Solo {días}, en citas que empiecen entre las {hora} y las {hora}.] [Cupos: {n}
   reservas. | Sin límite de cupos: vale para todas las citas que se reserven dentro de estas
-  fechas, mientras haya horarios libres.] [Solo para la primera visita: vale si nunca tuviste una
-  cita en {salón}, ni tienes otra reservada. | Una por cliente.] [El descuento de S/ {monto} se aplica
+  fechas, mientras haya horarios libres.] [Solo para tu primera reserva en {salón}: no vale si ya
+  tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas
+  canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono. | Una por cliente.] [frase
+  del combo] [El descuento de S/ {monto} se aplica
   una sola vez por reserva.] [El regalo ({servicio}, precio normal S/ {precio}) se hace en la
   misma cita y alarga la cita {n} min. No se cambia por dinero ni por otro servicio.] Si cambias
   tu cita, la promoción se mantiene solo si la nueva fecha y hora cumplen estas condiciones. [El
@@ -108,6 +110,35 @@ imagen descargable para Instagram.
 - Reglas: B entra como una línea más, S/ 0 cobrado y precio normal guardado; la duración incluye
   a B; solo profesionales que hacen A y B; si se quita A, B vuelve a precio normal; un regalo por
   reserva. Letra chica extra: la frase del regalo de la sección "Letra chica".
+
+### Combo a precio cerrado (segunda entrega; reglas elegidas por el usuario el 2026-10-14)
+- Propuesta de `marketing-advisor`; el usuario eligió las tres opciones recomendadas.
+- Campos: **2 o 3 servicios**, todos obligatorios (sin "requiere evaluación"; no solo adicionales),
+  **precio del combo** en soles, fechas y "Más opciones". El precio del combo se compara con la
+  suma de los **precios base** (la opción más barata de cada servicio, a precio de catálogo): la
+  rebaja va del 5 % al 50 %. Se guarda como **ahorro fijo en soles** (`amount_cents`).
+- **Mismo ahorro siempre**: con una opción más cara o un profesional con precio propio, la persona
+  paga la diferencia y ahorra lo mismo. Con opciones o precios por profesional el título dice
+  "desde". Ningún servicio puede quedar en S/ 0: si el ahorro no cabe, el combo no aplica.
+- **Reparto proporcional**: el ahorro se reparte entre los servicios del combo en proporción a su
+  precio en esa reserva (el último absorbe el resto, para que el ahorro dé exacto), igual que el
+  descuento manual. Comisiones y reportes no cambian de lógica.
+- Cliente: "{A} + {B} por S/ {precio}" (o "desde"), línea "Por separado S/ {normal}: ahorras
+  S/ {ahorro}". La tarjeta abre el asistente con los servicios marcados; se pueden sumar otros a
+  precio normal; si se quita uno del combo, vuelve el precio normal con el aviso "Sin {servicio}
+  el combo no aplica". Solo profesionales que hacen todos los servicios del combo.
+- Letra chica extra (revisada por `legal-compliance` el 2026-10-14): "El precio del combo es por
+  {A} y {B} juntos, en la misma cita y atendidos por una sola persona del equipo. Si eliges una
+  opción o un profesional con un precio más alto, pagas esa diferencia y sigues ahorrando
+  S/ {ahorro}. Si quitas uno de los servicios, el combo no aplica y los demás se cobran a su
+  precio normal." Con "desde", la línea dice "Por separado desde S/ {normal}".
+- **Nombre sin precio**: se guarda (y se congela en la reserva) como "Combo {A} + {B}"; el
+  "{A} + {B} por S/ {precio}" se escribe en vivo, porque los precios del catálogo cambian.
+- **Sin redondeo a 10 céntimos**: es la excepción a la regla general; el ahorro debe dar exacto.
+- **El precio anunciado se puede reservar**: "por separado" y el precio del combo salen del
+  profesional activo **más barato entre los que hacen todos sus servicios** (la opción más barata
+  de cada uno). Un combo que nadie del equipo hace completo no se puede crear ni se anuncia.
+- Gana la promoción de mayor ahorro, como siempre. Un solo profesional por reserva.
 
 ### Horas flojas
 - Los campos de Descuento con días y horas a la vista y obligatorios (por defecto lunes a

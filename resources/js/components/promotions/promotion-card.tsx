@@ -46,6 +46,11 @@ export function PromotionCard({ promotion, onEdit, onShare }: Props) {
                     <h3 className="font-display text-xl leading-snug font-semibold break-words">
                         {promotion.name}
                     </h3>
+                    {promotion.summary && (
+                        <p className="text-sm font-medium break-words">
+                            {promotion.summary}
+                        </p>
+                    )}
                 </div>
                 <PromotionStateTag
                     state={promotion.state}

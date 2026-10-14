@@ -5,8 +5,14 @@ import type {
 } from '@/components/promotions/types';
 import { toCents } from './money';
 import {
+    comboIsFrom,
+    comboNormalCents,
+    isComboComplete,
+} from './promotion-combo';
+import {
     amountPrice,
     depositCents,
+    list,
     percentPrice,
     promotionFinePrint,
     promotionTitle,
@@ -25,6 +31,11 @@ export type PreviewLine = {
 export type PromotionPreview = {
     overline: string | null;
     title: string;
+    /**
+     * What it does, under the title (like the public card's summary): a
+     * combo's live price, or the system's title under one of the owner's.
+     */
+    subtitle: string | null;
     lines: PreviewLine[];
     finePrint: string;
     /** What it means for the salon, sentence by sentence. */
@@ -38,27 +49,9 @@ function picked(fields: PromotionFields, services: PromotionService[]) {
     return services.filter((service) => fields.services.includes(service.id));
 }
 
-/** What the form says so far, in the words of the copy; null while incomplete. */
-function termsOf(fields: PromotionFields): CopyTerms | null {
-    const isGift = fields.mechanic === 'gift';
-    const isPercent = !isGift && fields.benefit === 'percent';
-    const percent = isPercent ? Number(fields.percent) : null;
-    const amountCents =
-        isGift || isPercent ? null : (toCents(fields.amount) ?? 0);
-
-    if (
-        (percent !== null && !(Number.isInteger(percent) && percent > 0)) ||
-        amountCents === 0 ||
-        fields.starts_on === '' ||
-        fields.ends_on === ''
-    ) {
-        return null;
-    }
-
+/** When and to whom: the same for every kind. */
+function periodOf(fields: PromotionFields) {
     return {
-        mechanic: fields.mechanic,
-        percent,
-        amountCents,
         startsOn: fields.starts_on,
         endsOn: fields.ends_on,
         weekdays: fields.weekdays.length === 0 ? null : fields.weekdays,
@@ -68,12 +61,77 @@ function termsOf(fields: PromotionFields): CopyTerms | null {
     };
 }
 
-/** The title the system would write for the form as it is; null while incomplete. */
+/**
+ * A combo saves what its services cost apart less its price; null until
+ * it has its services and a price below what they cost apart.
+ */
+function comboTermsOf(
+    fields: PromotionFields,
+    chosen: PromotionService[],
+): CopyTerms | null {
+    const priceCents = toCents(fields.combo_price) ?? 0;
+    const normalCents = comboNormalCents(chosen);
+
+    if (
+        !isComboComplete(chosen) ||
+        priceCents <= 0 ||
+        priceCents >= normalCents
+    ) {
+        return null;
+    }
+
+    return {
+        mechanic: 'combo',
+        percent: null,
+        amountCents: normalCents - priceCents,
+        ...periodOf(fields),
+        combo: { priceCents, isFrom: comboIsFrom(chosen) },
+    };
+}
+
+/** What the form says so far, in the words of the copy; null while incomplete. */
+function termsOf(
+    fields: PromotionFields,
+    services: PromotionService[],
+): CopyTerms | null {
+    if (fields.starts_on === '' || fields.ends_on === '') {
+        return null;
+    }
+
+    if (fields.mechanic === 'combo') {
+        return comboTermsOf(fields, picked(fields, services));
+    }
+
+    const isGift = fields.mechanic === 'gift';
+    const isPercent = !isGift && fields.benefit === 'percent';
+    const percent = isPercent ? Number(fields.percent) : null;
+    const amountCents =
+        isGift || isPercent ? null : (toCents(fields.amount) ?? 0);
+
+    if (
+        (percent !== null && !(Number.isInteger(percent) && percent > 0)) ||
+        amountCents === 0
+    ) {
+        return null;
+    }
+
+    return {
+        mechanic: fields.mechanic,
+        percent,
+        amountCents,
+        ...periodOf(fields),
+    };
+}
+
+/**
+ * The title the system would write for the form as it is; null while
+ * incomplete. A combo's goes without its price: that is said live.
+ */
 export function autoTitle(
     fields: PromotionFields,
     services: PromotionService[],
 ): string | null {
-    const terms = termsOf(fields);
+    const terms = termsOf(fields, services);
     const chosen = picked(fields, services);
     const gift = services.find(
         (service) => service.id === fields.gift_service_id,
@@ -84,16 +142,51 @@ export function autoTitle(
     }
 
     return promotionTitle(
-        terms,
+        { ...terms, combo: null },
         chosen.map((service) => service.name),
         gift?.name,
     );
+}
+
+/** "Corte + Barba por S/ 45" under "Combo Corte + Barba" or an own title. */
+function subtitleOf(
+    terms: CopyTerms,
+    names: string[],
+    title: string,
+    ownTitle: string,
+): string | null {
+    if (terms.combo) {
+        return promotionTitle(terms, names);
+    }
+
+    return ownTitle !== '' && ownTitle !== title ? title : null;
 }
 
 function deposit(totalCents: number, percent: number): string[] {
     return percent > 0
         ? [`Seña: S/ ${soles(depositCents(totalCents, percent))}.`]
         : [];
+}
+
+/** The services together, the price they cost apart crossed out. */
+function comboLines(names: string[], terms: CopyTerms): PreviewLine[] {
+    const promoCents = terms.combo?.priceCents ?? 0;
+
+    return [
+        {
+            name: names.join(' + '),
+            normalCents: promoCents + (terms.amountCents ?? 0),
+            promoCents,
+            isGift: false,
+        },
+    ];
+}
+
+function comboSummary(names: string[], line: PreviewLine): string[] {
+    return [
+        `El cliente paga S/ ${soles(line.promoCents)} por ${list(names)} juntos, en vez de S/ ${soles(line.normalCents)}.`,
+        'El ahorro se reparte entre los servicios según su precio. Quien atiende comisiona sobre lo cobrado.',
+    ];
 }
 
 function giftLines(main: PromotionService, gift: PromotionService) {
@@ -121,7 +214,7 @@ export function previewOf(
     fields: PromotionFields,
     { services, depositPercent, salonName }: PromotionContext,
 ): PromotionPreview | null {
-    const terms = termsOf(fields);
+    const terms = termsOf(fields, services);
     const title = autoTitle(fields, services);
     const chosen = picked(fields, services);
 
@@ -142,20 +235,31 @@ export function previewOf(
                 : amountPrice(cents(service), terms.amountCents ?? 0),
         isGift: false,
     });
-    const lines = gift ? giftLines(chosen[0], gift) : chosen.map(priced);
+    const isCombo = terms.mechanic === 'combo';
+    let lines = chosen.map(priced);
+
+    if (isCombo) {
+        lines = comboLines(names, terms);
+    } else if (gift) {
+        lines = giftLines(chosen[0], gift);
+    }
+
     const [first] = lines;
-    const example = chosen.length > 1 ? [`Ejemplo con ${first.name}:`] : [];
-    const summary = gift
-        ? [
-              `El cliente paga S/ ${soles(first.normalCents)} por ${first.name} y recibe ${gift.name} (S/ ${soles(cents(gift))}) sin costo.`,
-              'Quien atiende no comisiona por el servicio de regalo.',
-          ]
-        : [
-              `El cliente paga S/ ${soles(first.promoCents)} en vez de S/ ${soles(first.normalCents)}.`,
-              `Quien atiende comisiona sobre S/ ${soles(first.promoCents)}.`,
-          ];
+    const example =
+        chosen.length > 1 && !isCombo ? [`Ejemplo con ${first.name}:`] : [];
+    const summary = isCombo
+        ? comboSummary(names, first)
+        : gift
+          ? [
+                `El cliente paga S/ ${soles(first.normalCents)} por ${first.name} y recibe ${gift.name} (S/ ${soles(cents(gift))}) sin costo.`,
+                'Quien atiende no comisiona por el servicio de regalo.',
+            ]
+          : [
+                `El cliente paga S/ ${soles(first.promoCents)} en vez de S/ ${soles(first.normalCents)}.`,
+                `Quien atiende comisiona sobre S/ ${soles(first.promoCents)}.`,
+            ];
     const once =
-        terms.amountCents !== null && chosen.length > 1
+        terms.amountCents !== null && chosen.length > 1 && !isCombo
             ? ['El monto se descuenta una sola vez por reserva.']
             : [];
 
@@ -163,6 +267,7 @@ export function previewOf(
         overline:
             fields.card === 'season' ? fields.overline.trim() || null : null,
         title: fields.name.trim() || title,
+        subtitle: subtitleOf(terms, names, title, fields.name.trim()),
         lines,
         finePrint: promotionFinePrint(terms, names, {
             salonName,

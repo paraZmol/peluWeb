@@ -43,7 +43,7 @@ class ApplyPromotion
      * any lock: the booking itself counts the places again.
      *
      * @param  list<int>  $starts  Unix seconds (UTC), all on the same day of the salon's calendar
-     * @return array<int, array{name: string, cents: int}> by start; a start without a promotion is left out
+     * @return array<int, array{name: string, cents: int, firstVisit: bool}> by start; a start without a promotion is left out
      */
     public function forStarts(Salon $salon, ?SalonClient $client, BookingQuote $quote, array $starts): array
     {
@@ -61,7 +61,7 @@ class ApplyPromotion
             $priced = $this->pick($running, $client, $quote, CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone), false, countPlaces: false);
 
             if ($priced->promotion !== null) {
-                $marked[$start] = ['name' => $priced->promotion->name, 'cents' => $priced->promotionCents()];
+                $marked[$start] = ['name' => $priced->promotion->name, 'cents' => $priced->promotionCents(), 'firstVisit' => $priced->promotion->newClientsOnly];
             }
         }
 

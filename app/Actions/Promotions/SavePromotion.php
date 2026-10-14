@@ -3,14 +3,12 @@
 namespace App\Actions\Promotions;
 
 use App\Data\Promotions\PromotionDraft;
-use App\Domain\Promotions\PromotionCopy;
 use App\Enums\BookingStatus;
 use App\Enums\PromotionStatus;
 use App\Exceptions\PromotionException;
 use App\Models\Booking;
 use App\Models\Promotion;
 use App\Models\Salon;
-use App\Models\Service;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -80,16 +78,13 @@ class SavePromotion
 
     /**
      * The title the system writes: its services by name, in catalogue order.
+     * Stored without a combo's price, which changes with the catalogue.
      */
     public function title(Promotion $promotion): string
     {
-        $promotion->load(['services', 'giftService']);
+        $promotion->load(['services.variants', 'giftService']);
 
-        return PromotionCopy::title(
-            $promotion->terms(),
-            array_values($promotion->services->sortBy('position')->map(fn (Service $service): string => $service->name)->all()),
-            $promotion->giftService?->name,
-        );
+        return $promotion->writtenTitle(withPrice: false);
     }
 
     /**

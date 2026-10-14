@@ -82,6 +82,11 @@ export function PromotionPreviewPanel({ preview, savedFinePrint }: Props) {
                     <p className="display-type text-title-3 break-words">
                         {preview.title}
                     </p>
+                    {preview.subtitle && (
+                        <p className="font-semibold break-words">
+                            {preview.subtitle}
+                        </p>
+                    )}
                     <ul className="mt-2 divide-y">
                         {preview.lines.slice(0, LINES_SHOWN).map((line) => (
                             <Price key={line.name} line={line} />

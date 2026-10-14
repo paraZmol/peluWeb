@@ -37,6 +37,10 @@ class PromotionController extends SalonAreaController
                     'price' => Money::toAmount($service->price_cents),
                     'minutes' => $service->active_minutes + $service->idle_minutes + $service->finish_minutes,
                     'isAddon' => $service->is_addon,
+                    // What a combo is priced from: its cheapest option.
+                    'basePrice' => Money::toAmount($service->basePriceCents()),
+                    'hasOptions' => $service->variants->isNotEmpty(),
+                    'requiresEvaluation' => $service->requires_evaluation,
                     // One fixed price: the only kind that can be given away.
                     'canBeGift' => $service->variants->isEmpty() && ! $service->requires_evaluation,
                 ])->values(),

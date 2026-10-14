@@ -2,6 +2,7 @@ import { usePromotionForm } from '@/hooks/use-promotion-form';
 import type { PromotionTarget } from '@/hooks/use-promotion-form';
 import { giftCandidates } from '@/lib/promotion-cards';
 import { BenefitField } from './benefit-field';
+import { ComboFields } from './combo-fields';
 import { DateFields } from './date-fields';
 import { MoreOptions } from './more-options';
 import { OccasionField } from './occasion-field';
@@ -26,6 +27,7 @@ export function PromotionForm({ target, context, onSaved }: Props) {
     const { data, setData, errors } = form;
     const { services, limits, today } = context;
     const isGift = data.mechanic === 'gift';
+    const isCombo = data.mechanic === 'combo';
     const isQuietHours = data.card === 'quiet_hours';
     const isDraft = !target.promotion || target.promotion.state === 'draft';
 
@@ -42,50 +44,62 @@ export function PromotionForm({ target, context, onSaved }: Props) {
                 <div className="flex flex-col gap-6">
                     {data.card === 'season' && <OccasionField form={form} />}
 
-                    <ServiceChecklist
-                        name="services"
-                        legend={isGift ? 'Al reservar…' : '¿En qué servicios?'}
-                        hint={
-                            isGift
-                                ? 'Basta con cualquiera de los que marques.'
-                                : undefined
-                        }
-                        services={services}
-                        selected={data.services}
-                        onToggle={form.toggleService}
-                        onPickAll={form.pickAllServices}
-                        blocked={
-                            isGift && data.gift_service_id !== null
-                                ? {
-                                      ids: [data.gift_service_id],
-                                      reason: 'Es el regalo',
-                                  }
-                                : undefined
-                        }
-                        error={errors.services}
-                    />
-
-                    {isGift ? (
-                        <ServiceChecklist
-                            single
-                            name="gift_service_id"
-                            legend="…regalamos"
-                            hint="Un servicio con un solo precio. Se hace en la misma cita."
-                            services={giftCandidates(services)}
-                            selected={
-                                data.gift_service_id === null
-                                    ? []
-                                    : [data.gift_service_id]
-                            }
-                            onToggle={(id) => setData('gift_service_id', id)}
-                            blocked={{
-                                ids: data.services,
-                                reason: 'Ya está entre los que dan el regalo',
-                            }}
-                            error={errors.gift_service_id}
-                        />
+                    {isCombo ? (
+                        <ComboFields form={form} services={services} />
                     ) : (
-                        <BenefitField form={form} limits={limits} />
+                        <>
+                            <ServiceChecklist
+                                name="services"
+                                legend={
+                                    isGift
+                                        ? 'Al reservar…'
+                                        : '¿En qué servicios?'
+                                }
+                                hint={
+                                    isGift
+                                        ? 'Basta con cualquiera de los que marques.'
+                                        : undefined
+                                }
+                                services={services}
+                                selected={data.services}
+                                onToggle={form.toggleService}
+                                onPickAll={form.pickAllServices}
+                                blocked={
+                                    isGift && data.gift_service_id !== null
+                                        ? {
+                                              ids: [data.gift_service_id],
+                                              reason: 'Es el regalo',
+                                          }
+                                        : undefined
+                                }
+                                error={errors.services}
+                            />
+
+                            {isGift ? (
+                                <ServiceChecklist
+                                    single
+                                    name="gift_service_id"
+                                    legend="…regalamos"
+                                    hint="Un servicio con un solo precio. Se hace en la misma cita."
+                                    services={giftCandidates(services)}
+                                    selected={
+                                        data.gift_service_id === null
+                                            ? []
+                                            : [data.gift_service_id]
+                                    }
+                                    onToggle={(id) =>
+                                        setData('gift_service_id', id)
+                                    }
+                                    blocked={{
+                                        ids: data.services,
+                                        reason: 'Ya está entre los que dan el regalo',
+                                    }}
+                                    error={errors.gift_service_id}
+                                />
+                            ) : (
+                                <BenefitField form={form} limits={limits} />
+                            )}
+                        </>
                     )}
 
                     {isQuietHours && <WhenFields form={form} required />}

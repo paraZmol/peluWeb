@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Concerns\BelongsToSalon;
+use App\Domain\Promotions\ComboPrice;
+use App\Domain\Promotions\PromotionCopy;
 use App\Domain\Promotions\PromotionFacts;
 use App\Domain\Promotions\PromotionTerms;
 use App\Enums\PromotionMechanic;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A promotion a salon publishes: it applies by itself to the bookings
@@ -130,6 +133,63 @@ class Promotion extends Model
             giftPriceCents: $gift?->price_cents,
             giftMinutes: $gift === null ? null : $gift->active_minutes + $gift->idle_minutes + $gift->finish_minutes,
             hasDeposit: $salon->deposit_percent > 0,
+        );
+    }
+
+    /**
+     * The title the system writes for it, from its services as they are now.
+     * $withPrice: a combo's live price ("Corte + Barba por S/ 45"); without
+     * it, the name it is stored under ("Combo Corte + Barba").
+     */
+    public function writtenTitle(bool $withPrice = true): string
+    {
+        $services = $this->services->sortBy('position')->values();
+
+        return PromotionCopy::title(
+            $this->terms(),
+            array_values($services->map(fn (Service $service): string => $service->name)->all()),
+            $this->giftService?->name,
+            $withPrice ? $this->comboPrice() : null,
+        );
+    }
+
+    /**
+     * What a combo is announced at; null for any other promotion. "Desde"
+     * when an option or a professional's own price may change it.
+     */
+    public function comboPrice(): ?ComboPrice
+    {
+        return $this->mechanic === PromotionMechanic::Combo ? self::priceCombo($this->services, (int) $this->amount_cents) : null;
+    }
+
+    /**
+     * These services together, as the cheapest active professional who
+     * does them all charges them (the cheapest option of each), so what is
+     * announced can be booked. Not bookable when nobody does them all.
+     *
+     * @param  Collection<int, Service>  $services
+     */
+    public static function priceCombo(Collection $services, int $savingCents): ComboPrice
+    {
+        $services->loadMissing('variants');
+        $byStaff = DB::table('service_staff')
+            ->join('staff', 'staff.id', '=', 'service_staff.staff_id')
+            ->whereIn('service_staff.service_id', $services->modelKeys())
+            ->where('staff.is_active', true)
+            ->whereNull('staff.deleted_at')
+            ->get(['service_staff.staff_id', 'service_staff.service_id', 'service_staff.price_cents'])
+            ->groupBy('staff_id')
+            ->filter(fn ($rows): bool => $rows->count() === $services->count());
+        // An option's price is the same whoever does it; otherwise their own price counts.
+        $totals = $byStaff->map(fn ($rows): int => (int) $services->sum(fn (Service $service): int => $service->variants->isNotEmpty()
+            ? $service->basePriceCents()
+            : (int) ($rows->firstWhere('service_id', $service->id)->price_cents ?? $service->price_cents)));
+
+        return new ComboPrice(
+            normalCents: (int) ($totals->min() ?? $services->sum(fn (Service $service): int => $service->basePriceCents())),
+            savingCents: $savingCents,
+            isFrom: $totals->unique()->count() > 1 || $services->contains(fn (Service $service): bool => $service->variants->isNotEmpty()),
+            isBookable: $totals->isNotEmpty(),
         );
     }
 

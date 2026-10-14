@@ -1,5 +1,6 @@
 import { ArrowRight, Clock } from 'lucide-react';
 import { formatMinutes } from '@/lib/format';
+import { offerLabel } from '@/lib/promo-offers';
 import type { ServiceOffer } from '@/lib/promo-offers';
 import { SOFT_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
@@ -40,7 +41,7 @@ export function PhotoCard({ service, bookingUrl, photoUrl, offer }: Props) {
             <li className="flex flex-col gap-3 rounded-2xl p-4 skin-card">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <PriceSticker service={service} offer={offer} />
-                    {offer && <PromoTag />}
+                    {offer && <PromoTag label={offerLabel(offer)} />}
                 </div>
                 <h4 className="display-type text-xl lg:text-2xl">
                     {service.name}
@@ -79,7 +80,7 @@ export function PhotoCard({ service, bookingUrl, photoUrl, offer }: Props) {
                     <p className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold skin-glass tabular-nums">
                         <Clock className="size-3.5" aria-hidden />
                         {formatMinutes(service.minutes)}
-                        {offer && <span>· Promo</span>}
+                        {offer && <span>· {offerLabel(offer)}</span>}
                     </p>
                 </div>
                 <div className="flex items-end justify-between gap-3">

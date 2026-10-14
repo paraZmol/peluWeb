@@ -96,7 +96,47 @@ final readonly class PromotionTerms
         return match ($this->mechanic) {
             PromotionMechanic::Gift => $this->gift($items),
             PromotionMechanic::Discount => $this->percent !== null ? $this->percentOff($items) : $this->amountOff($items),
+            PromotionMechanic::Combo => $this->combo($items),
         };
+    }
+
+    /**
+     * Only with every service of the combo in the booking. Its saving is
+     * shared among them by price, like a manual discount; the last one
+     * takes the remainder so it adds up exactly. None may end at S/ 0:
+     * then it does not apply.
+     *
+     * @param  list<QuoteItem>  $items
+     * @return list<QuoteItem>
+     */
+    private function combo(array $items): array
+    {
+        $inCombo = array_values(array_filter($items, fn (QuoteItem $item): bool => in_array($item->serviceId, $this->serviceIds, true)));
+        $saving = (int) $this->amountCents;
+        $total = array_sum(array_map(fn (QuoteItem $item): int => $item->priceCents, $inCombo));
+        $hasAll = count(array_unique(array_map(fn (QuoteItem $item): int => $item->serviceId, $inCombo))) === count($this->serviceIds);
+
+        if (! $hasAll || $saving <= 0 || $total <= $saving) {
+            return $items;
+        }
+
+        $shares = [];
+        $left = $saving;
+
+        foreach ($inCombo as $position => $item) {
+            $share = $position === count($inCombo) - 1 ? $left : intdiv($saving * $item->priceCents, $total);
+            $shares[$item->serviceId] = $share;
+            $left -= $share;
+
+            if ($share >= $item->priceCents) {
+                return $items;
+            }
+        }
+
+        return array_map(
+            fn (QuoteItem $item): QuoteItem => isset($shares[$item->serviceId]) ? $item->chargedAt($item->priceCents - $shares[$item->serviceId]) : $item,
+            $items,
+        );
     }
 
     /**

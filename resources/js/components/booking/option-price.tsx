@@ -13,7 +13,14 @@ type Props = {
 };
 
 /** Price of a service to tick; the normal one crossed out with a promotion. */
-export function OptionPrice({ price, hasOptions, offer, isGift }: Props) {
+export function OptionPrice({
+    price,
+    hasOptions,
+    offer: anyOffer,
+    isGift,
+}: Props) {
+    // A combo's service alone keeps its price: nothing to cross out.
+    const offer = anyOffer?.isCombo ? undefined : anyOffer;
     const normal = isGift ? price : offer?.normal;
 
     return (

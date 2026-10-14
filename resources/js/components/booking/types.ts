@@ -69,7 +69,12 @@ export type Slot = {
     promotion?: SlotPromotion | null;
 };
 
-export type SlotPromotion = { name: string; saves: string };
+export type SlotPromotion = {
+    name: string;
+    saves: string;
+    /** Only for a first booking at the salon: the mark says so. */
+    firstVisit?: boolean;
+};
 
 /** The promotion that set a booking's price, as it was called then. */
 export type BookingPromotion = { name: string; saved: string };

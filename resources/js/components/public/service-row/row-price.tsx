@@ -15,7 +15,10 @@ type Props = {
  * A service's price; with a promotion, the normal one crossed out first
  * and, when only some times get it, a word saying so.
  */
-export function RowPrice({ service, offer, fromClassName }: Props) {
+export function RowPrice({ service, offer: anyOffer, fromClassName }: Props) {
+    // A combo's service alone keeps its price: nothing to cross out.
+    const offer = anyOffer?.isCombo ? undefined : anyOffer;
+
     return (
         <>
             {service.hasVariants && (

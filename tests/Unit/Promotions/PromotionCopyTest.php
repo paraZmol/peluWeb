@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Promotions\ComboPrice;
 use App\Domain\Promotions\PromotionCopy;
 use App\Domain\Promotions\PromotionFacts;
 use App\Domain\Promotions\PromotionTerms;
@@ -60,7 +61,7 @@ it('says a first visit is for someone who never came, in the title and in the fi
     $text = PromotionCopy::finePrint($first, ['Corte'], new PromotionFacts('Estudio Luz', quota: 10));
 
     expect(PromotionCopy::title($first, ['Corte']))->toBe('20 % menos en Corte en tu primera visita')
-        ->and($text)->toContain('Cupos: 10 reservas. Solo para la primera visita: vale si nunca tuviste una cita en Estudio Luz, ni tienes otra reservada. Si cambias')
+        ->and($text)->toContain('Cupos: 10 reservas. Solo para tu primera reserva en Estudio Luz: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono. Si cambias')
         ->and($text)->not->toContain('Una por cliente.');
 });
 
@@ -90,4 +91,15 @@ it('says only the days, or only the hours, when it names one of them', function 
     expect(PromotionCopy::when(copyTerms(PromotionMechanic::Discount, ['weekdays' => [6]])))->toBe('sábado')
         ->and(PromotionCopy::when(copyTerms(PromotionMechanic::Discount, ['fromMinute' => 540, 'toMinute' => 720])))->toBe('de 09:00 a 12:00')
         ->and(PromotionCopy::when(copyTerms(PromotionMechanic::Discount)))->toBeNull();
+});
+
+it('names a combo by its services and price, "desde" when the price can change', function () {
+    $combo = copyTerms(PromotionMechanic::Combo, ['serviceIds' => [1, 2], 'amountCents' => 1000]);
+
+    expect(PromotionCopy::title($combo, ['Corte', 'Barba'], null, new ComboPrice(5500, 1000, false)))->toBe('Corte + Barba por S/ 45')
+        ->and(PromotionCopy::title($combo, ['Tinte', 'Matiz'], null, new ComboPrice(18050, 3000, true)))->toBe('Tinte + Matiz desde S/ 150.50')
+        ->and(PromotionCopy::title($combo, ['Corte', 'Barba']))->toBe('Combo Corte + Barba')
+        ->and(PromotionCopy::finePrint($combo, ['Corte', 'Barba'], new PromotionFacts('Estudio Luz')))
+        ->toContain('El precio del combo es por Corte y Barba juntos, en la misma cita y atendidos por una sola persona del equipo. Si eliges una opción o un profesional con un precio más alto, pagas esa diferencia y sigues ahorrando S/ 10. Si quitas uno de los servicios, el combo no aplica y los demás se cobran a su precio normal.')
+        ->not->toContain('se aplica una sola vez por reserva');
 });

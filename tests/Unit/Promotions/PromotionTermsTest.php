@@ -129,3 +129,29 @@ it('prices a quote under one promotion at a time, from the normal prices', funct
     expect($gifted->priceCents())->toBe(3500)->and($gifted->promotionCents())->toBe(1200)->and($gifted->promotion?->id)->toBe(2)
         ->and($quote->promotionCents())->toBe(0);
 });
+
+it('shares a combo saving among its services by price, adding up exactly', function () {
+    // Corte S/ 35 + Barba S/ 18.50 = S/ 53.50; the combo saves S/ 10.
+    $combo = promoTerms(PromotionMechanic::Combo, ['serviceIds' => [1, 2], 'amountCents' => 1000]);
+    $priced = $combo->price([promoLine(1, 3500), promoLine(2, 1850), promoLine(3, 1200)]);
+
+    expect(array_map(fn (QuoteItem $item): int => $item->priceCents, $priced))->toBe([3500 - 654, 1850 - 346, 1200])
+        ->and($combo->savedCents([promoLine(1, 3500), promoLine(2, 1850)]))->toBe(1000)
+        ->and($priced[0]->normalPriceCents())->toBe(3500);
+});
+
+it('keeps the same saving with a dearer option, and none without every service', function () {
+    $combo = promoTerms(PromotionMechanic::Combo, ['serviceIds' => [1, 2], 'amountCents' => 1000]);
+
+    expect($combo->savedCents([promoLine(1, 5000), promoLine(2, 1850)]))->toBe(1000)
+        ->and($combo->savedCents([promoLine(1, 3500)]))->toBe(0)
+        ->and($combo->savedCents([promoLine(1, 3500), promoLine(3, 1200)]))->toBe(0);
+});
+
+it('does not apply a combo that would leave a service at S/ 0 or less', function () {
+    $combo = promoTerms(PromotionMechanic::Combo, ['serviceIds' => [1, 2], 'amountCents' => 2000]);
+
+    // A professional's own prices: S/ 10 + S/ 10 cannot save S/ 20.
+    expect($combo->savedCents([promoLine(1, 1000), promoLine(2, 1000)]))->toBe(0)
+        ->and($combo->savedCents([promoLine(1, 3500), promoLine(2, 1000)]))->toBe(2000);
+});

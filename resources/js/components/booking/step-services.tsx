@@ -1,5 +1,7 @@
+import { Info } from 'lucide-react';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { MAX_SERVICES } from '@/hooks/use-booking-wizard';
+import { useComboBreaks } from '@/hooks/use-combo-breaks';
 import { bestOffers, claimedGift, giftToOffer } from '@/lib/promo-offers';
 import { GiftOffer } from './gift-offer';
 import { ServiceOption } from './service-option';
@@ -21,6 +23,11 @@ export function StepServices({
     const chosenIds = wizard.chosen.map((service) => service.id);
     const offers = bestOffers(wizard.promotions);
     const claimed = claimedGift(wizard.promotions, chosenIds);
+    const breaks = useComboBreaks(
+        wizard.promotions,
+        wizard.services,
+        chosenIds,
+    );
     // Only a gift that can be booked here is worth offering.
     const offered = [giftToOffer(wizard.promotions, chosenIds)].find((gift) =>
         wizard.services.some((service) => service.id === gift?.serviceId),
@@ -51,26 +58,44 @@ export function StepServices({
                         {group.label}
                     </h2>
                     <ul className="grid items-start gap-2.5 @3xl:grid-cols-2">
-                        {group.services.map((service) => (
-                            <ServiceOption
-                                key={service.id}
-                                service={service}
-                                wizard={wizard}
-                                disabled={
-                                    isFull && !wizard.isSelected(service.id)
-                                }
-                                offer={offers.get(service.id)}
-                                isGift={claimed?.serviceId === service.id}
-                            >
-                                {gift?.giverId === service.id && (
-                                    <GiftOffer
-                                        gift={gift}
-                                        isClaimed={claimed !== null}
-                                        onAdd={isFull ? null : addGift}
-                                    />
-                                )}
-                            </ServiceOption>
-                        ))}
+                        {group.services.map((service) => {
+                            const comboBreak = breaks.find(
+                                (one) => one.serviceId === service.id,
+                            );
+
+                            return (
+                                <ServiceOption
+                                    key={service.id}
+                                    service={service}
+                                    wizard={wizard}
+                                    disabled={
+                                        isFull && !wizard.isSelected(service.id)
+                                    }
+                                    offer={offers.get(service.id)}
+                                    isGift={claimed?.serviceId === service.id}
+                                >
+                                    {gift?.giverId === service.id && (
+                                        <GiftOffer
+                                            gift={gift}
+                                            isClaimed={claimed !== null}
+                                            onAdd={isFull ? null : addGift}
+                                        />
+                                    )}
+                                    {comboBreak && (
+                                        <p
+                                            role="status"
+                                            className="mx-4 mb-4 flex items-start gap-2 text-sm font-semibold text-brand-text"
+                                        >
+                                            <Info
+                                                className="mt-0.5 size-4 shrink-0"
+                                                aria-hidden
+                                            />
+                                            {comboBreak.text}
+                                        </p>
+                                    )}
+                                </ServiceOption>
+                            );
+                        })}
                     </ul>
                 </section>
             ))}

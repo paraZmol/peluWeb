@@ -236,7 +236,7 @@ test.describe('Promociones del salón', () => {
         const preview = sheet.getByRole('region', { name: 'Vista previa' });
         await expect(preview).toContainText(title);
         await expect(preview).toContainText(
-            `Solo para la primera visita: vale si nunca tuviste una cita en Salón Promos ${isPhone ? 'Movil' : 'Escritorio'}, ni tienes otra reservada.`,
+            `Solo para tu primera reserva en Salón Promos ${isPhone ? 'Movil' : 'Escritorio'}: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada.`,
         );
         await expect(preview).not.toContainText('Una por cliente.');
         expect(await hasHorizontalScroll(page)).toBe(false);
@@ -246,5 +246,128 @@ test.describe('Promociones del salón', () => {
         await expect(card(page, title)).toContainText('Activa');
 
         assertNoErrors();
+    });
+
+    test('la dueña publica un combo y quien visita lo reserva con los dos servicios marcados', async ({
+        page,
+        browser,
+    }, testInfo) => {
+        test.setTimeout(120_000);
+        const isPhone = testInfo.project.name === 'movil';
+        const assertNoErrors = watchForErrors(page);
+        // Stored without its price (prices change); the price is said live.
+        const title = 'Combo Corte de promo + Barba de promo';
+        const live = 'Corte de promo + Barba de promo por S/ 45';
+
+        if (isPhone) {
+            await page.setViewportSize(PHONE);
+        }
+
+        await login(
+            page,
+            `promos-duena-${testInfo.project.name}@example.com`,
+            'password',
+        );
+        await expect(page).toHaveURL(/dashboard$/);
+        await page.goto('/promociones');
+        const startNew = page.getByRole('button', { name: 'Nueva promoción' });
+
+        if (await startNew.isVisible()) {
+            await startNew.click();
+        }
+
+        // The card proposes one with her own services, about 10 % less.
+        const comboCard = page.getByRole('button', { name: /^Combo/ });
+        await expect(comboCard).toContainText(
+            'Corte de promo + Barba de promo por S/ 49',
+        );
+        await comboCard.click();
+        const sheet = page.getByRole('dialog', { name: 'Combo' });
+        await expect(
+            sheet.getByRole('textbox', { name: 'Porcentaje' }),
+        ).toHaveCount(0);
+        await sheet.getByRole('checkbox', { name: /Corte de promo/ }).check();
+        await sheet.getByRole('checkbox', { name: /Barba de promo/ }).check();
+        await expect(sheet).toContainText('Por separado S/ 55.00.');
+        await expect(sheet).toContainText('Puede ir de S/ 27.50 a S/ 52.25.');
+        await sheet
+            .getByRole('textbox', { name: 'Precio del combo' })
+            .fill('45');
+
+        const preview = sheet.getByRole('region', { name: 'Vista previa' });
+        await expect(preview).toContainText(title);
+        await expect(preview).toContainText(live);
+        await expect(preview).toContainText(
+            'El precio del combo es por Corte de promo y Barba de promo juntos, en la misma cita y atendidos por una sola persona del equipo.',
+        );
+        await expect(preview).toContainText('sigues ahorrando S/ 10.');
+        await expect(preview).toContainText(
+            'El cliente paga S/ 45 por Corte de promo y Barba de promo juntos, en vez de S/ 55.',
+        );
+        expect(await hasHorizontalScroll(page)).toBe(false);
+        if (process.env.E2E_SHOTS) {
+            await page.screenshot({
+                path: `storage/app/shots/promo-combo-form-${testInfo.project.name}.png`,
+                fullPage: true,
+            });
+        }
+
+        await sheet.getByRole('button', { name: 'Publicar' }).click();
+        await expect(page.getByText('Promoción publicada.')).toBeVisible();
+        await expect(card(page, title)).toContainText('Activa');
+        await expect(card(page, title)).toContainText(live);
+        assertNoErrors();
+
+        // Someone who visits: the combo's price, what it saves, and the
+        // services marked without a price of their own.
+        const guest = await browser.newPage(
+            isPhone ? { viewport: PHONE } : undefined,
+        );
+        await guest.goto(`/s/salon-promos-${testInfo.project.name}`);
+        const offer = guest
+            .getByRole('region', { name: 'Promociones' })
+            .getByRole('listitem', { name: title });
+        // The price box says it: no second line repeats the price.
+        await expect(offer).not.toContainText(live);
+        await expect(offer).toContainText('Todo por');
+        await expect(offer).toContainText('S/ 45.00');
+        await expect(offer).toContainText(
+            'Por separado S/ 55.00: ahorras S/ 10.00',
+        );
+        // Corte has no other promotion running (Barba has the first visit's).
+        const cutRow = guest
+            .getByRole('region', { name: 'Servicios' })
+            .getByRole('listitem')
+            .filter({ hasText: 'Corte de promo' });
+        await expect(cutRow).toContainText('Combo');
+        await expect(cutRow).not.toContainText('Precio normal');
+        if (process.env.E2E_SHOTS) {
+            await offer.scrollIntoViewIfNeeded();
+            await offer.screenshot({
+                path: `storage/app/shots/promo-combo-card-${testInfo.project.name}.png`,
+            });
+        }
+
+        // Booking from it: both come ticked; without one it does not apply.
+        await offer
+            .getByRole('link', { name: /^Reservar con esta promo/ })
+            .click();
+        await expect(guest).toHaveURL(/\/reservar\?promo=\d+$/);
+        const cut = guest.getByRole('button', { name: /Corte de promo/ });
+        const beard = guest.getByRole('button', { name: /Barba de promo/ });
+        await expect(cut).toHaveAttribute('aria-pressed', 'true');
+        await expect(beard).toHaveAttribute('aria-pressed', 'true');
+        await expect(cut).toContainText('Combo');
+        await expect(cut).not.toContainText('Precio normal');
+        await beard.click();
+        await expect(
+            guest.getByText('Sin Barba de promo el combo no aplica'),
+        ).toBeVisible();
+        await beard.click();
+        await expect(
+            guest.getByText('Sin Barba de promo el combo no aplica'),
+        ).toHaveCount(0);
+        expect(await hasHorizontalScroll(guest)).toBe(false);
+        await guest.close();
     });
 });

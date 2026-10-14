@@ -7,11 +7,14 @@ import {
     bestSavingCents,
     bookedPromotion,
     claimedGift,
+    comboBreaks,
     giftToOffer,
     limitedPromotionHint,
     promotedTotal,
     promotionSelections,
+    slotPromoMark,
     slotsPromotionNote,
+    wholeCombos,
 } from './promo-offers';
 
 const CUT = 1;
@@ -42,6 +45,7 @@ function promo(with_: Partial<PublicPromotion>): PublicPromotion {
             },
         ],
         gift: null,
+        combo: null,
         ...with_,
     };
 }
@@ -62,6 +66,30 @@ const gift = promo({
         },
     ],
     gift: { serviceId: WASH, name: 'Lavado', price: '10.00', minutes: 10 },
+});
+
+const combo = promo({
+    id: 12,
+    name: 'Corte + Barba por S/ 50',
+    mechanic: 'combo',
+    serviceIds: [CUT, BEARD],
+    prices: [
+        {
+            serviceId: CUT,
+            name: 'Corte',
+            normal: '40.00',
+            promo: '33.30',
+            isFrom: false,
+        },
+        {
+            serviceId: BEARD,
+            name: 'Barba',
+            normal: '20.00',
+            promo: '16.70',
+            isFrom: false,
+        },
+    ],
+    combo: { price: '50.00', normal: '60.00', saves: '10.00', isFrom: false },
 });
 
 function service(id: number, variantIds: number[] = []): BookableService {
@@ -357,5 +385,58 @@ describe('slotsPromotionNote', () => {
         expect(slotsPromotionNote([plain, marked, other])).toBe(
             'Los horarios marcados tienen promoción: verás cuánto ahorras al elegir uno.',
         );
+    });
+});
+
+describe('a combo', () => {
+    it('marks its services without a price of their own: alone they cost the normal one', () => {
+        const offers = bestOffers([combo]);
+
+        expect(offers.get(BEARD)).toEqual({
+            normal: '20.00',
+            promo: '20.00',
+            isFrom: false,
+            isLimited: false,
+            isCombo: true,
+        });
+        // A discount that lowers the service is the price to show.
+        expect(bestOffers([combo, discount]).get(CUT)?.isCombo).toBeUndefined();
+    });
+
+    it('saves only with all its services', () => {
+        expect(bestSavingCents([combo], [CUT])).toBe(0);
+        expect(bestSavingCents([combo], [CUT, BEARD, WASH])).toBe(1000);
+        expect(bestSavingCents([combo, discount], [CUT, BEARD])).toBe(1000);
+    });
+
+    it('ticks all its services, or none when one cannot be booked', () => {
+        expect(
+            promotionSelections(combo, [service(CUT), service(BEARD, [7])]),
+        ).toEqual([
+            { serviceId: CUT, variantId: null },
+            { serviceId: BEARD, variantId: 7 },
+        ]);
+        expect(promotionSelections(combo, [service(CUT)])).toEqual([]);
+    });
+
+    it('says which service it lacks once it was whole', () => {
+        const names = (id: number) => (id === BEARD ? 'Barba' : 'Corte');
+
+        expect(wholeCombos([combo, discount], [CUT, BEARD])).toEqual([12]);
+        expect(comboBreaks([combo], [CUT], [12], names)).toEqual([
+            { serviceId: BEARD, text: 'Sin Barba el combo no aplica' },
+        ]);
+        // Never whole, or nothing of it left: nothing to say.
+        expect(comboBreaks([combo], [CUT], [], names)).toEqual([]);
+        expect(comboBreaks([combo], [WASH], [12], names)).toEqual([]);
+    });
+});
+
+describe('slotPromoMark', () => {
+    it('says when the promotion of a time is only for a first visit', () => {
+        expect(slotPromoMark({ name: 'x', saves: '5.00' })).toBe('con promo');
+        expect(
+            slotPromoMark({ name: 'x', saves: '5.00', firstVisit: true }),
+        ).toBe('con promo · primera visita');
     });
 });

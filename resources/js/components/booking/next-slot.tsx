@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Zap } from 'lucide-react';
 import { formatTime } from '@/lib/format';
+import { slotPromoMark } from '@/lib/promo-offers';
 import { cn } from '@/lib/utils';
 import type { Slot } from './types';
 
@@ -21,7 +22,7 @@ export function NextSlot({ slot, selected, onPick }: Props) {
     return (
         <button
             type="button"
-            aria-label={`Próximo horario libre: ${time}${slot.promotion ? ', con promo' : ''}`}
+            aria-label={`Próximo horario libre: ${time}${slot.promotion ? `, ${slotPromoMark(slot.promotion)}` : ''}`}
             aria-pressed={selected === null ? undefined : isSelected}
             onClick={() => onPick(slot)}
             className={cn(
@@ -58,7 +59,7 @@ export function NextSlot({ slot, selected, onPick }: Props) {
                                 !isSelected && 'text-brand-text',
                             )}
                         >
-                            con promo
+                            {slotPromoMark(slot.promotion)}
                         </span>
                     )}
                 </span>

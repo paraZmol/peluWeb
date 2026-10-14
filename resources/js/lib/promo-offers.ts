@@ -26,26 +26,45 @@ export type ServiceOffer = {
     isFrom: boolean;
     /** The promotion holds only on some days or hours: not every time gets it. */
     isLimited: boolean;
+    /**
+     * Only in a combo with other services: alone it costs `normal`, so no
+     * price is crossed out, only the combo is named.
+     */
+    isCombo?: boolean;
 };
 
 /** Goes with a price that only some times of the week get. */
 export const LIMITED_PRICE_NOTE = 'en horarios con promo';
 
+/** The word on a service with an offer: a combo is not a price of its own. */
+export function offerLabel(offer: ServiceOffer): string {
+    return offer.isCombo ? 'Combo' : 'Promo';
+}
+
+/** The mark of a time with a promotion; a first-visit one says so. */
+export function slotPromoMark(promotion: SlotPromotion): string {
+    return promotion.firstVisit ? 'con promo · primera visita' : 'con promo';
+}
+
 /**
  * The lowest promotional price of each service. A service that only earns
- * a gift keeps its price, so it is not here.
+ * a gift keeps its price, so it is not here. One that is only in a combo
+ * is marked as such, at its own price: alone it does not get the combo's.
  */
 export function bestOffers(
     promotions: PublicPromotion[],
 ): Map<number, ServiceOffer> {
     const offers = new Map<number, ServiceOffer>();
+    const combos = promotions.filter((promotion) => promotion.combo);
 
-    const priced = promotions.flatMap((promotion) =>
-        promotion.prices.map((price) => ({
-            ...price,
-            isLimited: promotion.when !== null,
-        })),
-    );
+    const priced = promotions
+        .filter((promotion) => !promotion.combo)
+        .flatMap((promotion) =>
+            promotion.prices.map((price) => ({
+                ...price,
+                isLimited: promotion.when !== null,
+            })),
+        );
 
     for (const { serviceId, ...offer } of priced) {
         const current = offers.get(serviceId);
@@ -56,7 +75,72 @@ export function bestOffers(
         }
     }
 
+    for (const promotion of combos) {
+        for (const price of promotion.prices) {
+            if (!offers.has(price.serviceId)) {
+                offers.set(price.serviceId, {
+                    normal: price.normal,
+                    promo: price.normal,
+                    isFrom: price.isFrom,
+                    isLimited: promotion.when !== null,
+                    isCombo: true,
+                });
+            }
+        }
+    }
+
     return offers;
+}
+
+/** Every service of a combo is chosen: only then does it apply. */
+function hasWholeCombo(
+    promotion: PublicPromotion,
+    chosenIds: number[],
+): boolean {
+    return promotion.serviceIds.every((id) => chosenIds.includes(id));
+}
+
+/** "Sin Barba el combo no aplica", under a service taken out of a combo. */
+export type ComboBreak = { serviceId: number; text: string };
+
+/**
+ * What was taken out of a combo that was whole (`wholeIds`, the combos the
+ * person had complete) while some of it is still chosen.
+ */
+export function comboBreaks(
+    promotions: PublicPromotion[],
+    chosenIds: number[],
+    wholeIds: number[],
+    nameOf: (serviceId: number) => string | undefined,
+): ComboBreak[] {
+    return promotions
+        .filter(
+            (promotion) =>
+                promotion.combo &&
+                wholeIds.includes(promotion.id) &&
+                promotion.serviceIds.some((id) => chosenIds.includes(id)),
+        )
+        .flatMap((promotion) =>
+            promotion.serviceIds
+                .filter((id) => !chosenIds.includes(id))
+                .map((serviceId) => ({
+                    serviceId,
+                    text: `Sin ${nameOf(serviceId) ?? 'este servicio'} el combo no aplica`,
+                })),
+        );
+}
+
+/** The combos the chosen services complete. */
+export function wholeCombos(
+    promotions: PublicPromotion[],
+    chosenIds: number[],
+): number[] {
+    return promotions
+        .filter(
+            (promotion) =>
+                promotion.combo && hasWholeCombo(promotion, chosenIds),
+        )
+        .map((promotion) => promotion.id);
 }
 
 export type GiftOffer = {
@@ -123,6 +207,12 @@ export function bestSavingCents(
     chosenIds: number[],
 ): number {
     const savings = promotions.map((promotion) => {
+        if (promotion.combo) {
+            return hasWholeCombo(promotion, chosenIds)
+                ? cents(promotion.combo.saves)
+                : 0;
+        }
+
         if (promotion.gift) {
             return claimedGift([promotion], chosenIds)
                 ? cents(promotion.gift.price)
@@ -140,10 +230,27 @@ export function bestSavingCents(
     return Math.max(0, ...savings);
 }
 
+function promotedServices(
+    promotion: PublicPromotion,
+    included: BookableService[],
+    gift: BookableService | undefined,
+): BookableService[] {
+    if (promotion.combo) {
+        return included.length === promotion.serviceIds.length ? included : [];
+    }
+
+    if (promotion.gift) {
+        return gift && included.length > 0 ? [included[0], gift] : [];
+    }
+
+    return included.length === 1 ? included : [];
+}
+
 /**
  * What the wizard starts with when it is opened from a promotion. A gift:
- * the first service that earns it and the gift. A discount: its service,
- * only when it has just one (several would mean booking them all).
+ * the first service that earns it and the gift. A combo: all its services,
+ * when all can be booked. A discount: its service, only when it has just
+ * one (several would mean booking them all).
  */
 export function promotionSelections(
     promotion: PublicPromotion | undefined,
@@ -159,13 +266,7 @@ export function promotionSelections(
     const gift = services.find(
         (service) => service.id === promotion.gift?.serviceId,
     );
-    const picked = promotion.gift
-        ? gift && included.length > 0
-            ? [included[0], gift]
-            : []
-        : included.length === 1
-          ? included
-          : [];
+    const picked = promotedServices(promotion, included, gift);
 
     return picked.map((service) => ({
         serviceId: service.id,

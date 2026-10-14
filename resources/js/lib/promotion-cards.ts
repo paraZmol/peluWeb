@@ -4,7 +4,14 @@ import type {
     PromotionFields,
     PromotionService,
 } from '@/components/promotions/types';
-import { addDays } from './promotions';
+import {
+    comboCandidates,
+    comboIsFrom,
+    comboNormalCents,
+    COMBO_MIN_SERVICES,
+    suggestedComboCents,
+} from './promotion-combo';
+import { addDays, soles } from './promotions';
 
 /*
  | The cards a promotion starts from (docs/promociones.md, "Fichas"):
@@ -105,6 +112,14 @@ export function occasionDefaults(
     };
 }
 
+function mechanicOf(card: PromotionCardKind): PromotionFields['mechanic'] {
+    if (card === 'combo') {
+        return 'combo';
+    }
+
+    return card === 'gift' ? 'gift' : 'discount';
+}
+
 /** What a new promotion says before the owner changes anything. */
 export function newPromotionFields(
     card: PromotionCardKind,
@@ -115,11 +130,12 @@ export function newPromotionFields(
 
     return {
         card,
-        mechanic: card === 'gift' ? 'gift' : 'discount',
+        mechanic: mechanicOf(card),
         services: [],
         benefit: 'percent',
         percent: String(DEFAULT_PERCENT),
         amount: '',
+        combo_price: '',
         gift_service_id: null,
         starts_on: today,
         ends_on: addDays(today, CARD_DAYS[card] ?? DEFAULT_DAYS),
@@ -153,6 +169,7 @@ export function savedPromotionFields(
         benefit: form.amount === null ? 'percent' : 'amount',
         percent: form.percent === null ? '' : String(form.percent),
         amount: form.amount ?? '',
+        combo_price: form.combo_price ?? '',
         gift_service_id: form.gift_service_id,
         starts_on: promotion.startsOn,
         ends_on: promotion.endsOn,
@@ -173,8 +190,9 @@ export function savedPromotionFields(
 /** The form as the server expects it: empty text becomes "not set". */
 export function promotionPayload(fields: PromotionFields, publish: boolean) {
     const isGift = fields.mechanic === 'gift';
-    const isPercent = !isGift && fields.benefit === 'percent';
-    const isAmount = !isGift && fields.benefit === 'amount';
+    const isCombo = fields.mechanic === 'combo';
+    const isPercent = !isGift && !isCombo && fields.benefit === 'percent';
+    const isAmount = !isGift && !isCombo && fields.benefit === 'amount';
     const text = (value: string) => (value.trim() === '' ? null : value.trim());
 
     return {
@@ -183,6 +201,9 @@ export function promotionPayload(fields: PromotionFields, publish: boolean) {
         services: fields.services,
         percent: isPercent ? text(fields.percent) : null,
         amount: isAmount ? text(fields.amount.replace(',', '.')) : null,
+        combo_price: isCombo
+            ? text(fields.combo_price.replace(',', '.'))
+            : null,
         gift_service_id: isGift ? fields.gift_service_id : null,
         starts_on: fields.starts_on,
         ends_on: fields.ends_on,
@@ -217,7 +238,22 @@ export type CardOffer = {
     example: string | null;
 };
 
-/** The five cards, each with an example made of the salon's own services. */
+/** "Corte + Barba por S/ 49": its first two main services, about 10 % less. */
+function comboExample(services: PromotionService[]): string | null {
+    const pair = comboCandidates(services)
+        .filter((service) => !service.isAddon)
+        .slice(0, COMBO_MIN_SERVICES);
+
+    if (pair.length < COMBO_MIN_SERVICES) {
+        return null;
+    }
+
+    const price = suggestedComboCents(comboNormalCents(pair));
+
+    return `${pair.map((service) => service.name).join(' + ')} ${comboIsFrom(pair) ? 'desde' : 'por'} S/ ${soles(price)}`;
+}
+
+/** The six cards, each with an example made of the salon's own services. */
 export function cardOffers(
     services: PromotionService[],
     today: string,
@@ -262,6 +298,12 @@ export function cardOffers(
             title: 'Primera visita',
             pitch: 'Un descuento para atraer clientes nuevos: vale solo en su primera cita.',
             example: discount && `${discount} en tu primera visita`,
+        },
+        {
+            card: 'combo',
+            title: 'Combo',
+            pitch: 'Dos o tres servicios juntos a un precio cerrado, más bajo que por separado.',
+            example: comboExample(services),
         },
     ];
 }

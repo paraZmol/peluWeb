@@ -64,7 +64,8 @@ class SalonPromotions
         $names = array_values($promotion->services->sortBy('position')->map(fn (Service $service): string => $service->name)->all());
         $state = $this->state($promotion, $today);
         $from = $promotion->from_minute;
-        $written = PromotionCopy::title($promotion->terms(), $names, $promotion->giftService?->name);
+        $written = $promotion->writtenTitle();
+        $combo = $promotion->comboPrice();
         $clock = fn (?int $minute): ?string => $minute === null ? null : sprintf('%02d:%02d', intdiv($minute, 60), $minute % 60);
 
         return [
@@ -88,7 +89,9 @@ class SalonPromotions
             'form' => [
                 'services' => $promotion->services->modelKeys(),
                 'percent' => $promotion->percent,
-                'amount' => $promotion->amount_cents === null ? null : Money::toAmount($promotion->amount_cents),
+                'amount' => $promotion->amount_cents === null || $combo !== null ? null : Money::toAmount($promotion->amount_cents),
+                // A combo's price against its services as they cost today.
+                'combo_price' => $combo === null ? null : Money::toAmount($combo->priceCents()),
                 'gift_service_id' => $promotion->gift_service_id,
                 'weekdays' => $promotion->weekdays,
                 'from_time' => $clock($from),

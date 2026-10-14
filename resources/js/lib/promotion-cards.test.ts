@@ -10,6 +10,7 @@ import {
     promotionPayload,
     upcomingOccasion,
 } from './promotion-cards';
+import { comboRange, suggestedComboCents } from './promotion-combo';
 import { previewOf } from './promotion-preview';
 
 const service = (
@@ -161,6 +162,41 @@ describe('promotionPayload', () => {
             gift_service_id: 4,
         });
     });
+
+    it('sends only the price of a combo', () => {
+        const fields = {
+            ...newPromotionFields('combo', '2026-10-12'),
+            services: [1, 3],
+            combo_price: '49,50',
+        };
+
+        expect(promotionPayload(fields, false)).toMatchObject({
+            card: 'combo',
+            mechanic: 'combo',
+            percent: null,
+            amount: null,
+            combo_price: '49.50',
+            gift_service_id: null,
+        });
+        expect(
+            promotionPayload(
+                newPromotionFields('discount', '2026-10-12'),
+                false,
+            ).combo_price,
+        ).toBeNull();
+    });
+});
+
+describe('combo prices', () => {
+    it('allows from 50 % to 5 % less, like the server', () => {
+        expect(comboRange(5500)).toEqual({ lowest: 2750, highest: 5225 });
+    });
+
+    it('proposes about 10 % less in whole soles, within the range', () => {
+        expect(suggestedComboCents(5500)).toBe(4900);
+        expect(suggestedComboCents(15500)).toBe(13900);
+        expect(suggestedComboCents(1000)).toBe(900);
+    });
 });
 
 describe('cards and gifts', () => {
@@ -181,6 +217,7 @@ describe('cards and gifts', () => {
             '20 % menos en Corte, de lunes a miércoles de 10:00 a 16:00',
             'Halloween · 20 % menos en Corte',
             '20 % menos en Corte en tu primera visita',
+            'Corte + Tinte por S/ 139',
         ]);
     });
 
@@ -266,7 +303,7 @@ describe('previewOf', () => {
 
         expect(preview?.title).toBe('20 % menos en Corte en tu primera visita');
         expect(preview?.finePrint).toContain(
-            'Solo para la primera visita: vale si nunca tuviste una cita en Estudio Luz, ni tienes otra reservada.',
+            'Solo para tu primera reserva en Estudio Luz: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono.',
         );
         expect(preview?.finePrint).not.toContain('Una por cliente.');
     });
@@ -278,5 +315,57 @@ describe('previewOf', () => {
         );
 
         expect(preview?.title).toBe('Semana del corte');
+        // Under it, what it does in the system's words, as the client reads it.
+        expect(preview?.subtitle).toBe('20 % menos en Corte');
+    });
+});
+
+describe('previewOf a combo', () => {
+    const combo = {
+        ...newPromotionFields('combo', '2026-10-12'),
+        services: [1, 3],
+        combo_price: '45',
+    };
+
+    it('waits for two services and a price below what they cost apart', () => {
+        expect(previewOf({ ...combo, services: [1] }, context)).toBeNull();
+        expect(previewOf({ ...combo, combo_price: '55' }, context)).toBeNull();
+    });
+
+    it('shows the services together against their price apart', () => {
+        const preview = previewOf(combo, context);
+
+        expect(preview?.title).toBe('Combo Corte + Barba');
+        expect(preview?.subtitle).toBe('Corte + Barba por S/ 45');
+        expect(preview?.lines).toEqual([
+            {
+                name: 'Corte + Barba',
+                normalCents: 5500,
+                promoCents: 4500,
+                isGift: false,
+            },
+        ]);
+        expect(preview?.finePrint).toContain('sigues ahorrando S/ 10.');
+        expect(preview?.summary).toEqual([
+            'El cliente paga S/ 45 por Corte y Barba juntos, en vez de S/ 55.',
+            'El ahorro se reparte entre los servicios según su precio. Quien atiende comisiona sobre lo cobrado.',
+            'Seña: S/ 13.50.',
+        ]);
+    });
+
+    it('says "desde" when a service has options, from its cheapest one', () => {
+        const withOptions = {
+            ...context,
+            services: services.map((one) =>
+                one.id === 3
+                    ? { ...one, hasOptions: true, basePrice: '15.00' }
+                    : one,
+            ),
+        };
+
+        expect(previewOf(combo, withOptions)?.subtitle).toBe(
+            'Corte + Barba desde S/ 45',
+        );
+        expect(previewOf(combo, withOptions)?.lines[0].normalCents).toBe(5000);
     });
 });

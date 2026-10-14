@@ -14,11 +14,15 @@ enum PromotionMechanic: string
     /** One service for free when booked together with an included one. */
     case Gift = 'gift';
 
+    /** Two or three services together save a fixed amount, shared among them. */
+    case Combo = 'combo';
+
     public function label(): string
     {
         return match ($this) {
             self::Discount => 'Descuento',
             self::Gift => 'Servicio de regalo',
+            self::Combo => 'Combo',
         };
     }
 }

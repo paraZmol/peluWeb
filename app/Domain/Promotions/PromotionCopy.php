@@ -26,10 +26,14 @@ final class PromotionCopy
      *
      * @param  list<string>  $serviceNames  the included services, in catalogue order
      */
-    public static function title(PromotionTerms $terms, array $serviceNames, ?string $giftName = null): string
+    public static function title(PromotionTerms $terms, array $serviceNames, ?string $giftName = null, ?ComboPrice $combo = null): string
     {
         $services = self::names($serviceNames);
         $title = match (true) {
+            // Without its price, the name it is stored under: prices change, a name must not lie.
+            $terms->mechanic === PromotionMechanic::Combo && $combo === null => 'Combo '.implode(' + ', $serviceNames),
+            $terms->mechanic === PromotionMechanic::Combo => implode(' + ', $serviceNames)
+                .($combo->isFrom ? ' desde S/ ' : ' por S/ ').self::soles($combo->priceCents()),
             $terms->mechanic === PromotionMechanic::Gift => "{$giftName} gratis con tu {$services}",
             $terms->percent !== null => "{$terms->percent} % menos en {$services}",
             default => 'S/ '.self::soles((int) $terms->amountCents)." menos en {$services}",
@@ -62,12 +66,16 @@ final class PromotionCopy
             : "Cupos: {$facts->quota} ".($facts->quota === 1 ? 'reserva' : 'reservas').'.';
 
         if ($terms->newClientsOnly) {
-            $parts[] = "Solo para la primera visita: vale si nunca tuviste una cita en {$facts->salonName}, ni tienes otra reservada.";
+            $parts[] = "Solo para tu primera reserva en {$facts->salonName}: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono.";
         } elseif ($facts->oncePerClient) {
             $parts[] = 'Una por cliente.';
         }
 
-        if ($terms->amountCents !== null && count($serviceNames) > 1) {
+        if ($terms->mechanic === PromotionMechanic::Combo) {
+            $parts[] = 'El precio del combo es por '.self::list($serviceNames).' juntos, en la misma cita y atendidos por una sola persona del equipo. '
+                .'Si eliges una opción o un profesional con un precio más alto, pagas esa diferencia y sigues ahorrando S/ '.self::soles((int) $terms->amountCents).'. '
+                .'Si quitas uno de los servicios, el combo no aplica y los demás se cobran a su precio normal.';
+        } elseif ($terms->amountCents !== null && count($serviceNames) > 1) {
             $parts[] = 'El descuento de S/ '.self::soles($terms->amountCents).' se aplica una sola vez por reserva.';
         }
 

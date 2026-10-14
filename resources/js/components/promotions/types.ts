@@ -4,9 +4,10 @@ export type PromotionCardKind =
     | 'gift'
     | 'quiet_hours'
     | 'season'
-    | 'first_visit';
+    | 'first_visit'
+    | 'combo';
 
-export type PromotionMechanic = 'discount' | 'gift';
+export type PromotionMechanic = 'discount' | 'gift' | 'combo';
 
 export type PromotionState =
     | 'draft'
@@ -26,6 +27,15 @@ export type PromotionService = {
     isAddon: boolean;
     /** One fixed price: the only kind that can be given away. */
     canBeGift: boolean;
+    /**
+     * Its lowest catalogue price (the cheapest option), what a combo is
+     * measured against; `price` until the server sends it.
+     */
+    basePrice?: string;
+    /** It has options: a combo with it is announced "desde". */
+    hasOptions?: boolean;
+    /** Needs an evaluation first: it cannot go in a combo. */
+    requiresEvaluation?: boolean;
 };
 
 export type PromotionResults = {
@@ -62,6 +72,8 @@ export type Promotion = {
         services: number[];
         percent: number | null;
         amount: string | null;
+        /** A combo's price, against its services as they cost today. */
+        combo_price?: string | null;
         gift_service_id: number | null;
         weekdays: number[] | null;
         from_time: string | null;
@@ -99,6 +111,8 @@ export type PromotionFields = {
     benefit: 'percent' | 'amount';
     percent: string;
     amount: string;
+    /** Soles the services cost together (combo card). */
+    combo_price: string;
     gift_service_id: number | null;
     starts_on: string;
     ends_on: string;

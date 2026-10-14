@@ -34,6 +34,10 @@ const HEADINGS: Record<PromotionCardKind, { title: string; lead: string }> = {
         title: 'Primera visita',
         lead: 'Un descuento solo para quien nunca tuvo una cita en tu salón. Sirve para atraer clientes nuevos.',
     },
+    combo: {
+        title: 'Combo',
+        lead: 'Dos o tres servicios juntos, en la misma cita, a un precio cerrado más bajo que por separado.',
+    },
 };
 
 type Props = {

@@ -111,8 +111,8 @@ it('marks in the time picker the starts where the promotion applies, and only th
     ]))->assertOk()->json('slots'))->keyBy('time');
 
     $wednesday = $slots('2026-10-07');
-    expect($wednesday['10:00']['promotion'])->toBe(['name' => 'Horas flojas', 'saves' => '7.00'])
-        ->and($wednesday['11:45']['promotion'])->toBe(['name' => 'Horas flojas', 'saves' => '7.00'])
+    expect($wednesday['10:00']['promotion'])->toBe(['name' => 'Horas flojas', 'saves' => '7.00', 'firstVisit' => false])
+        ->and($wednesday['11:45']['promotion'])->toBe(['name' => 'Horas flojas', 'saves' => '7.00', 'firstVisit' => false])
         ->and($wednesday['12:00']['promotion'])->toBeNull()
         ->and($wednesday['09:30']['promotion'])->toBeNull()
         ->and($slots('2026-10-08')['10:00']['promotion'])->toBeNull();
@@ -205,7 +205,7 @@ it('books nothing, and says so, when the promotion they confirmed is gone', func
     $promotion->forceFill(['status' => PromotionStatus::Paused])->save();
     $book(['expects_promotion' => true])->assertInertiaFlash('toast.type', 'error')
         // Sent back to the times: the wizard reads "horario" in what failed.
-        ->assertInertiaFlash('toast.message', 'La promoción ya no aplica a esta reserva en ese horario: se agotó, se pausó o es solo para la primera visita. Elige el horario de nuevo: verás el precio que te corresponde antes de confirmar.');
+        ->assertInertiaFlash('toast.message', 'Esta promoción no aplica a tu reserva. Elige de nuevo el horario para ver tu precio.');
     expect(Booking::withoutGlobalScope('salon')->count())->toBe(0);
 
     // Having seen the normal price, they book at it.

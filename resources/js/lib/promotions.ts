@@ -55,10 +55,18 @@ export type CopyTerms = {
     toTime: string | null;
     /** "Primera visita": only for someone who never had a booking at the salon. */
     newClientsOnly: boolean;
+    /**
+     * A combo: what it is announced at (App\Domain\Promotions\ComboPrice);
+     * its saving is `amountCents`.
+     */
+    combo?: ComboAnnounced | null;
 };
 
+/** "desde" when an option or a professional's own price may change it. */
+export type ComboAnnounced = { priceCents: number; isFrom: boolean };
+
 /** "A", "A y B", "A, B y C". */
-function list(items: string[]): string {
+export function list(items: string[]): string {
     const head = items.slice(0, -1);
     const last = items.at(-1) ?? '';
 
@@ -107,7 +115,9 @@ export function promotionPeriod(startsOn: string, endsOn: string): string {
 
 /**
  * "20 % menos en Corte", "S/ 10 menos en Manicure", "Rasurado gratis con
- * tu Corte"; "… en tu primera visita" when only newcomers get it.
+ * tu Corte", "Corte + Barba por S/ 45" ("Combo Corte + Barba" without its
+ * price, the name a combo is stored under); "… en tu primera visita" when
+ * only newcomers get it.
  */
 export function promotionTitle(
     terms: CopyTerms,
@@ -120,7 +130,12 @@ export function promotionTitle(
             : list(serviceNames);
     let title: string;
 
-    if (terms.mechanic === 'gift') {
+    if (terms.mechanic === 'combo' && !terms.combo) {
+        // The name it is stored under: prices change, a name must not lie.
+        title = `Combo ${serviceNames.join(' + ')}`;
+    } else if (terms.mechanic === 'combo') {
+        title = `${serviceNames.join(' + ')}${terms.combo?.isFrom ? ' desde' : ' por'} S/ ${soles(terms.combo?.priceCents ?? 0)}`;
+    } else if (terms.mechanic === 'gift') {
         title = `${giftName} gratis con tu ${services}`;
     } else if (terms.percent !== null) {
         title = `${terms.percent} % menos en ${services}`;
@@ -134,7 +149,7 @@ export function promotionTitle(
 /** Who may use it beyond the dates: newcomers only, or once each. */
 function whoMayUseIt(terms: CopyTerms, facts: PromotionFacts): string | null {
     if (terms.newClientsOnly) {
-        return `Solo para la primera visita: vale si nunca tuviste una cita en ${facts.salonName}, ni tienes otra reservada.`;
+        return `Solo para tu primera reserva en ${facts.salonName}: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono.`;
     }
 
     return facts.isOncePerClient ? 'Una por cliente.' : null;
@@ -177,6 +192,26 @@ function giftTerms({ name, priceCents, minutes }: GiftFacts): string {
     return `El regalo (${name}, precio normal S/ ${soles(priceCents)}) se hace en la misma cita y alarga la cita ${minutes} min. No se cambia por dinero ni por otro servicio.`;
 }
 
+/** That a combo is for its services together, and what changes its price. */
+function comboTerms(terms: CopyTerms, serviceNames: string[]): string {
+    return (
+        `El precio del combo es por ${list(serviceNames)} juntos, en la misma cita y atendidos por una sola persona del equipo. ` +
+        `Si eliges una opción o un profesional con un precio más alto, pagas esa diferencia y sigues ahorrando S/ ${soles(terms.amountCents ?? 0)}. ` +
+        'Si quitas uno de los servicios, el combo no aplica y los demás se cobran a su precio normal.'
+    );
+}
+
+/** What an amount off says: it is given once, whatever is booked. */
+function savingTerms(terms: CopyTerms, serviceNames: string[]): string | null {
+    if (terms.mechanic === 'combo') {
+        return comboTerms(terms, serviceNames);
+    }
+
+    return terms.amountCents !== null && serviceNames.length > 1
+        ? `El descuento de S/ ${soles(terms.amountCents)} se aplica una sola vez por reserva.`
+        : null;
+}
+
 /**
  * What it is valid for, said in full and the same way every time: whose it
  * is, how long it runs, how many it takes and every limit the engine applies.
@@ -201,9 +236,7 @@ export function promotionFinePrint(
             ? 'Sin límite de cupos: vale para todas las citas que se reserven dentro de estas fechas, mientras haya horarios libres.'
             : `${quotaLabel(facts.quota)}.`,
         whoMayUseIt(terms, facts),
-        terms.amountCents !== null && serviceNames.length > 1
-            ? `El descuento de S/ ${soles(terms.amountCents)} se aplica una sola vez por reserva.`
-            : null,
+        savingTerms(terms, serviceNames),
         terms.mechanic === 'gift' && facts.gift ? giftTerms(facts.gift) : null,
         'Si cambias tu cita, la promoción se mantiene solo si la nueva fecha y hora cumplen estas condiciones.',
         facts.hasDeposit

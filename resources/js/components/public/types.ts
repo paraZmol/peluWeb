@@ -102,7 +102,7 @@ export type PublicPromotion = {
     summary: string | null;
     /** The campaign it belongs to ("Halloween"), above the title. */
     overline: string | null;
-    mechanic: 'discount' | 'gift';
+    mechanic: 'discount' | 'gift' | 'combo';
     /** "Y-m-d": the last day a visit can use it. */
     endsOn: string;
     /** "del 5 al 18 de octubre de 2026": the visits it is valid for. */
@@ -112,7 +112,10 @@ export type PublicPromotion = {
     /** "lunes y martes, de 10:00 a 16:00"; null when it holds at any time. */
     when: string | null;
     finePrint: string;
-    /** Discount: the services it lowers. Gift: the ones that earn it. */
+    /**
+     * Discount: the services it lowers. Gift: the ones that earn it. Combo:
+     * the ones that must all be booked.
+     */
     serviceIds: number[];
     prices: PromotionPrice[];
     gift: {
@@ -121,6 +124,18 @@ export type PublicPromotion = {
         price: string;
         minutes: number;
     } | null;
+    /**
+     * A combo: its services together and apart ("desde" when an option or
+     * a professional may change it). Its `prices` hold only all together.
+     */
+    combo: PromotionCombo | null;
+};
+
+export type PromotionCombo = {
+    price: string;
+    normal: string;
+    saves: string;
+    isFrom: boolean;
 };
 
 export type PublicPromotions = {

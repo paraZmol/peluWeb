@@ -84,7 +84,9 @@ class BookingException extends BusinessRuleException
 
     public static function promotionGone(): self
     {
-        return new self('La promoción ya no aplica a esta reserva en ese horario: se agotó, se pausó o es solo para la primera visita. Elige el horario de nuevo: verás el precio que te corresponde antes de confirmar.');
+        // The same words whatever the reason: it must not tell anyone that a
+        // phone number already belongs to a client of this salon.
+        return new self('Esta promoción no aplica a tu reserva. Elige de nuevo el horario para ver tu precio.');
     }
 
     public static function promotionPlaceTaken(string $name): self

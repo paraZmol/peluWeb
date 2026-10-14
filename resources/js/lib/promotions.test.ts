@@ -138,7 +138,7 @@ describe('promotionFinePrint', () => {
             ),
         ).toBe(
             'Promoción de Estudio Luz. Válido para citas del 5 al 18 de octubre de 2026. Aplica a: Corte. ' +
-                'Cupos: 10 reservas. Solo para la primera visita: vale si nunca tuviste una cita en Estudio Luz, ni tienes otra reservada. ' +
+                'Cupos: 10 reservas. Solo para tu primera reserva en Estudio Luz: no vale si ya tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono. ' +
                 closing(''),
         );
     });
@@ -277,5 +277,50 @@ describe('sharing', () => {
     it('counts a single place in the singular', () => {
         expect(quotaLabel(1)).toBe('Cupos: 1 reserva');
         expect(quotaLabel(null)).toBeNull();
+    });
+});
+
+describe('a combo', () => {
+    // The same case as PromotionCopyTest: "names a combo by its services and price".
+    const combo = (priceCents: number, isFrom: boolean) =>
+        terms('combo', {
+            amountCents: 1000,
+            combo: { priceCents, isFrom },
+        });
+
+    it('is named by its services and price, "desde" when the price can change', () => {
+        expect(promotionTitle(combo(4500, false), ['Corte', 'Barba'])).toBe(
+            'Corte + Barba por S/ 45',
+        );
+        expect(promotionTitle(combo(15050, true), ['Tinte', 'Matiz'])).toBe(
+            'Tinte + Matiz desde S/ 150.50',
+        );
+        // Without its price, the name it is stored under.
+        expect(
+            promotionTitle(terms('combo', { amountCents: 1000 }), [
+                'Corte',
+                'Barba',
+            ]),
+        ).toBe('Combo Corte + Barba');
+    });
+
+    it('says in its fine print what it is for and what changes it', () => {
+        const finePrint = promotionFinePrint(
+            combo(4500, false),
+            ['Corte', 'Barba'],
+            {
+                salonName: 'Estudio Luz',
+                quota: null,
+                isOncePerClient: false,
+                hasDeposit: false,
+            },
+        );
+
+        expect(finePrint).toContain(
+            'El precio del combo es por Corte y Barba juntos, en la misma cita y atendidos por una sola persona del equipo. ' +
+                'Si eliges una opción o un profesional con un precio más alto, pagas esa diferencia y sigues ahorrando S/ 10. ' +
+                'Si quitas uno de los servicios, el combo no aplica y los demás se cobran a su precio normal.',
+        );
+        expect(finePrint).not.toContain('se aplica una sola vez por reserva');
     });
 });

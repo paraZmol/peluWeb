@@ -1,5 +1,6 @@
 import { ArrowRight, Clock } from 'lucide-react';
 import { formatMinutes } from '@/lib/format';
+import { offerLabel } from '@/lib/promo-offers';
 import { PromoTag } from '../promo-tag';
 import { CategoryIcon } from './category-icon';
 import { RowPrice } from './row-price';
@@ -30,7 +31,12 @@ export function RoundThumbRow({
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground tabular-nums">
                         <Clock className="size-4" aria-hidden />
                         {formatMinutes(service.minutes)}
-                        {offer && <PromoTag className="ml-1" />}
+                        {offer && (
+                            <PromoTag
+                                label={offerLabel(offer)}
+                                className="ml-1"
+                            />
+                        )}
                     </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">

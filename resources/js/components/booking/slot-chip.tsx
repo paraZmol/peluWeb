@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { formatTime } from '@/lib/format';
+import { slotPromoMark } from '@/lib/promo-offers';
 import { cn } from '@/lib/utils';
 import type { Slot } from './types';
 
@@ -46,7 +47,7 @@ export function SlotChip({ slot, index, selected, onPick, className }: Props) {
                         !isSelected && 'text-brand-text',
                     )}
                 >
-                    con promo
+                    {slotPromoMark(slot.promotion)}
                 </span>
             )}
         </motion.button>

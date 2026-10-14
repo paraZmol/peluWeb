@@ -4,17 +4,19 @@ import {
     CalendarDays,
     Clock,
     Gift,
+    Layers,
     Percent,
     Ticket,
 } from 'lucide-react';
-import { formatPrice } from '@/lib/format';
 import { quotaLabel } from '@/lib/promotions';
 import { PRIMARY_ACTION, SOFT_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import { create as bookingWizard } from '@/routes/salons/booking';
-import { PromotionPrices } from './promotion-prices';
+import { PromotionBenefit } from './promotion-benefit';
 import { PromotionTerms } from './promotion-terms';
 import type { PublicPromotion } from './types';
+
+const ICONS = { discount: Percent, gift: Gift, combo: Layers };
 
 type Props = {
     promotion: PublicPromotion;
@@ -38,9 +40,8 @@ export function PromotionCard({
     isFeatured,
     className,
 }: Props) {
-    const { gift } = promotion;
     const quota = quotaLabel(promotion.quota);
-    const Icon = gift ? Gift : Percent;
+    const Icon = ICONS[promotion.mechanic];
 
     return (
         <li
@@ -86,19 +87,10 @@ export function PromotionCard({
                 </div>
             </div>
 
-            {gift ? (
-                <p className="rounded-lg bg-brand-soft px-3.5 py-3 font-semibold text-brand-text">
-                    {gift.name} gratis ·{' '}
-                    <span className="whitespace-nowrap tabular-nums">
-                        Ahorras {formatPrice(gift.price)}
-                    </span>
-                </p>
-            ) : (
-                <PromotionPrices
-                    prices={promotion.prices}
-                    serviceNames={serviceNames}
-                />
-            )}
+            <PromotionBenefit
+                promotion={promotion}
+                serviceNames={serviceNames}
+            />
 
             <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
                 {promotion.when && (
