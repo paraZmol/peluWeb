@@ -55,8 +55,7 @@ mensajería en Perú usa WhatsApp. Yape tiene más de 15M de usuarios y Plin má
 | **Equipo** ★ | S/ 89 | S/ 69 | Hasta 6 profesionales con agenda, todo lo construido |
 | Más de 6 | a cotizar (ref. S/ 139) | — | Hasta 15, se vende a mano |
 
-Solo cuenta quien tiene agenda (recepción y caja van gratis). Precio fundador para los primeros salones
-(10 por defecto), con cupos y fecha escritos, y se conserva mientras se siga pagando. Anual: 12 meses por
+Solo cuenta quien tiene agenda (recepción y caja van gratis). Precio fundador para los primeros 5 salones, con cupos y fecha escritos, y se conserva mientras se siga pagando. Anual: 12 meses por
 el precio de 10, ofrecido desde el 2.º pago. Detalle y razones en PLAN.md §11 (2026-10-15).
 
 *Propuesta anterior (2026-10-04), descartada:* Negocio a S/ 169 con inventario, paquetes y roles finos,

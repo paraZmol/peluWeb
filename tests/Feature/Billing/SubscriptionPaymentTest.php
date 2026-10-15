@@ -79,6 +79,13 @@ it('covers the month that follows the trial, with the founder price for the firs
     expect(recordPayment($salon)->covers_from->toDateString())->toBe('2026-12-07');
 });
 
+it('keeps a founder on the founder price of a bigger plan', function () {
+    recordPayment($this->salon);
+
+    expect(RecordSubscriptionPayment::expectedCents($this->salon->refresh(), billingPlan('equipo'), 1))->toBe(6900)
+        ->and(RecordSubscriptionPayment::expectedCents($this->salon, billingPlan('equipo'), 12))->toBe(69000);
+});
+
 it('charges a year as ten months', function () {
     expect(RecordSubscriptionPayment::expectedCents($this->salon, billingPlan('equipo'), 12))->toBe(69000);
 

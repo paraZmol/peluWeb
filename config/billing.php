@@ -20,7 +20,7 @@ return [
     // Founder price for the first salons that pay: both limits are written
     // in the offer (Indecopi), so they live in the environment, not in code.
     'founder' => [
-        'slots' => (int) env('BILLING_FOUNDER_SLOTS', 10),
+        'slots' => (int) env('BILLING_FOUNDER_SLOTS', 5),
         'ends_on' => env('BILLING_FOUNDER_ENDS_ON'),
     ],
 
