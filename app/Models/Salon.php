@@ -222,6 +222,14 @@ class Salon extends Model
     }
 
     /**
+     * @return HasMany<SubscriptionPayment, $this>
+     */
+    public function subscriptionPayments(): HasMany
+    {
+        return $this->hasMany(SubscriptionPayment::class);
+    }
+
+    /**
      * How many professionals with an agenda (active) the plan allows. A
      * salon without a plan counts as the trial's.
      */
