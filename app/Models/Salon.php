@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -53,7 +54,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $payment_instructions
  * @property bool $accepts_online_bookings
  * @property ReviewMode $review_mode
+ * @property int|null $plan_id
  * @property CarbonImmutable|null $trial_ends_at
+ * @property CarbonImmutable|null $paid_until Last day paid for.
+ * @property CarbonImmutable|null $founder_since Keeps the founder price while it keeps paying.
+ * @property CarbonImmutable|null $trial_extended_at The trial was extended once, by hand.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
@@ -114,6 +119,9 @@ class Salon extends Model
             'status' => SalonStatus::class,
             'theme' => SalonTheme::class,
             'trial_ends_at' => 'datetime',
+            'paid_until' => 'date',
+            'founder_since' => 'datetime',
+            'trial_extended_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'accepts_online_bookings' => 'boolean',
@@ -202,6 +210,33 @@ class Salon extends Model
     public function brandTokens(): ?array
     {
         return $this->brand_color === null ? null : BrandColor::tokens($this->brand_color);
+    }
+
+    /**
+     * @return BelongsTo<Plan, $this>
+     */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * How many professionals with an agenda (active) the plan allows. A
+     * salon without a plan counts as the trial's.
+     */
+    public function staffLimit(): int
+    {
+        return min(($this->plan ?? Plan::trial())->max_staff, Staff::MAX_PER_SALON);
+    }
+
+    /**
+     * Whether one more professional can get an agenda under the plan.
+     */
+    public function hasRoomForStaff(): bool
+    {
+        $withAgenda = Staff::withoutGlobalScope('salon')->where('salon_id', $this->id)->where('is_active', true)->count();
+
+        return $withAgenda < $this->staffLimit();
     }
 
     /**

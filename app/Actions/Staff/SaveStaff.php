@@ -3,6 +3,7 @@
 namespace App\Actions\Staff;
 
 use App\Exceptions\StaffException;
+use App\Models\Plan;
 use App\Models\Salon;
 use App\Models\Service;
 use App\Models\Staff;
@@ -32,8 +33,8 @@ class SaveStaff
                 Staff::withoutGlobalScope('salon')->lockForUpdate()->find($staff->id);
             }
 
-            // Serializes concurrent saves so the limit and the link stay true.
-            Salon::query()->lockForUpdate()->findOrFail($salon->id);
+            // Serializes concurrent saves so the limits and the link stay true.
+            $locked = Salon::query()->with('plan')->lockForUpdate()->findOrFail($salon->id);
 
             $isNew = $staff === null;
             $staff ??= $this->newStaff($salon);
@@ -42,6 +43,7 @@ class SaveStaff
 
             $staff->fill($attributes);
             $staff->user_id = $userId;
+            $this->ensurePlanAllows($locked, $staff, $isNew);
             $staff->save();
 
             if ($isNew) {
@@ -65,6 +67,19 @@ class SaveStaff
         $staff->position = (int) $existing->max('position') + 1;
 
         return $staff;
+    }
+
+    /**
+     * Only professionals with an agenda (active) count for the plan, so the
+     * check runs when someone gets one: created active or switched back on.
+     */
+    private function ensurePlanAllows(Salon $salon, Staff $staff, bool $isNew): void
+    {
+        $getsAgenda = $staff->is_active && ($isNew || ! $staff->getOriginal('is_active'));
+
+        if ($getsAgenda && ! $salon->hasRoomForStaff()) {
+            throw StaffException::planLimitReached($salon->staffLimit(), ($salon->plan ?? Plan::trial())->name);
+        }
     }
 
     private function ensureLinkable(Salon $salon, Staff $staff, ?int $userId): void
