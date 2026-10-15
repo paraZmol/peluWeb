@@ -190,7 +190,10 @@ export default function Profile({
 
             <PushToggle className="rounded-xl border p-5" />
 
-            <DeleteUser />
+            {/* A rule between the device's switch and the danger zone. */}
+            <div className="border-t pt-12">
+                <DeleteUser />
+            </div>
         </>
     );
 }

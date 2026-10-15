@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { Armchair } from 'lucide-react';
+import { useState } from 'react';
 import { AddWalkIn } from '@/components/walk-ins/add-walk-in';
+import { ClosedRow } from '@/components/walk-ins/closed-row';
 import { LineItem } from '@/components/walk-ins/line-item';
 import type { WalkIn, WalkInOption } from '@/components/walk-ins/types';
 import { index } from '@/routes/walk-ins';
@@ -29,6 +31,7 @@ export default function WalkIns({
     const closed = line.filter(
         (walkIn) => walkIn.status === 'attended' || walkIn.status === 'left',
     );
+    const [announcement, setAnnouncement] = useState('');
 
     return (
         <>
@@ -79,6 +82,7 @@ export default function WalkIns({
                                             ? waiting.indexOf(walkIn) + 1
                                             : null
                                     }
+                                    onMoved={setAnnouncement}
                                 />
                             ))}
                         </ol>
@@ -95,19 +99,19 @@ export default function WalkIns({
                         </h2>
                         <ul className="divide-y rounded-xl border bg-card text-sm">
                             {closed.map((walkIn) => (
-                                <li
+                                <ClosedRow
                                     key={walkIn.id}
-                                    className="flex items-center justify-between gap-3 px-4 py-3"
-                                >
-                                    <span>{walkIn.name}</span>
-                                    <span className="text-muted-foreground">
-                                        {walkIn.statusLabel}
-                                    </span>
-                                </li>
+                                    walkIn={walkIn}
+                                    onMoved={setAnnouncement}
+                                />
                             ))}
                         </ul>
                     </section>
                 )}
+
+                <p aria-live="polite" className="sr-only">
+                    {announcement}
+                </p>
             </div>
         </>
     );

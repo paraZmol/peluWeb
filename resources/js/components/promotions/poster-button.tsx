@@ -5,11 +5,19 @@ import { templateProps } from '@/components/salon/portal-theme';
 import { PLATFORM_THEME } from '@/components/salon/salon-themes';
 import { Button } from '@/components/ui/button';
 import { posterBlob, saveFile } from '@/lib/poster-look';
+import { isIos } from '@/lib/pwa';
 import { posterContent, posterFileName } from '@/lib/promo-poster';
 import { savedPromotionFields } from '@/lib/promotion-cards';
 import { previewOf } from '@/lib/promotion-preview';
 import type { SalonTheme } from '@/types';
 import type { Promotion, PromotionContext } from './types';
+
+/** iPhone and iPad may open the image in a new tab instead of saving it. */
+function readyMessage(): string {
+    return isIos(navigator.userAgent, navigator.maxTouchPoints)
+        ? 'Imagen lista. Si se abrió en otra pestaña, mantén pulsada la imagen y elige «Guardar».'
+        : 'Imagen lista.';
+}
 
 type Props = {
     promotion: Promotion;
@@ -26,7 +34,9 @@ type Props = {
 export function PosterButton({ promotion, context, theme }: Props) {
     const { brand } = useSalonTheme();
     const probe = useRef<HTMLSpanElement>(null);
-    const [state, setState] = useState<'idle' | 'working' | 'failed'>('idle');
+    const [state, setState] = useState<'idle' | 'working' | 'ready' | 'failed'>(
+        'idle',
+    );
 
     const download = async () => {
         if (!probe.current) {
@@ -54,7 +64,7 @@ export function PosterButton({ promotion, context, theme }: Props) {
                 await posterBlob(probe.current, content),
                 posterFileName(promotion),
             );
-            setState('idle');
+            setState('ready');
         } catch {
             setState('failed');
         }
@@ -80,6 +90,11 @@ export function PosterButton({ promotion, context, theme }: Props) {
                     ? 'Preparando imagen…'
                     : 'Descargar imagen'}
             </Button>
+            {state === 'ready' && (
+                <p role="status" className="text-sm text-muted-foreground">
+                    {readyMessage()}
+                </p>
+            )}
             {state === 'failed' && (
                 <p role="alert" className="text-sm text-destructive-foreground">
                     No se pudo crear la imagen. Inténtalo de nuevo.

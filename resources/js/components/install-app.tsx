@@ -35,8 +35,8 @@ export function InstallApp({ name: salonName, className }: Props) {
             <div>
                 <h2 className="font-semibold">Ten {name} a un toque</h2>
                 <p className="text-sm text-muted-foreground">
-                    Instálala en tu pantalla de inicio: abre más rápido y tus
-                    reservas se ven aunque no haya conexión.
+                    Instala la app de {name} en tu pantalla de inicio: abre más
+                    rápido y tus reservas se ven aunque no haya conexión.
                 </p>
             </div>
 
@@ -44,13 +44,11 @@ export function InstallApp({ name: salonName, className }: Props) {
                 <ol className="flex flex-col gap-2 text-sm">
                     <li className="flex items-center gap-2">
                         <Share className="size-4 shrink-0" aria-hidden />
-                        <span>
-                            1. Toca «Compartir» en la barra del navegador.
-                        </span>
+                        <span>Toca «Compartir» en la barra del navegador.</span>
                     </li>
                     <li className="flex items-center gap-2">
                         <SquarePlus className="size-4 shrink-0" aria-hidden />
-                        <span>2. Elige «Añadir a pantalla de inicio».</span>
+                        <span>Elige «Añadir a pantalla de inicio».</span>
                     </li>
                 </ol>
             )}

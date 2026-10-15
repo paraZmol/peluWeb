@@ -1,7 +1,7 @@
 import { Check, Clock, EyeOff, Flag, Lock, MessageSquare } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { canReport, PRIVATE_REVIEW_NOTE, reviewStatus } from '@/lib/reviews';
+import { canReport, ownerReviewNote, reviewStatus } from '@/lib/reviews';
 import type { ReviewStatus } from '@/lib/reviews';
 import { TOUCH_FOOTER } from '@/lib/sheet';
 import { cn } from '@/lib/utils';
@@ -84,11 +84,7 @@ export function OwnerReviewList({ reviews, onReply, onReport }: Props) {
                                     )}
                                 </>
                             }
-                            note={
-                                review.isPublishable
-                                    ? undefined
-                                    : PRIVATE_REVIEW_NOTE
-                            }
+                            note={ownerReviewNote(review)}
                             className="border bg-card shadow-card"
                             actions={
                                 <div

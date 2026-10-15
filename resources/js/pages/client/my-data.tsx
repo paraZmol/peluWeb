@@ -70,6 +70,10 @@ export default function MyData({ files }: Props) {
                         salón anota por su cuenta (preferencias, fórmula) se
                         pide en el salón.
                     </p>
+                    <p className="max-w-2xl text-sm text-muted-foreground">
+                        Se descarga como un archivo JSON, que puedes abrir con
+                        cualquier editor de texto.
+                    </p>
                     <Button asChild variant="outline" className="h-11">
                         <a href={download().url} download="mis-datos.json">
                             <Download aria-hidden /> Descargar mis datos

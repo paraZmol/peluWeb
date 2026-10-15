@@ -39,6 +39,9 @@ export function PromotionCard({
     // The 2x1 free is only for some days and hours: said by the title.
     const whenByTitle = pairPercent(promotion) === PAIR_FREE;
     const when = shortWhen(promotion.when);
+    // "2x1 en Corte" is what the pair box right below already spells out.
+    const showsSummary =
+        promotion.summary !== null && promotion.mechanic !== 'pair';
 
     return (
         <li
@@ -76,7 +79,7 @@ export function PromotionCard({
                     <h3 className="display-type text-title-3 break-words">
                         {promotion.name}
                     </h3>
-                    {promotion.summary && (
+                    {showsSummary && (
                         <p className="font-semibold break-words">
                             {promotion.summary}
                         </p>

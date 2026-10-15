@@ -141,7 +141,13 @@ test('avisos en este dispositivo: donde el navegador los bloquea, se explica y n
     await waitForWorker(page);
     await page.reload();
     await expect(push.getByText(/bloqueadas para este sitio/)).toBeVisible();
-    await expect(push.getByRole('button')).toHaveCount(0);
+    await expect(push.getByText(/Toca el candado/)).toBeVisible();
+    // Only a way to look again once unblocked; nothing to turn on.
+    await expect(push.getByRole('button')).toHaveCount(1);
+    await push.getByRole('button', { name: 'Ya lo cambié' }).click();
+    await expect(
+        push.getByText('Siguen bloqueadas en este navegador.'),
+    ).toBeVisible();
 
     // Nothing to turn on there: the list of bookings does not offer it.
     await page.goto('/mis-reservas');

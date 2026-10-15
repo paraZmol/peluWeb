@@ -6,6 +6,7 @@ import {
     formatAverage,
     isRatingChosen,
     isReportReasonValid,
+    ownerReviewNote,
     ratingText,
     reviewAudienceNotice,
     reviewStatus,
@@ -178,5 +179,35 @@ describe('authorInitial', () => {
 
     it('never comes back empty', () => {
         expect(authorInitial('  ')).toBe('·');
+    });
+});
+
+describe('ownerReviewNote', () => {
+    it('says nothing about a public review nobody reported', () => {
+        expect(ownerReviewNote({ ...flags, isPublishable: true })).toBe(
+            undefined,
+        );
+    });
+
+    it('tells that a reported review stays on the page until the decision', () => {
+        expect(
+            ownerReviewNote({
+                ...flags,
+                isReported: true,
+                isPublishable: true,
+            }),
+        ).toMatch(/Sigue visible en tu página hasta que se decida/);
+    });
+
+    it('never says a private review is visible, even while reported', () => {
+        const note = ownerReviewNote({
+            ...flags,
+            isReported: true,
+            isPublishable: false,
+        });
+
+        expect(note).toMatch(/no aparece en tu página/);
+        expect(note).toMatch(/En revisión de la plataforma/);
+        expect(note).not.toMatch(/Sigue visible/);
     });
 });

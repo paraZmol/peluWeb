@@ -35,7 +35,14 @@ export function PromotionActions({ promotion, onEdit, onShare }: Props) {
         );
 
     return (
-        <div className={cn('flex flex-wrap border-t pt-3', TOUCH_FOOTER)}>
+        <div
+            className={cn(
+                // Two by two on a phone; a lone last button takes the row.
+                'grid grid-cols-2 border-t pt-3 sm:flex sm:flex-wrap',
+                '[&>:last-child:nth-child(odd)]:col-span-2',
+                TOUCH_FOOTER,
+            )}
+        >
             {SHAREABLE.includes(state) && (
                 <Button type="button" variant="outline" onClick={onShare}>
                     <Share2 aria-hidden /> Compartir

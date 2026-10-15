@@ -43,11 +43,27 @@ export function usePush() {
         }
     };
 
+    /** After unblocking them in the browser: looks again, says what it found. */
+    const recheck = async (): Promise<PushState> => {
+        setIsBusy(true);
+        setHasFailed(false);
+
+        try {
+            const found = await pushState();
+            setState(found);
+
+            return found;
+        } finally {
+            setIsBusy(false);
+        }
+    };
+
     return {
         state: pushKey === null ? null : state,
         isBusy,
         hasFailed,
         enable: () => change(() => enablePush(pushKey ?? '')),
         disable: () => change(disablePush),
+        recheck,
     };
 }

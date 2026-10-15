@@ -127,6 +127,29 @@ export function canReport(
 export const PRIVATE_REVIEW_NOTE =
     'Se escribió cuando tus reseñas eran privadas: no aparece en tu página.';
 
+/**
+ * What the team must know about a review, under its comment: whether it
+ * shows on the page and, while reported, that it stays as it is (the
+ * platform hides it only after deciding; a report alone hides nothing).
+ */
+export function ownerReviewNote(
+    review: Pick<
+        OwnerReview,
+        'isReported' | 'isHidden' | 'wasKept' | 'isPublishable'
+    >,
+): string | undefined {
+    const isPending = reviewStatus(review)?.key === 'reported';
+    const pendingNote = review.isPublishable
+        ? 'En revisión de la plataforma. Sigue visible en tu página hasta que se decida.'
+        : 'En revisión de la plataforma hasta que se decida.';
+    const notes = [
+        review.isPublishable ? null : PRIVATE_REVIEW_NOTE,
+        isPending ? pendingNote : null,
+    ].filter(Boolean);
+
+    return notes.length > 0 ? notes.join(' ') : undefined;
+}
+
 /** A report needs a reason long enough to be looked at. */
 export function isReportReasonValid(
     reason: string,

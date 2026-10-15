@@ -1,4 +1,5 @@
-import { BellOff, BellRing } from 'lucide-react';
+import { BellOff, BellRing, LoaderCircle } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { usePush } from '@/hooks/use-push';
 import type { PushState } from '@/lib/push';
@@ -24,11 +25,17 @@ type Props = {
  * or why there is none. Each device is switched on its own.
  */
 export function PushToggle({ isOfferOnly = false, className }: Props) {
-    const { state, isBusy, hasFailed, enable, disable } = usePush();
+    const { state, isBusy, hasFailed, enable, disable, recheck } = usePush();
+    const [isStillBlocked, setIsStillBlocked] = useState(false);
 
     if (state === null || (isOfferOnly && state !== 'off')) {
         return null;
     }
+
+    const lookAgain = () =>
+        void recheck()
+            .then((found) => setIsStillBlocked(found === 'denied'))
+            .catch(() => setIsStillBlocked(true));
 
     return (
         <section
@@ -50,30 +57,49 @@ export function PushToggle({ isOfferOnly = false, className }: Props) {
                     )}
                 </h2>
                 <p className="text-sm text-muted-foreground">{HELP[state]}</p>
+                {state === 'denied' && (
+                    <p className="mt-2 text-sm font-medium">
+                        Toca el candado junto a la dirección y activa
+                        Notificaciones.
+                    </p>
+                )}
             </div>
 
             {state === 'off' && (
-                <Button
-                    className="h-11"
-                    disabled={isBusy}
-                    aria-busy={isBusy}
-                    onClick={() => void enable()}
+                <BusyButton
+                    isBusy={isBusy}
+                    busyLabel="Activando…"
+                    onClick={enable}
                 >
                     Activar avisos
-                </Button>
+                </BusyButton>
             )}
             {state === 'on' && (
-                <Button
+                <BusyButton
                     variant="outline"
-                    className="h-11"
-                    disabled={isBusy}
-                    aria-busy={isBusy}
-                    onClick={() => void disable()}
+                    isBusy={isBusy}
+                    busyLabel="Desactivando…"
+                    onClick={disable}
                 >
                     Desactivar en este dispositivo
-                </Button>
+                </BusyButton>
+            )}
+            {state === 'denied' && (
+                <BusyButton
+                    variant="outline"
+                    isBusy={isBusy}
+                    busyLabel="Comprobando…"
+                    onClick={lookAgain}
+                >
+                    Ya lo cambié
+                </BusyButton>
             )}
 
+            {state === 'denied' && isStillBlocked && !isBusy && (
+                <p role="status" className="text-sm text-muted-foreground">
+                    Siguen bloqueadas en este navegador.
+                </p>
+            )}
             {hasFailed && (
                 <p role="alert" className="text-sm text-destructive-foreground">
                     No se pudo cambiar. Revisa tu conexión y vuelve a
@@ -81,5 +107,35 @@ export function PushToggle({ isOfferOnly = false, className }: Props) {
                 </p>
             )}
         </section>
+    );
+}
+
+type BusyButtonProps = {
+    isBusy: boolean;
+    busyLabel: string;
+    variant?: 'default' | 'outline';
+    onClick: () => unknown;
+    children: string;
+};
+
+/** A 44 px button that says what it is doing while the browser answers. */
+function BusyButton({
+    isBusy,
+    busyLabel,
+    variant = 'default',
+    onClick,
+    children,
+}: BusyButtonProps) {
+    return (
+        <Button
+            variant={variant}
+            className="h-11"
+            disabled={isBusy}
+            aria-busy={isBusy}
+            onClick={() => void onClick()}
+        >
+            {isBusy && <LoaderCircle className="animate-spin" aria-hidden />}
+            {isBusy ? busyLabel : children}
+        </Button>
     );
 }

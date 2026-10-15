@@ -36,6 +36,17 @@ test('fila sin cita: el equipo anota a quien llega, lo llama y cierra su lugar',
         page.getByRole('button', { name: `Llamar a ${name}` }),
     ).toHaveCount(0);
 
+    // Closed by mistake: the same day, they go back to the line.
+    await closed
+        .getByRole('button', { name: `Volver a la fila: ${name}` })
+        .click();
+    await expect(
+        page.getByRole('button', { name: `Llamar a ${name}` }),
+    ).toBeVisible();
+    await expect(page.getByText(`${name} volvió a la fila`)).toBeAttached();
+    await page.getByRole('button', { name: `${name}: se fue` }).click();
+    await expect(closed.getByText(name)).toBeVisible();
+
     expect(
         await page.evaluate(
             () =>
