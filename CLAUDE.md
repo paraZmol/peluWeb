@@ -88,6 +88,9 @@ Plataforma multi-salón: los salones pagan una suscripción para usarla. Roles: 
   Si toca un texto legal, un formulario que recoge datos de personas, cookies o rastreadores,
   mensajes comerciales o condiciones de una promoción → **legal-compliance** (redacta borradores
   y señala riesgos según la ley peruana; no sustituye al abogado que debe confirmarlos).
+  Si cambia precios, planes, precio fundador o descuentos de la plataforma, o suma un costo mensual
+  (hosting, servicios) → **finance-advisor** (contador de la plataforma; lleva el libro fuera del
+  repositorio, nunca escribe cifras del negocio en el repo público).
   Si tocó una pantalla → **visual-designer** (mira capturas y corrige la presentación para que
   se vea profesional) y después **ux-reviewer** (solo opina).
 - Pantallas públicas y de alta del salón (portada, registro, página del salón, reserva, Mis
