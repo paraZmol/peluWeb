@@ -78,6 +78,9 @@ class Salon extends Model
 
     public const int TRIAL_DAYS = 30;
 
+    /** Where the platform sells first (decision D2); also the column's default. */
+    public const string DEFAULT_TIMEZONE = 'America/Lima';
+
     /**
      * Mirrors the column defaults so fresh instances never miss them
      * (strict mode throws on missing attributes).

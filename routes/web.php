@@ -30,6 +30,7 @@ use App\Http\Controllers\Owner\StaffController;
 use App\Http\Controllers\Owner\SubscriptionController;
 use App\Http\Controllers\Owner\TeamController;
 use App\Http\Controllers\Public\BookingController;
+use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ManifestController;
 use App\Http\Controllers\Public\SalonPageController;
 use App\Http\Controllers\Public\SamplePhotoController;
@@ -54,7 +55,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // Bundled sample photos for previews and the landing page. Without the
 // session: a response cached as public must never carry a session cookie.

@@ -39,13 +39,27 @@ export type PhotoItem = {
     description: string;
 };
 
-export type Plan = {
-    name: string;
-    priceSoles: number;
+/** What the landing says about a plan; its name and prices come from the server. */
+export type PlanCopy = {
     capacity: string;
     description: string;
     features: string[];
     isFeatured?: boolean;
+};
+
+/** A public plan as the server sends it (the plans table). */
+export type PublicPlan = {
+    code: string;
+    name: string;
+    priceCents: number;
+    founderPriceCents: number | null;
+    maxStaff: number;
+};
+
+export type PublicPricing = {
+    plans: PublicPlan[];
+    /** Null once its places or its last day ran out. */
+    founder: { slotsLeft: number; endsOn: string | null } | null;
 };
 
 export type Faq = { question: string; answer: string };
@@ -326,57 +340,75 @@ export const SHOWCASE_SALON: MiniSalon = {
     ],
 };
 
-// Prices are a proposal pending decision D3 in docs/PLAN.md (see docs/mercado.md).
+// Prices and the founder offer come from the server (the plans table and
+// config/billing.php); the words were reviewed by legal-compliance on
+// 2026-10-15. Never a crossed-out price: the regular price was never charged.
 export const PRICING = {
     eyebrow: 'Precios',
     title: 'Un precio fijo, sin comisión por cliente',
-    trialNote: `${TRIAL_DAYS} días gratis en cualquier plan, sin tarjeta`,
+    trialNote: `${TRIAL_DAYS} días gratis con todo el plan Equipo, sin datos de pago`,
     cta: 'Empezar prueba gratis',
     perMonth: '/mes',
-    featuredLabel: 'Más elegido',
+    featuredLabel: 'Recomendado',
+    underCards:
+        'Pagas solo por quien atiende con agenda; recepción y caja no se cobran. ¿Más de 6 profesionales? Escríbenos y te cotizamos.',
     footnote:
-        'Precios en soles, IGV incluido. Pago anual con 20 % de descuento.',
-    plans: [
-        {
-            name: 'Solo',
-            priceSoles: 39,
-            capacity: '1 profesional',
+        'Precios en soles, IGV incluido. Pago mensual por adelantado por Yape o transferencia, sin contrato ni cobro automático.',
+    founderLabel: 'Precio fundador',
+    plans: {
+        solo: {
+            capacity: '1 profesional con agenda',
             description: 'Si trabajas por tu cuenta.',
             features: [
-                'Reservas ilimitadas',
-                'Señas por WhatsApp y Yape/Plin',
-                'Caja simple',
-                'Tu página con tu marca',
+                'Reservas en línea ilimitadas',
+                'Señas por WhatsApp con Yape o Plin',
+                'Caja, gastos y cierre del día',
+                'Tu página con tu marca y galería',
+                'Promociones y clientes VIP',
             ],
         },
-        {
-            name: 'Equipo',
-            priceSoles: 89,
-            capacity: 'Hasta 6 profesionales',
+        equipo: {
+            capacity: 'Hasta 6 profesionales con agenda',
             description: 'Para el salón con equipo.',
             isFeatured: true,
             features: [
                 'Todo lo del plan Solo',
+                'Agenda por profesional',
                 'Comisiones y reportes',
-                'Reservas VIP',
-                'Reseñas con interruptor',
-                'Galería de trabajos',
+                'Reseñas verificadas que tú decides mostrar',
+                'Recordatorios por correo y avisos en el celular',
             ],
         },
-        {
-            name: 'Negocio',
-            priceSoles: 169,
-            capacity: 'Hasta 15 profesionales',
-            description: 'Para salones grandes o con varias sedes.',
-            features: [
-                'Todo lo del plan Equipo',
-                'Inventario y paquetes',
-                'Permisos por persona',
-                'Sede adicional por S/ 79 al mes',
-            ],
-        },
-    ] satisfies Plan[],
+    } satisfies Record<string, PlanCopy>,
 };
+
+/** "Precio fundador S/ 29 al mes …": only while places are left and before its last day. */
+export function founderLine(
+    founder: string,
+    regular: string,
+    slotsLeft: number,
+    endsOn: string | null,
+): string {
+    const until = endsOn ? ` hasta el ${endsOn}` : '';
+    const places =
+        slotsLeft === 1
+            ? 'el próximo salón'
+            : `los próximos ${slotsLeft} salones`;
+
+    return `${PRICING.founderLabel} ${founder} al mes para ${places} que hagan su primer pago${until}. Lo mantienes mientras sigas pagando; si tu cuenta pasa a solo lectura, vuelves al precio regular de ${regular}.`;
+}
+
+/** The footnote, with the offer's conditions written out while it lasts. */
+export function founderFootnote(
+    slotsLeft: number,
+    endsOn: string | null,
+): string {
+    const until = endsOn
+        ? `, válido para primeros pagos hasta el ${endsOn} o hasta agotar cupos, lo que ocurra primero`
+        : ', hasta agotar cupos';
+
+    return `Precio fundador: quedan ${slotsLeft} ${slotsLeft === 1 ? 'cupo' : 'cupos'} en total entre ambos planes${until}.`;
+}
 
 export const FAQ_HEADING = {
     eyebrow: 'Preguntas frecuentes',
@@ -386,7 +418,19 @@ export const FAQ_HEADING = {
 export const FAQS: Faq[] = [
     {
         question: '¿Necesito tarjeta para probar?',
-        answer: `No. Tienes ${TRIAL_DAYS} días gratis con todas las funciones del plan Equipo y no te pedimos tarjeta. Si te convence, eliges un plan y pagas por Yape o transferencia.`,
+        answer: `No. Tienes ${TRIAL_DAYS} días gratis con todo el plan Equipo y no te pedimos ningún dato de pago. Si te convence, eliges tu plan y pagas por Yape o transferencia.`,
+    },
+    {
+        question: '¿Qué pasa si no pago a tiempo?',
+        answer: 'Te avisamos por correo 7, 3 y 1 día antes del vencimiento. Después tienes 7 días de gracia con todo funcionando. Si no pagas en ese plazo, tu cuenta pasa a solo lectura: ves toda tu información y puedes descargar tus movimientos de caja, pero no entran reservas nuevas. Las citas ya agendadas se respetan. No borramos nada y, al pagar, se reactiva al momento.',
+    },
+    {
+        question: '¿Puedo cancelar cuando quiera?',
+        answer: 'Sí. No hay contrato ni cobro automático: si no renuevas, el plan vence al final del periodo pagado.',
+    },
+    {
+        question: '¿Cuántas personas puedo tener?',
+        answer: 'Solo cuentan quienes atienden con agenda: 1 en Solo y hasta 6 en Equipo. Recepción y caja entran gratis. Para más de 6, te cotizamos.',
     },
     {
         question: '¿Mis clientes tienen que descargar algo?',
@@ -406,7 +450,7 @@ export const FAQS: Faq[] = [
     },
     {
         question: '¿Puedo tener varios salones?',
-        answer: 'Sí. Con una misma cuenta puedes administrar más de un salón, y el plan Negocio permite sumar sedes por S/ 79 al mes cada una.',
+        answer: 'Sí. Con una misma cuenta puedes administrar más de un salón y cambiar de uno a otro desde el menú. Cada salón tiene su propio plan.',
     },
     {
         question: '¿Mis datos están seguros?',
