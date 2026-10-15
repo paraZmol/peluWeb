@@ -7,8 +7,10 @@ use App\Enums\SalonRole;
 use App\Models\Plan;
 use App\Models\Salon;
 use App\Models\SalonInvitation;
+use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 
 /*
 | Step 7.1: the plan only limits how many professionals have an agenda
@@ -88,4 +90,22 @@ it('treats a salon without a plan as the trial', function () {
     $salon = Salon::factory()->create(['plan_id' => null]);
 
     expect($salon->staffLimit())->toBe(planNamed('equipo')->max_staff);
+});
+
+it('does not take the agenda from someone with appointments ahead', function () {
+    $this->travelTo(CarbonImmutable::parse('2026-10-07 08:00', 'America/Lima'));
+    $this->salon->forceFill(['timezone' => 'America/Lima', 'deposit_percent' => 0, 'min_lead_minutes' => 0])->save();
+    $beto = Staff::factory()->for($this->salon)->working([3], '09:00', '18:00')->create(['name' => 'Beto']);
+    $cut = Service::factory()->for($this->salon)->create(['active_minutes' => 30]);
+    $beto->services()->attach($cut->id);
+    $this->actingAs(User::factory()->create())->post(route('salons.booking.store', $this->salon), [
+        'services' => [['id' => $cut->id]],
+        'staff' => $beto->id,
+        'start' => CarbonImmutable::parse('2026-10-07 10:00', 'America/Lima')->getTimestamp(),
+    ])->assertSessionHasNoErrors();
+
+    $this->actingAs($this->owner)->put(route('staff.update', $beto), ['name' => 'Beto', 'is_active' => false])
+        ->assertInertiaFlash('toast.type', 'error');
+
+    expect($beto->refresh()->is_active)->toBeTrue();
 });

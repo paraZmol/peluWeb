@@ -2,6 +2,7 @@
 
 namespace App\Actions\Staff;
 
+use App\Actions\Booking\FindAffectedBookings;
 use App\Exceptions\StaffException;
 use App\Models\Plan;
 use App\Models\Salon;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\DB;
  */
 class SaveStaff
 {
+    public function __construct(private readonly FindAffectedBookings $affected) {}
+
     /**
      * Create (when $staff is null) or update a professional. A new one
      * starts performing every service of the salon.
@@ -44,6 +47,12 @@ class SaveStaff
             $staff->fill($attributes);
             $staff->user_id = $userId;
             $this->ensurePlanAllows($locked, $staff, $isNew);
+
+            // Without an agenda their appointments would drop out of the board.
+            if (! $isNew && ! $staff->is_active && $staff->getOriginal('is_active')) {
+                $this->affected->ensureNone($staff);
+            }
+
             $staff->save();
 
             if ($isNew) {

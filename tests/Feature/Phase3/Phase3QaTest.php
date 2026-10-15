@@ -600,7 +600,8 @@ describe('professional lifecycle', function () {
     });
 
     it('lets a removed professional free a slot under the 50 limit', function () {
-        $all = Staff::factory()->for($this->salon)->count(Staff::MAX_PER_SALON)->create();
+        // Without an agenda, so the plan's limit is not what stops it.
+        $all = Staff::factory()->for($this->salon)->count(Staff::MAX_PER_SALON)->create(['is_active' => false]);
         $this->actingAs($this->owner)->delete(route('staff.destroy', $all->first()));
 
         $this->post(route('staff.store'), ['name' => 'Cupo liberado'])->assertSessionHasNoErrors();
