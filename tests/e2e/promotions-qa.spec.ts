@@ -28,6 +28,18 @@ for (const colorScheme of ['light', 'dark'] as const) {
         await expect(page).toHaveURL(/dashboard$/);
         await page.goto('/promociones');
 
+        // Other specs share this salon and may leave it at its limit of
+        // published promotions: pause what is live before publishing.
+        const live = page.locator('main').getByRole('button', {
+            name: 'Pausar',
+        });
+
+        for (let left = await live.count(); left > 0; left--) {
+            await live.first().click();
+            await page.getByRole('button', { name: 'Sí, pausar' }).click();
+            await expect(live).toHaveCount(left - 1);
+        }
+
         const empty = page.getByRole('heading', {
             name: 'Crea tu primera promoción',
         });
