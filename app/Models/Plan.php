@@ -55,14 +55,4 @@ class Plan extends Model
     {
         return $this->hasMany(Salon::class);
     }
-
-    /**
-     * What this salon pays per month: the founder price if it holds one.
-     */
-    public function monthlyCentsFor(Salon $salon): int
-    {
-        return $salon->founder_since !== null && $this->founder_price_cents !== null
-            ? $this->founder_price_cents
-            : $this->price_cents;
-    }
 }
