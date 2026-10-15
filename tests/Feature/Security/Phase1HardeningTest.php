@@ -107,7 +107,10 @@ it('makes suspended salons and expired trials read only', function (array $state
     expect(SalonInvitation::withoutGlobalScopes()->exists())->toBe($writable);
 })->with([
     'suspended' => [['status' => SalonStatus::Suspended], false],
-    'trial expired' => [['status' => SalonStatus::Trial, 'trial_ends_at' => now()->subDay()], false],
+    'trial expired' => [['status' => SalonStatus::Trial, 'trial_ends_at' => now()->subDays(10)], false], // past its 7 days of grace
+    'trial ended, in its grace' => [['status' => SalonStatus::Trial, 'trial_ends_at' => now()->subDays(3)], true],
+    'paid until long ago' => [['status' => SalonStatus::Active, 'trial_ends_at' => now()->subDays(60), 'paid_until' => now()->subDays(10)], false],
+    'paid until today' => [['status' => SalonStatus::Active, 'trial_ends_at' => now()->subDays(60), 'paid_until' => now()], true],
     'past due (grace period)' => [['status' => SalonStatus::PastDue], true],
     'active' => [['status' => SalonStatus::Active], true],
 ]);

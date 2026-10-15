@@ -358,7 +358,7 @@ it('blocks every Phase 2 write on a suspended or expired salon but keeps reading
         ->and(SalonPhoto::withoutGlobalScopes()->find($photo->id))->not->toBeNull();
 })->with([
     'suspended' => [['status' => SalonStatus::Suspended]],
-    'trial expired' => [['status' => SalonStatus::Trial, 'trial_ends_at' => now()->subDay()]],
+    'trial expired' => [['status' => SalonStatus::Trial, 'trial_ends_at' => now()->subDays(10)]], // past its 7 days of grace
 ]);
 
 // ---- Checklist ---------------------------------------------------------

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Billing\SubscriptionStanding;
 use App\Domain\Schedule\TimeRange;
 use App\Domain\Schedule\WeeklyHours;
 use App\Enums\BusinessType;
@@ -256,17 +257,28 @@ class Salon extends Model
     }
 
     /**
-     * Whether the salon may change data. Past-due is the 7-day grace period
-     * (PLAN §4.10) and still writable; suspended salons and expired trials
-     * are read only until the subscription is renewed.
+     * Where it stands with its subscription, from its dates: only a
+     * suspension is set by hand (PLAN 7.3).
+     */
+    public function standing(): SubscriptionStanding
+    {
+        return SubscriptionStanding::of(
+            $this->status === SalonStatus::Suspended,
+            $this->trial_ends_at?->setTimezone($this->timezone)->startOfDay(),
+            $this->paid_until,
+            $this->localNow(),
+            (int) config('billing.grace_days'),
+        );
+    }
+
+    /**
+     * Whether the salon may change data: through the trial, what is paid
+     * and the grace after it. Read only and suspended salons keep every
+     * record and can still see and export them.
      */
     public function isWritable(): bool
     {
-        return match ($this->status) {
-            SalonStatus::Active, SalonStatus::PastDue => true,
-            SalonStatus::Trial => $this->trial_ends_at === null || $this->trial_ends_at->isFuture(),
-            SalonStatus::Suspended => false,
-        };
+        return $this->standing()->state->isWritable();
     }
 
     public function ownersCount(): int
