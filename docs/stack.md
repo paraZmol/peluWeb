@@ -73,6 +73,24 @@ Ver la skill `booking-domain`.
 - Futuro: Cloud API de Meta, que cobra por plantilla entregada (en Perú, utility ~US$ 0.03 desde
   oct-2026, *confirmar en developers.facebook.com/docs/whatsapp/pricing*). Sería un extra de pago.
 
+## Correo y tareas programadas
+- Los correos de la reserva (recibida, confirmada, cancelada, reprogramada, recordatorio) salen por
+  la **cola** (`QUEUE_CONNECTION=database`). En local `MAIL_MAILER=log`: se escriben en
+  `storage/logs/laravel.log`, no se envían.
+- **Notificaciones push (paso 6.5)**: librería `minishlink/web-push` (aprobada el 2026-10-12). Cada servidor
+  genera su par de claves con `php artisan webpush:keys` y lo pega en su `.env` (`VAPID_PUBLIC_KEY`,
+  `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`); sin claves no se envía nada y el interruptor no aparece. Las
+  notificaciones salen por la cola, igual que los correos. **En Windows local** PHP necesita dos cosas para
+  enviar de verdad: `OPENSSL_CONF` apuntando a `C:\php84\extras\ssl\openssl.cnf` (ya lo pone `dev.cmd`) y un
+  archivo de autoridades certificadoras en `curl.cainfo` de `C:\php84\php.ini` (sin él, el envío falla con
+  "cURL error 60"). En Linux (producción) no hace falta ninguna de las dos.
+- Producción necesita dos tareas cada minuto (cron de cPanel o del VPS), con el PHP 8.4:
+  `php artisan schedule:run` (vence retenciones cada 5 min, recordatorios cada 15 min, borrado de alergias y fotos vencidas una vez al día) y
+  `php artisan queue:work --stop-when-empty --max-time=50` (o un `queue:work` permanente con
+  supervisor en un VPS). Sin la segunda, los correos se quedan en la tabla `jobs`.
+- `APP_LOCALE=es`: las fechas de los correos salen en español.
+- Proveedor de correo: por elegir (requisito P12 de `docs/legal/requisitos-de-producto.md`).
+
 ## Calidad
 - Pruebas: Pest 4 (incluye pruebas de navegador con Playwright).
 - Análisis estático: Larastan nivel 6+ y Pint.

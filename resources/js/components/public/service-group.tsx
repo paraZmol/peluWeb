@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useSalonTheme } from '@/components/salon/brand-theme';
+import type { ServiceOffer } from '@/lib/promo-offers';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
 import { ListRow } from './service-row/list-row';
@@ -20,10 +21,12 @@ type Props = {
     bookingUrl: string | null;
     /** A salon photo for the group's first card (photo-card only). */
     photoUrl: string | null;
+    /** By service: its price with the best promotion that lowers it. */
+    offers?: Map<number, ServiceOffer>;
 };
 
 /** One group of services in the arrangement of the template (`serviceRow`). */
-export function ServiceGroup({ group, bookingUrl, photoUrl }: Props) {
+export function ServiceGroup({ group, bookingUrl, photoUrl, offers }: Props) {
     const { layout } = useSalonTheme();
     const [isExpanded, setIsExpanded] = useState(false);
     const headingId = useId();
@@ -34,7 +37,12 @@ export function ServiceGroup({ group, bookingUrl, photoUrl }: Props) {
             : group.services;
 
     const rows = services.map((service, index) => {
-        const props = { service, bookingUrl, group: group.label };
+        const props = {
+            service,
+            bookingUrl,
+            group: group.label,
+            offer: offers?.get(service.id),
+        };
 
         if (layout.serviceRow === 'photo-card') {
             return (

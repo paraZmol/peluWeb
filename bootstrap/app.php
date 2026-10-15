@@ -16,6 +16,7 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -61,6 +62,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Health data refused by validation must not linger in the session.
+        $exceptions->dontFlash(['care_notes']);
+
         // Business rule violations go back to the form as a toast, not a 500.
         $exceptions->render(function (BusinessRuleException $exception, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
@@ -70,6 +74,19 @@ return Application::configure(basePath: dirname(__DIR__))
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
 
             return back();
+        });
+
+        // A bare "403" line is a dead end: say it with a way back.
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
+            $isPage = ! $request->expectsJson() && ! $request->is('api/*', 'plataforma', 'plataforma/*', 'livewire*') && ! $request->hasHeader('X-Livewire');
+
+            if (! $isPage || ! in_array($response->getStatusCode(), [403, 404], true)) {
+                return $response;
+            }
+
+            return Inertia::render('public/error', ['status' => $response->getStatusCode()])
+                ->toResponse($request)
+                ->setStatusCode($response->getStatusCode());
         });
 
         $exceptions->shouldRenderJsonWhen(

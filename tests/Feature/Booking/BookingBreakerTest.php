@@ -441,7 +441,7 @@ describe('VIP and team-only hours over HTTP', function () {
                 expect($times->first())->toBe('09:00')
                     ->and($times->last())->toBe('11:30')
                     ->and($times->filter(fn (string $time) => $time >= '11:45')->all())->toBe([])
-                    ->and(array_keys($response->json('slots.0')))->toBe(['start', 'time'])
+                    ->and(array_keys($response->json('slots.0')))->toBe(['start', 'time', 'promotion'])
                     ->and($response->getContent())->not->toContain('vip', 'staff_only');
 
                 // Days with only VIP or team-only hours: nothing at all.
@@ -568,7 +568,7 @@ describe('time zones', function () {
 
         // Thursday from its first minute: 00:00 in Lima is 05:00 UTC.
         $thursday = collect($this->getJson(brkAvailabilityUrl(['date' => '2026-10-08']))->assertOk()->json('slots'));
-        expect($thursday->first())->toBe(['start' => CarbonImmutable::parse('2026-10-08 05:00', 'UTC')->getTimestamp(), 'time' => '00:00'])
+        expect($thursday->first())->toBe(['start' => CarbonImmutable::parse('2026-10-08 05:00', 'UTC')->getTimestamp(), 'time' => '00:00', 'promotion' => null])
             ->and($thursday->last()['time'])->toBe('23:15');
 
         $this->actingAs($this->customer)->post(brkStoreUrl(), brkPayload('23:30'));

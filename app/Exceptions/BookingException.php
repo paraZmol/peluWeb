@@ -17,6 +17,21 @@ class BookingException extends BusinessRuleException
         return new self('Uno de los servicios ya no está disponible. Vuelve a elegir.');
     }
 
+    public static function noCompanionToDrop(): self
+    {
+        return new self('Esta cita no tiene a nadie más anotado, o ya terminó.');
+    }
+
+    public static function depositAboveWhatIsLeft(): self
+    {
+        return new self('La seña ya pagada es mayor que el precio normal de quien vino: cobra la cita tal como se reservó.');
+    }
+
+    public static function companionNeedsSameService(): self
+    {
+        return new self('Quien te acompaña reserva el mismo servicio que tú, y la reserva lleva solo esos dos. Para algo más, haz otra reserva.');
+    }
+
     public static function onlyAddons(): self
     {
         return new self('Los adicionales se reservan junto con otro servicio.');
@@ -80,6 +95,23 @@ class BookingException extends BusinessRuleException
     public static function tooManyMoves(): self
     {
         return new self('Ya cambiaste esta reserva varias veces. Escribe al salón para coordinar otro cambio.');
+    }
+
+    public static function promotionGone(): self
+    {
+        // The same words whatever the reason: it must not tell anyone that a
+        // phone number already belongs to a client of this salon.
+        return new self('Esta promoción no aplica a tu reserva. Elige de nuevo el horario para ver tu precio.');
+    }
+
+    public static function promotionPlaceTaken(string $name): self
+    {
+        return new self("El plazo de la seña venció y «{$name}» ya no le corresponde: otra reserva tomó su cupo, o la persona reservó otra cita y esta ya no es su primera visita. No se puede confirmar a ese precio. Avisa a la persona: si acepta el precio normal, cancela esta reserva y crea una nueva; si no, devuélvele la seña completa.");
+    }
+
+    public static function promotionNotValidThen(string $name): self
+    {
+        return new self("La promoción «{$name}» de tu reserva no vale en ese horario. Elige otro, o pide al salón que la mueva.");
     }
 
     public static function alreadyStarted(): self

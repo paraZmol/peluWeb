@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A visit of one client with one professional. Instants are UTC; prices
@@ -36,10 +37,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool|null $deposit_refundable
  * @property CarbonImmutable|null $deposit_refunded_at
  * @property int $discount_cents
+ * @property int|null $promotion_id The promotion that set its price, if one did.
+ * @property string|null $promotion_name Its name when it was applied.
+ * @property int $promotion_cents What the client saved by it; apart from any manual discount.
  * @property int|null $charged_cents What the visit finally cost; null until it is completed.
  * @property int|null $commission_cents What whoever attended earns for it; frozen when it is completed.
  * @property int|null $commission_settlement_id Set once that commission was paid.
  * @property CarbonImmutable|null $hold_expires_at
+ * @property CarbonImmutable|null $reminder_sent_at
  * @property string|null $client_note
  * @property string|null $reference_photo_path
  * @property int|null $created_by
@@ -51,6 +56,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, BookingSegment> $segments
  * @property-read Collection<int, BookingEvent> $events
  * @property-read Collection<int, Payment> $payments
+ * @property-read Review|null $review
  */
 class Booking extends Model
 {
@@ -68,6 +74,7 @@ class Booking extends Model
         'deposit_refundable' => null,
         'deposit_refunded_at' => null,
         'discount_cents' => 0,
+        'promotion_cents' => 0,
         'charged_cents' => null,
         'commission_cents' => null,
         'commission_settlement_id' => null,
@@ -90,6 +97,7 @@ class Booking extends Model
             'deposit_paid_at' => 'datetime',
             'deposit_refunded_at' => 'datetime',
             'hold_expires_at' => 'datetime',
+            'reminder_sent_at' => 'datetime',
             'is_vip' => 'boolean',
             'deposit_refundable' => 'boolean',
         ];
@@ -109,6 +117,16 @@ class Booking extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(Staff::class)->withTrashed();
+    }
+
+    /**
+     * What the client said about this visit, if anything.
+     *
+     * @return HasOne<Review, $this>
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
     }
 
     /**

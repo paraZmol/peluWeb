@@ -97,6 +97,15 @@ class Service extends Model
     }
 
     /**
+     * Its lowest catalogue price: the cheapest option when it has options.
+     * What a promotion's "normal price" starts from.
+     */
+    public function basePriceCents(): int
+    {
+        return (int) ($this->variants->min('price_cents') ?? $this->price_cents);
+    }
+
+    /**
      * Total time from start to end, including the idle (processing) gap.
      */
     public function totalMinutes(): int

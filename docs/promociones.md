@@ -18,7 +18,12 @@ reservar: sin códigos y sin que nadie la "aplique" a mano. El precio queda cong
    o Servicio de regalo; nombre y fechas ya sugeridos (10 días antes y hasta el día).
 
 ### Segunda entrega, en orden
-Primera visita (Descuento con condición "cliente nuevo") → Combo a precio cerrado → 2x1 (una
+Primera visita (Descuento con condición "cliente nuevo"; *construida el 2026-10-14*: quinta
+tarjeta, solo descuento; "nuevo" = sin ninguna reserva en el salón salvo canceladas o con la
+retención vencida, así que cuentan las pasadas, las no asistidas y las próximas; se comprueba en
+el servidor con la fila del cliente bloqueada; a un visitante sin sesión se le muestran los
+horarios con promo y, si al entrar resulta que ya vino, la reserva no se crea y se le pide elegir
+de nuevo para ver su precio) → Combo a precio cerrado → 2x1 (una
 reserva, un profesional, dos turnos seguidos del mismo servicio, se paga el más caro; exige que
 `QuoteBooking` admita el servicio repetido y anotar a quien acompaña) → filtro por profesional →
 imagen descargable para Instagram.
@@ -49,12 +54,41 @@ imagen descargable para Instagram.
 - **Máximo 3 promociones activas** por salón. En todos los planes y en la prueba gratis.
 - **Quién**: crear, pausar y editar es solo del dueño. En reservas creadas por el personal la
   promoción aparece premarcada y se puede quitar.
-- **Letra chica**, armada sola y no editable: "Válido para citas del {inicio} al {fin}. Aplica a:
-  {servicios}. [Solo {días}, de {hora} a {hora}.] [Cupos: {n}. | Sin límite de cupos, sujeto a
-  horarios disponibles.] [Una por cliente.] Con reserva previa. No acumulable con otras
-  promociones. Precios en soles con IGV incluido." (Art. 14 de la Ley 29571, citado de memoria:
-  **confirmar con el texto legal antes del paso 9.4**; si piden un número de cupos, el campo pasa
-  a obligatorio con 30 por defecto.)
+- **Letra chica**, armada sola y no editable (versión del 2026-10-13, tras la revisión de
+  `legal-compliance`; la escribe `PromotionCopy::finePrint` y dice todo lo que el motor aplica):
+  "Promoción de {salón}. Válido para citas del {día} al {día} de {mes} de {año}. Aplica a:
+  {servicios}. [Solo {días}, en citas que empiecen entre las {hora} y las {hora}.] [Cupos: {n}
+  reservas. | Sin límite de cupos: vale para todas las citas que se reserven dentro de estas
+  fechas, mientras haya horarios libres.] [Solo para tu primera reserva en {salón}: no vale si ya
+  tuviste una cita allí, aunque no hayas asistido, ni si tienes otra reservada. Las citas
+  canceladas no cuentan. Lo comprobamos con tu cuenta y tu teléfono. | Una por cliente.] [frase
+  del combo] [El descuento de S/ {monto} se aplica
+  una sola vez por reserva.] [El regalo ({servicio}, precio normal S/ {precio}) se hace en la
+  misma cita y alarga la cita {n} min. No se cambia por dinero ni por otro servicio.] Si cambias
+  tu cita, la promoción se mantiene solo si la nueva fecha y hora cumplen estas condiciones. [El
+  precio con promoción se reserva hasta el plazo para enviar la seña.] Con reserva previa. No se
+  suma a otras promociones: si tu cita cumple más de una, se aplica la de mayor ahorro. Precios
+  finales en soles, con impuestos incluidos." Borrador: **lo confirma un abogado antes del paso
+  9.4**; si pide un número de cupos, el campo pasa a obligatorio con 30 por defecto.
+- **Lo que se anuncia** (2026-10-13): una promoción con los cupos agotados deja de anunciarse (su
+  enlace dice que ya no está disponible); la duración y los cupos se leen en la tarjeta y en los
+  textos para compartir sin abrir las condiciones; un título escrito por el salón va siempre
+  acompañado del título automático; y una reserva nunca se guarda a un precio distinto del que
+  la persona vio al confirmar (si la promoción se fue, no se crea y se le pide elegir de nuevo).
+
+### Precisiones del motor (2026-10-12, tras el ataque de `booking-breaker`)
+- Los cupos y "una por cliente" se cuentan con la fila de la promoción bloqueada y con lecturas
+  bloqueantes: una lectura normal contaría con la foto anterior a la espera del bloqueo.
+- Una reserva cuya retención venció devolvió su cupo. Si otra reserva lo tomó, "Seña recibida" se
+  rechaza con un mensaje que pide avisar a la persona: si acepta el precio normal, cancelar y
+  crear una nueva; si no, devolverle la seña completa.
+- El monto fijo solo se aplica a un servicio que cueste **más** que el monto con ese profesional o
+  esa variante (nunca deja un servicio gratis) y el resultado se redondea hacia abajo a 10 céntimos.
+- El porcentaje nunca redondea un servicio a S/ 0.
+- El regalo es el servicio sin opción elegida: una variante suya se cobra a su precio.
+- Un servicio incluido borrado (no solo desactivado) también detiene la promoción.
+- Días y horas pueden cruzar la medianoche ("22:00 a 02:00").
+- Si la promoción se borró del todo, el cliente ya no puede mover esa reserva: solo el salón.
 
 ## Fichas
 
@@ -75,8 +109,82 @@ imagen descargable para Instagram.
   cita). Desde el enlace de la promoción, A y B llegan marcados.
 - Reglas: B entra como una línea más, S/ 0 cobrado y precio normal guardado; la duración incluye
   a B; solo profesionales que hacen A y B; si se quita A, B vuelve a precio normal; un regalo por
-  reserva. Letra chica extra: "El servicio de regalo se realiza en la misma cita y no es
-  canjeable por dinero ni por otro servicio."
+  reserva. Letra chica extra: la frase del regalo de la sección "Letra chica".
+
+### Combo a precio cerrado (segunda entrega; reglas elegidas por el usuario el 2026-10-14)
+- Propuesta de `marketing-advisor`; el usuario eligió las tres opciones recomendadas.
+- Campos: **2 o 3 servicios**, todos obligatorios (sin "requiere evaluación"; no solo adicionales),
+  **precio del combo** en soles, fechas y "Más opciones". El precio del combo se compara con la
+  suma de los **precios base** (la opción más barata de cada servicio, a precio de catálogo): la
+  rebaja va del 5 % al 50 %. Se guarda como **ahorro fijo en soles** (`amount_cents`).
+- **Mismo ahorro siempre**: con una opción más cara o un profesional con precio propio, la persona
+  paga la diferencia y ahorra lo mismo. Con opciones o precios por profesional el título dice
+  "desde". Ningún servicio puede quedar en S/ 0: si el ahorro no cabe, el combo no aplica.
+- **Reparto proporcional**: el ahorro se reparte entre los servicios del combo en proporción a su
+  precio en esa reserva (el último absorbe el resto, para que el ahorro dé exacto), igual que el
+  descuento manual. Comisiones y reportes no cambian de lógica.
+- Cliente: "{A} + {B} por S/ {precio}" (o "desde"), línea "Por separado S/ {normal}: ahorras
+  S/ {ahorro}". La tarjeta abre el asistente con los servicios marcados; se pueden sumar otros a
+  precio normal; si se quita uno del combo, vuelve el precio normal con el aviso "Sin {servicio}
+  el combo no aplica". Solo profesionales que hacen todos los servicios del combo.
+- Letra chica extra (revisada por `legal-compliance` el 2026-10-14): "El precio del combo es por
+  {A} y {B} juntos, en la misma cita y atendidos por una sola persona del equipo. Si eliges una
+  opción o un profesional con un precio más alto, pagas esa diferencia y sigues ahorrando
+  S/ {ahorro}. Si quitas uno de los servicios, el combo no aplica y los demás se cobran a su
+  precio normal." Con "desde", la línea dice "Por separado desde S/ {normal}".
+- **Nombre sin precio**: se guarda (y se congela en la reserva) como "Combo {A} + {B}"; el
+  "{A} + {B} por S/ {precio}" se escribe en vivo, porque los precios del catálogo cambian.
+- **Sin redondeo a 10 céntimos**: es la excepción a la regla general; el ahorro debe dar exacto.
+- **El precio anunciado se puede reservar**: "por separado" y el precio del combo salen del
+  profesional activo **más barato entre los que hacen todos sus servicios** (la opción más barata
+  de cada uno). Un combo que nadie del equipo hace completo no se puede crear ni se anuncia.
+- Gana la promoción de mayor ahorro, como siempre. Un solo profesional por reserva.
+
+### Ven con alguien (2x1) (segunda entrega; reglas elegidas por el usuario el 2026-10-14)
+- Propuesta de `marketing-advisor`; el usuario eligió las tres opciones recomendadas.
+- Dos personas, **el mismo servicio**, el mismo profesional, una después de otra, en **una sola
+  reserva** de exactamente dos líneas. Cada persona elige su opción (corto y largo); se cobra
+  entero el más caro y se rebaja el más barato.
+- Beneficio a elegir: **"el segundo a mitad de precio"** (marcado; cualquier horario) o **"2x1,
+  el segundo gratis"** (días y horas obligatorios, como Horas flojas). Mecánica `pair` con
+  `percent` 50 o 100 sobre la línea más barata (la mitad se redondea hacia abajo a 10 céntimos).
+- Servicios: de precio fijo (sin "requiere evaluación"), no adicionales. Uno o varios incluidos:
+  vale cualquiera de ellos repetido.
+- **Quien acompaña: solo su nombre**, obligatorio, guardado en su línea (`booking_services.
+  companion_name`); sin teléfono ni ficha. La reserva, la seña, "una por cliente" y la reseña son
+  de quien reserva; quien acompaña no cuenta como visita propia.
+- **Si llega una sola persona** (corregido tras `legal-compliance`): el salón dice **quién vino**
+  (quien reservó o quien acompaña); se quita la otra línea y se cobra a precio normal solo el
+  servicio de quien vino. La seña pagada se descuenta de ese monto; no es cancelación ni
+  inasistencia. El historial guarda quién lo hizo, sin el nombre de quien acompañaba. El tiempo
+  reservado no cambia. Como baja lo que se cobra, exige el **permiso de caja** (igual que un
+  descuento; auditoría del 2026-10-14).
+- **El nombre de quien acompaña** no va en la URL de disponibilidad (solo una marca), no se
+  guarda en la lista de espera, no admite enlaces y se borra **30 días después de la cita** (y al
+  borrar la cuenta de quien reservó).
+- Mover y cancelar: las dos líneas van juntas. Seña sobre el total con promoción. Un cupo es una
+  reserva.
+- Títulos: "2x1 en {servicio}" / "Segundo {servicio} a mitad de precio"; la tarjeta dice sin
+  abrir condiciones "Se cobra entero el de mayor precio" y, en la modalidad gratis, sus días y
+  horas. Letra chica extra (revisada por `legal-compliance` el 2026-10-14): "Vale para dos
+  personas que reservan juntas, en una sola reserva, el mismo servicio, atendidas una después de
+  otra por la misma persona del equipo. Si eligen opciones de distinto precio, se cobra entero el
+  de mayor precio y el otro es gratis [va a mitad de precio]. Al reservar se pide solo el nombre
+  de quien acompaña. Si llega una sola persona, la promoción no aplica: se cobra a precio normal
+  solo el servicio de quien vino y la seña pagada se descuenta de ese monto. El beneficio no se
+  cambia por dinero ni se pasa a otra cita."
+- Junto al campo del nombre: "Nombre de quien te acompaña: solo el nombre o como prefiera que lo
+  llamen. Lo verán el salón y tú, únicamente para esta cita. Avísale que lo compartes."
+
+### Filtro por profesional (segunda entrega, 2026-10-14)
+- En «Más opciones» de cualquier tarjeta: "Solo con…" y la lista del equipo; ninguna marcada =
+  todo el equipo. Se guarda en `promotion_staff`.
+- Aplica solo cuando quien reserva **elige** a una de esas personas (o el personal reserva con
+  ella). Con «Cualquiera» no aplica: el precio mostrado no puede depender de a quién se asigna
+  después. Los horarios se marcan "con promo" solo con esa persona elegida.
+- Tarjeta pública: "Con {nombres}". Letra chica: "Solo con {nombres}: al reservar, elige a una
+  de estas personas." Solo el salón puede pasar la cita a otra persona del equipo, y entonces el
+  precio se mantiene, como al mover cualquier cita con promoción.
 
 ### Horas flojas
 - Los campos de Descuento con días y horas a la vista y obligatorios (por defecto lunes a

@@ -1,5 +1,6 @@
 import type { AgendaBooking } from '@/components/booking/types';
-import { formatCents, formatPrice } from '@/lib/format';
+import { servicesLine } from '@/lib/companion';
+import { formatCents, formatPrice, sumAmounts } from '@/lib/format';
 import { toCents } from '@/lib/money';
 
 type Props = {
@@ -10,14 +11,21 @@ type Props = {
 
 /** How the amount to collect comes about, line by line, and the total. */
 export function CheckoutSummary({ booking, discountCents, totalCents }: Props) {
+    const { promotion } = booking;
     const lines = [
+        {
+            // Not typed here: the booking already carries it in its price.
+            label: `Promoción ${promotion?.name ?? ''}`,
+            amount: `− ${formatPrice(promotion?.saved ?? '0')}`,
+            isShown: promotion !== null,
+        },
         {
             label: 'Seña ya pagada',
             amount: `− ${formatPrice(booking.depositPaid)}`,
             isShown: toCents(booking.depositPaid) !== 0,
         },
         {
-            label: 'Descuento',
+            label: promotion ? 'Descuento manual' : 'Descuento',
             amount: `− ${formatCents(discountCents)}`,
             isShown: discountCents > 0,
         },
@@ -26,9 +34,15 @@ export function CheckoutSummary({ booking, discountCents, totalCents }: Props) {
     return (
         <div className="rounded-xl border bg-card">
             <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 p-4 text-sm">
-                <dt className="break-words">{booking.services.join(', ')}</dt>
+                <dt className="break-words">
+                    {servicesLine(booking.services)}
+                </dt>
                 <dd className="text-right whitespace-nowrap tabular-nums">
-                    {formatPrice(booking.price)}
+                    {formatPrice(
+                        promotion
+                            ? sumAmounts([booking.price, promotion.saved])
+                            : booking.price,
+                    )}
                 </dd>
                 {lines
                     .filter((line) => line.isShown)

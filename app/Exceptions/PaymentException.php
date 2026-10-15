@@ -54,6 +54,11 @@ class PaymentException extends BusinessRuleException
         return new self('Lo pendiente cambió mientras tenías la pantalla abierta. Revisa el nuevo total y vuelve a liquidar.');
     }
 
+    public static function expenseInClosedCash(): self
+    {
+        return new self('Este gasto entró en una caja que ya se cerró y no se puede cambiar ni eliminar. Si hubo un error, anótalo y regístralo aparte.');
+    }
+
     public static function expenseIsSettlement(): self
     {
         return new self('Este gasto es el pago de una liquidación de comisiones y no se puede cambiar desde aquí.');

@@ -2,12 +2,16 @@ import { Head, Link } from '@inertiajs/react';
 import { CalendarDays, ChevronRight, Repeat } from 'lucide-react';
 import { BookAgainLink } from '@/components/booking/book-again-link';
 import { ClientBookingCard } from '@/components/booking/client-booking-card';
-import type { ClientBooking } from '@/components/booking/types';
+import type { ClientBooking, WaitlistPlace } from '@/components/booking/types';
+import { WaitlistPlaces } from '@/components/booking/waitlist-places';
+import { InstallApp } from '@/components/install-app';
+import { PushToggle } from '@/components/push-toggle';
+import { MyDataLink } from '@/components/my-data/my-data-link';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { index } from '@/routes/bookings';
 import { create as bookAgain } from '@/routes/salons/booking';
 
-type Props = { bookings: ClientBooking[] };
+type Props = { bookings: ClientBooking[]; waitlist?: WaitlistPlace[] };
 
 /** With this few bookings the list offers the way to book another one. */
 const FEW_BOOKINGS = 3;
@@ -65,7 +69,7 @@ function RepeatLast({ booking }: { booking: ClientBooking }) {
     );
 }
 
-export default function BookingsIndex({ bookings }: Props) {
+export default function BookingsIndex({ bookings, waitlist = [] }: Props) {
     const isActive = (booking: ClientBooking) =>
         booking.isUpcoming &&
         (booking.status === 'pending' || booking.status === 'confirmed');
@@ -87,6 +91,11 @@ export default function BookingsIndex({ bookings }: Props) {
                 <h1 className="text-3xl font-semibold lg:text-4xl">
                     Mis reservas
                 </h1>
+
+                <WaitlistPlaces
+                    places={waitlist}
+                    titleClassName={SECTION_TITLE}
+                />
 
                 {bookings.length === 0 && (
                     <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border-strong px-6 py-12 text-center">
@@ -131,6 +140,11 @@ export default function BookingsIndex({ bookings }: Props) {
                         ))}
                     </ul>
                 )}
+
+                <PushToggle isOfferOnly className="rounded-xl p-5 skin-card" />
+                <InstallApp />
+
+                <MyDataLink />
             </div>
         </>
     );

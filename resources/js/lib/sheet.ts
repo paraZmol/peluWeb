@@ -1,4 +1,14 @@
 /**
+ * A button that is 44 px on a phone and compact from `sm` up, unless the
+ * pointer is a finger (a tablet, a touch laptop): then it stays 44 px.
+ */
+export const TOUCH_BUTTON = 'h-11 sm:h-9 sm:pointer-coarse:h-11';
+
+/** The same, for every button of a dialog's footer. */
+export const TOUCH_FOOTER =
+    'gap-2 [&_button]:h-11 sm:[&_button]:h-9 sm:pointer-coarse:[&_button]:h-11';
+
+/**
  * On a phone the dialog becomes a sheet anchored to the bottom, with its
  * action in the thumb zone; from `sm` up it is the usual centered dialog.
  */

@@ -30,6 +30,11 @@ function queryString({ selections, staffId, date, refresh }: Query): string {
                 String(selection.variantId),
             );
         }
+
+        if (selection.companion) {
+            // Only that someone comes along: the name travels with the booking, not in a URL.
+            params.set(`services[${index}][companion]`, '1');
+        }
     });
 
     if (staffId !== null) {

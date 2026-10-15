@@ -1,10 +1,14 @@
+import { Tag } from 'lucide-react';
 import { useEffect } from 'react';
 import type { useAvailability } from '@/hooks/use-availability';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
+import { limitedPromotionHint } from '@/lib/promo-offers';
+import { holdsWith } from '@/lib/promo-staff';
 import { CHIP_ACTION } from '@/lib/skin-actions';
 import { DayStrip, toDate } from './day-strip';
 import { SlotGrid } from './slot-grid';
-import type { BookingDay } from './types';
+import type { BookingDay, Viewer } from './types';
+import { WaitlistOffer } from './waitlist-offer';
 
 const monthFormat = new Intl.DateTimeFormat('es-PE', { month: 'long' });
 
@@ -12,13 +16,22 @@ type Props = {
     days: BookingDay[];
     wizard: BookingWizard;
     availability: ReturnType<typeof useAvailability>;
+    /** Online booking only: a full day offers its waiting list. */
+    waitlist?: { salonSlug: string; viewer: Viewer };
 };
 
-export function StepTime({ days, wizard, availability }: Props) {
+export function StepTime({ days, wizard, availability, waitlist }: Props) {
     const firstOpen = days.find((day) => !day.closed)?.date ?? null;
     const date = wizard.date ?? firstOpen;
     const { slots, error, isLoading, retry } = availability;
     const { chooseDate } = wizard;
+    const promotionHint = limitedPromotionHint(
+        // Not one that holds only with someone else of the team.
+        wizard.promotions.filter((promotion) =>
+            holdsWith(promotion, wizard.staffId),
+        ),
+        wizard.chosen.map((service) => service.id),
+    );
 
     // Start on the first day the salon opens, so the list is never empty by default.
     useEffect(() => {
@@ -48,6 +61,15 @@ export function StepTime({ days, wizard, availability }: Props) {
                     className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm"
                 >
                     {wizard.notice}
+                </p>
+            )}
+            {promotionHint && (
+                <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Tag
+                        className="mt-0.5 size-4 shrink-0 text-brand-text"
+                        aria-hidden
+                    />
+                    {promotionHint}
                 </p>
             )}
             <div className="flex flex-col gap-2">
@@ -91,6 +113,15 @@ export function StepTime({ days, wizard, availability }: Props) {
                     </>
                 }
             />
+            {waitlist && date && (
+                <WaitlistOffer
+                    {...waitlist}
+                    wizard={wizard}
+                    date={date}
+                    isFull={slots?.length === 0}
+                    onStale={retry}
+                />
+            )}
         </div>
     );
 }

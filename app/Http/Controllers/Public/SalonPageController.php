@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Actions\Promotions\PublicPromotions;
+use App\Actions\Reviews\SalonReviews;
 use App\Data\Salon\PublicSalonContent;
 use App\Data\Salon\SalonPreview;
 use App\Domain\Schedule\TimeRange;
@@ -16,6 +18,7 @@ use App\Models\SalonPhoto;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Support\Images\ImageStore;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -58,7 +61,45 @@ class SalonPageController extends Controller
 
         return Inertia::render('public/salon', [
             'salon' => new PublicSalonResource($salon, $content, $preview),
-        ])->withViewData(['meta' => $this->meta($salon)]);
+            // Null unless the salon shows its reviews.
+            'reviews' => app(SalonReviews::class)->forPublic($salon),
+            // What it is running today; `shared` when the visitor came by a promotion's link.
+            'promotions' => app(PublicPromotions::class)->handle($salon, self::sharedCode($request)),
+        ])->withViewData(['meta' => $this->meta($salon), ...self::installData($salon)]);
+    }
+
+    /**
+     * The code of a shared promotion, only in the shape codes have: an
+     * array or anything else in its place is no code at all.
+     */
+    private static function sharedCode(Request $request): ?string
+    {
+        $code = $request->query('promo');
+
+        return is_string($code) && preg_match('/^[a-z0-9]{6,16}$/', $code) === 1 ? $code : null;
+    }
+
+    /**
+     * The link a salon shares for one promotion: its page, with that
+     * promotion pointed at. The page decides what to say when it is over.
+     */
+    public function promotion(Salon $salon, string $code): RedirectResponse
+    {
+        return to_route('salons.show', ['salon' => $salon->slug, 'promo' => $code]);
+    }
+
+    /**
+     * Installing from a salon's page puts that salon on the home screen.
+     *
+     * @return array{manifest: string, appIcon: string, appTitle: string}
+     */
+    public static function installData(Salon $salon): array
+    {
+        return [
+            'manifest' => route('salons.manifest', $salon, absolute: false),
+            'appIcon' => route('salons.icon', [$salon, 192], absolute: false),
+            'appTitle' => $salon->name,
+        ];
     }
 
     /**

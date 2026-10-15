@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -18,8 +19,9 @@ class RequireTwoFactor
         $user = $request->user();
 
         if ($user instanceof User && ! $user->hasTwoFactorEnabled()) {
-            return redirect()->route('security.edit')
-                ->with('status', 'Activa la verificación en dos pasos para entrar al panel de la plataforma.');
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Activa la verificación en dos pasos para entrar al panel de la plataforma.']);
+
+            return redirect()->route('security.edit');
         }
 
         return $next($request);

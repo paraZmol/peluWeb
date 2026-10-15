@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Support\CurrentSalon;
+use App\Support\Push\PushSender;
+use App\Support\Push\WebPushSender;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Scoped: reset for every request and queued job, never leaks between them.
         $this->app->scoped(CurrentSalon::class);
+        $this->app->bind(PushSender::class, WebPushSender::class);
     }
 
     /**

@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
 import { formatTime, sumAmounts } from '@/lib/format';
+import { bookedLines, keptCompanion, pairOffer } from '@/lib/companion';
+import type { Companion } from '@/lib/companion';
+import { fromCents, toCents } from '@/lib/money';
+import {
+    askedPromotion,
+    bestSavingCents,
+    pairSavingCents,
+    promotionSelections,
+} from '@/lib/promo-offers';
+import { holdsWith, soleStaffId } from '@/lib/promo-staff';
 import type {
     BookableSalon,
     BookableService,
@@ -7,13 +17,18 @@ import type {
     Selection,
     Slot,
 } from '@/components/booking/types';
+import type { PublicPromotion } from '@/components/public/types';
 
 export const MAX_SERVICES = 5;
 export const STEPS = ['Servicios', 'Profesional', 'Día y hora', 'Confirmar'];
+/** Where the day and the time are chosen. */
+const TIME_STEP = 2;
 
 type State = {
     step: number;
     selections: Selection[];
+    /** "Ven con alguien": who comes along for the same service. */
+    companion: Companion | null;
     /** null = whoever is free. */
     staffId: number | null;
     date: string | null;
@@ -33,6 +48,7 @@ const RESTORE_WINDOW_MS = 30 * 60 * 1000;
 const EMPTY: State = {
     step: 0,
     selections: [],
+    companion: null,
     staffId: null,
     date: null,
     slot: null,
@@ -66,6 +82,13 @@ type Options = {
     resume?: boolean;
     /** Keep the choices in the browser, to survive signing in. */
     persist?: boolean;
+    /** A link that asks for a day ("?fecha="): the times start on it. */
+    startDate?: string | null;
+    /**
+     * What the salon runs today: tags, the gift offer and the "desde". A
+     * link that names one ("?promo=") starts with its services.
+     */
+    promotions?: PublicPromotion[];
 };
 
 export function useBookingWizard({
@@ -74,16 +97,26 @@ export function useBookingWizard({
     repeat = null,
     resume = false,
     persist = true,
+    startDate = null,
+    promotions = [],
 }: Options) {
     const services = salon.serviceGroups.flatMap((group) => group.services);
     const find = (id: number): BookableService | undefined =>
         services.find((service) => service.id === id);
+    const startPromotion =
+        typeof window === 'undefined'
+            ? undefined
+            : askedPromotion(window.location.search, promotions);
 
     const [state, setState] = useState<State>(() => {
+        // Who came along then comes along again, with their name written.
+        const companionLine = repeat?.selections.find((s) => s.companion);
         const repeated = (repeat?.selections ?? []).flatMap((selection) => {
             const service = find(selection.serviceId);
 
-            return service ? [{ service, variantId: selection.variantId }] : [];
+            return service && !selection.companion
+                ? [{ service, variantId: selection.variantId }]
+                : [];
         });
 
         if (repeated.length > 0) {
@@ -102,19 +135,44 @@ export function useBookingWizard({
                     // always needs one.
                     variantId: variantId ?? service.variants[0]?.id ?? null,
                 })),
+                companion: companionLine?.companion
+                    ? {
+                          serviceId: companionLine.serviceId,
+                          name: companionLine.companion,
+                          variantId: companionLine.variantId,
+                      }
+                    : null,
                 staffId,
                 step: staffId === null ? 1 : 2,
             };
         }
 
         const preselected = find(preselectedServiceId ?? 0);
+        const promoted = promotionSelections(startPromotion, services);
+        // From a "Ven con alguien": it starts asking who comes along.
+        const companion =
+            startPromotion?.mechanic === 'pair' && promoted.length === 1
+                ? { ...promoted[0], name: '' }
+                : null;
+
+        // A promotion of one professional only starts with them chosen.
+        const staffId = soleStaffId(
+            startPromotion,
+            promoted.flatMap((selection) => find(selection.serviceId) ?? []),
+        );
 
         return {
             ...EMPTY,
-            selections:
-                preselected && preselected.variants.length === 0
+            companion,
+            staffId,
+            selections: [
+                ...promoted,
+                ...(preselected &&
+                preselected.variants.length === 0 &&
+                !promoted.some((s) => s.serviceId === preselected.id)
                     ? [{ serviceId: preselected.id, variantId: null }]
-                    : [],
+                    : []),
+            ],
         };
     });
     // Forward/back, so the step transition slides the right way.
@@ -123,16 +181,34 @@ export function useBookingWizard({
     // After mount, not in the initial state: the server render has no storage.
     // Also without `resume`: the phone's back button leaves the wizard, and
     // coming back should not mean starting over. A link that asks for
-    // something specific (a service, repeating a booking) wins.
+    // something specific (a service, a promotion, repeating a booking) wins,
+    // except over what was kept to sign in: that is the same visit.
     useEffect(() => {
         const asksForSomething =
-            preselectedServiceId !== null || repeat !== null;
+            preselectedServiceId !== null ||
+            repeat !== null ||
+            (startPromotion !== undefined && !resume);
         const saved = persist && !asksForSomething ? restore(salon.slug) : null;
         const isFresh =
             saved !== null && Date.now() - saved.savedAt < RESTORE_WINDOW_MS;
 
         if (saved && (resume || isFresh)) {
             setState({ ...saved, notice: null });
+        }
+
+        // The day asked for wins over the one kept, and over a time already
+        // picked on another day.
+        if (startDate !== null) {
+            setState((current) =>
+                current.date === startDate
+                    ? current
+                    : {
+                          ...current,
+                          date: startDate,
+                          slot: null,
+                          step: Math.min(current.step, TIME_STEP),
+                      },
+            );
         }
         // Only on arrival.
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,7 +242,25 @@ export function useBookingWizard({
 
     /** Changing services invalidates the professional and the time chosen. */
     const setSelections = (selections: Selection[]) =>
-        patch({ selections, staffId: null, slot: null });
+        setState((current) => ({
+            ...current,
+            selections,
+            companion: keptCompanion(selections, current.companion),
+            staffId: null,
+            slot: null,
+        }));
+
+    const companion = keptCompanion(state.selections, state.companion);
+    const pair = pairOffer(state.selections, promotions);
+    const priceOf = (selection: Selection): string => {
+        const service = find(selection.serviceId);
+        const variant = service?.variants.find(
+            (v) => v.id === selection.variantId,
+        );
+
+        return variant?.price ?? service?.price ?? '0';
+    };
+    const lines = bookedLines(state.selections, companion);
 
     const toggleService = (service: BookableService) => {
         if (isSelected(service.id)) {
@@ -195,25 +289,57 @@ export function useBookingWizard({
         .map((s) => find(s.serviceId))
         .filter((service): service is BookableService => service !== undefined);
 
+    const estimate = sumAmounts(lines.map(priceOf));
+    // One limited to some professionals counts only once one of them is chosen.
+    const holding = promotions.filter((promotion) =>
+        holdsWith(promotion, state.staffId),
+    );
+    const savingCents = Math.max(
+        bestSavingCents(
+            holding,
+            chosen.map((service) => service.id),
+        ),
+        pair && holding.includes(pair) && lines.length === 2
+            ? pairSavingCents(pair, [priceOf(lines[0]), priceOf(lines[1])])
+            : 0,
+    );
+
     return {
         ...state,
         direction,
         services,
         chosen,
+        promotions,
+        /** What is asked for and booked, with the line of who comes along. */
+        lines,
+        /** The "Ven con alguien" the selection can take, if any. */
+        pair,
+        companion,
+        /** "Ven con alguien" is on, and who comes along has no name yet. */
+        needsCompanionName: companion !== null && companion.name.trim() === '',
+        /** On or off; on, it starts with the same option as the first. */
+        toggleCompanion: () =>
+            patch({
+                companion: companion
+                    ? null
+                    : { ...state.selections[0], name: '' },
+                staffId: null,
+                slot: null,
+            }),
+        setCompanion: (changes: Partial<Companion>) =>
+            companion &&
+            patch({
+                companion: { ...companion, ...changes },
+                slot: null,
+            }),
         // Only who performs every chosen service can take the visit.
         eligibleStaff: salon.staff.filter((person) =>
             chosen.every((service) => service.staffIds.includes(person.id)),
         ),
-        // Lowest price it could cost: the chosen option, else the base price.
-        estimate: sumAmounts(
-            state.selections.map((selection) => {
-                const service = find(selection.serviceId);
-                const variant = service?.variants.find(
-                    (v) => v.id === selection.variantId,
-                );
-
-                return variant?.price ?? service?.price ?? '0';
-            }),
+        // Lowest price it could cost: the chosen option, else the base
+        // price, with the best promotion the selection may get.
+        estimate: fromCents(
+            Math.max(0, (toCents(estimate) ?? 0) - savingCents),
         ),
         hasOnlyAddons:
             chosen.length > 0 && chosen.every((service) => service.isAddon),

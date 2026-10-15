@@ -9,6 +9,7 @@ import { StepTime } from '@/components/booking/step-time';
 import type { BookableSalon, BookingDay } from '@/components/booking/types';
 import { WizardHeader } from '@/components/booking/wizard-header';
 import { useAvailability } from '@/hooks/use-availability';
+import type { PublicPromotion } from '@/components/public/types';
 import { useBookingWizard } from '@/hooks/use-booking-wizard';
 import { index } from '@/routes/agenda';
 import {
@@ -16,7 +17,12 @@ import {
     create,
 } from '@/routes/agenda/bookings';
 
-type Props = { salon: BookableSalon; days: BookingDay[] };
+type Props = {
+    salon: BookableSalon;
+    days: BookingDay[];
+    /** What the salon is running today: the same prices a client is shown. */
+    promotions?: PublicPromotion[];
+};
 
 const STEPS = ['Servicios', 'Profesional', 'Día y hora', 'Cliente'];
 const TITLES = [
@@ -27,13 +33,13 @@ const TITLES = [
 ];
 
 /** The team books for someone who called, wrote or walked in. */
-export default function BookingCreate({ salon, days }: Props) {
+export default function BookingCreate({ salon, days, promotions = [] }: Props) {
     const reduceMotion = useReducedMotion();
-    const wizard = useBookingWizard({ salon, persist: false });
+    const wizard = useBookingWizard({ salon, persist: false, promotions });
     const firstOpenDay = days.find((day) => !day.closed)?.date ?? null;
     const availability = useAvailability({
         url: availabilityRoute.url(),
-        selections: wizard.selections,
+        selections: wizard.lines,
         staffId: wizard.staffId,
         refresh: wizard.refresh,
         // Nothing to ask until a professional was chosen.
@@ -82,6 +88,7 @@ export default function BookingCreate({ salon, days }: Props) {
                                 salon={salon}
                                 wizard={wizard}
                                 empty="Todavía no hay servicios activos para agendar. Agrégalos en Servicios."
+                                voice="staff"
                             />
                         )}
                         {wizard.step === 1 && <StepStaff wizard={wizard} />}
@@ -104,7 +111,7 @@ export default function BookingCreate({ salon, days }: Props) {
             </div>
 
             {wizard.step === 0 && wizard.chosen.length > 0 && (
-                <SelectionBar wizard={wizard} inline />
+                <SelectionBar wizard={wizard} inline voice="staff" />
             )}
         </>
     );

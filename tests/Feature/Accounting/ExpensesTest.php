@@ -124,7 +124,7 @@ it('shows the receipt only to whoever handles this salon\'s cash', function () {
     $this->actingAs($this->owner)->get(route('expenses.index'))
         ->assertInertia(fn (Assert $page) => $page->where('expenses.0.receiptUrl', fn (string $url) => str_contains($url, "/gastos/{$expense->id}/comprobante")));
     $this->actingAs($this->owner)->get(route('expenses.receipt', $expense))
-        ->assertOk()->assertHeader('Content-Type', 'image/webp')->assertHeader('Cache-Control', 'max-age=3600, private');
+        ->assertOk()->assertHeader('Content-Type', 'image/webp')->assertHeader('Cache-Control', 'no-store, private');
 
     $this->actingAs($member->user)->get(route('expenses.receipt', $expense))->assertForbidden();
     $this->actingAs($intruder)->get(route('expenses.receipt', $expense->id))->assertNotFound();

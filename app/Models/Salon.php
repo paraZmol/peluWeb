@@ -6,6 +6,7 @@ use App\Domain\Schedule\TimeRange;
 use App\Domain\Schedule\WeeklyHours;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
+use App\Enums\ReviewMode;
 use App\Enums\SalonRole;
 use App\Enums\SalonStatus;
 use App\Enums\SalonTheme;
@@ -41,6 +42,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $timezone
  * @property string $currency
  * @property SalonStatus $status
+ * @property bool $walk_ins_enabled The team keeps a day's line of people without a booking.
  * @property int $min_lead_minutes Notice a client must give before a booking starts.
  * @property int $max_days_ahead How far ahead clients can book.
  * @property int $slot_step_minutes Grid of the start times offered.
@@ -50,6 +52,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int|null $vip_deposit_percent Null = same as everyone.
  * @property string|null $payment_instructions
  * @property bool $accepts_online_bookings
+ * @property ReviewMode $review_mode
  * @property CarbonImmutable|null $trial_ends_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -58,7 +61,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'name', 'business_type', 'clientele', 'phone', 'timezone', 'description', 'instagram',
     'address', 'district', 'city', 'latitude', 'longitude',
-    'accepts_online_bookings', 'min_lead_minutes', 'max_days_ahead', 'slot_step_minutes',
+    'accepts_online_bookings', 'walk_ins_enabled', 'min_lead_minutes', 'max_days_ahead', 'slot_step_minutes',
     'cancel_window_hours', 'deposit_percent', 'vip_deposit_percent', 'hold_minutes', 'payment_instructions',
 ])]
 class Salon extends Model
@@ -86,6 +89,7 @@ class Salon extends Model
         'city' => null,
         'latitude' => null,
         'longitude' => null,
+        'walk_ins_enabled' => false,
         'min_lead_minutes' => 60,
         'max_days_ahead' => 60,
         'slot_step_minutes' => 15,
@@ -95,6 +99,7 @@ class Salon extends Model
         'vip_deposit_percent' => null,
         'payment_instructions' => null,
         'accepts_online_bookings' => true,
+        'review_mode' => 'private',
     ];
 
     /**
@@ -104,6 +109,7 @@ class Salon extends Model
     {
         return [
             'business_type' => BusinessType::class,
+            'walk_ins_enabled' => 'boolean',
             'clientele' => Clientele::class,
             'status' => SalonStatus::class,
             'theme' => SalonTheme::class,
@@ -111,6 +117,7 @@ class Salon extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'accepts_online_bookings' => 'boolean',
+            'review_mode' => ReviewMode::class,
         ];
     }
 

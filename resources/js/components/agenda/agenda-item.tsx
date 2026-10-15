@@ -1,10 +1,12 @@
 import { Star } from 'lucide-react';
+import { PromotionLine } from '@/components/booking/promotion-line';
 import { StatusBadge } from '@/components/booking/status-badge';
 import type {
     AgendaBooking,
     BookingDay,
     StaffOption,
 } from '@/components/booking/types';
+import { servicesLine } from '@/lib/companion';
 import { formatPrice, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { AgendaActions } from './agenda-actions';
@@ -63,11 +65,18 @@ export function AgendaItem({
                         )}
                     </p>
                     <p className="text-sm break-words text-muted-foreground">
-                        {booking.services.join(', ')} ·{' '}
+                        {servicesLine(booking.services)} ·{' '}
                         <span className="whitespace-nowrap tabular-nums">
                             {formatPrice(booking.price)}
                         </span>
                     </p>
+                    {booking.promotion && (
+                        <PromotionLine
+                            name={booking.promotion.name}
+                            amount={booking.promotion.saved}
+                            className="mt-1"
+                        />
+                    )}
                     {showStaff && (
                         <p className="text-sm text-muted-foreground">
                             Con {booking.staffName}

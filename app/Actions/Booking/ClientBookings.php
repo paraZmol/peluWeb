@@ -32,7 +32,7 @@ class ClientBookings
             ->withCount(['events as own_moves_count' => fn (Builder $events) => $events
                 ->where('changed_by', $user->id)
                 ->whereColumn('from_status', 'to_status')])
-            ->with(['salon', 'services', 'client' => $unscoped, 'staff' => $unscoped]);
+            ->with(['salon', 'services', 'client' => $unscoped, 'staff' => $unscoped, 'review' => $unscoped]);
     }
 
     public function findOrFail(User $user, string $code): Booking

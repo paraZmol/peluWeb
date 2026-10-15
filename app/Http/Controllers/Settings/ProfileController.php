@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\Salon\ClientDataRights;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
@@ -46,10 +47,12 @@ class ProfileController extends Controller
     /**
      * Delete the user's profile.
      */
-    public function destroy(ProfileDeleteRequest $request): RedirectResponse
+    public function destroy(ProfileDeleteRequest $request, ClientDataRights $rights): RedirectResponse
     {
         $user = $request->user();
 
+        // Nothing they authorized stays behind in any salon.
+        $rights->forgetEverywhere($user);
         Auth::logout();
 
         $user->delete();

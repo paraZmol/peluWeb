@@ -45,6 +45,7 @@ class SalonSettingsResource extends JsonResource
             'longitude' => $this->longitude === null ? null : (float) $this->longitude,
             'booking' => [
                 'acceptsOnlineBookings' => $this->accepts_online_bookings,
+                'walkInsEnabled' => $this->walk_ins_enabled,
                 'minLeadMinutes' => $this->min_lead_minutes,
                 'maxDaysAhead' => $this->max_days_ahead,
                 'slotStepMinutes' => $this->slot_step_minutes,

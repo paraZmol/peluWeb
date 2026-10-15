@@ -13,9 +13,29 @@ class SalonPolicy
         return $user->membershipIn($salon)?->isOwner() ?? false;
     }
 
+    /**
+     * Promotions change what the salon charges: owners only.
+     */
+    public function managePromotions(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->isOwner() ?? false;
+    }
+
     public function manageServices(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageServices) ?? false;
+    }
+
+    /**
+     * The client list: who marks VIPs, and who sees everyone's agenda
+     * (they already open each client's file from a booking).
+     */
+    public function viewClients(User $user, Salon $salon): bool
+    {
+        $membership = $user->membershipIn($salon);
+
+        return $membership !== null
+            && ($membership->hasPermission(SalonPermission::ManageVipClients) || $membership->hasPermission(SalonPermission::ViewAllSchedules));
     }
 
     public function manageVipClients(User $user, Salon $salon): bool

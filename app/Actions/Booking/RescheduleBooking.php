@@ -3,12 +3,14 @@
 namespace App\Actions\Booking;
 
 use App\Data\Booking\BookingMove;
+use App\Enums\BookingNotice;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\BookingEvent;
 use App\Models\BookingService;
+use App\Models\Promotion;
 use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\Staff;
@@ -34,11 +36,15 @@ class RescheduleBooking
     public function __construct(
         private readonly StaffAvailability $availability,
         private readonly SyncBookingSegments $segments,
+        private readonly NotifyClient $notify,
     ) {}
 
     public function handle(BookingMove $move): Booking
     {
-        return DB::transaction(fn (): Booking => $this->move($move), self::DEADLOCK_ATTEMPTS);
+        $moved = DB::transaction(fn (): Booking => $this->move($move), self::DEADLOCK_ATTEMPTS);
+        $this->notify->handle($moved, BookingNotice::Moved);
+
+        return $moved;
     }
 
     /**
@@ -58,9 +64,51 @@ class RescheduleBooking
             return [];
         }
 
-        return $this->availability->slots(
+        $slots = $this->availability->slots(
             $salon, $target, $booking->shape(), $localDate, $this->level($booking, $byClient), $now, $booking->id,
         );
+
+        if (! $byClient) {
+            return $slots;
+        }
+
+        // A client keeps the promotion's price only where it still applies.
+        $keeps = $this->promotionRule($booking, $salon);
+
+        return array_values(array_filter($slots, $keeps));
+    }
+
+    /**
+     * Whether a visit starting then is still one the booking's promotion
+     * covers. The salon may move it anywhere and the price stays; a client
+     * may not, or a "quiet hours" price would follow them to a Saturday.
+     */
+    private function keepsPromotion(Booking $booking, int $start, Salon $salon): bool
+    {
+        return $this->promotionRule($booking, $salon)($start);
+    }
+
+    /**
+     * The test a start must pass for the booking to keep its promotion;
+     * read once, whatever number of starts is checked.
+     *
+     * @return callable(int): bool
+     */
+    private function promotionRule(Booking $booking, Salon $salon): callable
+    {
+        if ($booking->promotion_cents === 0) {
+            return fn (int $start): bool => true;
+        }
+
+        $terms = $booking->promotion_id === null ? null
+            : Promotion::withoutGlobalScope('salon')->withTrashed()->with('services')->find($booking->promotion_id)?->terms();
+
+        // Its rules are gone with the promotion: only the salon moves it now.
+        if ($terms === null) {
+            return fn (int $start): bool => $start === $booking->starts_at->getTimestamp();
+        }
+
+        return fn (int $start): bool => $terms->covers(CarbonImmutable::createFromTimestampUTC($start)->setTimezone($salon->timezone));
     }
 
     private function move(BookingMove $move): Booking
@@ -87,6 +135,10 @@ class RescheduleBooking
         }
 
         $this->ensureMovable($booking, $salon, $move, $now);
+
+        if ($move->byClient && ! $this->keepsPromotion($booking, $move->startsAt->getTimestamp(), $salon)) {
+            throw BookingException::promotionNotValidThen((string) $booking->promotion_name);
+        }
 
         if ($target === null || ! $this->canTake($target, $booking)) {
             throw BookingException::staffCannotTake();

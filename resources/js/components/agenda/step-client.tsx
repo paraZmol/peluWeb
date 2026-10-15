@@ -10,9 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { flashFailed } from '@/lib/flash';
 import { formatMinutes } from '@/lib/format';
+import { promotedTotal } from '@/lib/promo-offers';
 import { store } from '@/routes/agenda/bookings';
 import type { ClientChoice } from './client-picker';
 import { ClientPicker } from './client-picker';
+import { PromotionToggle } from './promotion-toggle';
 
 type Props = {
     salon: BookableSalon;
@@ -28,6 +30,7 @@ export function StepClient({ salon, wizard, quote }: Props) {
         phone: '',
     });
     const [sending, setSending] = useState(false);
+    const [withPromotion, setWithPromotion] = useState(true);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const staff = salon.staff.find((person) => person.id === wizard.staffId);
     const { slot, date } = wizard;
@@ -37,13 +40,18 @@ export function StepClient({ salon, wizard, quote }: Props) {
         return null;
     }
 
+    const money = quote
+        ? promotedTotal(quote, withPromotion ? slot.promotion : null)
+        : null;
+
     const save = () =>
         router.post(
             store(),
             {
-                services: wizard.selections.map((selection) => ({
+                services: wizard.lines.map((selection) => ({
                     id: selection.serviceId,
                     variant: selection.variantId,
+                    companion: selection.companion ?? null,
                 })),
                 staff: wizard.staffId,
                 start: slot.start,
@@ -52,6 +60,7 @@ export function StepClient({ salon, wizard, quote }: Props) {
                 client_phone:
                     client.id === null ? client.phone.trim() || null : null,
                 note: wizard.note || null,
+                with_promotion: withPromotion,
             },
             {
                 preserveState: true,
@@ -86,6 +95,13 @@ export function StepClient({ salon, wizard, quote }: Props) {
                 />
             </div>
 
+            {slot.promotion && (
+                <PromotionToggle
+                    promotion={slot.promotion}
+                    checked={withPromotion}
+                    onChange={setWithPromotion}
+                />
+            )}
             <BookingSummary
                 date={date}
                 time={slot.time}
@@ -98,8 +114,10 @@ export function StepClient({ salon, wizard, quote }: Props) {
                         : undefined
                 }
                 items={wizard.chosen.map((service) => ({ name: service.name }))}
-                total={quote?.price ?? null}
+                total={money?.total ?? null}
                 totalPrefix={quote?.priceVaries ? 'desde' : undefined}
+                listTotal={money?.listTotal}
+                promotion={money?.promotion}
             />
 
             {(errors.network ?? errors.services ?? errors.note) && (

@@ -11,13 +11,20 @@ type Props = {
     days: BookingDay[];
     /** Still to come and not cancelled. */
     isActive: boolean;
+    /** Another primary is on screen (the review): booking again steps back. */
+    isRepeatSecondary?: boolean;
 };
 
 /**
  * What the client can do with a booking. One primary at a time: how to get
  * there while it is ahead, booking it again once it is over.
  */
-export function BookingActions({ booking, days, isActive }: Props) {
+export function BookingActions({
+    booking,
+    days,
+    isActive,
+    isRepeatSecondary = false,
+}: Props) {
     const { salon } = booking;
 
     return (
@@ -37,7 +44,7 @@ export function BookingActions({ booking, days, isActive }: Props) {
                     href={bookAgain(salon.slug, {
                         query: { repetir: booking.code },
                     })}
-                    className={PRIMARY_ACTION}
+                    className={isRepeatSecondary ? CHIP_ACTION : PRIMARY_ACTION}
                 >
                     <Repeat aria-hidden /> Repetir esta reserva
                 </Link>

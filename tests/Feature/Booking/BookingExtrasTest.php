@@ -62,7 +62,7 @@ describe('repeating a booking', function () {
         $booking = extraBooking($this->customer);
 
         $this->actingAs($this->customer)->get(repeatUrl($booking->code))
-            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['selections' => [['serviceId' => $this->cut->id, 'variantId' => null], ['serviceId' => $this->beard->id, 'variantId' => null]], 'staffId' => $this->pedro->id]));
+            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['selections' => [['serviceId' => $this->cut->id, 'variantId' => null, 'companion' => null], ['serviceId' => $this->beard->id, 'variantId' => null, 'companion' => null]], 'staffId' => $this->pedro->id]));
     });
 
     it('leaves out what no longer exists', function () {
@@ -71,7 +71,7 @@ describe('repeating a booking', function () {
         $this->pedro->forceFill(['is_active' => false])->save();
 
         $this->actingAs($this->customer)->get(repeatUrl($booking->code))
-            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['selections' => [['serviceId' => $this->cut->id, 'variantId' => null]], 'staffId' => null]));
+            ->assertInertia(fn (Assert $page) => $page->where('repeat', ['selections' => [['serviceId' => $this->cut->id, 'variantId' => null, 'companion' => null]], 'staffId' => null]));
 
         $this->cut->delete();
         $this->actingAs($this->customer)->get(repeatUrl($booking->code))

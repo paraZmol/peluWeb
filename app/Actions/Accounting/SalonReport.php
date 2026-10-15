@@ -45,12 +45,12 @@ class SalonReport
     }
 
     /**
-     * @return array{incomeCents: int, servicesCents: int, keptDepositsCents: int, expensesCents: int, profitCents: int, discountsCents: int, visits: int}
+     * @return array{incomeCents: int, servicesCents: int, keptDepositsCents: int, expensesCents: int, profitCents: int, discountsCents: int, promotionsCents: int, visits: int}
      */
     private function totals(ReportScope $scope): array
     {
         $visits = $scope->completed()
-            ->selectRaw('COUNT(*) as visits, COALESCE(SUM(charged_cents), 0) as services, COALESCE(SUM(discount_cents), 0) as discounts')
+            ->selectRaw('COUNT(*) as visits, COALESCE(SUM(charged_cents), 0) as services, COALESCE(SUM(discount_cents), 0) as discounts, COALESCE(SUM(promotion_cents), 0) as promotions')
             ->toBase()->first();
         $services = (int) ($visits->services ?? 0);
         $kept = (int) $scope->keptDeposits()->sum('deposit_cents');
@@ -63,6 +63,8 @@ class SalonReport
             'expensesCents' => $expenses,
             'profitCents' => $services + $kept - $expenses,
             'discountsCents' => (int) ($visits->discounts ?? 0),
+            // Apart from the manual discounts: what the salon's own promotions took off.
+            'promotionsCents' => (int) ($visits->promotions ?? 0),
             'visits' => (int) ($visits->visits ?? 0),
         ];
     }

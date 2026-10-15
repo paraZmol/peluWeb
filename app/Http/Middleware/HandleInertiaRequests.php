@@ -49,6 +49,8 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'features' => [
                 'googleLogin' => GoogleLoginController::isEnabled(),
+                // The public half of the push keys; null hides the switch.
+                'pushKey' => config('services.webpush.private_key') ? config('services.webpush.public_key') : null,
             ],
             ...$this->salonProps($request),
         ];
@@ -73,6 +75,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
+            'booking_reminders' => $user->booking_reminders,
             'avatar' => $user->avatar,
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),
             'two_factor_enabled' => $user->hasTwoFactorEnabled(),
@@ -108,6 +111,8 @@ class HandleInertiaRequests extends Middleware
                 'brand' => $salon->brandTokens(),
                 // Drives the "Mi horario" menu entry: the user attends clients here.
                 'hasStaffProfile' => Staff::query()->where('user_id', $user->id)->exists(),
+                // The team keeps a line of people without a booking: shows its menu entry.
+                'walkInsEnabled' => $salon->walk_ins_enabled,
                 'permissions' => collect(SalonPermission::cases())
                     ->filter(fn (SalonPermission $permission) => $membership->hasPermission($permission))
                     ->map(fn (SalonPermission $permission) => $permission->value)

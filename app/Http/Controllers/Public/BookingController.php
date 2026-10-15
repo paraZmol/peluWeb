@@ -6,6 +6,8 @@ use App\Actions\Booking\CreateBooking;
 use App\Actions\Booking\FindAvailableSlots;
 use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\ResolveSalonClient;
+use App\Actions\Promotions\ApplyPromotion;
+use App\Actions\Promotions\PublicPromotions;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\ClientLevel;
@@ -59,13 +61,14 @@ class BookingController extends Controller
             'viewer' => $this->viewer($request->user()),
             'preselectedServiceId' => $request->integer('servicio') ?: null,
             'repeat' => $this->repeat($request, $salon, $services, $staff),
-        ]);
+            'promotions' => app(PublicPromotions::class)->handle($salon)['items'],
+        ])->withViewData(SalonPageController::installData($salon));
     }
 
     /**
      * Free starts of one day for the selection, plus what it costs.
      */
-    public function availability(AvailabilityRequest $request, Salon $salon): JsonResponse
+    public function availability(AvailabilityRequest $request, Salon $salon, ApplyPromotion $promotions): JsonResponse
     {
         abort_if($salon->status === SalonStatus::Suspended, 404);
 
@@ -77,8 +80,15 @@ class BookingController extends Controller
             $salon, $selections, $staff, $request->localDate($salon->timezone), $level, CarbonImmutable::now(),
         );
 
+        $cheapest = AvailabilityPayload::cheapest($quotes);
+        $client = $request->user() === null ? null : $this->clients->forUser($salon, $request->user());
+
         return response()->json([
-            'slots' => AvailabilityPayload::slots(array_keys($slots), $salon),
+            'slots' => AvailabilityPayload::slots(
+                array_keys($slots),
+                $salon,
+                $cheapest === null ? [] : $promotions->forStarts($salon, $client, $cheapest->chosenWith($staff?->id), array_keys($slots)),
+            ),
             'quote' => AvailabilityPayload::quote($quotes, $salon->depositPercentFor($level === ClientLevel::Vip)),
         ]);
     }
@@ -103,6 +113,7 @@ class BookingController extends Controller
             source: BookingSource::Client,
             actor: $user,
             note: $request->validated('note'),
+            expectsPromotion: $request->boolean('expects_promotion'),
         ));
 
         Inertia::flash('toast', [
@@ -129,7 +140,7 @@ class BookingController extends Controller
      *
      * @param  Collection<int, Service>  $services  the salon's active services
      * @param  Collection<int, Staff>  $staff  the salon's active professionals
-     * @return array{selections: list<array{serviceId: int, variantId: int|null}>, staffId: int|null}|null
+     * @return array{selections: list<array{serviceId: int, variantId: int|null, companion: string|null}>, staffId: int|null}|null
      */
     private function repeat(Request $request, Salon $salon, Collection $services, Collection $staff): ?array
     {
@@ -155,12 +166,17 @@ class BookingController extends Controller
 
         foreach ($booking->services as $booked) {
             $service = $services->firstWhere('id', $booked->service_id);
+            // Its companion's name already erased (it is kept 30 days): repeat it for one.
+            $isNamelessRepeat = $booked->companion_name === null && in_array($booked->service_id, array_column($selections, 'serviceId'), true);
 
-            if ($service !== null) {
+            if ($service !== null && ! $isNamelessRepeat) {
                 // The option booked then, if the service still offers it.
                 $selections[] = [
                     'serviceId' => $service->id,
                     'variantId' => $service->variants->firstWhere('id', $booked->service_variant_id)?->id,
+                    // "Ven con alguien": without it the repeated pair reads as a
+                    // duplicate. Alone (only one of them came), it is just a visit.
+                    'companion' => $booking->services->count() === 2 ? $booked->companion_name : null,
                 ];
             }
         }

@@ -23,6 +23,7 @@ class UpdateSalonBookingRequest extends FormRequest
     {
         return [
             'accepts_online_bookings' => ['required', 'boolean'],
+            'walk_ins_enabled' => ['sometimes', 'boolean'],
             'min_lead_minutes' => ['required', 'integer', 'min:0', 'max:'.self::WEEK_IN_MINUTES],
             'max_days_ahead' => ['required', 'integer', 'min:1', 'max:365'],
             'slot_step_minutes' => ['required', 'integer', Rule::in(self::SLOT_STEPS)],

@@ -1,6 +1,6 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarClock, MessageCircle, Play } from 'lucide-react';
+import { CalendarClock, MessageCircle, Play, UserRound } from 'lucide-react';
 import { CheckoutDialog } from '@/components/accounting/checkout-dialog';
 import {
     DepositReceivedDialog,
@@ -15,7 +15,9 @@ import type {
 import { ConfirmRemoveDialog } from '@/components/team/confirm-remove-dialog';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { DropCompanionDialog } from './drop-companion-dialog';
 import { cancel, move, noShow, slots, start } from '@/routes/agenda/bookings';
+import { show as clientFile } from '@/routes/clients';
 
 type Props = {
     booking: AgendaBooking;
@@ -24,6 +26,9 @@ type Props = {
     /** Colleagues it can be handed to; empty for a professional's own agenda. */
     staffOptions: StaffOption[];
 };
+
+/** A visit not over yet: someone may still turn out to come alone. */
+const OPEN = ['pending', 'confirmed', 'in_service'];
 
 /** The next step of a visit takes the whole row on a phone. */
 const PRIMARY = 'col-span-2';
@@ -72,6 +77,14 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
                     triggerClassName={PRIMARY}
                 />
             )}
+            {booking.companion &&
+                OPEN.includes(booking.status) &&
+                booking.actions.length > 0 && (
+                    <DropCompanionDialog
+                        booking={booking}
+                        companion={booking.companion}
+                    />
+                )}
             {booking.client.whatsappUrl && (
                 <Button asChild variant="outline">
                     <a
@@ -84,6 +97,14 @@ export function AgendaActions({ booking, days, staffOptions }: Props) {
                     </a>
                 </Button>
             )}
+            <Button asChild variant="outline">
+                <Link
+                    href={clientFile(booking.client.id)}
+                    aria-label={`Ver ficha de ${booking.client.name}`}
+                >
+                    <UserRound aria-hidden /> Ver ficha
+                </Link>
+            </Button>
             {can('move') && (
                 <MoveDialog
                     trigger={

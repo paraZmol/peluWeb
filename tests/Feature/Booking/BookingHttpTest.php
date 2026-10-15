@@ -126,7 +126,7 @@ describe('availability', function () {
 
         $times = collect($response->json('slots'))->pluck('time');
         expect($times)->toContain('09:00')->toContain('10:30')->not->toContain('10:00')->not->toContain('09:45')
-            ->and($response->json('slots.0'))->toBe(['start' => httpAt('09:00'), 'time' => '09:00'])
+            ->and($response->json('slots.0'))->toBe(['start' => httpAt('09:00'), 'time' => '09:00', 'promotion' => null])
             ->and($response->json('quote'))->toMatchArray(['price' => '35.00', 'minutes' => 30, 'depositPercent' => 30, 'deposit' => '10.50', 'priceVaries' => false]);
     });
 

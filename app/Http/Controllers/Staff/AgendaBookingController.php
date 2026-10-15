@@ -6,6 +6,8 @@ use App\Actions\Booking\CreateBooking;
 use App\Actions\Booking\FindAvailableSlots;
 use App\Actions\Booking\ListBookableDays;
 use App\Actions\Booking\ResolveSalonClient;
+use App\Actions\Promotions\ApplyPromotion;
+use App\Actions\Promotions\PublicPromotions;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\ClientLevel;
@@ -55,13 +57,15 @@ class AgendaBookingController extends SalonAreaController
         return Inertia::render('staff/booking-create', [
             'salon' => new BookableSalonResource($salon, $services, $staff, $this->finder->performers($staff)),
             'days' => $days->handle($salon, ClientLevel::Team, self::DAYS_AHEAD),
+            // The same ones a client sees: who books for them quotes the same prices.
+            'promotions' => app(PublicPromotions::class)->handle($salon)['items'],
         ]);
     }
 
     /**
      * Free starts of one day for the selection, in any working hours.
      */
-    public function availability(AvailabilityRequest $request): JsonResponse
+    public function availability(AvailabilityRequest $request, ApplyPromotion $promotions): JsonResponse
     {
         $salon = $this->bookingSalon();
         $staff = $this->staffFor($request, $salon, $request->staffIn($salon));
@@ -70,8 +74,14 @@ class AgendaBookingController extends SalonAreaController
             $salon, $request->selections(), $staff, $request->localDate($salon->timezone), ClientLevel::Team, CarbonImmutable::now(),
         );
 
+        $cheapest = AvailabilityPayload::cheapest($quotes);
+
         return response()->json([
-            'slots' => AvailabilityPayload::slots(array_keys($slots), $salon),
+            'slots' => AvailabilityPayload::slots(
+                array_keys($slots),
+                $salon,
+                $cheapest === null ? [] : $promotions->forStarts($salon, null, $cheapest->chosenWith($staff?->id), array_keys($slots)),
+            ),
             'quote' => AvailabilityPayload::quote($quotes, 0),
         ]);
     }
@@ -126,6 +136,8 @@ class AgendaBookingController extends SalonAreaController
             source: BookingSource::Staff,
             actor: $request->user(),
             note: $request->validated('note'),
+            // Marked by default; the team may book at the normal price on purpose.
+            withPromotion: $request->boolean('with_promotion', true),
         ));
 
         $this->toast("Cita agendada para {$client->name}.");

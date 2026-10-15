@@ -33,7 +33,8 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Receipts and pictures of people: only through controllers with a policy.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

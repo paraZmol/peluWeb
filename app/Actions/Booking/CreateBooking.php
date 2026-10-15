@@ -4,6 +4,7 @@ namespace App\Actions\Booking;
 
 use App\Data\Booking\BookingQuote;
 use App\Data\Booking\NewBooking;
+use App\Enums\BookingNotice;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Enums\ClientLevel;
@@ -46,6 +47,7 @@ class CreateBooking
         private readonly QuoteBooking $quote,
         private readonly StaffAvailability $availability,
         private readonly SyncBookingSegments $segments,
+        private readonly NotifyClient $notify,
     ) {}
 
     public function handle(NewBooking $data): Booking
@@ -65,6 +67,8 @@ class CreateBooking
             $booking = DB::transaction(fn () => $this->attempt($data, $staff, $now), self::DEADLOCK_ATTEMPTS);
 
             if ($booking !== null) {
+                $this->notify->handle($booking, $booking->status === BookingStatus::Pending ? BookingNotice::Received : BookingNotice::Confirmed);
+
                 return $booking;
             }
         }
@@ -157,6 +161,19 @@ class CreateBooking
         $client = $this->client($data, $now);
         $start = $data->startsAt->getTimestamp();
         $shape = $quote->shape();
+
+        // Priced under the lock: the promotion's places are counted with
+        // its row locked, after the professional's and the client's.
+        if ($data->withPromotion) {
+            $quote = $this->quote->promote($data->salon, $client, $quote->chosenWith($data->staff?->id), $data->startsAt, underLock: true);
+        }
+
+        // Its last place went, or it was paused, since they saw the price:
+        // they are told, not charged more than what they confirmed.
+        if ($data->expectsPromotion && $quote->promotion === null) {
+            throw BookingException::promotionGone();
+        }
+
         $deposit = $this->depositCents($data, $client, $quote->priceCents());
 
         $booking = new Booking;
@@ -169,6 +186,9 @@ class CreateBooking
         $booking->ends_at = CarbonImmutable::createFromTimestampUTC($shape->endsAt($start));
         $booking->is_vip = $client->is_vip;
         $booking->price_cents = $quote->priceCents();
+        $booking->promotion_id = $quote->promotion?->id;
+        $booking->promotion_name = $quote->promotion?->name;
+        $booking->promotion_cents = $quote->promotionCents();
         $booking->deposit_cents = $deposit;
         // Without a deposit there is nothing to wait for: it is confirmed.
         $booking->status = $deposit > 0 ? BookingStatus::Pending : BookingStatus::Confirmed;
@@ -182,8 +202,10 @@ class CreateBooking
             $service->booking_id = $booking->id;
             $service->service_id = $item->serviceId;
             $service->service_variant_id = $item->variantId;
+            $service->companion_name = $item->companion;
             $service->name = $item->name;
             $service->price_cents = $item->priceCents;
+            $service->list_price_cents = $item->normalPriceCents();
             $service->active_minutes = $item->activeMinutes;
             $service->idle_minutes = $item->idleMinutes;
             $service->finish_minutes = $item->finishMinutes;

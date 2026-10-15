@@ -66,5 +66,9 @@
             const svg = `<svg class="icon ${el.className}" viewBox="0 0 24 24" aria-hidden="true">${icons[el.dataset.i] || ''}</svg>`;
             el.outerHTML = svg;
         });
-    document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', paint) : paint();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', paint);
+    } else {
+        paint();
+    }
 })();

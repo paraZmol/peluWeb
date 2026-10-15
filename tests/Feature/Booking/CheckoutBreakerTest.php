@@ -397,7 +397,7 @@ describe('the till against the clock', function () {
 
         expect($session->expected_cash_cents)->toBe(7450)
             ->and($session->differenceCents())->toBe(0);
-    })->skip('Known failure (MEDIO): a charge in the same second as the close, before it, falls out of every cash session.');
+    });
 
     it('never counts one movement in two consecutive sessions', function () {
         $booking = chkInService();

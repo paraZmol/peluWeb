@@ -1,0 +1,249 @@
+import type {
+    ClientFile,
+    ClientNotesFields,
+    ClientPhoto,
+} from '@/components/clients/types';
+import { formatDate } from './format';
+
+const longDayFormat = new Intl.DateTimeFormat('es-PE', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+});
+
+/**
+ * "2026-10-07" → "7 oct 2026": a file spans years, so the year always shows.
+ * Built from parts so no timezone shifts it.
+ */
+export function formatLongDay(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+
+    return longDayFormat
+        .format(new Date(year, month - 1, day))
+        .replace(/[.,]/g, '')
+        .replace(/ de /g, ' ')
+        .toLowerCase();
+}
+
+/** "2026-10-07" → "mié 7 oct 2026": the day of a visit, weekday included. */
+export function formatVisitDay(date: string): string {
+    return `${formatDate(date)} ${date.slice(0, 4)}`;
+}
+
+/**
+ * Since when they are a client: the first visit when the record was created
+ * after it (a history loaded later), the record's day otherwise.
+ */
+export function clientSince(
+    since: string | null,
+    firstVisit: string | null,
+): string | null {
+    if (since === null || firstVisit === null) {
+        return since ?? firstVisit;
+    }
+
+    // "Y-m-d" sorts as text.
+    return firstVisit < since ? firstVisit : since;
+}
+
+/** One thing to keep in mind before attending, and where it is written. */
+export type BriefLine = {
+    key: 'care' | 'formula' | 'notes';
+    label: string;
+    text: string;
+    /** The field of the notes form it jumps to. */
+    href: string;
+    /** An allergy on the file, or its withdrawal: it must stand out. */
+    isAlert: boolean;
+    /** A warning to read whole, never cut short. */
+    isNotice: boolean;
+};
+
+/** Never "no allergies": nothing written is not the same as none. */
+const NO_CARE_NOTES =
+    'Sin alergias registradas. Pregunta antes de aplicar productos.';
+
+/** How an authorization given from the person's own account is recorded. */
+export const ACCOUNT_METHOD = 'account';
+
+/** The person authorized the care notes themselves: no sheet to declare. */
+export function isCareAuthorizedFromAccount(client: ClientFile): boolean {
+    return client.careConsent?.method === ACCOUNT_METHOD;
+}
+
+/**
+ * The care notes were erased with a withdrawal that still stands: the team
+ * must know, so the empty field never reads as "no allergies".
+ */
+export function careWithdrawalNotice(client: ClientFile): string | null {
+    const withdrawal = client.careWithdrawal;
+
+    if (withdrawal === null || client.careConsent !== null) {
+        return null;
+    }
+
+    const day = formatLongDay(withdrawal.date);
+    const who = withdrawal.byThePerson
+        ? `${client.name} retiró el ${day} su autorización`
+        : `Se retiró el ${day} la autorización`;
+
+    return `${who} para guardar alergias. Lo anotado se borró. No lo anotes en otro campo. Pregúntale por alergias antes de cada servicio.`;
+}
+
+/**
+ * The person took the care notes back themselves and nothing stands since:
+ * only they can allow them again, so no sheet or box opens the field.
+ */
+export function isCareLockedByThePerson(client: ClientFile): boolean {
+    return (
+        client.careConsent === null &&
+        client.careWithdrawal !== null &&
+        client.careWithdrawal.byThePerson
+    );
+}
+
+/**
+ * The person took their pictures back from their account: only they can
+ * allow them again, so the file offers no upload. Null otherwise.
+ */
+export function photosWithdrawalNotice(client: ClientFile): string | null {
+    const withdrawal = client.photosWithdrawal;
+
+    if (withdrawal === null || !withdrawal.byThePerson) {
+        return null;
+    }
+
+    const { name } = client;
+    const erased =
+        withdrawal.count === 1
+            ? ' Se borró la foto de su ficha.'
+            : withdrawal.count > 1
+              ? ` Se borraron las ${withdrawal.count} fotos de su ficha.`
+              : '';
+
+    return `${name} retiró el ${formatLongDay(withdrawal.date)} su autorización para fotos.${erased} Si hay copias en un teléfono u otro lugar, bórralas también. Solo ${name} puede volver a autorizarlas, desde su cuenta.`;
+}
+
+/**
+ * What to read first with the person in the chair: allergies (only for who
+ * may see them), formula and preferences. Nothing written, no lines, unless
+ * the care notes were taken back: that is always said.
+ */
+export function attendingBrief(
+    client: ClientFile,
+    canSeeCare: boolean,
+): BriefLine[] {
+    const care = canSeeCare ? (client.careNotes ?? '').trim() : '';
+    const formula = (client.formulaNotes ?? '').trim();
+    const notes = (client.notes ?? '').trim();
+    const withdrawal = canSeeCare ? careWithdrawalNotice(client) : null;
+
+    if (care === '' && formula === '' && notes === '' && withdrawal === null) {
+        return [];
+    }
+
+    const lines: BriefLine[] = [
+        {
+            key: 'care',
+            label: 'Alergias',
+            text: withdrawal ?? (care === '' ? NO_CARE_NOTES : care),
+            href: '#client-care-notes-field',
+            isAlert: care !== '' || withdrawal !== null,
+            isNotice: withdrawal !== null,
+        },
+        {
+            key: 'formula',
+            label: 'Fórmula',
+            text: formula,
+            href: '#client-formula-notes-field',
+            isAlert: false,
+            isNotice: false,
+        },
+        {
+            key: 'notes',
+            label: 'Preferencias',
+            text: notes,
+            href: '#client-notes-field',
+            isAlert: false,
+            isNotice: false,
+        },
+    ];
+
+    return lines.filter((line) =>
+        line.key === 'care' ? canSeeCare : line.text !== '',
+    );
+}
+
+/** "Antes · 7 oct 2026": what a picture is, for who cannot see it. */
+export function photoCaption(
+    photo: Pick<ClientPhoto, 'kindLabel' | 'date'>,
+): string {
+    return `${photo.kindLabel} · ${formatLongDay(photo.date)}`;
+}
+
+/** The pictures of each day together, in the order they arrive. */
+export function groupPhotosByDay(
+    photos: ClientPhoto[],
+): { date: string; photos: ClientPhoto[] }[] {
+    const days = new Map<string, ClientPhoto[]>();
+
+    for (const photo of photos) {
+        days.set(photo.date, [...(days.get(photo.date) ?? []), photo]);
+    }
+
+    return [...days].map(([date, ofDay]) => ({ date, photos: ofDay }));
+}
+
+/** 1 → "1 vez", 3 → "3 veces". */
+export function timesLabel(count: number): string {
+    return count === 1 ? '1 vez' : `${count} veces`;
+}
+
+/** What the form starts from: the saved notes, and the consent on record. */
+export function initialNotesFields(client: ClientFile): ClientNotesFields {
+    return {
+        notes: client.notes ?? '',
+        formula_notes: client.formulaNotes ?? '',
+        care_notes: client.careNotes ?? '',
+        care_consent: client.careConsent !== null,
+        care_minor: client.careConsent?.byGuardian ?? false,
+    };
+}
+
+/**
+ * What is sent. Without the authorization the care notes go empty (the
+ * server erases them anyway); whoever may not read them sends nothing about
+ * them, so theirs stay as they are.
+ */
+export function notesPayload(
+    fields: ClientNotesFields,
+    canSeeCare: boolean,
+): Partial<ClientNotesFields> {
+    const { notes, formula_notes } = fields;
+
+    if (!canSeeCare) {
+        return { notes, formula_notes };
+    }
+
+    return {
+        notes,
+        formula_notes,
+        care_notes: fields.care_consent ? fields.care_notes : '',
+        care_consent: fields.care_consent,
+        care_minor: fields.care_consent && fields.care_minor,
+    };
+}
+
+/**
+ * Saving without the authorization erases care notes already on the file,
+ * and that cannot be undone: it is asked first.
+ */
+export function erasesSavedCare(
+    client: ClientFile,
+    fields: ClientNotesFields,
+    canSeeCare: boolean,
+): boolean {
+    const hasSavedCare = (client.careNotes ?? '').trim() !== '';
+
+    return canSeeCare && hasSavedCare && !fields.care_consent;
+}

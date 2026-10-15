@@ -1,0 +1,124 @@
+import { Check, Clock, EyeOff, Flag, Lock, MessageSquare } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { canReport, ownerReviewNote, reviewStatus } from '@/lib/reviews';
+import type { ReviewStatus } from '@/lib/reviews';
+import { TOUCH_FOOTER } from '@/lib/sheet';
+import { cn } from '@/lib/utils';
+import { ReviewCard } from './review-card';
+import type { OwnerReview } from './types';
+
+type TagStyle = {
+    icon: LucideIcon;
+    style: string;
+    /** The warning color is too light for words: only the icon wears it. */
+    iconStyle?: string;
+};
+
+const STATUS: Record<ReviewStatus['key'], TagStyle> = {
+    reported: {
+        icon: Clock,
+        style: 'bg-warning/15 text-foreground',
+        iconStyle: 'text-warning',
+    },
+    hidden: {
+        icon: EyeOff,
+        style: 'bg-destructive/10 text-destructive-foreground',
+    },
+    kept: { icon: Check, style: 'bg-muted text-muted-foreground' },
+};
+
+type TagProps = TagStyle & { label: string };
+
+/** The label always says it; color only reinforces it. */
+function Tag({ icon: Icon, label, style, iconStyle }: TagProps) {
+    return (
+        <span
+            className={cn(
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap',
+                style,
+            )}
+        >
+            <Icon className={cn('size-3.5', iconStyle)} aria-hidden />
+            {label}
+        </span>
+    );
+}
+
+type Props = {
+    reviews: OwnerReview[];
+    onReply: (review: OwnerReview) => void;
+    onReport: (review: OwnerReview) => void;
+};
+
+/**
+ * Every review of the salon, newest first. The salon answers and reports;
+ * it never edits or erases one (PLAN 4.8), so there is no such button.
+ */
+export function OwnerReviewList({ reviews, onReply, onReport }: Props) {
+    return (
+        <ul className="flex flex-col gap-3">
+            {reviews.map((review) => {
+                const status = reviewStatus(review);
+
+                return (
+                    <li key={review.id}>
+                        <ReviewCard
+                            review={review}
+                            replyTitle="Tu respuesta"
+                            detail={`Atendió ${review.staffName}`}
+                            status={
+                                <>
+                                    {!review.isPublishable && (
+                                        <Tag
+                                            icon={Lock}
+                                            label="Privada"
+                                            style="bg-muted text-muted-foreground"
+                                        />
+                                    )}
+                                    {status && (
+                                        <Tag
+                                            label={status.label}
+                                            {...STATUS[status.key]}
+                                        />
+                                    )}
+                                </>
+                            }
+                            note={ownerReviewNote(review)}
+                            className="border bg-card shadow-card"
+                            actions={
+                                <div
+                                    className={cn(
+                                        'flex flex-wrap border-t pt-3',
+                                        TOUCH_FOOTER,
+                                    )}
+                                >
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => onReply(review)}
+                                    >
+                                        <MessageSquare aria-hidden />
+                                        {review.reply
+                                            ? 'Editar respuesta'
+                                            : 'Responder'}
+                                    </Button>
+                                    {canReport(review) && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={() => onReport(review)}
+                                        >
+                                            <Flag aria-hidden />
+                                            Reportar
+                                        </Button>
+                                    )}
+                                </div>
+                            }
+                        />
+                    </li>
+                );
+            })}
+        </ul>
+    );
+}

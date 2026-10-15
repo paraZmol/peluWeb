@@ -8,6 +8,11 @@ namespace App\Data\Booking;
  */
 final readonly class QuoteItem
 {
+    /**
+     * @param  int  $priceCents  what is charged for it
+     * @param  int|null  $listPriceCents  its normal price, when a promotion changed what is charged; null = the same
+     * @param  string|null  $companion  the name of who comes along, on their line of "Ven con alguien"
+     */
     public function __construct(
         public int $serviceId,
         public string $name,
@@ -16,5 +21,30 @@ final readonly class QuoteItem
         public int $idleMinutes,
         public int $finishMinutes,
         public ?int $variantId = null,
+        public ?int $listPriceCents = null,
+        public ?string $companion = null,
     ) {}
+
+    public function normalPriceCents(): int
+    {
+        return $this->listPriceCents ?? $this->priceCents;
+    }
+
+    /**
+     * The same service charged at another price; its normal price is kept.
+     */
+    public function chargedAt(int $priceCents): self
+    {
+        return new self(
+            $this->serviceId,
+            $this->name,
+            $priceCents,
+            $this->activeMinutes,
+            $this->idleMinutes,
+            $this->finishMinutes,
+            $this->variantId,
+            $this->normalPriceCents(),
+            $this->companion,
+        );
+    }
 }

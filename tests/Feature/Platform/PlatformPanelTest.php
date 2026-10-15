@@ -1,12 +1,16 @@
 <?php
 
+use App\Enums\SalonPermission;
 use App\Enums\SalonStatus;
 use App\Filament\Resources\Salons\Pages\EditSalon;
 use App\Filament\Resources\Salons\SalonResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Salon;
+use App\Models\SalonClient;
+use App\Models\SalonMember;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Inertia\Testing\AssertableInertia as Assert;
 use Livewire\Livewire;
 
 it('sends guests to the app login', function () {
@@ -26,7 +30,19 @@ it('asks the platform admin to enable two-factor authentication first', function
 
     $this->actingAs($admin)
         ->get('/plataforma')
-        ->assertRedirect(route('security.edit'));
+        ->assertRedirect(route('security.edit'))
+        // Said out loud: a silent bounce to the settings looks like a broken link.
+        ->assertInertiaFlash('toast.type', 'error');
+});
+
+it('tells the platform admin apart on their own panel, and nobody else', function () {
+    $admin = User::factory()->platformAdmin()->create();
+    $client = User::factory()->create();
+
+    $this->actingAs($admin)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('platform.hasTwoFactor', false)->missing('auth.user.is_platform_admin'));
+    $this->actingAs($client)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('platform', null));
 });
 
 it('lets the platform admin with two-factor in', function () {
@@ -83,4 +99,37 @@ it('keeps users read-only in the panel, even for the platform admin', function (
         ->and(UserResource::can('delete'))->toBeFalse()
         ->and(UserResource::can('create'))->toBeFalse()
         ->and(SalonResource::can('forceDelete'))->toBeFalse();
+});
+
+it('says why when someone without a salon opens a salon screen', function () {
+    $this->actingAs(User::factory()->create())->get(route('agenda.index'))
+        ->assertRedirect(route('salons.create'))
+        ->assertInertiaFlash('toast.type', 'error');
+});
+
+it('answers what is not theirs with a page that offers a way back', function () {
+    $staff = User::factory()->create();
+    $salon = Salon::factory()->create();
+    SalonMember::factory()->for($salon)->for($staff)->create();
+
+    $this->actingAs($staff)->get(route('team.index'))
+        ->assertForbidden()
+        ->assertInertia(fn (Assert $page) => $page->component('public/error')->where('status', 403));
+    $this->actingAs($staff)->get('/no-existe')->assertNotFound()
+        ->assertInertia(fn (Assert $page) => $page->component('public/error')->where('status', 404));
+    // The API keeps answering in JSON.
+    $this->actingAs($staff)->getJson(route('team.index'))->assertForbidden()->assertJsonStructure(['message']);
+});
+
+it('shows the client list to who sees everyone\'s agenda, without the VIP switch', function () {
+    $reception = User::factory()->create();
+    $salon = Salon::factory()->create();
+    SalonMember::factory()->for($salon)->for($reception)->withPermissions(SalonPermission::ViewAllSchedules)->create();
+    $client = SalonClient::factory()->for($salon)->create();
+
+    $this->actingAs($reception)->get(route('clients.index'))
+        ->assertInertia(fn (Assert $page) => $page->has('clients', 1)->where('canManageVip', false));
+    $this->actingAs($reception)->patch(route('clients.vip.update', $client), ['is_vip' => true])->assertForbidden();
+
+    expect($client->refresh()->is_vip)->toBeFalse();
 });

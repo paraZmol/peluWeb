@@ -1,3 +1,4 @@
+import type { MyReview } from '@/components/reviews/types';
 import type { BrandTokens, SalonTheme } from '@/types';
 
 export type BookableVariant = {
@@ -50,18 +51,43 @@ export type Viewer = {
 
 /** Services and professional of an earlier booking, to start the wizard from. */
 export type RepeatBooking = {
-    selections: { serviceId: number; variantId: number | null }[];
+    /** `companion`: the second line of a "Ven con alguien", with its name. */
+    selections: {
+        serviceId: number;
+        variantId: number | null;
+        companion?: string | null;
+    }[];
     staffId: number | null;
 };
 
-export type Selection = { serviceId: number; variantId: number | null };
+export type Selection = {
+    serviceId: number;
+    variantId: number | null;
+    /** "Ven con alguien": the name of who this second line is for. */
+    companion?: string;
+};
 
 export type Slot = {
     /** Unix seconds (UTC): sent back as-is when booking. */
     start: number;
     /** "HH:MM" on the salon's clock. */
     time: string;
+    /**
+     * The promotion a booking at this start gets and what it takes off the
+     * quoted price. The server already weighed days, hours and places left.
+     */
+    promotion?: SlotPromotion | null;
 };
+
+export type SlotPromotion = {
+    name: string;
+    saves: string;
+    /** Only for a first booking at the salon: the mark says so. */
+    firstVisit?: boolean;
+};
+
+/** The promotion that set a booking's price, as it was called then. */
+export type BookingPromotion = { name: string; saved: string };
 
 export type Quote = {
     price: string;
@@ -103,8 +129,10 @@ export type ClientBooking = {
     isUpcoming: boolean;
     isVip: boolean;
     staffName: string;
-    services: { name: string; price: string }[];
+    /** `listPrice`: the normal price, when a promotion changed what is charged. */
+    services: { name: string; price: string; listPrice: string | null }[];
     price: string;
+    promotion: BookingPromotion | null;
     note: string | null;
     deposit: {
         amount: string;
@@ -120,6 +148,14 @@ export type ClientBooking = {
     canMove: boolean;
     cancelForfeitsDeposit: boolean;
     cancelWindowHours: number;
+    /** What they wrote about this visit, if anything. */
+    review: MyReview | null;
+    /** They took their review back: the visit cannot be reviewed again. */
+    reviewWithdrawn: boolean;
+    /** A completed visit, while the salon takes reviews and the time lasts. */
+    canReview: boolean;
+    /** The salon shows its reviews: one left now carries the first name. */
+    reviewIsPublic: boolean;
     salon: {
         name: string;
         slug: string;
@@ -129,6 +165,21 @@ export type ClientBooking = {
         directionsUrl: string | null;
         whatsappUrl: string | null;
     };
+};
+
+/** A place someone holds on a salon's waiting list, in "Mis reservas". */
+export type WaitlistPlace = {
+    id: number;
+    salonName: string;
+    /** "Y-m-d" on the salon's clock. */
+    date: string;
+    services: string[];
+    /** They were told a time opened up: theirs to book until `turnUntil`. */
+    hasTurn: boolean;
+    /** "HH:MM" on the salon's clock; null while waiting. */
+    turnUntil: string | null;
+    /** The wizard, opened on that day. */
+    bookUrl: string;
 };
 
 export type AgendaAction =
@@ -154,6 +205,7 @@ export type AgendaBooking = {
     statusLabel: string;
     isVip: boolean;
     client: {
+        id: number;
         name: string;
         phone: string | null;
         whatsappUrl: string | null;
@@ -162,7 +214,14 @@ export type AgendaBooking = {
     staffId: number;
     staffName: string;
     services: string[];
+    /**
+     * "Ven con alguien": who comes along, while the visit still has both
+     * lines; the team may take one off when only one person came.
+     */
+    companion?: string | null;
     price: string;
+    /** Already inside `price`; apart from the discount given at the till. */
+    promotion: BookingPromotion | null;
     deposit: { amount: string; isPaid: boolean; isRefunded: boolean } | null;
     /** Price minus the deposit already paid: what is left to collect. */
     balance: string;

@@ -5,8 +5,10 @@ namespace App\Http\Resources;
 use App\Actions\Booking\RescheduleBooking;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
+use App\Enums\ReviewMode;
 use App\Models\Booking;
 use App\Models\BookingService;
+use App\Models\Review;
 use App\Models\Salon;
 use App\Support\Images\ImageStore;
 use App\Support\Money;
@@ -52,10 +54,18 @@ class ClientBookingResource extends JsonResource
             'isVip' => $this->is_vip,
             'staffName' => $this->staff->name,
             'services' => $this->services->map(fn (BookingService $service) => [
-                'name' => $service->name,
+                'name' => $service->displayName(),
                 'price' => Money::toAmount($service->price_cents),
+                // Its normal price, when a promotion changed what is charged.
+                'listPrice' => $service->list_price_cents !== null && $service->list_price_cents !== $service->price_cents
+                    ? Money::toAmount($service->list_price_cents) : null,
             ])->values(),
             'price' => Money::toAmount($this->price_cents),
+            // The promotion that set its price, as it was called then.
+            'promotion' => $this->promotion_cents === 0 ? null : [
+                'name' => $this->promotion_name,
+                'saved' => Money::toAmount($this->promotion_cents),
+            ],
             // A note the team wrote is theirs; the client sees only their own.
             'note' => $this->source === BookingSource::Client ? $this->client_note : null,
             'deposit' => $this->deposit_cents === 0 ? null : [
@@ -75,6 +85,20 @@ class ClientBookingResource extends JsonResource
             // Cancelling now would forfeit the deposit already paid.
             'cancelForfeitsDeposit' => $this->deposit_paid_at !== null && ! $hasNotice,
             'cancelWindowHours' => $salon->cancel_window_hours,
+            'review' => $this->review === null || $this->review->withdrawn_at !== null ? null : [
+                'rating' => $this->review->rating,
+                'comment' => $this->review->comment,
+                'reply' => $this->review->hidden_at === null ? $this->review->reply : null,
+                // This one, not the salon's mode today: written as private, it never goes public.
+                'isPublished' => $this->review->is_publishable && $this->review->hidden_at === null && $salon->review_mode === ReviewMode::Public,
+            ],
+            // A completed visit, while the salon takes reviews and the time to leave one lasts.
+            // Taken back: the visit was reviewed once and that was it.
+            'reviewWithdrawn' => $this->review?->withdrawn_at !== null,
+            'canReview' => $this->review === null && $status === BookingStatus::Completed && $salon->review_mode->collects()
+                && $this->starts_at->greaterThanOrEqualTo($now->subDays(Review::WINDOW_DAYS)),
+            // Public reviews carry the first name: the form says so before sending.
+            'reviewIsPublic' => $salon->review_mode === ReviewMode::Public,
             'salon' => [
                 'name' => $salon->name,
                 'slug' => $salon->slug,
@@ -95,7 +119,7 @@ class ClientBookingResource extends JsonResource
      */
     private function depositMessage(CarbonImmutable $start): string
     {
-        $services = $this->services->pluck('name')->join(', ');
+        $services = $this->services->map(fn (BookingService $service): string => $service->displayName())->join(', ');
         $amount = Money::toAmount($this->deposit_cents);
 
         return "Hola, soy {$this->client->name}. Reservé {$services} para el {$start->format('d/m/Y')} a las {$start->format('g:i a')} "

@@ -1,21 +1,26 @@
 import { ArrowRight, Clock } from 'lucide-react';
-import { formatMinutes, formatPrice } from '@/lib/format';
+import { formatMinutes } from '@/lib/format';
+import { offerLabel } from '@/lib/promo-offers';
+import type { ServiceOffer } from '@/lib/promo-offers';
 import { SOFT_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
+import { PromoTag } from '../promo-tag';
 import type { PublicService } from '../types';
+import { RowPrice } from './row-price';
 import type { ServiceRowProps } from './row-props';
 import { ServiceBookLink } from './service-book-link';
 import { ServiceExtras } from './service-extras';
 
-function PriceSticker({ service }: { service: PublicService }) {
+type StickerProps = { service: PublicService; offer?: ServiceOffer };
+
+function PriceSticker({ service, offer }: StickerProps) {
     return (
         <p className="w-fit -rotate-4 rounded-full bg-card px-3 py-1 text-sm leading-tight font-bold text-brand-text tabular-nums shadow-card">
-            {service.hasVariants && (
-                <span className="block text-xs font-medium text-muted-foreground">
-                    desde
-                </span>
-            )}
-            {formatPrice(service.priceFrom)}
+            <RowPrice
+                service={service}
+                offer={offer}
+                fromClassName="block text-xs font-medium text-muted-foreground"
+            />
         </p>
     );
 }
@@ -30,11 +35,14 @@ type Props = ServiceRowProps & {
  * of their own yet, so only the first card of a group borrows one from the
  * gallery (wide, with a veil); the rest are text cards (plantillas.md §6).
  */
-export function PhotoCard({ service, bookingUrl, photoUrl }: Props) {
+export function PhotoCard({ service, bookingUrl, photoUrl, offer }: Props) {
     if (!photoUrl) {
         return (
             <li className="flex flex-col gap-3 rounded-2xl p-4 skin-card">
-                <PriceSticker service={service} />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <PriceSticker service={service} offer={offer} />
+                    {offer && <PromoTag label={offerLabel(offer)} />}
+                </div>
                 <h4 className="display-type text-xl lg:text-2xl">
                     {service.name}
                 </h4>
@@ -68,10 +76,11 @@ export function PhotoCard({ service, bookingUrl, photoUrl }: Props) {
                     className="absolute inset-0 -z-10 photo-veil"
                 />
                 <div className="flex items-start justify-between gap-2">
-                    <PriceSticker service={service} />
+                    <PriceSticker service={service} offer={offer} />
                     <p className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold skin-glass tabular-nums">
                         <Clock className="size-3.5" aria-hidden />
                         {formatMinutes(service.minutes)}
+                        {offer && <span>· {offerLabel(offer)}</span>}
                     </p>
                 </div>
                 <div className="flex items-end justify-between gap-3">

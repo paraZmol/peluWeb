@@ -1,4 +1,7 @@
+import { releasePush } from '@/lib/push';
+import { forgetOfflineCopies } from '@/lib/pwa';
 import { Form } from '@inertiajs/react';
+import { TriangleAlert } from 'lucide-react';
 import { useRef } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/heading';
@@ -11,10 +14,13 @@ import {
     DialogContent,
     DialogDescription,
     DialogFooter,
+    DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { SHEET_ON_PHONE, TOUCH_BUTTON, TOUCH_FOOTER } from '@/lib/sheet';
+import { cn } from '@/lib/utils';
 
 export default function DeleteUser() {
     const passwordInput = useRef<HTMLInputElement>(null);
@@ -24,15 +30,34 @@ export default function DeleteUser() {
             <Heading
                 variant="small"
                 title="Eliminar cuenta"
-                description="Elimina tu cuenta y todos sus recursos"
+                description="Elimina tu cuenta de peluWeb"
             />
-            <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
-                <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
-                    <p className="font-medium">Advertencia</p>
-                    <p className="text-sm">
-                        Procede con precaución, esta acción no se puede
-                        deshacer.
-                    </p>
+            {/* Tokens only: the warning reads the same in both modes. */}
+            <div className="flex flex-col gap-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4 sm:p-5 dark:border-destructive-foreground/25 dark:bg-destructive/15">
+                <div className="flex items-start gap-3">
+                    <TriangleAlert
+                        className="mt-0.5 size-5 shrink-0 text-destructive-foreground"
+                        strokeWidth={1.75}
+                        aria-hidden
+                    />
+                    <div className="flex min-w-0 flex-col gap-2 text-sm leading-relaxed">
+                        <p className="text-base leading-snug font-semibold text-destructive-foreground">
+                            Advertencia
+                        </p>
+                        <p className="font-medium">
+                            Procede con precaución, esta acción no se puede
+                            deshacer.
+                        </p>
+                        <p className="text-pretty">
+                            Se retirarán tus autorizaciones y se borrarán las
+                            alergias y fotos que los salones guarden de ti. Los
+                            salones donde reservaste conservan tu ficha (nombre,
+                            teléfono y citas): para borrarla, pídeselo a cada
+                            salón. Tus reseñas siguen publicadas sin tu nombre;
+                            si prefieres quitarlas, retíralas antes desde Mis
+                            reservas.
+                        </p>
+                    </div>
                 </div>
 
                 <Dialog>
@@ -40,20 +65,22 @@ export default function DeleteUser() {
                         <Button
                             variant="destructive"
                             data-test="delete-user-button"
+                            className={cn(TOUCH_BUTTON, 'sm:self-start')}
                         >
                             Eliminar cuenta
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle>
-                            ¿Seguro que quieres eliminar tu cuenta?
-                        </DialogTitle>
-                        <DialogDescription>
-                            Una vez eliminada tu cuenta, todos sus recursos y
-                            datos también se eliminarán de forma permanente.
-                            Ingresa tu contraseña para confirmar que deseas
-                            eliminar tu cuenta de forma permanente.
-                        </DialogDescription>
+                    <DialogContent className={SHEET_ON_PHONE}>
+                        <DialogHeader className="text-left">
+                            <DialogTitle className="pr-8 leading-snug text-balance">
+                                ¿Seguro que quieres eliminar tu cuenta?
+                            </DialogTitle>
+                            <DialogDescription>
+                                Tu cuenta se elimina de forma permanente y no se
+                                puede recuperar. Ingresa tu contraseña para
+                                confirmar.
+                            </DialogDescription>
+                        </DialogHeader>
 
                         <Form
                             {...ProfileController.destroy.form()}
@@ -61,6 +88,11 @@ export default function DeleteUser() {
                                 preserveScroll: true,
                             }}
                             onError={() => passwordInput.current?.focus()}
+                            // The account is gone: so is the copy of its bookings on this device.
+                            onSuccess={() => {
+                                forgetOfflineCopies();
+                                releasePush();
+                            }}
                             resetOnSuccess
                             className="space-y-6"
                         >
@@ -85,10 +117,10 @@ export default function DeleteUser() {
                                         <InputError message={errors.password} />
                                     </div>
 
-                                    <DialogFooter className="gap-2">
+                                    <DialogFooter className={TOUCH_FOOTER}>
                                         <DialogClose asChild>
                                             <Button
-                                                variant="secondary"
+                                                variant="outline"
                                                 onClick={() =>
                                                     resetAndClearErrors()
                                                 }

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\BookingService;
 use App\Support\Images\ImageStore;
 use App\Support\Money;
 use App\Support\WhatsApp;
@@ -49,6 +50,7 @@ class AgendaBookingResource extends JsonResource
             'statusLabel' => $status->label(),
             'isVip' => $this->is_vip,
             'client' => [
+                'id' => $this->client->id,
                 'name' => $this->client->name,
                 'phone' => $this->client->phone,
                 'whatsappUrl' => WhatsApp::link($this->client->phone, "Hola {$this->client->name}, te escribimos por tu cita de las {$start->format('g:i a')}."),
@@ -56,8 +58,17 @@ class AgendaBookingResource extends JsonResource
             ],
             'staffId' => $this->staff_id,
             'staffName' => $this->staff->name,
-            'services' => $this->services->pluck('name')->values(),
+            'services' => $this->services->map(fn (BookingService $service): string => $service->displayName())->values(),
+            // "Ven con alguien": who comes along; the team may take them off if only one comes.
+            // Only for who handles money: taking them off changes what is charged.
+            'companion' => $this->services->count() === 2 && ($request->user()?->can('confirmDeposit', $booking) ?? false)
+                ? $this->services->firstWhere('companion_name', '!==', null)?->companion_name : null,
             'price' => Money::toAmount($this->price_cents),
+            // The promotion that set its price, as it was called then.
+            'promotion' => $this->promotion_cents === 0 ? null : [
+                'name' => $this->promotion_name,
+                'saved' => Money::toAmount($this->promotion_cents),
+            ],
             'deposit' => $this->deposit_cents === 0 ? null : [
                 'amount' => Money::toAmount($this->deposit_cents),
                 'isPaid' => $this->deposit_paid_at !== null,

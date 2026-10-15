@@ -15,14 +15,36 @@ final class AvailabilityPayload
 {
     /**
      * @param  list<int>  $starts  Unix seconds (UTC)
-     * @return list<array{start: int, time: string}>
+     * @param  array<int, array{name: string, cents: int, firstVisit: bool}>  $promotions  by start, where one applies
+     * @return list<array{start: int, time: string, promotion: array{name: string, saves: string, firstVisit: bool}|null}>
      */
-    public static function slots(array $starts, Salon $salon): array
+    public static function slots(array $starts, Salon $salon, array $promotions = []): array
     {
         return array_map(fn (int $start): array => [
             'start' => $start,
             'time' => CarbonImmutable::createFromTimestamp($start, $salon->timezone)->format('H:i'),
+            // Booking at this time gets it: the picker marks it "con promo",
+            // and "primera visita" when that is its condition.
+            'promotion' => isset($promotions[$start])
+                ? ['name' => $promotions[$start]['name'], 'saves' => Money::toAmount($promotions[$start]['cents']), 'firstVisit' => $promotions[$start]['firstVisit']]
+                : null,
         ], $starts);
+    }
+
+    /**
+     * The quote the "from" price comes from: the cheapest professional's.
+     *
+     * @param  array<int, BookingQuote>  $quotes
+     */
+    public static function cheapest(array $quotes): ?BookingQuote
+    {
+        $cheapest = null;
+
+        foreach ($quotes as $quote) {
+            $cheapest = $cheapest === null || $quote->priceCents() < $cheapest->priceCents() ? $quote : $cheapest;
+        }
+
+        return $cheapest;
     }
 
     /**

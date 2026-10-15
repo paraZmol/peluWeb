@@ -2,9 +2,9 @@ import { cn } from '@/lib/utils';
 import type { BookingStatus } from './types';
 
 const STYLES: Record<BookingStatus, string> = {
-    pending: 'bg-warning/15 text-warning',
-    confirmed: 'bg-success/15 text-success',
-    in_service: 'bg-primary/15 text-primary',
+    pending: 'bg-warning/10 text-warning',
+    confirmed: 'bg-success/10 text-success',
+    in_service: 'bg-brand-soft text-brand-text',
     completed: 'bg-muted text-muted-foreground',
     cancelled: 'bg-muted text-muted-foreground line-through',
     no_show: 'bg-destructive/10 text-destructive-foreground',

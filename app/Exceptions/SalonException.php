@@ -11,4 +11,24 @@ class SalonException extends BusinessRuleException
     {
         return new self("Tu galería ya tiene {$max} fotos. Elimina alguna para subir otra.");
     }
+
+    public static function tooManyClientPhotos(int $max): self
+    {
+        return new self("Una ficha guarda {$max} fotos como máximo. Elimina alguna para subir otra.");
+    }
+
+    public static function careWithdrawn(): self
+    {
+        return new self('Esta persona retiró su autorización para guardar alergias. Solo ella puede volver a darla, desde su cuenta.');
+    }
+
+    public static function photosWithdrawn(): self
+    {
+        return new self('Esta persona retiró su autorización para fotos. Solo ella puede volver a darla, desde su cuenta.');
+    }
+
+    public static function emailNotVerified(): self
+    {
+        return new self('Confirma tu correo antes de autorizar: ahí te enviamos la constancia.');
+    }
 }

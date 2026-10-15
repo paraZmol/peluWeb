@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Client\BookingController as ClientBookingController;
+use App\Http\Controllers\Client\MyDataController;
+use App\Http\Controllers\Client\ReviewController as ClientReviewController;
+use App\Http\Controllers\Client\WaitlistController;
 use App\Http\Controllers\CurrentSalonController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationAcceptanceController;
@@ -13,8 +16,10 @@ use App\Http\Controllers\Owner\ExpenseController;
 use App\Http\Controllers\Owner\HolidayController;
 use App\Http\Controllers\Owner\InvitationController;
 use App\Http\Controllers\Owner\MemberController;
+use App\Http\Controllers\Owner\PromotionController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\ReportExportController;
+use App\Http\Controllers\Owner\ReviewController;
 use App\Http\Controllers\Owner\SalonBrandingController;
 use App\Http\Controllers\Owner\SalonController;
 use App\Http\Controllers\Owner\SalonPhotoController;
@@ -24,16 +29,20 @@ use App\Http\Controllers\Owner\ServiceController;
 use App\Http\Controllers\Owner\StaffController;
 use App\Http\Controllers\Owner\TeamController;
 use App\Http\Controllers\Public\BookingController;
+use App\Http\Controllers\Public\ManifestController;
 use App\Http\Controllers\Public\SalonPageController;
 use App\Http\Controllers\Public\SamplePhotoController;
 use App\Http\Controllers\Staff\AgendaBookingController;
 use App\Http\Controllers\Staff\AgendaController;
 use App\Http\Controllers\Staff\BookingMoveController;
 use App\Http\Controllers\Staff\BookingStatusController;
+use App\Http\Controllers\Staff\ClientPhotoController;
+use App\Http\Controllers\Staff\ClientProfileController;
 use App\Http\Controllers\Staff\ScheduleController;
 use App\Http\Controllers\Staff\StaffPhotoController;
 use App\Http\Controllers\Staff\StaffServiceController;
 use App\Http\Controllers\Staff\TimeOffController;
+use App\Http\Controllers\Staff\WalkInController;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveCurrentSalon;
@@ -62,6 +71,56 @@ Route::get('img/muestra/{file}', [SamplePhotoController::class, 'show'])
     ])
     ->middleware('throttle:300,1,samples')
     ->name('samples.show');
+
+// Installable app: the platform's manifest, and each salon's own name and logo.
+// Cached as public, so without the session (see the sample photos above).
+Route::get('manifest.webmanifest', [ManifestController::class, 'platform'])
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleAppearance::class,
+        ResolveCurrentSalon::class,
+        HandleInertiaRequests::class,
+    ])
+    ->middleware('throttle:120,1,manifest')
+    ->name('manifest');
+Route::get('s/{salon:slug}/manifest.webmanifest', [ManifestController::class, 'salon'])
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleAppearance::class,
+        ResolveCurrentSalon::class,
+        HandleInertiaRequests::class,
+    ])
+    ->middleware('throttle:120,1,manifest')
+    ->name('salons.manifest');
+Route::get('s/{salon:slug}/icono-{size}.png', [ManifestController::class, 'icon'])
+    ->whereNumber('size')
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        HandleAppearance::class,
+        ResolveCurrentSalon::class,
+        HandleInertiaRequests::class,
+    ])
+    ->middleware('throttle:120,1,salon-icon')
+    ->name('salons.icon');
+
+// A promotion's own link: opens the salon's page with it on top. An ended
+// or unknown one still lands on the page, never on a 404.
+Route::get('s/{salon:slug}/promo/{code}', [SalonPageController::class, 'promotion'])
+    ->where('code', '[a-z0-9]{6,16}')
+    ->middleware('throttle:120,1,salon-page')
+    ->name('salons.promotions.show');
 
 // Public salon profile, shared by the salon on WhatsApp/Instagram and as a QR.
 // Generous limit: link-preview bots (WhatsApp, Facebook) also fetch it.
@@ -100,6 +159,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('salon-actual/{salon}', [CurrentSalonController::class, 'update'])->name('current-salon.update');
 
     Route::get('s/{salon:slug}/reservar/continuar', [BookingController::class, 'resume'])->name('salons.booking.resume');
+    // No free time that day: be told if one opens up.
+    Route::post('s/{salon:slug}/lista-de-espera', [WaitlistController::class, 'store'])
+        ->middleware('throttle:10,1,waitlist-join')
+        ->name('salons.waitlist.store');
+    Route::delete('lista-de-espera/{entry}', [WaitlistController::class, 'destroy'])
+        ->whereNumber('entry')
+        ->name('waitlist.destroy');
+
     Route::post('s/{salon:slug}/reservas', [BookingController::class, 'store'])
         ->middleware('throttle:10,1,booking-store')
         ->name('salons.booking.store');
@@ -119,6 +186,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:10,1,booking-photo')
         ->name('bookings.photo.store');
     Route::delete('mis-reservas/{code}/foto', [ClientBookingController::class, 'destroyPhoto'])->name('bookings.photo.destroy');
+
+    Route::post('mis-reservas/{code}/resena', [ClientReviewController::class, 'store'])
+        ->middleware('throttle:10,1,review-store')
+        ->name('bookings.review.store');
+    Route::delete('mis-reservas/{code}/resena', [ClientReviewController::class, 'destroy'])
+        ->middleware('throttle:10,1,review-destroy')
+        ->name('bookings.review.destroy');
+
+    // What each salon keeps of the person under their authorization.
+    Route::get('mis-datos', [MyDataController::class, 'index'])
+        ->middleware('cache.headers:no_store;private')
+        ->name('my-data.index');
+    Route::get('mis-datos/descargar', [MyDataController::class, 'download'])
+        ->middleware('throttle:6,1,my-data-download')
+        ->name('my-data.download');
+    Route::post('mis-datos/{client}/autorizar/{kind}', [MyDataController::class, 'grant'])
+        ->whereNumber('client')
+        ->middleware('throttle:10,1,my-data-grant')
+        ->name('my-data.grant');
+    Route::post('mis-datos/{client}/retirar/{kind}', [MyDataController::class, 'withdraw'])
+        ->whereNumber('client')
+        ->middleware('throttle:10,1,my-data-withdraw')
+        ->name('my-data.withdraw');
+    Route::get('mis-datos/{client}/fotos/{photo}', [MyDataController::class, 'photo'])
+        ->whereNumber(['client', 'photo'])
+        ->name('my-data.photos.show');
 
     Route::post('invitaciones/{token}', [InvitationAcceptanceController::class, 'store'])
         ->middleware('throttle:10,1')
@@ -172,6 +265,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('gastos-categorias/{category}', [ExpenseCategoryController::class, 'update'])->name('expenses.categories.update');
         Route::delete('gastos-categorias/{category}', [ExpenseCategoryController::class, 'destroy'])->name('expenses.categories.destroy');
 
+        Route::get('promociones', [PromotionController::class, 'index'])->name('promotions.index');
+        Route::post('promociones', [PromotionController::class, 'store'])->middleware('throttle:30,1,promotions')->name('promotions.store');
+        Route::put('promociones/{promotion}', [PromotionController::class, 'update'])->middleware('throttle:30,1,promotions')->name('promotions.update');
+        Route::post('promociones/{promotion}/publicar', [PromotionController::class, 'publish'])->middleware('throttle:30,1,promotions')->name('promotions.publish');
+        Route::post('promociones/{promotion}/pausar', [PromotionController::class, 'pause'])->middleware('throttle:30,1,promotions')->name('promotions.pause');
+        Route::post('promociones/{promotion}/duplicar', [PromotionController::class, 'duplicate'])->middleware('throttle:30,1,promotions')->name('promotions.duplicate');
+        Route::delete('promociones/{promotion}', [PromotionController::class, 'destroy'])->middleware('throttle:30,1,promotions')->name('promotions.destroy');
+
         Route::get('servicios', [ServiceController::class, 'index'])->name('services.index');
         Route::post('servicios', [ServiceController::class, 'store'])->name('services.store');
         Route::post('servicios/catalogo', [ServiceCatalogController::class, 'store'])->name('services.catalog.store');
@@ -201,6 +302,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('profesionales/{staff}/servicios', [StaffServiceController::class, 'update'])->name('staff.services.update');
 
         Route::get('agenda', [AgendaController::class, 'index'])->name('agenda.index');
+
+        // The day's line of people without a booking, kept by the team.
+        Route::get('fila', [WalkInController::class, 'index'])->name('walk-ins.index');
+        Route::post('fila', [WalkInController::class, 'store'])->middleware('throttle:60,1,walk-ins')->name('walk-ins.store');
+        Route::patch('fila/{walkIn}', [WalkInController::class, 'update'])->name('walk-ins.update');
         // The team books for a client, and moves bookings.
         Route::get('agenda/nueva', [AgendaBookingController::class, 'create'])->name('agenda.bookings.create');
         Route::get('agenda/disponibilidad', [AgendaBookingController::class, 'availability'])
@@ -221,12 +327,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('agenda/{booking}/confirmar', [BookingStatusController::class, 'confirm'])->name('agenda.bookings.confirm');
         Route::post('agenda/{booking}/iniciar', [BookingStatusController::class, 'start'])->name('agenda.bookings.start');
         Route::post('agenda/{booking}/completar', [BookingStatusController::class, 'complete'])->name('agenda.bookings.complete');
+        Route::post('agenda/{booking}/vino-solo-uno', [BookingStatusController::class, 'dropCompanion'])->name('agenda.bookings.drop-companion');
         Route::post('agenda/{booking}/no-vino', [BookingStatusController::class, 'noShow'])->name('agenda.bookings.no-show');
         Route::post('agenda/{booking}/cancelar', [BookingStatusController::class, 'cancel'])->name('agenda.bookings.cancel');
         Route::post('agenda/{booking}/devolver-sena', [BookingStatusController::class, 'refundDeposit'])->name('agenda.bookings.refund-deposit');
 
         Route::get('clientes', [ClientController::class, 'index'])->name('clients.index');
         Route::patch('clientes/{client}/vip', [ClientController::class, 'updateVip'])->name('clients.vip.update');
+        Route::get('clientes/{client}', [ClientProfileController::class, 'show'])
+            // Never kept by the browser: "Back" after signing out must not bring it back.
+            ->middleware(['throttle:60,1,client-file', 'cache.headers:no_store;private'])
+            ->name('clients.show');
+        Route::put('clientes/{client}/notas', [ClientProfileController::class, 'updateNotes'])
+            ->middleware('throttle:60,1,client-notes')
+            ->name('clients.notes.update');
+        Route::post('clientes/{client}/fotos', [ClientPhotoController::class, 'store'])
+            ->middleware('throttle:30,1,client-photos')
+            ->name('clients.photos.store');
+        Route::get('clientes/{client}/fotos/{photo}', [ClientPhotoController::class, 'show'])->name('clients.photos.show');
+        Route::delete('clientes/{client}/fotos/{photo}', [ClientPhotoController::class, 'destroy'])->name('clients.photos.destroy');
+
+        Route::get('resenas', [ReviewController::class, 'index'])->name('reviews.index');
+        Route::put('resenas/modo', [ReviewController::class, 'updateMode'])->name('reviews.mode.update');
+        Route::put('resenas/{review}/respuesta', [ReviewController::class, 'reply'])
+            ->middleware('throttle:30,1,review-reply')
+            ->name('reviews.reply');
+        Route::post('resenas/{review}/reportar', [ReviewController::class, 'report'])
+            ->middleware('throttle:10,1,review-report')
+            ->name('reviews.report');
 
         Route::post('feriados', [HolidayController::class, 'store'])
             ->middleware('throttle:60,1')

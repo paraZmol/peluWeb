@@ -2,13 +2,16 @@
 
 namespace App\Actions\Booking;
 
+use App\Actions\Promotions\ApplyPromotion;
 use App\Data\Booking\BookingQuote;
 use App\Data\Booking\QuoteItem;
 use App\Exceptions\BookingException;
 use App\Models\Salon;
+use App\Models\SalonClient;
 use App\Models\Service;
 use App\Models\ServiceVariant;
 use App\Models\Staff;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use stdClass;
@@ -23,6 +26,17 @@ class QuoteBooking
     public const int MAX_SERVICES = 5;
 
     private const int MIN_ACTIVE_MINUTES = 5;
+
+    public function __construct(private readonly ApplyPromotion $promotions) {}
+
+    /**
+     * The quote under the salon's best promotion for a visit starting then,
+     * if one applies. With $underLock, inside the booking's transaction.
+     */
+    public function promote(Salon $salon, ?SalonClient $client, BookingQuote $quote, CarbonImmutable $startsAt, bool $underLock = false): BookingQuote
+    {
+        return $this->promotions->handle($salon, $client, $quote, $startsAt, $underLock);
+    }
 
     /**
      * @param  list<array{service_id: int, variant_id: int|null}>  $selections  in the order they will be done
@@ -46,7 +60,7 @@ class QuoteBooking
 
             if ($own->count() === $services->count()) {
                 $quotes[$person->id] = new BookingQuote(array_map(
-                    fn (array $selection): QuoteItem => $this->item($services[$selection['service_id']], $selection['variant_id'], $own[$selection['service_id']]),
+                    fn (array $selection): QuoteItem => $this->item($services[$selection['service_id']], $selection, $own[$selection['service_id']]),
                     $selections,
                 ));
             }
@@ -57,16 +71,23 @@ class QuoteBooking
 
     /**
      * The selected services, checked: active, of this salon, not repeated
-     * and not only add-ons.
+     * and not only add-ons. The one repeat allowed is "Ven con alguien":
+     * exactly two lines of one service, the second for who comes along.
      *
-     * @param  list<array{service_id: int, variant_id: int|null}>  $selections
+     * @param  list<array{service_id: int, variant_id: int|null, companion?: string|null}>  $selections
      * @return Collection<int, Service> keyed by id
      */
     private function services(Salon $salon, array $selections): Collection
     {
-        $ids = array_column($selections, 'service_id');
+        $ids = array_values(array_unique(array_column($selections, 'service_id')));
+        $companions = array_values(array_filter(array_map(fn (array $selection): ?string => $selection['companion'] ?? null, $selections)));
+        $isPair = count($selections) === 2 && count($ids) === 1 && ($selections[0]['companion'] ?? null) === null && $companions !== [];
 
-        if ($ids === [] || count($ids) !== count(array_unique($ids))) {
+        if ($companions !== [] && ! $isPair) {
+            throw BookingException::companionNeedsSameService();
+        }
+
+        if ($ids === [] || (count($ids) !== count($selections) && ! $isPair)) {
             throw BookingException::serviceUnavailable();
         }
 
@@ -98,9 +119,12 @@ class QuoteBooking
      * time; otherwise the professional's own price wins over the salon's.
      * The professional's own working time always applies.
      */
-    private function item(Service $service, ?int $variantId, stdClass $pivot): QuoteItem
+    /**
+     * @param  array{service_id: int, variant_id: int|null, companion?: string|null}  $selection
+     */
+    private function item(Service $service, array $selection, stdClass $pivot): QuoteItem
     {
-        $variant = $this->variant($service, $variantId);
+        $variant = $this->variant($service, $selection['variant_id']);
         $active = (int) ($pivot->active_minutes ?? $service->active_minutes) + ($variant->extra_minutes ?? 0);
 
         return new QuoteItem(
@@ -111,6 +135,7 @@ class QuoteBooking
             idleMinutes: $service->idle_minutes,
             finishMinutes: $service->finish_minutes,
             variantId: $variant?->id,
+            companion: $selection['companion'] ?? null,
         );
     }
 

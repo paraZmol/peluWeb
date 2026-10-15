@@ -9,10 +9,10 @@ use App\Models\Expense;
 use App\Models\Payment;
 
 /**
- * Adds up what moved from a session's opening up to (not including) the
- * instant it closed, or everything since it opened while it is still open:
- * payments in, refunds and expenses out, per method. Half-open on purpose,
- * so a movement never counts in two consecutive sessions.
+ * Adds up what moved while a session was open: payments in, refunds and
+ * expenses out, per method. Each movement names the session it was
+ * recorded in, so it counts in exactly one, or in none when the till was
+ * closed.
  */
 class CountCashSession
 {
@@ -23,8 +23,7 @@ class CountCashSession
 
         $payments = Payment::withoutGlobalScope('salon')
             ->where('salon_id', $session->salon_id)
-            ->where('paid_at', '>=', $session->opened_at)
-            ->when($session->closed_at !== null, fn ($query) => $query->where('paid_at', '<', $session->closed_at))
+            ->where('cash_session_id', $session->id)
             ->selectRaw('kind, method, SUM(amount_cents) as total')
             ->groupBy('kind', 'method')
             ->toBase()
@@ -40,8 +39,7 @@ class CountCashSession
 
         $expenses = Expense::withoutGlobalScope('salon')
             ->where('salon_id', $session->salon_id)
-            ->where('paid_at', '>=', $session->opened_at)
-            ->when($session->closed_at !== null, fn ($query) => $query->where('paid_at', '<', $session->closed_at))
+            ->where('cash_session_id', $session->id)
             ->selectRaw('method, SUM(amount_cents) as total')
             ->groupBy('method')
             ->toBase()

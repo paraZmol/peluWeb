@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { formatTime } from '@/lib/format';
+import { slotPromoMark } from '@/lib/promo-offers';
 import { cn } from '@/lib/utils';
 import type { Slot } from './types';
 
@@ -33,12 +34,22 @@ export function SlotChip({ slot, index, selected, onPick, className }: Props) {
             }}
             onClick={() => onPick(slot)}
             className={cn(
-                'h-12 rounded-full text-sm font-bold tabular-nums transition-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring active:scale-[0.97]',
+                'flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-sm leading-none font-bold tabular-nums transition-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring active:scale-[0.97]',
                 isSelected ? 'skin-primary' : 'skin-chip',
                 className,
             )}
         >
-            {formatTime(slot.time)}
+            {formatTime(slot.time)}{' '}
+            {slot.promotion && (
+                <span
+                    className={cn(
+                        'text-xs leading-none font-semibold',
+                        !isSelected && 'text-brand-text',
+                    )}
+                >
+                    {slotPromoMark(slot.promotion)}
+                </span>
+            )}
         </motion.button>
     );
 }

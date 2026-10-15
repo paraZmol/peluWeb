@@ -44,6 +44,21 @@ export function formatDate(date: string): string {
         .toLowerCase();
 }
 
+const longDayFormat = new Intl.DateTimeFormat('es-PE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+});
+
+/** "2026-10-08" → "jueves 8 de octubre", for sentences and headings. */
+export function formatLongDate(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+
+    return longDayFormat
+        .format(new Date(year, month - 1, day))
+        .replace(',', '');
+}
+
 /** "2026-10-07 15:30" → "mié 7 oct, 3:30 p. m." (already on the salon's clock). */
 export function formatDateTime(dateTime: string): string {
     const [date, time] = dateTime.split(' ');

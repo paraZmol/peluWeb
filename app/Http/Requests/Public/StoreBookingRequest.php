@@ -21,6 +21,8 @@ class StoreBookingRequest extends FormRequest
             ...$this->selectionRules(),
             ...$this->startRules(),
             'note' => ['nullable', 'string', 'max:255', self::PLAIN_TEXT],
+            // The price they were shown had a promotion in it.
+            'expects_promotion' => ['sometimes', 'boolean'],
         ];
     }
 

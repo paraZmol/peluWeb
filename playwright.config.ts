@@ -25,6 +25,11 @@ export const testEnv = {
     // Rate limits live in the cache: with `array` they reset on every request,
     // so the many logins of the suite are not throttled (5 per minute).
     CACHE_STORE: 'array',
+    // Shows the notifications switch. A throwaway public key; the private half
+    // is a placeholder: no test sends a real push.
+    VAPID_PUBLIC_KEY:
+        'BPtUvWFKrdVnegE9rPhmBRIJwwnI5tSPRBBmdBu8psu5oXWAEgxSyz205jPmb8ErRxaczY_wVLWNb5fZBQ-IqkU',
+    VAPID_PRIVATE_KEY: 'solo-para-pruebas',
 };
 
 export default defineConfig({
@@ -34,6 +39,9 @@ export default defineConfig({
     workers: 1,
     // The money flows (charge, till, settlement) take close to 30 s on a phone.
     timeout: 60_000,
+    // `artisan serve` answers one request at a time: with the machine busy
+    // (other lanes building or testing) a login takes more than the default 5 s.
+    expect: { timeout: 15_000 },
     retries: process.env.CI ? 1 : 0,
     reporter: process.env.CI ? 'github' : 'list',
     globalSetup: './tests/e2e/global-setup.ts',

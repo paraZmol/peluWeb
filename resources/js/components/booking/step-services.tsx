@@ -1,5 +1,11 @@
+import { Info } from 'lucide-react';
 import type { BookingWizard } from '@/hooks/use-booking-wizard';
 import { MAX_SERVICES } from '@/hooks/use-booking-wizard';
+import { useComboBreaks } from '@/hooks/use-combo-breaks';
+import type { CompanionVoice } from '@/lib/companion';
+import { bestOffers, claimedGift, giftToOffer } from '@/lib/promo-offers';
+import { CompanionOffer } from './companion-offer';
+import { GiftOffer } from './gift-offer';
 import { ServiceOption } from './service-option';
 import type { BookableSalon } from './types';
 
@@ -8,14 +14,37 @@ type Props = {
     wizard: BookingWizard;
     /** What to say when there is nothing to choose from. */
     empty?: string;
+    /** Who reads it: the person booking, or the team booking for someone. */
+    voice?: CompanionVoice;
 };
 
 export function StepServices({
     salon,
     wizard,
     empty = 'Este salón todavía no tiene servicios para reservar en línea.',
+    voice = 'client',
 }: Props) {
     const isFull = wizard.selections.length >= MAX_SERVICES;
+    const chosenIds = wizard.chosen.map((service) => service.id);
+    const offers = bestOffers(wizard.promotions);
+    const claimed = claimedGift(wizard.promotions, chosenIds);
+    const breaks = useComboBreaks(
+        wizard.promotions,
+        wizard.services,
+        chosenIds,
+    );
+    // Only a gift that can be booked here is worth offering.
+    const offered = [giftToOffer(wizard.promotions, chosenIds)].find((gift) =>
+        wizard.services.some((service) => service.id === gift?.serviceId),
+    );
+    const gift = claimed ?? offered ?? null;
+    const addGift = () => {
+        const service = wizard.services.find((s) => s.id === gift?.serviceId);
+
+        if (service) {
+            wizard.toggleService(service);
+        }
+    };
 
     if (wizard.services.length === 0) {
         return (
@@ -34,16 +63,52 @@ export function StepServices({
                         {group.label}
                     </h2>
                     <ul className="grid items-start gap-2.5 @3xl:grid-cols-2">
-                        {group.services.map((service) => (
-                            <ServiceOption
-                                key={service.id}
-                                service={service}
-                                wizard={wizard}
-                                disabled={
-                                    isFull && !wizard.isSelected(service.id)
-                                }
-                            />
-                        ))}
+                        {group.services.map((service) => {
+                            const comboBreak = breaks.find(
+                                (one) => one.serviceId === service.id,
+                            );
+
+                            return (
+                                <ServiceOption
+                                    key={service.id}
+                                    service={service}
+                                    wizard={wizard}
+                                    disabled={
+                                        isFull && !wizard.isSelected(service.id)
+                                    }
+                                    offer={offers.get(service.id)}
+                                    isGift={claimed?.serviceId === service.id}
+                                >
+                                    {gift?.giverId === service.id && (
+                                        <GiftOffer
+                                            gift={gift}
+                                            isClaimed={claimed !== null}
+                                            onAdd={isFull ? null : addGift}
+                                        />
+                                    )}
+                                    {(wizard.pair || wizard.companion) &&
+                                        wizard.isSelected(service.id) && (
+                                            <CompanionOffer
+                                                wizard={wizard}
+                                                service={service}
+                                                voice={voice}
+                                            />
+                                        )}
+                                    {comboBreak && (
+                                        <p
+                                            role="status"
+                                            className="mx-4 mb-4 flex items-start gap-2 text-sm font-semibold text-brand-text"
+                                        >
+                                            <Info
+                                                className="mt-0.5 size-4 shrink-0"
+                                                aria-hidden
+                                            />
+                                            {comboBreak.text}
+                                        </p>
+                                    )}
+                                </ServiceOption>
+                            );
+                        })}
                     </ul>
                 </section>
             ))}

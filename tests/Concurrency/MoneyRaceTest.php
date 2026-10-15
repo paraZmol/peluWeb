@@ -732,28 +732,16 @@ describe('the till opened or closed twice at once', function () {
 
 describe('the till closed while a cash charge comes in', function () {
     /*
-    | CloseCashSession freezes "what should be in the drawer" from the
-    | movements committed before its `closed_at`. A charge fixes its
-    | `paid_at` when it takes the booking's lock and commits a moment later.
-    | If the close reads in between, the charge is not in the frozen figure
-    | and yet it is dated inside the session.
+    | CloseCashSession freezes "what should be in the drawer".
+    | Every movement names the session it entered, taking the salon's row
+    | first; the close takes the same row. So they never cross: the frozen
+    | figure is exactly what the session's movements add up to, whichever
+    | of the two got there first.
     |
-    | KNOWN FAILURE (MEDIO), see the report of the booking-breaker of
-    | 2026-10-10. Where to fix: every movement of money (ChangeBookingStatus,
-    | RefundDeposit, SettleCommissions, SaveExpense) should take a shared lock
-    | on the salon's row before fixing its instant, and CloseCashSession an
-    | exclusive one before fixing `closed_at` (the salon stays last in the
-    | lock order); or movements should carry the id of the session they
-    | entered instead of being matched by time.
-    |
-    | The gate below widens that moment: this process holds the salon's
-    | row, which the charge's insert into `payments` needs (foreign key), so
-    | the charge stops after dating itself. The close does not touch the
-    | salon's row and goes through.
+    | The gate below holds the salon's row so both are waiting at once.
     */
-    it('freezes an expected amount that includes every cash charge dated inside the session', function () {
+    it('freezes an expected amount that matches the movements of the session, whoever arrives first', function () {
         $booking = mnInService('10:00');
-        sleep(1);
         $session = app(OpenCashSession::class)->handle($this->salon, 5000, $this->owner);
 
         DB::beginTransaction();
@@ -761,26 +749,23 @@ describe('the till closed while a cash charge comes in', function () {
 
         $charge = mnProcess(mnHttpComplete($booking), 0.0);
         mnUntilQueued([$charge]);
-        // A later second than the charge's, so the dates leave no doubt.
-        sleep(1);
-        // The cashier counts the drawer with those S/ 24.50 already in it.
         $close = mnProcess(mnHttp("/caja/{$session->id}/cerrar", ['amount' => '74.50']), 0.0);
-        $closed = mnResults([$close]);
+        usleep(500_000);
 
         DB::commit();
-        $tally = mnTally([...$closed, ...mnResults([$charge])]);
+        $tally = mnTally(mnResults([$charge, $close]));
         $session->refresh();
         $payment = Payment::withoutGlobalScopes()->where('booking_id', $booking->id)->where('kind', 'charge')->sole();
         $recount = app(CountCashSession::class)->handle($session)->expectedCashCents();
+        // In the session: 50.00 + 24.50. After it closed: the 50.00 alone.
+        $expected = $payment->cash_session_id === $session->id ? 7450 : 5000;
 
         expect($tally['error'])->toBe(0, $tally['all'])
             ->and($session->isOpen())->toBeFalse()
-            ->and($payment->paid_at->lessThan($session->closed_at))->toBeTrue('the charge is dated inside the session')
-            // 50.00 + 24.50: what the movements of the session add up to.
-            ->and($recount)->toBe(7450)
-            ->and($session->expected_cash_cents)->toBe($recount, 'the frozen figure left the charge out')
-            ->and($session->differenceCents())->toBe(0);
-    })->skip('Known failure (MEDIO): CloseCashSession does not wait for a charge that is already dated but not yet committed.');
+            ->and($payment->cash_session_id)->toBeIn([$session->id, null])
+            ->and($recount)->toBe($expected)
+            ->and($session->expected_cash_cents)->toBe($recount, 'the frozen figure and the movements disagree');
+    });
 
     /*
     | The same race left to chance: three cash charges and the close sent at
