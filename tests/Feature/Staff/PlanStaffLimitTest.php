@@ -11,6 +11,7 @@ use App\Models\Service;
 use App\Models\Staff;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Inertia\Testing\AssertableInertia as Assert;
 
 /*
 | Step 7.1: the plan only limits how many professionals have an agenda
@@ -32,9 +33,12 @@ function activeStaffOf(Salon $salon): int
     return Staff::withoutGlobalScopes()->where('salon_id', $salon->id)->where('is_active', true)->count();
 }
 
-it('starts a new salon on the trial with the Equipo plan', function () {
+it('starts a new salon on the trial with the Equipo plan, and says so on the professionals screen', function () {
     expect($this->salon->plan->code)->toBe('equipo')
         ->and($this->salon->staffLimit())->toBe(6);
+
+    $this->actingAs($this->owner)->get(route('staff.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('agendaLimit', ['withAgenda' => 1, 'max' => 6, 'planName' => 'Equipo']));
 });
 
 it('stops at the plan limit of professionals with an agenda, and counts only those', function () {
