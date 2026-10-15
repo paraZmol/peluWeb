@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\SalonPermission;
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Models\Salon;
 use App\Models\SalonMember;
 use App\Models\Staff;
 use App\Support\CurrentSalon;
@@ -113,6 +114,8 @@ class HandleInertiaRequests extends Middleware
                 'hasStaffProfile' => Staff::query()->where('user_id', $user->id)->exists(),
                 // The team keeps a line of people without a booking: shows its menu entry.
                 'walkInsEnabled' => $salon->walk_ins_enabled,
+                // Drives the notice about paying (owners) or the salon being paused (everyone).
+                'subscription' => $this->subscription($salon),
                 'permissions' => collect(SalonPermission::cases())
                     ->filter(fn (SalonPermission $permission) => $membership->hasPermission($permission))
                     ->map(fn (SalonPermission $permission) => $permission->value)
@@ -129,5 +132,15 @@ class HandleInertiaRequests extends Middleware
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * @return array{state: string, daysLeft: int|null}
+     */
+    private function subscription(Salon $salon): array
+    {
+        $standing = $salon->standing();
+
+        return ['state' => $standing->state->value, 'daysLeft' => $standing->daysLeft];
     }
 }

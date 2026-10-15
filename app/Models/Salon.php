@@ -60,6 +60,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property CarbonImmutable|null $paid_until Last day paid for.
  * @property CarbonImmutable|null $founder_since Keeps the founder price while it keeps paying.
  * @property CarbonImmutable|null $trial_extended_at The trial was extended once, by hand.
+ * @property CarbonImmutable|null $billing_notice_on Last day the owners were reminded about paying.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
@@ -123,6 +124,7 @@ class Salon extends Model
             'paid_until' => 'date',
             'founder_since' => 'datetime',
             'trial_extended_at' => 'datetime',
+            'billing_notice_on' => 'date',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'accepts_online_bookings' => 'boolean',

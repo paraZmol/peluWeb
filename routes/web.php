@@ -27,6 +27,7 @@ use App\Http\Controllers\Owner\SalonSettingsController;
 use App\Http\Controllers\Owner\ServiceCatalogController;
 use App\Http\Controllers\Owner\ServiceController;
 use App\Http\Controllers\Owner\StaffController;
+use App\Http\Controllers\Owner\SubscriptionController;
 use App\Http\Controllers\Owner\TeamController;
 use App\Http\Controllers\Public\BookingController;
 use App\Http\Controllers\Public\ManifestController;
@@ -227,6 +228,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('equipo/miembros/{member}', [MemberController::class, 'update'])->name('team.members.update');
         Route::delete('equipo/miembros/{member}', [MemberController::class, 'destroy'])->name('team.members.destroy');
 
+        Route::get('mi-plan', [SubscriptionController::class, 'show'])->name('subscription.show');
         Route::get('mi-salon', [SalonSettingsController::class, 'edit'])->name('salon.edit');
         Route::put('mi-salon/datos', [SalonSettingsController::class, 'updateProfile'])->name('salon.profile.update');
         Route::put('mi-salon/reservas', [SalonSettingsController::class, 'updateBooking'])->name('salon.booking.update');
