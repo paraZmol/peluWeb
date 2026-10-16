@@ -2,6 +2,8 @@
 
 namespace App\Actions\Billing;
 
+use App\Actions\Platform\SupportVisits;
+use App\Enums\SubscriptionState;
 use App\Models\Plan;
 use App\Models\Salon;
 use App\Models\Staff;
@@ -14,6 +16,8 @@ use App\Models\SubscriptionPayment;
  */
 class SubscriptionSummary
 {
+    public function __construct(private readonly SupportVisits $supportVisits) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -32,7 +36,10 @@ class SubscriptionSummary
             'graceEndsOn' => $standing->coveredUntil?->addDays($graceDays)->toDateString(),
             'plan' => ['code' => $plan->code, 'name' => $plan->name, 'maxStaff' => $plan->max_staff],
             'withAgenda' => Staff::query()->where('is_active', true)->count(),
-            'isFounder' => $salon->founder_since !== null,
+            // Paused, it already lost the founder price for its next payment.
+            // What one month of its plan costs it today: "Mi plan" says it in so many words.
+            'dueCents' => RecordSubscriptionPayment::expectedCents($salon, $plan, 1),
+            'isFounder' => $salon->founder_since !== null && $standing->state !== SubscriptionState::ReadOnly,
             'plans' => $this->plans($salon, $plan),
             // A year is offered from the second payment on: at sign up it scares (PLAN §11).
             'offersYear' => $payments->isNotEmpty(),
@@ -50,6 +57,7 @@ class SubscriptionSummary
                 'coversFrom' => $payment->covers_from->toDateString(),
                 'coversUntil' => $payment->covers_until->toDateString(),
             ])->values()->all(),
+            'supportVisits' => $this->supportVisits->forOwner($salon),
         ];
     }
 

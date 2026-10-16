@@ -409,7 +409,7 @@ it('adds the whole catalog of 116 once without duplicating on a second submit', 
 
 it('seeds starter services only for the new salon', function () {
     $u = User::factory()->create();
-    $this->actingAs($u)->post(route('salons.store'), ['name' => 'Spa Ñu', 'business_type' => 'spa', 'clientele' => 'everyone']);
+    $this->actingAs($u)->post(route('salons.store'), ['name' => 'Spa Ñu', 'business_type' => 'spa', 'clientele' => 'everyone', 'salon_terms' => '1']);
     $new = Salon::where('name', 'Spa Ñu')->firstOrFail();
     expect(qaCount($new))->toBeGreaterThan(0)->and(qaCount($this->salon))->toBe(0);
 });

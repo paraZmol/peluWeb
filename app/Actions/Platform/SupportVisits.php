@@ -2,10 +2,15 @@
 
 namespace App\Actions\Platform;
 
+use App\Enums\SalonRole;
 use App\Models\Salon;
+use App\Models\SalonMember;
 use App\Models\SupportVisit;
 use App\Models\User;
+use App\Notifications\SupportVisitStartedNotification;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * "Entrar como salón" for support (PLAN 7.4): the platform admin sees a
@@ -29,6 +34,9 @@ class SupportVisits
         $visit->save();
 
         $session->put(self::SESSION_KEY, $visit->id);
+
+        // The owners always learn who came in and why (L27).
+        Notification::send($this->owners($salon), new SupportVisitStartedNotification($visit->setRelation('salon', $salon)));
 
         return $visit;
     }
@@ -57,6 +65,24 @@ class SupportVisits
         return $visit;
     }
 
+    /**
+     * The salon's last visits, for "Mi plan": the owner sees each look.
+     *
+     * @return list<array{id: int, startedAt: string, minutes: int|null, reason: string}>
+     */
+    public function forOwner(Salon $salon, int $limit = 10): array
+    {
+        return SupportVisit::query()->where('salon_id', $salon->id)->latest('started_at')->limit($limit)->get()
+            ->map(fn (SupportVisit $visit): array => [
+                'id' => $visit->id,
+                'startedAt' => $visit->started_at->setTimezone($salon->timezone)->format('Y-m-d H:i'),
+                'minutes' => $visit->ended_at === null ? null : (int) $visit->started_at->diffInMinutes($visit->ended_at),
+                'reason' => $visit->reason,
+            ])
+            ->values()
+            ->all();
+    }
+
     public function end(Session $session): ?SupportVisit
     {
         $visitId = $session->pull(self::SESSION_KEY);
@@ -69,5 +95,16 @@ class SupportVisits
         }
 
         return $visit;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    private function owners(Salon $salon): Collection
+    {
+        return SalonMember::query()->with('user')->where('salon_id', $salon->id)->where('role', SalonRole::Owner)->get()
+            ->map(fn (SalonMember $member): ?User => $member->user)
+            ->filter()
+            ->values();
     }
 }

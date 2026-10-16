@@ -28,6 +28,15 @@ export type SubscriptionPayment = {
     coversUntil: string;
 };
 
+export type SupportVisitSummary = {
+    id: number;
+    /** "2026-10-07 15:30" on the salon's clock. */
+    startedAt: string;
+    /** How long it lasted; null while it is still open. */
+    minutes: number | null;
+    reason: string;
+};
+
 export type Subscription = {
     state: SubscriptionState;
     stateLabel: string;
@@ -41,5 +50,8 @@ export type Subscription = {
     plans: SubscriptionPlan[];
     offersYear: boolean;
     payTo: { yape: string | null; name: string | null };
+    /** One month of its current plan at what this salon pays today. */
+    dueCents: number;
     payments: SubscriptionPayment[];
+    supportVisits: SupportVisitSummary[];
 };

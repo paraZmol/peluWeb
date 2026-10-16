@@ -33,6 +33,12 @@ class SalonSettingsResource extends JsonResource
             'description' => $this->description,
             'phone' => $this->phone,
             'instagram' => $this->instagram,
+            'legal' => [
+                'legalName' => $this->legal_name,
+                'ruc' => $this->ruc,
+                'contactEmail' => $this->contact_email,
+                'complaintsBookUrl' => $this->complaints_book_url,
+            ],
             'logoUrl' => $images->url($this->logo_path),
             'coverUrl' => $images->url($this->cover_path),
             'brandColor' => $this->brand_color,

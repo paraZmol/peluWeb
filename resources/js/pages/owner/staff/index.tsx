@@ -1,10 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import {
-    AgendaFullHint,
-    AgendaLimitSummary,
-} from '@/components/staff/agenda-limit';
+import { AgendaLimitSummary } from '@/components/staff/agenda-limit';
 import { HolidaysSection } from '@/components/staff/holidays-section';
 import { StaffCard } from '@/components/staff/staff-card';
 import { StaffForm } from '@/components/staff/staff-form';
@@ -42,7 +39,6 @@ export default function StaffIndex({
     agendaLimit,
 }: Props) {
     const [creating, setCreating] = useState(false);
-    const isPlanFull = agendaLimit.withAgenda >= agendaLimit.max;
 
     return (
         <>
@@ -64,7 +60,7 @@ export default function StaffIndex({
                             .
                         </p>
                     </div>
-                    <div className="flex flex-col gap-2 sm:items-end">
+                    <div className="flex flex-col sm:items-end">
                         <Dialog open={creating} onOpenChange={setCreating}>
                             <DialogTrigger asChild>
                                 <Button className="rounded-full">
@@ -84,7 +80,6 @@ export default function StaffIndex({
                                 />
                             </DialogContent>
                         </Dialog>
-                        {isPlanFull && <AgendaFullHint />}
                     </div>
                 </div>
 

@@ -36,12 +36,8 @@ export function PaymentHistory({ payments }: Props) {
             ) : (
                 <ul className="divide-y rounded-xl border bg-card">
                     {payments.map((payment) => (
-                        <li
-                            key={payment.id}
-                            aria-label={`Pago del plan ${payment.planName}, ${monthsText(payment.months)}`}
-                            className="p-4"
-                        >
-                            <dl className="grid grid-cols-3 gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_6rem_7rem_6.5rem] sm:items-center">
+                        <li key={payment.id} className="p-4">
+                            <dl className="grid grid-cols-3 gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_7rem_5.5rem] sm:items-center sm:gap-x-3">
                                 <div className="col-span-3 min-w-0 sm:col-span-1">
                                     <dt className="sr-only">Plan</dt>
                                     <dd className="font-medium">
@@ -63,7 +59,7 @@ export function PaymentHistory({ payments }: Props) {
                                 <CashFigure label="Pagado">
                                     {payment.paidOn
                                         ? formatDate(payment.paidOn)
-                                        : '—'}
+                                        : 'Sin fecha'}
                                 </CashFigure>
                             </dl>
                         </li>

@@ -23,21 +23,28 @@ export function SupportBand() {
     return (
         <div
             role="status"
-            className="flex flex-wrap items-center gap-3 bg-foreground px-4 py-2 text-sm text-background"
+            className="sticky top-0 z-40 flex flex-wrap items-center gap-x-4 gap-y-2 bg-foreground px-6 py-2.5 text-sm text-background md:px-4 print:hidden"
         >
-            <LifeBuoy className="size-4 shrink-0" aria-hidden />
-            <p className="min-w-0 flex-1">
-                <span className="font-semibold">Modo soporte</span> en{' '}
-                {support.salonName}: puedes ver todo, sin hacer cambios (se
-                cierra solo a las {until})
+            <p className="flex min-w-0 flex-1 basis-64 items-start gap-2.5 text-pretty">
+                <LifeBuoy
+                    className="mt-0.5 size-4 shrink-0"
+                    strokeWidth={1.75}
+                    aria-hidden
+                />
+                <span className="min-w-0">
+                    <span className="font-semibold">Modo soporte</span> en{' '}
+                    {support.salonName}: puedes ver todo, sin hacer cambios (se
+                    cierra solo a las {until})
+                </span>
             </p>
-            <Form {...end.form()}>
+            <Form {...end.form()} className="max-sm:w-full">
                 {({ processing }) => (
                     <Button
                         type="submit"
                         size="sm"
                         variant="secondary"
                         disabled={processing}
+                        className="max-sm:h-11 max-sm:w-full"
                     >
                         Salir del modo soporte
                     </Button>

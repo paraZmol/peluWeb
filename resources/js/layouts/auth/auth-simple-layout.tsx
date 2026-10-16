@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { motion, useAnimationControls, useReducedMotion } from 'motion/react';
 import { useEffect } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { LegalFooter } from '@/components/legal/legal-footer';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -68,6 +69,7 @@ export default function AuthSimpleLayout({
                     </motion.div>
                 </div>
             </motion.div>
+            <LegalFooter className="max-w-md py-0" />
         </div>
     );
 }

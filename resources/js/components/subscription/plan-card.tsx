@@ -62,11 +62,17 @@ export function PlanCard({ plan, offersYear, isFounder }: Props) {
                             {formatCents(plan.normalCents)}
                         </span>{' '}
                         al mes.
-                        {isFounder &&
-                            ' Lo conservas mientras sigas pagando; si tu salón llega a pausa, lo pierdes desde el siguiente pago.'}
                     </p>
                 )}
             </div>
+
+            {isFounderPrice && isFounder && (
+                <p className="border-l-2 border-brand-line pl-3 text-sm text-pretty text-muted-foreground">
+                    Mantienes este precio mientras pagues a tiempo. Si el salón
+                    entra en pausa, pagas el precio normal desde el siguiente
+                    pago.
+                </p>
+            )}
 
             <p className="text-sm font-medium">
                 {staffLimitText(plan.maxStaff)}

@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { LegalFooter } from '@/components/legal/legal-footer';
 import { Button } from '@/components/ui/button';
 import { home } from '@/routes';
 
@@ -20,7 +21,7 @@ export default function ErrorPage({ status }: { status: number }) {
     return (
         <>
             <Head title={title} />
-            <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-start justify-center gap-4 px-6 py-10">
+            <main className="mx-auto flex min-h-[80dvh] w-full max-w-md flex-col items-start justify-center gap-4 px-6 py-10">
                 <p className="text-sm font-medium text-muted-foreground tabular-nums">
                     Error {status}
                 </p>
@@ -42,6 +43,7 @@ export default function ErrorPage({ status }: { status: number }) {
                     </Button>
                 </div>
             </main>
+            <LegalFooter />
         </>
     );
 }

@@ -11,9 +11,11 @@ use App\Models\SalonMember;
 use App\Models\Staff;
 use App\Models\SupportVisit;
 use App\Models\User;
+use App\Notifications\SupportVisitStartedNotification;
 use App\Support\CurrentSalon;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Livewire\Livewire;
 
@@ -134,4 +136,47 @@ it('does not let one admin ride another admin\'s visit', function () {
     $this->actingAs($other)->withSession([SupportVisits::SESSION_KEY => $visit->id])
         ->get(route('staff.index'))
         ->assertRedirect(route('salons.create'));
+});
+
+it('tells the owners by email who came in and why, and lists the visit in Mi plan', function () {
+    Notification::fake();
+    $owner = SalonMember::query()->where('salon_id', $this->salon->id)->sole()->user;
+    $this->actingAs($this->admin);
+    Filament::setCurrentPanel('plataforma');
+
+    Livewire::test(ViewSalon::class, ['record' => $this->salon->getRouteKey()])
+        ->callAction('supportVisit', ['reason' => 'No le aparecen las reservas']);
+
+    Notification::assertSentTo($owner, SupportVisitStartedNotification::class, fn (SupportVisitStartedNotification $notification) => str_contains(
+        implode(' ', $notification->toMail($owner)->introLines),
+        'No le aparecen las reservas',
+    ));
+    Notification::assertNotSentTo($this->admin, SupportVisitStartedNotification::class);
+
+    app()->forgetScopedInstances();
+    session()->flush();
+    $this->actingAs($owner->fresh())->get(route('subscription.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('subscription.supportVisits', 1)
+            ->where('subscription.supportVisits.0.reason', 'No le aparecen las reservas')
+            ->where('subscription.supportVisits.0.minutes', null));
+});
+
+it('lists only the salon own visits to its owner', function () {
+    $other = app(CreateSalon::class)->handle(User::factory()->create(), 'Estudio Luz', BusinessType::BeautySalon, Clientele::Everyone);
+    openVisit($this->admin, $other);
+    $owner = SalonMember::query()->where('salon_id', $this->salon->id)->sole()->user;
+
+    $this->actingAs($owner)->get(route('subscription.show'))
+        ->assertInertia(fn (Assert $page) => $page->has('subscription.supportVisits', 0));
+});
+
+it('forgets visits after 24 months', function () {
+    $old = openVisit($this->admin, $this->salon);
+    $old->forceFill(['started_at' => now()->subMonths(SupportVisit::RETENTION_MONTHS)->subDay()])->save();
+    $recent = openVisit($this->admin, $this->salon);
+
+    $this->artisan('model:prune', ['--model' => [SupportVisit::class]])->assertSuccessful();
+
+    expect(SupportVisit::query()->pluck('id')->all())->toBe([$recent->id]);
 });

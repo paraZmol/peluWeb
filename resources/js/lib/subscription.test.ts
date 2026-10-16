@@ -72,6 +72,19 @@ describe('subscriptionNotice', () => {
         ).toBe('Tu prueba gratis termina hoy.');
     });
 
+    it('tells the owner in grace until when, and what happens after', () => {
+        const message = subscriptionNotice({
+            state: 'grace',
+            daysLeft: -2,
+            graceEndsOn: '2026-10-21',
+            isOwner: true,
+        })?.message;
+
+        expect(message).toMatch(/^Tu pago está vencido\. Tienes hasta el /);
+        expect(message).toContain('las reservas en línea se pausan');
+        expect(message).toContain('No se borra nada.');
+    });
+
     it('tells the staff only when the salon is paused, without a plan link', () => {
         expect(
             subscriptionNotice({

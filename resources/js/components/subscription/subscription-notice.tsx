@@ -24,8 +24,13 @@ export function SubscriptionNotice() {
         return null;
     }
 
-    const { state, daysLeft } = currentSalon.subscription;
-    const notice = subscriptionNotice({ state, daysLeft, isOwner });
+    const { state, daysLeft, graceEndsOn } = currentSalon.subscription;
+    const notice = subscriptionNotice({
+        state,
+        daysLeft,
+        graceEndsOn,
+        isOwner,
+    });
     const key = `${currentSalon.id}:${state}:${daysLeft}`;
 
     if (notice === null || dismissedKey === key) {
@@ -38,16 +43,18 @@ export function SubscriptionNotice() {
 
     return (
         <motion.div
-            role={notice.isBlocking ? 'alert' : 'status'}
+            role="status"
             data-test="subscription-notice"
             initial={{ opacity: 0, y: reduceMotion ? 0 : -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-                'mx-4 mt-4 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm md:mx-6 print:hidden',
+                // A strip under the header, edge to edge and lined up with it: it is about
+                // the whole salon, not about the page below.
+                'flex items-start gap-3 border-b px-6 py-3 text-sm md:px-4 print:hidden',
                 notice.isBlocking
-                    ? 'border-destructive/40 bg-destructive/10'
-                    : 'border-warning/40 bg-warning/10',
+                    ? 'border-destructive/30 bg-destructive/10'
+                    : 'border-warning/30 bg-warning/10',
             )}
         >
             <Icon
@@ -60,11 +67,11 @@ export function SubscriptionNotice() {
                 aria-hidden
             />
             <div className="flex min-w-0 flex-1 flex-col gap-x-3 gap-y-1 sm:flex-row sm:flex-wrap sm:items-baseline">
-                <p className="min-w-0">{notice.message}</p>
+                <p className="min-w-0 text-pretty">{notice.message}</p>
                 {notice.showsPlanLink && (
                     <Link
                         href={myPlan()}
-                        className="font-medium whitespace-nowrap text-brand-text underline underline-offset-4"
+                        className="-my-1 self-start rounded-sm py-1 font-medium whitespace-nowrap text-brand-text underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:self-auto"
                     >
                         Ver mi plan
                     </Link>
@@ -75,7 +82,7 @@ export function SubscriptionNotice() {
                     type="button"
                     onClick={() => setDismissedKey(key)}
                     aria-label="Ocultar aviso"
-                    className="-m-1.5 shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    className="-my-3 -mr-3 shrink-0 rounded-md p-3.5 text-muted-foreground hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                     <X className="size-4" aria-hidden />
                 </button>

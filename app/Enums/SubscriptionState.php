@@ -23,7 +23,7 @@ enum SubscriptionState: string
             self::Trial => 'En prueba',
             self::Active => 'Al día',
             self::Grace => 'Pago vencido',
-            self::ReadOnly => 'Solo lectura',
+            self::ReadOnly => 'En pausa',
             self::Suspended => 'Suspendido',
         };
     }

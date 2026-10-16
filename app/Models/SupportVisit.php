@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -22,6 +24,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class SupportVisit extends Model
 {
+    use Prunable;
+
+    /** How long the record of a visit is kept (privacy policy, L27). */
+    public const int RETENTION_MONTHS = 24;
+
     /** A visit ends by itself after this long, in case nobody leaves it. */
     public const int MAX_MINUTES = 120;
 
@@ -46,6 +53,14 @@ class SupportVisit extends Model
     public function salon(): BelongsTo
     {
         return $this->belongsTo(Salon::class);
+    }
+
+    /**
+     * @return Builder<self>
+     */
+    public function prunable(): Builder
+    {
+        return self::query()->where('started_at', '<', now()->subMonths(self::RETENTION_MONTHS));
     }
 
     public function isOpenFor(User $user): bool

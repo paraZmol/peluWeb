@@ -1,10 +1,15 @@
 import { Smartphone } from 'lucide-react';
+import { formatCents } from '@/lib/format';
 import type { Subscription } from './types';
 
-type Props = { payTo: Subscription['payTo'] };
+type Props = {
+    payTo: Subscription['payTo'];
+    dueCents: number;
+    planName: string;
+};
 
-/** Where to send the money; the platform records it and the plan runs on. */
-export function HowToPay({ payTo }: Props) {
+/** Where to send the money, and how much; the platform records it and the plan runs on. */
+export function HowToPay({ payTo, dueCents, planName }: Props) {
     return (
         <section
             aria-labelledby="how-to-pay-title"
@@ -42,7 +47,13 @@ export function HowToPay({ payTo }: Props) {
             )}
 
             <ol className="flex list-inside list-decimal flex-col gap-2 text-sm marker:text-muted-foreground">
-                <li>Paga el monto de tu plan.</li>
+                <li>
+                    {payTo.yape ? 'Yapea' : 'Paga'}{' '}
+                    <span className="font-semibold tabular-nums">
+                        {formatCents(dueCents)}
+                    </span>{' '}
+                    (1 mes del plan {planName}).
+                </li>
                 <li>
                     Registramos tu pago y tu plan se extiende: si el salón
                     estaba en pausa, se reactiva al momento.

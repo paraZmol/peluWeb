@@ -5,7 +5,12 @@ import { HowToPay } from '@/components/subscription/how-to-pay';
 import { PaymentHistory } from '@/components/subscription/payment-history';
 import { PlansSection } from '@/components/subscription/plans-section';
 import { StandingCard } from '@/components/subscription/standing-card';
-import type { Subscription } from '@/components/subscription/types';
+import { SupportVisits } from '@/components/subscription/support-visits';
+import type {
+    Subscription,
+    SubscriptionState,
+} from '@/components/subscription/types';
+import { cn } from '@/lib/utils';
 import { show } from '@/routes/subscription';
 
 type Props = {
@@ -13,11 +18,16 @@ type Props = {
     currency: string;
 };
 
+/** Late or paused: paying comes first. */
+const OVERDUE_STATES: SubscriptionState[] = ['grace', 'read_only'];
+
 /**
  * "Mi plan": where the salon stands with the platform and how to pay.
  * Payments are recorded by the platform admin; the owner only reads here.
  */
 export default function MyPlan({ subscription }: Props) {
+    const isOverdue = OVERDUE_STATES.includes(subscription.state);
+
     return (
         <>
             <Head title="Mi plan" />
@@ -31,22 +41,42 @@ export default function MyPlan({ subscription }: Props) {
                     </p>
                 </div>
 
-                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-                    <div className="flex min-w-0 flex-col gap-8">
-                        <Rise order={0}>
-                            <StandingCard subscription={subscription} />
-                        </Rise>
-                        <Rise order={1}>
-                            <PlansSection subscription={subscription} />
-                        </Rise>
-                    </div>
-
-                    <Rise order={2} className="lg:sticky lg:top-6">
-                        <HowToPay payTo={subscription.payTo} />
+                {/* Phones read top to bottom: a late or paused salon gets how to
+                    pay right under its standing, before the plans. On desktop
+                    it stays in the side column. */}
+                <div className="grid items-start gap-x-6 gap-y-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+                    <Rise
+                        order={0}
+                        className="min-w-0 lg:col-start-1 lg:row-start-1"
+                    >
+                        <StandingCard subscription={subscription} />
+                    </Rise>
+                    <Rise
+                        order={isOverdue ? 1 : 2}
+                        className={cn(
+                            'lg:sticky lg:top-6 lg:col-start-2 lg:row-span-3 lg:row-start-1',
+                            !isOverdue && 'max-lg:order-1',
+                        )}
+                    >
+                        <HowToPay
+                            payTo={subscription.payTo}
+                            dueCents={subscription.dueCents}
+                            planName={subscription.plan.name}
+                        />
+                    </Rise>
+                    <Rise
+                        order={isOverdue ? 2 : 1}
+                        className="min-w-0 lg:col-start-1 lg:row-start-2"
+                    >
+                        <PlansSection subscription={subscription} />
                     </Rise>
 
-                    <Rise order={3} className="min-w-0">
+                    <Rise
+                        order={3}
+                        className="flex min-w-0 flex-col gap-8 max-lg:order-2 lg:col-start-1 lg:row-start-3"
+                    >
                         <PaymentHistory payments={subscription.payments} />
+                        <SupportVisits visits={subscription.supportVisits} />
                     </Rise>
                 </div>
             </div>

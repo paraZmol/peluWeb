@@ -4,7 +4,6 @@ namespace App\Actions\Billing;
 
 use App\Models\Plan;
 use App\Models\Salon;
-use Carbon\CarbonImmutable;
 
 /**
  * The prices the landing shows, from the plans table, and the founder
@@ -37,7 +36,7 @@ class PublicPricing
      */
     private function founder(): ?array
     {
-        if (! RecordSubscriptionPayment::founderOfferIsOpen(CarbonImmutable::now(Salon::DEFAULT_TIMEZONE)->startOfDay())) {
+        if (! RecordSubscriptionPayment::founderOfferIsOpen(RecordSubscriptionPayment::todayInLima())) {
             return null;
         }
 

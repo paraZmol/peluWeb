@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\AcceptanceChannel;
+use App\Models\LegalAcceptance;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as GoogleUser;
@@ -27,15 +29,38 @@ it('is unavailable until Google credentials are configured', function () {
     $this->get(route('google.callback'))->assertNotFound();
 });
 
-it('creates a verified account for a new Google user and signs them in', function () {
+it('shows a new Google user the terms before creating their account', function () {
     fakeGoogleUser('lucia@gmail.com');
 
-    $this->get(route('google.callback'))->assertRedirect(route('dashboard'));
+    $this->get(route('google.callback'))->assertRedirect(route('google.terms'));
+
+    $this->assertGuest();
+    expect(User::where('email', 'lucia@gmail.com')->exists())->toBeFalse();
+    $this->get(route('google.terms'))->assertInertia(fn ($page) => $page
+        ->component('auth/accept-terms')
+        ->where('mode', 'google')
+        ->where('account.email', 'lucia@gmail.com'));
+});
+
+it('creates the verified account once the new Google user accepts the terms', function () {
+    fakeGoogleUser('lucia@gmail.com');
+    $this->get(route('google.callback'));
+
+    $this->post(route('google.terms.store'))->assertSessionHasErrors('terms');
+    expect(User::count())->toBe(0);
+
+    $this->post(route('google.terms.store'), ['terms' => 'on'])->assertRedirect(route('dashboard'));
 
     $user = User::where('email', 'lucia@gmail.com')->firstOrFail();
     expect($user->google_id)->toBe('google-123')
-        ->and($user->email_verified_at)->not->toBeNull();
+        ->and($user->email_verified_at)->not->toBeNull()
+        ->and(LegalAcceptance::where('user_id', $user->id)->pluck('channel')->unique()->all())->toBe([AcceptanceChannel::Google]);
     $this->assertAuthenticatedAs($user);
+});
+
+it('sends the Google terms screen back to sign in when nobody is waiting on it', function () {
+    $this->get(route('google.terms'))->assertRedirect(route('login'));
+    $this->post(route('google.terms.store'), ['terms' => 'on'])->assertRedirect(route('login'));
 });
 
 it('links Google to an existing account with the same verified email', function () {

@@ -24,6 +24,8 @@ export type CurrentSalon = {
         state: 'trial' | 'active' | 'grace' | 'read_only' | 'suspended';
         /** Days to the last covered day: 0 that day, negative after. */
         daysLeft: number | null;
+        /** Last day of grace ("2026-10-21"); null when nothing was ever covered. */
+        graceEndsOn: string | null;
     };
 };
 

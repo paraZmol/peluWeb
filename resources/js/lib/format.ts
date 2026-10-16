@@ -59,6 +59,19 @@ export function formatLongDate(date: string): string {
         .replace(',', '');
 }
 
+const fullDateFormat = new Intl.DateTimeFormat('es-PE', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+});
+
+/** "2026-10-16" → "16 de octubre de 2026", for documents that outlive the year. */
+export function formatFullDate(date: string): string {
+    const [year, month, day] = date.split('-').map(Number);
+
+    return fullDateFormat.format(new Date(year, month - 1, day));
+}
+
 /** "2026-10-07 15:30" → "mié 7 oct, 3:30 p. m." (already on the salon's clock). */
 export function formatDateTime(dateTime: string): string {
     const [date, time] = dateTime.split(' ');

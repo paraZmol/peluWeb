@@ -21,7 +21,7 @@ it('gives a new salon the starter services of its type', function (string $type,
     $owner = User::factory()->create();
 
     $this->actingAs($owner)->post(route('salons.store'), [
-        'name' => 'Salón de prueba', 'business_type' => $type, 'clientele' => 'everyone',
+        'name' => 'Salón de prueba', 'business_type' => $type, 'clientele' => 'everyone', 'salon_terms' => '1',
     ]);
 
     $salon = Salon::firstOrFail();

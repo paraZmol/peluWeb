@@ -10,6 +10,7 @@ use App\Models\Staff;
 use App\Models\SupportVisit;
 use App\Support\CurrentSalon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -56,6 +57,24 @@ class HandleInertiaRequests extends Middleware
             ],
             ...$this->salonProps($request),
             'support' => $this->supportProps(),
+            'legal' => $this->legalProps(),
+        ];
+    }
+
+    /**
+     * Who provides the service and where to complain, for the legal footer
+     * of every page. Empty values stay null: the footer leaves them out.
+     *
+     * @return array{providerName: string|null, ruc: string|null, contactEmail: string|null, complaintsUrl: string|null}
+     */
+    private function legalProps(): array
+    {
+        return [
+            'providerName' => config('legal.provider.name') ?: null,
+            'ruc' => config('legal.provider.ruc') ?: null,
+            'contactEmail' => config('legal.contact.email') ?: null,
+            // The Libro de Reclamaciones has its own route; never a broken link.
+            'complaintsUrl' => Route::has('complaints.create') ? route('complaints.create') : null,
         ];
     }
 
@@ -137,13 +156,17 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * @return array{state: string, daysLeft: int|null}
+     * @return array{state: string, daysLeft: int|null, graceEndsOn: string|null}
      */
     private function subscription(Salon $salon): array
     {
         $standing = $salon->standing();
 
-        return ['state' => $standing->state->value, 'daysLeft' => $standing->daysLeft];
+        return [
+            'state' => $standing->state->value,
+            'daysLeft' => $standing->daysLeft,
+            'graceEndsOn' => $standing->coveredUntil?->addDays((int) config('billing.grace_days'))->toDateString(),
+        ];
     }
 
     /**

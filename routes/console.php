@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SupportVisit;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -17,6 +18,9 @@ Schedule::command('clients:purge-expired-data')->dailyAt('03:30')->withoutOverla
 // 7, 3 and 1 days before a trial or a paid month ends (PLAN 7.2); each salon at most once a day.
 // 14:00 UTC is 9 a.m. in Lima: a reminder that arrives with the working day.
 Schedule::command('subscriptions:send-reminders')->dailyAt('14:00')->withoutOverlapping();
+
+// Support visits are kept 24 months, as the privacy policy says.
+Schedule::command('model:prune', ['--model' => [SupportVisit::class]])->dailyAt('04:00');
 
 // API tokens past their 90 days are dead weight.
 Schedule::command('sanctum:prune-expired --hours=24')->daily();

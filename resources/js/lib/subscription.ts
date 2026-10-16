@@ -86,7 +86,7 @@ export function standingHeadline(standing: Standing): string {
 export function standingDetail(standing: Standing): string {
     switch (standing.state) {
         case 'trial':
-            return `Hasta entonces usas el plan ${standing.planName} completo, sin pagar nada.`;
+            return `Hasta entonces usas el plan ${standing.planName} completo, sin pagar nada. Al terminar eliges un plan y pagas por Yape; si no pagas, el salón se pausa, pero tus datos quedan guardados.`;
         case 'active':
             return 'Todo funciona con normalidad. Te avisamos por correo antes de que venza.';
         case 'grace':
@@ -112,6 +112,7 @@ export type SubscriptionNotice = {
 type NoticeInput = {
     state: SubscriptionState;
     daysLeft: number | null;
+    graceEndsOn?: string | null;
     isOwner: boolean;
 };
 
@@ -119,6 +120,7 @@ type NoticeInput = {
 export function subscriptionNotice({
     state,
     daysLeft,
+    graceEndsOn = null,
     isOwner,
 }: NoticeInput): SubscriptionNotice | null {
     if (state === 'read_only' || state === 'suspended') {
@@ -138,7 +140,9 @@ export function subscriptionNotice({
     if (state === 'grace') {
         return {
             message:
-                'Tu pago está vencido. Paga pronto para que el salón no se pause.',
+                graceEndsOn === null
+                    ? 'Tu pago está vencido. Paga pronto para que el salón no se pause.'
+                    : `Tu pago está vencido. Tienes hasta el ${formatPlanDate(graceEndsOn)} para pagar; después las reservas en línea se pausan. No se borra nada.`,
             isBlocking: false,
             showsPlanLink: true,
         };

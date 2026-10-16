@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessRuleException;
+use App\Http\Middleware\EnsureLegalTermsAccepted;
 use App\Http\Middleware\EnsureSalonMember;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'salon' => EnsureSalonMember::class,
             'lookup' => KeepFlashedData::class,
+            'terms' => EnsureLegalTermsAccepted::class,
         ]);
 
         // The current salon must be known before route model binding runs,
@@ -58,6 +60,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             ResolveCurrentSalon::class,
             HandleInertiaRequests::class,
+            // Inside Inertia's middleware, so a refused PUT/DELETE gets a 303.
+            EnsureLegalTermsAccepted::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
     })

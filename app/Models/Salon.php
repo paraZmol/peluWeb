@@ -36,6 +36,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $brand_color
  * @property SalonTheme $theme
  * @property string|null $instagram
+ * @property string|null $legal_name Name or company name of who provides the service (P7).
+ * @property string|null $ruc
+ * @property string|null $contact_email
+ * @property string|null $complaints_book_url The salon's own Libro de Reclamaciones online.
  * @property string|null $address
  * @property string|null $district
  * @property string|null $city
@@ -67,6 +71,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 #[Fillable([
     'name', 'business_type', 'clientele', 'phone', 'timezone', 'description', 'instagram',
+    'legal_name', 'ruc', 'contact_email', 'complaints_book_url',
     'address', 'district', 'city', 'latitude', 'longitude',
     'accepts_online_bookings', 'walk_ins_enabled', 'min_lead_minutes', 'max_days_ahead', 'slot_step_minutes',
     'cancel_window_hours', 'deposit_percent', 'vip_deposit_percent', 'hold_minutes', 'payment_instructions',
@@ -94,6 +99,10 @@ class Salon extends Model
         'brand_color' => null,
         'theme' => 'nocturna',
         'instagram' => null,
+        'legal_name' => null,
+        'ruc' => null,
+        'contact_email' => null,
+        'complaints_book_url' => null,
         'address' => null,
         'district' => null,
         'city' => null,

@@ -102,14 +102,14 @@ export const HERO = {
     primaryCta: `Prueba gratis ${TRIAL_DAYS} días`,
     secondaryCta: 'Ver cómo queda tu página',
     secondaryHref: '#tu-pagina',
-    trust: ['Sin tarjeta', 'Cancela cuando quieras', 'Hecho en Perú'],
+    trust: ['Sin tarjeta', 'Sin contrato', 'Hecho en Perú'],
 };
 
 export const HERO_PHOTOS = {
     main: {
         ...photo(
             'pexels-3993311.jpg',
-            'Clienta con color recién aplicado frente a un espejo con luces',
+            'Cliente con color recién aplicado frente a un espejo con luces',
         ),
         label: 'Salón de belleza',
     },
@@ -395,7 +395,7 @@ export function founderLine(
             ? 'el próximo salón'
             : `los próximos ${slotsLeft} salones`;
 
-    return `${PRICING.founderLabel} ${founder} al mes para ${places} que hagan su primer pago${until}. Lo mantienes mientras sigas pagando; si tu cuenta pasa a solo lectura, vuelves al precio regular de ${regular}.`;
+    return `${PRICING.founderLabel} ${founder} al mes para ${places} que hagan su primer pago${until}. Lo mantienes mientras pagues a tiempo; si tu salón entra en pausa por falta de pago, vuelves al precio regular de ${regular}.`;
 }
 
 /** The footnote, with the offer's conditions written out while it lasts. */
@@ -422,7 +422,7 @@ export const FAQS: Faq[] = [
     },
     {
         question: '¿Qué pasa si no pago a tiempo?',
-        answer: 'Te avisamos por correo 7, 3 y 1 día antes del vencimiento. Después tienes 7 días de gracia con todo funcionando. Si no pagas en ese plazo, tu cuenta pasa a solo lectura: ves toda tu información y puedes descargar tus movimientos de caja, pero no entran reservas nuevas. Las citas ya agendadas se respetan. No borramos nada y, al pagar, se reactiva al momento.',
+        answer: 'Te avisamos por correo 7, 3 y 1 día antes del vencimiento. Después tienes 7 días de gracia con todo funcionando. Si no pagas en ese plazo, tu salón entra en pausa: ves toda tu información y puedes descargar tus movimientos de caja, pero no entran reservas nuevas. Las citas ya agendadas se respetan. No borramos nada y, al pagar, se reactiva al momento.',
     },
     {
         question: '¿Puedo cancelar cuando quiera?',
@@ -514,14 +514,6 @@ export const FOOTER = {
             ],
         },
     ],
-    legal: {
-        title: 'Legal',
-        soonLabel: '(pronto)',
-        items: [
-            'Términos y condiciones',
-            'Política de privacidad',
-            'Libro de reclamaciones',
-        ],
-    },
+    legalTitle: 'Legal',
     madeIn: 'Hecho en Perú.',
 };

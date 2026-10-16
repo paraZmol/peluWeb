@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { BookingSection } from '@/components/salon-settings/booking-section';
 import { BrandingSection } from '@/components/salon-settings/branding-section';
 import { GallerySection } from '@/components/salon-settings/gallery-section';
+import { LegalSection } from '@/components/salon-settings/legal-section';
 import { LocationSection } from '@/components/salon-settings/location-section';
 import { ProfileSection } from '@/components/salon-settings/profile-section';
 import { ShareSection } from '@/components/salon-settings/share-section';
@@ -32,6 +33,7 @@ const sections = [
     ['ubicacion', 'Ubicación'],
     ['galeria', 'Galería'],
     ['reservas', 'Reservas'],
+    ['libro', 'Libro de Reclamaciones'],
 ] as const;
 
 export default function EditSalon({
@@ -91,6 +93,7 @@ export default function EditSalon({
                 {canManageBookingRules && (
                     <BookingSection salon={salon} slotSteps={slotSteps} />
                 )}
+                <LegalSection salon={salon} />
             </div>
         </>
     );

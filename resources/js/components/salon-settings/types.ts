@@ -23,6 +23,14 @@ export type BookingSettings = {
     paymentInstructions: string | null;
 };
 
+/** Who provides the service and the salon's own book (requirement P7). */
+export type SalonLegalSettings = {
+    legalName: string | null;
+    ruc: string | null;
+    contactEmail: string | null;
+    complaintsBookUrl: string | null;
+};
+
 export type SalonSettings = {
     booking: BookingSettings;
     name: string;
@@ -33,6 +41,7 @@ export type SalonSettings = {
     description: string | null;
     phone: string | null;
     instagram: string | null;
+    legal: SalonLegalSettings;
     logoUrl: string | null;
     coverUrl: string | null;
     brandColor: string | null;

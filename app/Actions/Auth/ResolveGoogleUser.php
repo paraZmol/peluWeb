@@ -2,40 +2,33 @@
 
 namespace App\Actions\Auth;
 
+use App\Data\Auth\GoogleProfile;
 use App\Exceptions\SocialLoginException;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class ResolveGoogleUser
 {
     /**
-     * Find, link or create the account behind a Google sign-in.
+     * Find or link the account behind a Google sign-in. A new person gets
+     * an account only once they accepted the terms ($createMissing), so a
+     * plain sign-in returns null for them.
      *
-     * An existing account is only linked when Google vouches for the email;
-     * otherwise anyone could create a Google account with someone else's
-     * address and take over their peluWeb account.
+     * An existing account is only linked when Google vouches for the email
+     * (GoogleProfile checks it).
      */
-    public function handle(SocialiteUser $googleUser): User
+    public function handle(GoogleProfile $profile, bool $createMissing = false): ?User
     {
-        $email = Str::lower((string) $googleUser->getEmail());
-        $googleId = (string) $googleUser->getId();
-        $raw = method_exists($googleUser, 'getRaw') ? $googleUser->getRaw() : [];
-
-        if ($email === '' || ($raw['email_verified'] ?? false) !== true) {
-            throw SocialLoginException::unverifiedEmail();
-        }
-
-        return DB::transaction(function () use ($googleUser, $email, $googleId): User {
-            $user = User::where('google_id', $googleId)->first()
-                ?? User::where('email', $email)->lockForUpdate()->first();
+        return DB::transaction(function () use ($profile, $createMissing): ?User {
+            $user = User::where('google_id', $profile->googleId)->first()
+                ?? User::where('email', $profile->email)->lockForUpdate()->first();
 
             if ($user === null) {
-                return $this->create($googleUser, $email, $googleId);
+                return $createMissing ? $this->create($profile) : null;
             }
 
-            if ($user->google_id !== null && $user->google_id !== $googleId) {
+            if ($user->google_id !== null && $user->google_id !== $profile->googleId) {
                 throw SocialLoginException::linkedToAnotherGoogleAccount();
             }
 
@@ -43,7 +36,7 @@ class ResolveGoogleUser
                 $this->evictPreviousHolder($user);
             }
 
-            $user->google_id = $googleId;
+            $user->google_id = $profile->googleId;
             $user->email_verified_at ??= now();
             $user->save();
 
@@ -51,13 +44,13 @@ class ResolveGoogleUser
         });
     }
 
-    private function create(SocialiteUser $googleUser, string $email, string $googleId): User
+    private function create(GoogleProfile $profile): User
     {
         $user = new User;
-        $user->name = $googleUser->getName() ?: Str::before($email, '@');
-        $user->email = $email;
+        $user->name = $profile->name;
+        $user->email = $profile->email;
         $user->password = Str::password(32);
-        $user->google_id = $googleId;
+        $user->google_id = $profile->googleId;
         $user->email_verified_at = now();
         $user->save();
 

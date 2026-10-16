@@ -201,7 +201,7 @@ describe('the template a new salon starts with', function () {
         $this->actingAs($owner)->post(route('salons.store'), [
             'name' => 'Ñandú & Hijos',
             'business_type' => $type->value,
-            'clientele' => 'everyone',
+            'clientele' => 'everyone', 'salon_terms' => '1',
         ])->assertRedirect(route('dashboard'));
 
         $created = Salon::query()->where('name', 'Ñandú & Hijos')->firstOrFail();

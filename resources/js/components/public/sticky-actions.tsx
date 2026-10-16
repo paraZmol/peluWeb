@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 
 type Props = {
     bookingUrl: string | null;
+    /** Online booking is paused: WhatsApp asks for a visit, it does not book one. */
+    isPaused?: boolean;
     whatsappUrl: string | null;
     directionsUrl: string | null;
 };
@@ -18,6 +20,7 @@ const MAIN = cn(PRIMARY_ACTION, 'flex-1');
  */
 export function StickyActions({
     bookingUrl,
+    isPaused = false,
     whatsappUrl,
     directionsUrl,
 }: Props) {
@@ -53,7 +56,11 @@ export function StickyActions({
                         className={MAIN}
                     >
                         <MessageCircle aria-hidden />
-                        <span className="truncate">Reservar por WhatsApp</span>
+                        <span className="truncate">
+                            {isPaused
+                                ? 'Pedir cita por WhatsApp'
+                                : 'Reservar por WhatsApp'}
+                        </span>
                     </a>
                 )}
                 {!bookingUrl && !whatsappUrl && directionsUrl && (

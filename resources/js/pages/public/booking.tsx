@@ -15,6 +15,7 @@ import type {
 } from '@/components/booking/types';
 import { WizardHeader } from '@/components/booking/wizard-header';
 import type { PublicPromotion } from '@/components/public/types';
+import { LegalFooter } from '@/components/legal/legal-footer';
 import { BrandTheme } from '@/components/salon/brand-theme';
 import { ThemeBackdrop } from '@/components/salon/theme-backdrop';
 import { useAvailability } from '@/hooks/use-availability';
@@ -28,7 +29,6 @@ type Props = {
     salon: BookableSalon;
     days: BookingDay[];
     isOpen: boolean;
-    isPaused: boolean;
     viewer: Viewer;
     preselectedServiceId: number | null;
     repeat: RepeatBooking | null;
@@ -39,7 +39,6 @@ export default function Booking({
     salon,
     days,
     isOpen,
-    isPaused,
     viewer,
     preselectedServiceId,
     repeat,
@@ -93,12 +92,11 @@ export default function Booking({
                 onBack={() => wizard.goTo(wizard.step - 1)}
             />
 
-            <main className="mx-auto w-full max-w-5xl overflow-x-clip px-4 pt-6 pb-32 sm:pt-10">
+            <main className="mx-auto w-full max-w-5xl overflow-x-clip px-4 pt-6 pb-6 sm:pt-10">
                 {!isOpen ? (
                     <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                        {isPaused
-                            ? 'Las reservas en línea de este salón están en pausa. Puedes pedir tu cita por WhatsApp desde su página.'
-                            : 'Este salón no está recibiendo reservas en línea por ahora.'}
+                        Las reservas en línea de este salón están en pausa.
+                        Puedes pedir tu cita por WhatsApp desde su página.
                     </p>
                 ) : (
                     <StepFrame
@@ -143,6 +141,8 @@ export default function Booking({
                     </StepFrame>
                 )}
             </main>
+            {/* Its bottom padding keeps it clear of the fixed selection bar. */}
+            <LegalFooter className="pb-[calc(8rem+env(safe-area-inset-bottom))]" />
 
             {isOpen && wizard.step === 0 && wizard.chosen.length > 0 && (
                 <SelectionBar wizard={wizard} wide />

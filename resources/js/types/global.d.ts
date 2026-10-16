@@ -22,6 +22,13 @@ declare module '@inertiajs/core' {
             salons: SalonSummary[];
             /** The platform admin is looking at the current salon for support (read only). */
             support: { salonName: string; endsAt: string } | null;
+            /** Who provides the service, for the legal footer; empty values are null. */
+            legal: {
+                providerName: string | null;
+                ruc: string | null;
+                contactEmail: string | null;
+                complaintsUrl: string | null;
+            };
             [key: string]: unknown;
         };
     }

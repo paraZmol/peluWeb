@@ -43,6 +43,7 @@ class SubscriptionEndingNotification extends Notification
             ->line("{$what} de ".Markdown::escape($this->salon->name)." termina {$when}.")
             ->line('Para seguir sin interrupciones, paga por Yape o transferencia. En «Mi plan» tienes los datos y lo que cuesta.')
             ->action('Ver mi plan', route('subscription.show'))
-            ->line("Si no se paga, el salón sigue funcionando {$graceDays} días más. Después queda en solo lectura: las reservas en línea se pausan, pero puedes ver y descargar todo y no se borra nada.");
+            ->line("Si no se paga, el salón sigue funcionando {$graceDays} días más; esos días se cuentan en el siguiente periodo. Después queda en solo lectura: las reservas en línea se pausan, las citas ya tomadas se mantienen, puedes ver y descargar tu información y no se borra nada.")
+            ->salutation('Te escribimos porque eres titular de '.Markdown::escape($this->salon->name).' en peluWeb. Es un aviso del servicio que contrataste.');
     }
 }

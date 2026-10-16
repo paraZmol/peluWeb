@@ -140,6 +140,19 @@ it('takes the founder price away from a salon that let it lapse to read only', f
         ->and($this->salon->refresh()->founder_since)->toBeNull();
 });
 
+it('does not give the founder price back to a salon that lost it, even with places left', function () {
+    recordPayment($this->salon);
+    $this->travelTo(CarbonImmutable::parse('2027-01-10 10:00', 'America/Lima'));
+
+    expect(RecordSubscriptionPayment::expectedCents($this->salon->refresh(), $this->salon->currentPlan(), 1))->toBe(3900);
+
+    $payment = recordPayment($this->salon);
+
+    expect($payment->is_founder)->toBeFalse()
+        ->and($payment->amount_cents)->toBe(3900)
+        ->and($this->salon->refresh()->founder_since)->toBeNull();
+});
+
 it('refuses a smaller plan while more people have an agenda than it allows', function () {
     Staff::factory()->for($this->salon)->create();
 

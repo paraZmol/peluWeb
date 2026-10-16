@@ -12,6 +12,7 @@ use App\Models\Staff;
 use App\Models\SubscriptionPayment;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -51,7 +52,8 @@ class RecordSubscriptionPayment
             // The places are counted across salons: two payments at once take turns.
             Plan::query()->lockForUpdate()->get();
 
-            if ($salon->founder_since === null && $data->plan->founder_price_cents !== null && self::founderOfferIsOpen($today)) {
+            // Only a first payment gets it: a salon that lost it does not win it back.
+            if ($salon->founder_since === null && $data->plan->founder_price_cents !== null && ! self::hasPaid($salon) && self::founderOfferIsOpen(self::todayInLima())) {
                 $salon->founder_since = now();
             }
 
@@ -84,7 +86,7 @@ class RecordSubscriptionPayment
     public static function expectedCents(Salon $salon, Plan $plan, int $months): int
     {
         $keepsIt = $salon->founder_since !== null && $salon->standing()->state !== SubscriptionState::ReadOnly;
-        $getsIt = $keepsIt || self::founderOfferIsOpen($salon->localNow()->startOfDay());
+        $getsIt = $keepsIt || (! self::hasPaid($salon) && self::founderOfferIsOpen(self::todayInLima()));
         $monthly = $getsIt && $plan->founder_price_cents !== null ? $plan->founder_price_cents : $plan->price_cents;
 
         return $monthly * ($months === Plan::YEAR_MONTHS ? Plan::YEAR_PAID_MONTHS : $months);
@@ -119,6 +121,19 @@ class RecordSubscriptionPayment
         return Salon::query()->whereNotNull('founder_since')->count() < (int) config('billing.founder.slots');
     }
 
+    private static function hasPaid(Salon $salon): bool
+    {
+        return SubscriptionPayment::withoutGlobalScopes()->where('salon_id', $salon->id)->exists();
+    }
+
+    /**
+     * The founder offer is one for everybody: its days are Lima's, wherever the salon is.
+     */
+    public static function todayInLima(): CarbonImmutable
+    {
+        return CarbonImmutable::now(Salon::DEFAULT_TIMEZONE)->startOfDay();
+    }
+
     /**
      * The offer's last day as Y-m-d, null when it has none, or false when
      * it is written wrong: an offer whose end cannot be read is closed
@@ -144,7 +159,10 @@ class RecordSubscriptionPayment
             }
         }
 
-        report(new \InvalidArgumentException('BILLING_FOUNDER_ENDS_ON must be a date like 2026-12-31.'));
+        // Once an hour is enough: the landing asks on every visit.
+        if (Cache::add('billing.founder.ends_on.invalid', true, now()->addHour())) {
+            report(new \InvalidArgumentException('BILLING_FOUNDER_ENDS_ON must be a date like 2026-12-31.'));
+        }
 
         return false;
     }

@@ -436,16 +436,13 @@ describe('agenda', function () {
         expect($this->pedros->refresh()->status)->toBe(BookingStatus::Confirmed);
     });
 
-    it('refuses changes while the salon is suspended, but lets it call off a booking it took', function () {
+    it('refuses every change while the salon is suspended, even calling off a booking', function () {
         $this->salon->forceFill(['status' => 'suspended'])->save();
 
         $this->actingAs($this->owner)->post(route('agenda.bookings.start', $this->pedros));
-
-        expect($this->pedros->refresh()->status)->toBe(BookingStatus::Confirmed);
-
         $this->actingAs($this->owner)->post(route('agenda.bookings.cancel', $this->pedros));
 
-        expect($this->pedros->refresh()->status)->toBe(BookingStatus::Cancelled);
+        expect($this->pedros->refresh()->status)->toBe(BookingStatus::Confirmed);
     });
 });
 

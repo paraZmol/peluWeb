@@ -66,7 +66,7 @@ it('does not silently replace a different linked Google account', function () {
 
 it('rejects salon names with link or markup syntax', function (string $name) {
     $this->actingAs(User::factory()->create())
-        ->post(route('salons.store'), ['name' => $name, 'business_type' => 'unisex', 'clientele' => 'everyone'])
+        ->post(route('salons.store'), ['name' => $name, 'business_type' => 'unisex', 'clientele' => 'everyone', 'salon_terms' => '1'])
         ->assertSessionHasErrors('name');
 })->with([
     'markdown link' => ['Aviso [verifica aquí](https://evil.tld)'],
@@ -75,7 +75,7 @@ it('rejects salon names with link or markup syntax', function (string $name) {
 
 it('accepts real salon names with accents, ñ and punctuation', function () {
     $this->actingAs(User::factory()->create())
-        ->post(route('salons.store'), ['name' => "Peluquería D'Ángela & Ñusta, S.A.C.", 'business_type' => 'unisex', 'clientele' => 'everyone'])
+        ->post(route('salons.store'), ['name' => "Peluquería D'Ángela & Ñusta, S.A.C.", 'business_type' => 'unisex', 'clientele' => 'everyone', 'salon_terms' => '1'])
         ->assertSessionHasNoErrors();
 });
 

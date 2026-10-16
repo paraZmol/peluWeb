@@ -58,7 +58,6 @@ class BookingController extends Controller
             'salon' => new BookableSalonResource($salon, $services, $staff, $this->finder->performers($staff)),
             'days' => $days->handle($salon, $this->clients->levelOf($salon, $request->user()), $salon->max_days_ahead),
             'isOpen' => $salon->isWritable() && $salon->accepts_online_bookings,
-            'isPaused' => ! $salon->isWritable(),
             'viewer' => $this->viewer($request->user()),
             'preselectedServiceId' => $request->integer('servicio') ?: null,
             'repeat' => $this->repeat($request, $salon, $services, $staff),

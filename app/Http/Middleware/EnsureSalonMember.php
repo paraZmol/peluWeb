@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\SubscriptionState;
+use App\Models\Salon;
 use App\Support\CurrentSalon;
 use Closure;
 use Illuminate\Http\Request;
@@ -26,7 +28,12 @@ class EnsureSalonMember
         'agenda.bookings.refund-deposit',
         'agenda.bookings.no-show',
         'agenda.bookings.cancel',
+        // What those move goes into a till that has to be closable.
+        'cash.close',
     ];
+
+    /** Money back to a client never waits for the salon to be in good standing. */
+    private const array ALLOWED_WHILE_SUSPENDED = ['agenda.bookings.refund-deposit'];
 
     /** Files with the salon's or third parties' data that support never downloads. */
     private const array HIDDEN_FROM_SUPPORT = ['reports.export', 'expenses.receipt'];
@@ -58,7 +65,7 @@ class EnsureSalonMember
             return back(status: 303);
         }
 
-        if (! $request->isMethodSafe() && ! $salon->isWritable() && ! $request->routeIs(self::ALLOWED_WHILE_PAUSED)) {
+        if (! $request->isMethodSafe() && ! $salon->isWritable() && ! $this->isAllowedWhilePaused($request, $salon)) {
             Inertia::flash('toast', [
                 'type' => 'error',
                 'message' => 'Tu salón está en pausa. Renueva tu plan para seguir haciendo cambios.',
@@ -68,5 +75,19 @@ class EnsureSalonMember
         }
 
         return $next($request);
+    }
+
+    /**
+     * Only a pause for not paying keeps those. A suspension is the
+     * platform's decision and stops everything but giving a client's
+     * deposit back.
+     */
+    private function isAllowedWhilePaused(Request $request, Salon $salon): bool
+    {
+        if ($request->routeIs(self::ALLOWED_WHILE_SUSPENDED)) {
+            return true;
+        }
+
+        return $salon->standing()->state === SubscriptionState::ReadOnly && $request->routeIs(self::ALLOWED_WHILE_PAUSED);
     }
 }
