@@ -21,14 +21,21 @@ type Props = {
     staff?: StaffSummary;
     /** Team accounts not linked to any professional yet. */
     linkableMembers: LinkableMember[];
+    /** Every agenda of the plan is taken: someone new starts without one. */
+    isPlanFull?: boolean;
     onSaved: () => void;
 };
 
-export function StaffForm({ staff, linkableMembers, onSaved }: Props) {
+export function StaffForm({
+    staff,
+    linkableMembers,
+    isPlanFull = false,
+    onSaved,
+}: Props) {
     const form = useForm({
         name: staff?.name ?? '',
         title: staff?.title ?? '',
-        is_active: staff?.isActive ?? true,
+        is_active: staff?.isActive ?? !isPlanFull,
         user_id: staff?.userId ?? null,
     });
     const { data, setData, errors, processing } = form;
@@ -117,16 +124,26 @@ export function StaffForm({ staff, linkableMembers, onSaved }: Props) {
                 </div>
             )}
 
-            {staff && (
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
-                    <Checkbox
-                        checked={data.is_active}
-                        onCheckedChange={(checked) =>
-                            setData('is_active', checked === true)
-                        }
-                    />
-                    Atiende clientes (aparece para reservar)
-                </label>
+            {(staff || isPlanFull) && (
+                <div className="grid gap-2">
+                    <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+                        <Checkbox
+                            checked={data.is_active}
+                            onCheckedChange={(checked) =>
+                                setData('is_active', checked === true)
+                            }
+                        />
+                        Atiende clientes (aparece para reservar)
+                    </label>
+                    {!staff && isPlanFull && (
+                        <p className="text-xs text-pretty text-muted-foreground">
+                            Tu plan ya no tiene agendas libres. Puedes guardar a
+                            esta persona sin agenda y dársela cuando quites la
+                            de alguien o cambies de plan.
+                        </p>
+                    )}
+                    <InputError message={errors.is_active} />
+                </div>
             )}
 
             <Button

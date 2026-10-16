@@ -76,6 +76,10 @@ export default function StaffIndex({
                                 </DialogHeader>
                                 <StaffForm
                                     linkableMembers={linkableMembers}
+                                    isPlanFull={
+                                        agendaLimit.withAgenda >=
+                                        agendaLimit.max
+                                    }
                                     onSaved={() => setCreating(false)}
                                 />
                             </DialogContent>

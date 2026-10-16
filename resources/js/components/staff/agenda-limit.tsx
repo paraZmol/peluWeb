@@ -29,7 +29,10 @@ export function AgendaLimitSummary({ limit }: { limit: AgendaLimit }) {
 /** Every agenda of the plan is taken: the way out, one tap away. */
 function AgendaFullHint() {
     return (
-        <p className="flex items-start gap-2.5 rounded-lg bg-brand-soft px-3 py-2.5 text-sm text-pretty">
+        <p
+            role="status"
+            className="flex items-start gap-2.5 rounded-lg bg-brand-soft px-3 py-2.5 text-sm text-pretty"
+        >
             <CircleAlert
                 className="mt-0.5 size-4 shrink-0 text-brand-text"
                 strokeWidth={1.75}
