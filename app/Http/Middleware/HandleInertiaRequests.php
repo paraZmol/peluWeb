@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Models\Salon;
 use App\Models\SalonMember;
 use App\Models\Staff;
+use App\Models\SupportVisit;
 use App\Support\CurrentSalon;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -54,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                 'pushKey' => config('services.webpush.private_key') ? config('services.webpush.public_key') : null,
             ],
             ...$this->salonProps($request),
+            'support' => $this->supportProps(),
         ];
     }
 
@@ -142,5 +144,21 @@ class HandleInertiaRequests extends Middleware
         $standing = $salon->standing();
 
         return ['state' => $standing->state->value, 'daysLeft' => $standing->daysLeft];
+    }
+
+    /**
+     * The platform admin looking at a salon for support: drives the band
+     * that says so and the way out.
+     *
+     * @return array{salonName: string, endsAt: string}|null
+     */
+    private function supportProps(): ?array
+    {
+        $visit = app(CurrentSalon::class)->supportVisit();
+
+        return $visit === null ? null : [
+            'salonName' => $visit->salon->name,
+            'endsAt' => $visit->started_at->addMinutes(SupportVisit::MAX_MINUTES)->toIso8601String(),
+        ];
     }
 }

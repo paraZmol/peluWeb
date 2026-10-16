@@ -29,6 +29,7 @@ use App\Http\Controllers\Owner\ServiceController;
 use App\Http\Controllers\Owner\StaffController;
 use App\Http\Controllers\Owner\SubscriptionController;
 use App\Http\Controllers\Owner\TeamController;
+use App\Http\Controllers\Platform\SupportVisitController;
 use App\Http\Controllers\Public\BookingController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\ManifestController;
@@ -214,6 +215,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('mis-datos/{client}/fotos/{photo}', [MyDataController::class, 'photo'])
         ->whereNumber(['client', 'photo'])
         ->name('my-data.photos.show');
+
+    Route::post('soporte/salir', [SupportVisitController::class, 'destroy'])->name('support.end');
 
     Route::post('invitaciones/{token}', [InvitationAcceptanceController::class, 'store'])
         ->middleware('throttle:10,1')

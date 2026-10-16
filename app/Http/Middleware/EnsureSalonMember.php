@@ -32,6 +32,12 @@ class EnsureSalonMember
             abort(403);
         }
 
+        if (! $request->isMethodSafe() && $this->currentSalon->supportVisit() !== null) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Estás en modo soporte: puedes ver todo, pero no hacer cambios.']);
+
+            return back(status: 303);
+        }
+
         if (! $request->isMethodSafe() && ! $salon->isWritable()) {
             Inertia::flash('toast', [
                 'type' => 'error',

@@ -20,6 +20,8 @@ declare module '@inertiajs/core' {
             };
             currentSalon: CurrentSalon | null;
             salons: SalonSummary[];
+            /** The platform admin is looking at the current salon for support (read only). */
+            support: { salonName: string; endsAt: string } | null;
             [key: string]: unknown;
         };
     }
