@@ -32,7 +32,7 @@ use Laravel\Sanctum\Sanctum;
 | every day 09:00–18:00; a cut is 30 minutes and S/ 50.
 */
 
-const PB_PAUSED = 'Tu salón está en pausa. Renueva tu plan para seguir haciendo cambios.';
+const PSB_PAUSED = 'Tu salón está en pausa. Renueva tu plan para seguir haciendo cambios.';
 
 beforeEach(function () {
     Notification::fake();
@@ -52,25 +52,25 @@ beforeEach(function () {
     $this->client = User::factory()->create(['name' => 'Ana Cliente']);
 });
 
-function pbAt(string $time, string $date = '2026-10-09'): CarbonImmutable
+function psbAt(string $time, string $date = '2026-10-09'): CarbonImmutable
 {
     return CarbonImmutable::parse("{$date} {$time}", 'America/Lima');
 }
 
-function pbClientOf(User $user): SalonClient
+function psbClientOf(User $user): SalonClient
 {
     return SalonClient::withoutGlobalScopes()->where('salon_id', test()->salon->id)->where('user_id', $user->id)->first()
         ?? SalonClient::factory()->for(test()->salon)->forUser($user)->create();
 }
 
-function pbBook(string $time, string $date = '2026-10-09', ?User $user = null, BookingSource $source = BookingSource::Client): Booking
+function psbBook(string $time, string $date = '2026-10-09', ?User $user = null, BookingSource $source = BookingSource::Client): Booking
 {
     return app(CreateBooking::class)->handle(new NewBooking(
         salon: test()->salon->refresh(),
-        client: $user === null ? SalonClient::factory()->for(test()->salon)->create() : pbClientOf($user),
+        client: $user === null ? SalonClient::factory()->for(test()->salon)->create() : psbClientOf($user),
         selections: [['service_id' => test()->cut->id, 'variant_id' => null]],
         staff: test()->beto,
-        startsAt: pbAt($time, $date),
+        startsAt: psbAt($time, $date),
         source: $source,
     ));
 }
@@ -78,7 +78,7 @@ function pbBook(string $time, string $date = '2026-10-09', ?User $user = null, B
 /**
  * Read only (trial over long before, nothing paid) or suspended by hand.
  */
-function pbPause(string $how = 'read_only'): void
+function psbPause(string $how = 'read_only'): void
 {
     $salon = test()->salon;
 
@@ -91,22 +91,22 @@ function pbPause(string $how = 'read_only'): void
     expect($salon->refresh()->isWritable())->toBeFalse();
 }
 
-function pbBookingsCount(): int
+function psbBookingsCount(): int
 {
     return DB::table('bookings')->where('salon_id', test()->salon->id)->count();
 }
 
-function pbStoreBody(string $time = '11:00', string $date = '2026-10-09'): array
+function psbStoreBody(string $time = '11:00', string $date = '2026-10-09'): array
 {
-    return ['services' => [['id' => test()->cut->id]], 'staff' => test()->beto->id, 'start' => pbAt($time, $date)->getTimestamp()];
+    return ['services' => [['id' => test()->cut->id]], 'staff' => test()->beto->id, 'start' => psbAt($time, $date)->getTimestamp()];
 }
 
-function pbWait(string $date = '2026-10-09'): WaitlistEntry
+function psbWait(string $date = '2026-10-09'): WaitlistEntry
 {
     $entry = new WaitlistEntry;
     $entry->forceFill([
         'salon_id' => test()->salon->id,
-        'salon_client_id' => pbClientOf(test()->client)->id,
+        'salon_client_id' => psbClientOf(test()->client)->id,
         'staff_id' => test()->beto->id,
         'date' => $date,
         'selections' => [['service_id' => test()->cut->id, 'variant_id' => null]],
@@ -120,12 +120,12 @@ function pbWait(string $date = '2026-10-09'): WaitlistEntry
 // ------------------------------------------------- 1. confirming an expired hold
 
 it('confirms while read only an expired hold whose slot nobody took, once, without overlapping anything', function () {
-    $held = pbBook('10:00', user: $this->client);
+    $held = psbBook('10:00', user: $this->client);
     expect($held->status)->toBe(BookingStatus::Pending);
 
     $this->travel(31)->minutes();
     expect($held->refresh()->isHoldExpired())->toBeTrue();
-    pbPause();
+    psbPause();
 
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $held), ['method' => 'yape'])->assertSessionHasNoErrors();
     // A second press does not record the deposit twice.
@@ -138,16 +138,16 @@ it('confirms while read only an expired hold whose slot nobody took, once, witho
 });
 
 it('stops every change of the team when the platform suspends the salon, even confirm, no-show and cancel', function () {
-    $paid = pbBook('10:00', user: $this->client);
+    $paid = psbBook('10:00', user: $this->client);
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $paid), ['method' => 'yape'])->assertSessionHasNoErrors();
-    $held = pbBook('11:00');
-    $missed = pbBook('09:00');
-    $this->travelTo(pbAt('09:20'));
-    pbPause('suspended');
+    $held = psbBook('11:00');
+    $missed = psbBook('09:00');
+    $this->travelTo(psbAt('09:20'));
+    psbPause('suspended');
 
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $held), ['method' => 'yape'])->assertInertiaFlash('toast.message', PB_PAUSED);
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.no-show', $missed))->assertInertiaFlash('toast.message', PB_PAUSED);
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.cancel', $paid))->assertInertiaFlash('toast.message', PB_PAUSED);
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $held), ['method' => 'yape'])->assertInertiaFlash('toast.message', PSB_PAUSED);
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.no-show', $missed))->assertInertiaFlash('toast.message', PSB_PAUSED);
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.cancel', $paid))->assertInertiaFlash('toast.message', PSB_PAUSED);
 
     expect($held->refresh()->status)->toBe(BookingStatus::Pending)
         ->and($missed->refresh()->status)->toBe(BookingStatus::Pending)
@@ -159,9 +159,9 @@ it('stops every change of the team when the platform suspends the salon, even co
 });
 
 it('leaves no way back for a deposit already paid when the platform suspends the salon', function () {
-    $paid = pbBook('10:00', '2026-10-07', user: $this->client);
+    $paid = psbBook('10:00', '2026-10-07', user: $this->client);
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $paid), ['method' => 'yape'])->assertSessionHasNoErrors();
-    pbPause('suspended');
+    psbPause('suspended');
 
     // The visit cannot happen (the team cannot even start it), so the client calls it off...
     $this->actingAs($this->client)->post(route('bookings.cancel', $paid->code))->assertSessionHasNoErrors();
@@ -175,14 +175,14 @@ it('leaves no way back for a deposit already paid when the platform suspends the
 });
 
 it('refuses in pause to revive an expired hold whose time another client already took', function () {
-    $held = pbBook('10:00', user: $this->client);
+    $held = psbBook('10:00', user: $this->client);
     $this->travel(31)->minutes();
 
     // The hold ran out while the salon still worked: someone else took 10:00.
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    $taker = pbBook('10:00');
+    $taker = psbBook('10:00');
     expect($taker->status)->toBe(BookingStatus::Confirmed);
-    pbPause();
+    psbPause();
 
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $held), ['method' => 'yape']);
 
@@ -193,13 +193,13 @@ it('refuses in pause to revive an expired hold whose time another client already
 });
 
 it('lets only the first of two expired holds on the same time be revived in pause', function () {
-    $first = pbBook('10:00', user: $this->client);
+    $first = psbBook('10:00', user: $this->client);
     $this->travel(31)->minutes();
     // The first hold is gone, so a second person holds the same time, and lets it go too.
-    $second = pbBook('10:00');
+    $second = psbBook('10:00');
     $this->travel(31)->minutes();
     expect($first->refresh()->isHoldExpired())->toBeTrue()->and($second->refresh()->isHoldExpired())->toBeTrue();
-    pbPause();
+    psbPause();
 
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $first), ['method' => 'yape'])->assertSessionHasNoErrors();
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $second), ['method' => 'yape']);
@@ -214,58 +214,58 @@ it('lets only the first of two expired holds on the same time be revived in paus
 
 it('creates no booking in pause through the public wizard, the API v1 or the action itself', function (string $how) {
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    pbPause($how);
+    psbPause($how);
 
-    $this->actingAs($this->client)->post(route('salons.booking.store', $this->salon), pbStoreBody());
+    $this->actingAs($this->client)->post(route('salons.booking.store', $this->salon), psbStoreBody());
 
     Sanctum::actingAs($this->client, ['*']);
-    $api = $this->postJson(route('api.v1.bookings.store', $this->salon->slug), pbStoreBody('12:00'));
+    $api = $this->postJson(route('api.v1.bookings.store', $this->salon->slug), psbStoreBody('12:00'));
     expect($api->status())->not->toBe(201);
 
-    expect(fn () => pbBook('13:00', source: BookingSource::Staff))->toThrow(BookingException::class)
-        ->and(pbBookingsCount())->toBe(0);
+    expect(fn () => psbBook('13:00', source: BookingSource::Staff))->toThrow(BookingException::class)
+        ->and(psbBookingsCount())->toBe(0);
 })->with(['read only' => 'read_only', 'suspended' => 'suspended']);
 
 it('refuses in pause a booking made by the team from the agenda', function () {
-    pbPause();
+    psbPause();
 
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.store'), [...pbStoreBody(), 'client_name' => 'Luis Paso'])
-        ->assertRedirect()->assertInertiaFlash('toast.message', PB_PAUSED);
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.store'), [...psbStoreBody(), 'client_name' => 'Luis Paso'])
+        ->assertRedirect()->assertInertiaFlash('toast.message', PSB_PAUSED);
 
-    expect(pbBookingsCount())->toBe(0)
+    expect(psbBookingsCount())->toBe(0)
         ->and(SalonClient::withoutGlobalScopes()->where('name', 'Luis Paso')->exists())->toBeFalse();
 });
 
 it('does not move a booking in pause, from the agenda, from Mis reservas or from the API', function () {
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    $booking = pbBook('10:00', user: $this->client);
-    pbPause();
+    $booking = psbBook('10:00', user: $this->client);
+    psbPause();
 
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.move', $booking), ['start' => pbAt('15:00')->getTimestamp()])
-        ->assertInertiaFlash('toast.message', PB_PAUSED);
-    $this->actingAs($this->client)->post(route('bookings.move', $booking->code), ['start' => pbAt('16:00')->getTimestamp()]);
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.move', $booking), ['start' => psbAt('15:00')->getTimestamp()])
+        ->assertInertiaFlash('toast.message', PSB_PAUSED);
+    $this->actingAs($this->client)->post(route('bookings.move', $booking->code), ['start' => psbAt('16:00')->getTimestamp()]);
     Sanctum::actingAs($this->client, ['*']);
-    $this->postJson(route('api.v1.bookings.move', $booking->code), ['start' => pbAt('17:00')->getTimestamp()]);
+    $this->postJson(route('api.v1.bookings.move', $booking->code), ['start' => psbAt('17:00')->getTimestamp()]);
 
-    expect($booking->refresh()->starts_at->equalTo(pbAt('10:00')))->toBeTrue()
-        ->and(DB::table('booking_segments')->where('booking_id', $booking->id)->min('starts_at'))->toBe(pbAt('10:00')->utc()->format('Y-m-d H:i:s'));
+    expect($booking->refresh()->starts_at->equalTo(psbAt('10:00')))->toBeTrue()
+        ->and(DB::table('booking_segments')->where('booking_id', $booking->id)->min('starts_at'))->toBe(psbAt('10:00')->utc()->format('Y-m-d H:i:s'));
 });
 
 it('does not add to nor move the walk-in line in pause', function () {
     $this->actingAs($this->owner->fresh())->post(route('walk-ins.store'), ['name' => 'Primero'])->assertSessionHasNoErrors();
     $walkIn = WalkIn::withoutGlobalScopes()->where('name', 'Primero')->firstOrFail();
-    pbPause();
+    psbPause();
 
-    $this->actingAs($this->owner->fresh())->post(route('walk-ins.store'), ['name' => 'Segundo'])->assertInertiaFlash('toast.message', PB_PAUSED);
-    $this->actingAs($this->owner->fresh())->patch(route('walk-ins.update', $walkIn), ['status' => 'called'])->assertInertiaFlash('toast.message', PB_PAUSED);
+    $this->actingAs($this->owner->fresh())->post(route('walk-ins.store'), ['name' => 'Segundo'])->assertInertiaFlash('toast.message', PSB_PAUSED);
+    $this->actingAs($this->owner->fresh())->patch(route('walk-ins.update', $walkIn), ['status' => 'called'])->assertInertiaFlash('toast.message', PSB_PAUSED);
 
     expect(WalkIn::withoutGlobalScopes()->where('salon_id', $this->salon->id)->count())->toBe(1)
         ->and($walkIn->refresh()->status->value)->toBe('waiting');
 });
 
 it('takes nobody on the waiting list and offers no free time of a paused salon', function () {
-    $entry = pbWait();
-    pbPause();
+    $entry = psbWait();
+    psbPause();
 
     // Joining is closed.
     $this->actingAs($this->client)->post(route('salons.waitlist.store', $this->salon), ['services' => [['id' => $this->cut->id]], 'date' => '2026-10-09'])->assertNotFound();
@@ -281,26 +281,26 @@ it('takes nobody on the waiting list and offers no free time of a paused salon',
 
 it('does not open a "repeat" booking in pause: the wizard says it is paused and the store refuses it', function () {
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    $done = pbBook('10:00', user: $this->client);
-    $this->travelTo(pbAt('12:00'));
+    $done = psbBook('10:00', user: $this->client);
+    $this->travelTo(psbAt('12:00'));
     Booking::withoutGlobalScopes()->whereKey($done->id)->update(['status' => BookingStatus::Completed]);
-    pbPause();
+    psbPause();
 
     $this->actingAs($this->client)->get(route('salons.booking.create', ['salon' => $this->salon->slug, 'repetir' => $done->code]))
         ->assertInertia(fn ($page) => $page->where('isOpen', false));
-    $this->actingAs($this->client)->post(route('salons.booking.store', $this->salon), pbStoreBody('10:00', '2026-10-16'));
+    $this->actingAs($this->client)->post(route('salons.booking.store', $this->salon), psbStoreBody('10:00', '2026-10-16'));
 
-    expect(pbBookingsCount())->toBe(1);
+    expect(psbBookingsCount())->toBe(1);
 });
 
 // ------------------------------------------------- 3. what no-show and cancel set off
 
 it('marks "no vino" in pause without charging, paying a commission or offering the slot', function () {
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    $booking = pbBook('10:00', user: $this->client);
-    $entry = pbWait();
-    $this->travelTo(pbAt('10:20'));
-    pbPause();
+    $booking = psbBook('10:00', user: $this->client);
+    $entry = psbWait();
+    $this->travelTo(psbAt('10:20'));
+    psbPause();
 
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.no-show', $booking))->assertSessionHasNoErrors();
     $this->artisan('waitlist:offer')->assertSuccessful();
@@ -309,16 +309,16 @@ it('marks "no vino" in pause without charging, paying a commission or offering t
         ->and($booking->commission_cents)->toBeIn([null, 0])
         ->and($booking->charged_cents)->toBeIn([null, 0])
         ->and(Payment::withoutGlobalScopes()->where('salon_id', $this->salon->id)->exists())->toBeFalse()
-        ->and(pbClientOf($this->client)->no_show_count)->toBe(1)
+        ->and(psbClientOf($this->client)->no_show_count)->toBe(1)
         ->and($entry->refresh()->status)->toBe(WaitlistStatus::Waiting);
     Notification::assertNotSentTo($this->client, WaitlistNotification::class);
 });
 
 it('cancels in pause without offering the freed time to the waiting list nor moving money', function () {
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    $booking = pbBook('10:00');
-    $entry = pbWait();
-    pbPause();
+    $booking = psbBook('10:00');
+    $entry = psbWait();
+    psbPause();
 
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.cancel', $booking))->assertSessionHasNoErrors();
     $this->artisan('waitlist:offer')->assertSuccessful();
@@ -329,14 +329,14 @@ it('cancels in pause without offering the freed time to the waiting list nor mov
     Notification::assertNotSentTo($this->client, WaitlistNotification::class);
 
     // And the freed time is still not bookable while paused.
-    $this->actingAs(User::factory()->create())->post(route('salons.booking.store', $this->salon), pbStoreBody('10:00'));
-    expect(pbBookingsCount())->toBe(1);
+    $this->actingAs(User::factory()->create())->post(route('salons.booking.store', $this->salon), psbStoreBody('10:00'));
+    expect(psbBookingsCount())->toBe(1);
 });
 
 it('gives a paid deposit back once in pause after the salon cancels, and never twice', function () {
-    $booking = pbBook('10:00', user: $this->client);
+    $booking = psbBook('10:00', user: $this->client);
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.confirm', $booking), ['method' => 'yape'])->assertSessionHasNoErrors();
-    pbPause();
+    psbPause();
 
     $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.cancel', $booking))->assertSessionHasNoErrors();
     expect($booking->refresh()->deposit_refundable)->toBeTrue()
@@ -351,12 +351,12 @@ it('gives a paid deposit back once in pause after the salon cancels, and never t
 
 it('does not start nor charge a visit in pause (only confirm, refund, no-show and cancel pass)', function () {
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    $booking = pbBook('10:00', user: $this->client);
-    $this->travelTo(pbAt('10:05'));
-    pbPause();
+    $booking = psbBook('10:00', user: $this->client);
+    $this->travelTo(psbAt('10:05'));
+    psbPause();
 
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.start', $booking))->assertInertiaFlash('toast.message', PB_PAUSED);
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.complete', $booking), ['method' => 'cash'])->assertInertiaFlash('toast.message', PB_PAUSED);
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.start', $booking))->assertInertiaFlash('toast.message', PSB_PAUSED);
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.complete', $booking), ['method' => 'cash'])->assertInertiaFlash('toast.message', PSB_PAUSED);
 
     expect($booking->refresh()->status)->toBe(BookingStatus::Confirmed)
         ->and(Payment::withoutGlobalScopes()->where('salon_id', $this->salon->id)->exists())->toBeFalse();
@@ -395,27 +395,27 @@ it('takes a booking at 23:59 of the last day of grace in Lima and refuses it at 
     $this->salon->forceFill(['trial_ends_at' => null, 'paid_until' => '2026-11-06', 'deposit_percent' => 0])->save();
 
     $this->travelTo(CarbonImmutable::parse('2026-11-13 23:59:00', 'America/Lima'));
-    $this->actingAs($this->client)->post(route('salons.booking.store', $this->salon), pbStoreBody('10:00', '2026-11-20'))->assertSessionHasNoErrors();
-    expect(pbBookingsCount())->toBe(1);
+    $this->actingAs($this->client)->post(route('salons.booking.store', $this->salon), psbStoreBody('10:00', '2026-11-20'))->assertSessionHasNoErrors();
+    expect(psbBookingsCount())->toBe(1);
 
     $this->travelTo(CarbonImmutable::parse('2026-11-14 00:00:00', 'America/Lima'));
-    $this->actingAs(User::factory()->create())->post(route('salons.booking.store', $this->salon), pbStoreBody('11:00', '2026-11-20'));
-    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.store'), [...pbStoreBody('12:00', '2026-11-20'), 'client_name' => 'Luis Paso'])
-        ->assertInertiaFlash('toast.message', PB_PAUSED);
+    $this->actingAs(User::factory()->create())->post(route('salons.booking.store', $this->salon), psbStoreBody('11:00', '2026-11-20'));
+    $this->actingAs($this->owner->fresh())->post(route('agenda.bookings.store'), [...psbStoreBody('12:00', '2026-11-20'), 'client_name' => 'Luis Paso'])
+        ->assertInertiaFlash('toast.message', PSB_PAUSED);
 
-    expect(pbBookingsCount())->toBe(1);
+    expect(psbBookingsCount())->toBe(1);
 });
 
 // ------------------------------------------------- 5. reminders keep going out
 
 it('still sends the reminder of a booking already taken while the salon is paused', function (string $how) {
     $this->salon->forceFill(['deposit_percent' => 0])->save();
-    $booking = pbBook('10:00', user: $this->client);
+    $booking = psbBook('10:00', user: $this->client);
     expect($booking->status)->toBe(BookingStatus::Confirmed);
-    pbPause($how);
+    psbPause($how);
 
     // 22 hours before the visit.
-    $this->travelTo(pbAt('12:00', '2026-10-08'));
+    $this->travelTo(psbAt('12:00', '2026-10-08'));
     $this->artisan('bookings:send-reminders')->assertSuccessful();
 
     expect($booking->refresh()->reminder_sent_at)->not->toBeNull();

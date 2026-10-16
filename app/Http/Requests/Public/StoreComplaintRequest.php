@@ -8,7 +8,9 @@ use App\Enums\IdentityDocument;
 use App\Support\Money;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * A sheet of the platform's Libro de Reclamaciones, filed without an
@@ -18,6 +20,12 @@ class StoreComplaintRequest extends FormRequest
 {
     /** Highest amount the form takes, in soles: beyond that it is a typo. */
     private const int MAX_CLAIMED_SOLES = 100000;
+
+    private const int MAX_PER_ADDRESS_PER_DAY = 3;
+
+    private const int MAX_PER_DAY = 50;
+
+    private const int DAY_SECONDS = 86400;
 
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -40,7 +48,36 @@ class StoreComplaintRequest extends FormRequest
             'detail' => ['required', 'string', 'min:10', 'max:3000'],
             'request' => ['required', 'string', 'min:5', 'max:2000'],
             'consent' => ['accepted'],
+            // A field people never see: whoever fills it is a bot.
+            'website' => ['prohibited'],
         ];
+    }
+
+    /**
+     * Beyond the limit per IP: a few sheets a day per address (so the book
+     * cannot be used to mail strangers) and a ceiling for the whole book.
+     *
+     * @return array<int, \Closure>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $perAddress = 'complaint-email:'.sha1(mb_strtolower(trim($this->string('email')->toString())));
+
+            if (RateLimiter::tooManyAttempts($perAddress, self::MAX_PER_ADDRESS_PER_DAY)
+                || RateLimiter::tooManyAttempts('complaint-all', self::MAX_PER_DAY)) {
+                $validator->errors()->add('email', 'Hoy ya se registraron varias hojas. Si necesitas presentar otra, escríbenos y la registramos.');
+
+                return;
+            }
+
+            RateLimiter::hit($perAddress, self::DAY_SECONDS);
+            RateLimiter::hit('complaint-all', self::DAY_SECONDS);
+        }];
     }
 
     protected function prepareForValidation(): void

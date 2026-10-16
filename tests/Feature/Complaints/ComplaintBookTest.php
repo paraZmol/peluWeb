@@ -130,6 +130,24 @@ it('limits how many sheets one connection can send in an hour', function () {
     expect(Complaint::query()->count())->toBe(10);
 });
 
+it('takes at most 3 sheets a day for one address, so the book cannot mail strangers', function () {
+    foreach (range(1, 3) as $attempt) {
+        $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$attempt}"])
+            ->post(route('complaints.store'), complaintSheet(['email' => 'Victima@Example.test']))->assertSessionHasNoErrors();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.9'])
+        ->post(route('complaints.store'), complaintSheet(['email' => 'victima@example.test']))->assertSessionHasErrors('email');
+
+    expect(Complaint::query()->count())->toBe(3);
+});
+
+it('ignores a sheet whose hidden trap field was filled', function () {
+    $this->post(route('complaints.store'), complaintSheet(['website' => 'https://spam.example']))->assertSessionHasErrors('website');
+
+    expect(Complaint::query()->count())->toBe(0);
+});
+
 it('never lets a sheet be edited or deleted', function () {
     $complaint = Complaint::factory()->create();
 

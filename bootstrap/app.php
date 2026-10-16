@@ -67,7 +67,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Health data refused by validation must not linger in the session.
-        $exceptions->dontFlash(['care_notes']);
+        $exceptions->dontFlash(['care_notes', 'document_number', 'consumer_address', 'phone', 'email', 'detail', 'request']);
 
         // Business rule violations go back to the form as a toast, not a 500.
         $exceptions->render(function (BusinessRuleException $exception, Request $request) {

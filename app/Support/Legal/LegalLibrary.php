@@ -63,10 +63,13 @@ class LegalLibrary
      */
     public function versions(LegalDocumentType $type): array
     {
-        $versions = array_map(
-            fn (string $path): string => pathinfo($path, PATHINFO_FILENAME),
-            glob($this->folder($type).'/*.md') ?: [],
-        );
+        $versions = array_values(array_filter(
+            array_map(
+                fn (string $path): string => pathinfo($path, PATHINFO_FILENAME),
+                glob($this->folder($type).'/*.md') ?: [],
+            ),
+            fn (string $version): bool => preg_match('/\A\d+(\.\d+)*\z/', $version) === 1,
+        ));
 
         usort($versions, fn (string $a, string $b): int => version_compare($b, $a));
 
