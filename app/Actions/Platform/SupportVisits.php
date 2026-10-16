@@ -68,7 +68,7 @@ class SupportVisits
     /**
      * The salon's last visits, for "Mi plan": the owner sees each look.
      *
-     * @return list<array{id: int, startedAt: string, minutes: int|null, reason: string}>
+     * @return array<int, array{id: int, startedAt: string, minutes: int|null, reason: string}>
      */
     public function forOwner(Salon $salon, int $limit = 10): array
     {
@@ -103,7 +103,7 @@ class SupportVisits
     private function owners(Salon $salon): Collection
     {
         return SalonMember::query()->with('user')->where('salon_id', $salon->id)->where('role', SalonRole::Owner)->get()
-            ->map(fn (SalonMember $member): ?User => $member->user)
+            ->map(fn (SalonMember $member): User => $member->user)
             ->filter()
             ->values();
     }
