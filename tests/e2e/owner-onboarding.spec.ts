@@ -97,13 +97,17 @@ test('el registro pide aceptar los términos y el pie los enlaza', async ({
     await page.goto('/register');
     await page.getByLabel('Nombre').fill('Ale Nuevo');
     await page.getByLabel('Correo electrónico').fill(email);
-    await page.getByLabel('Contraseña', { exact: true }).fill('password-Segura-1');
+    await page
+        .getByLabel('Contraseña', { exact: true })
+        .fill('password-Segura-1');
     await page.getByLabel('Confirmar contraseña').fill('password-Segura-1');
     await page.getByRole('button', { name: /Crear mi cuenta/ }).click();
     await expect(page.getByText(/marca que leíste y aceptas/)).toBeVisible();
 
     await page.getByRole('checkbox', { name: /Leí y acepto/ }).check();
-    await page.getByLabel('Contraseña', { exact: true }).fill('password-Segura-1');
+    await page
+        .getByLabel('Contraseña', { exact: true })
+        .fill('password-Segura-1');
     await page.getByLabel('Confirmar contraseña').fill('password-Segura-1');
     await page.getByRole('button', { name: /Crear mi cuenta/ }).click();
     await expect(page).not.toHaveURL(/\/register$/);

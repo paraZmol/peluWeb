@@ -38,17 +38,17 @@ export function ComplaintForm({
             }}
             className="flex flex-col gap-8"
         >
-            {/* A trap for bots: hidden from people and from screen readers. */}
-            <input
-                type="text"
-                name="website"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden
-                className="hidden"
-            />
             {({ processing, errors }) => (
                 <>
+                    {/* A trap for bots: hidden from people and from screen readers. */}
+                    <input
+                        type="text"
+                        name="website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden
+                        className="hidden"
+                    />
                     <ConsumerFields documents={documents} errors={errors} />
                     <ClaimFields
                         kinds={kinds}
