@@ -87,7 +87,7 @@ class SaveStaff
         $getsAgenda = $staff->is_active && ($isNew || ! $staff->getOriginal('is_active'));
 
         if ($getsAgenda && ! $salon->hasRoomForStaff()) {
-            throw StaffException::planLimitReached($salon->staffLimit(), ($salon->plan ?? Plan::trial())->name);
+            throw StaffException::planLimitReached($salon->staffLimit(), $salon->currentPlan()->name);
         }
     }
 

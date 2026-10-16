@@ -240,7 +240,16 @@ class Salon extends Model
      */
     public function staffLimit(): int
     {
-        return min(($this->plan ?? Plan::trial())->max_staff, Staff::MAX_PER_SALON);
+        return min($this->currentPlan()->max_staff, Staff::MAX_PER_SALON);
+    }
+
+    /**
+     * The plan it is on; one without a plan counts as the trial's. Loaded
+     * on purpose: lazy loading is off in the app.
+     */
+    public function currentPlan(): Plan
+    {
+        return $this->loadMissing('plan')->plan ?? Plan::trial();
     }
 
     /**

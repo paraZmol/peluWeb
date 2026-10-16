@@ -97,7 +97,7 @@ class RecordPaymentAction
      */
     private static function defaults(Salon $salon): array
     {
-        $plan = $salon->plan ?? Plan::trial();
+        $plan = $salon->currentPlan();
 
         return [
             'plan_id' => $plan->id,

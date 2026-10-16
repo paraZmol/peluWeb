@@ -43,7 +43,7 @@ class StaffController extends SalonAreaController
             'agendaLimit' => [
                 'withAgenda' => $staff->where('is_active', true)->count(),
                 'max' => $salon->staffLimit(),
-                'planName' => $salon->plan->name ?? Plan::trial()->name,
+                'planName' => $salon->currentPlan()->name,
             ],
         ]);
     }

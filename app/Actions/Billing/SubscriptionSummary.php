@@ -20,7 +20,7 @@ class SubscriptionSummary
     public function handle(Salon $salon): array
     {
         $standing = $salon->standing();
-        $plan = $salon->plan ?? Plan::trial();
+        $plan = $salon->currentPlan();
         $payments = SubscriptionPayment::query()->with('plan')->latest('covers_from')->get();
         $graceDays = (int) config('billing.grace_days');
 

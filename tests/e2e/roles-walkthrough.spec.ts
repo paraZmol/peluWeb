@@ -39,6 +39,7 @@ const SALON_PAGES = [
     '/reportes',
     '/profesionales',
     '/equipo',
+    '/mi-plan',
 ];
 const PLATFORM = '/plataforma';
 /** Every salon page, plus the professional's own hours. */
@@ -96,6 +97,7 @@ const roles: Role[] = [
             'Reportes',
             'Profesionales',
             'Equipo',
+            'Mi plan',
             'Mis reservas',
             'Mis datos',
         ],
@@ -147,6 +149,7 @@ const roles: Role[] = [
             '/promociones',
             '/profesionales',
             '/equipo',
+            '/mi-plan',
             PLATFORM,
         ],
         panel: 'Agenda de hoy',
@@ -188,6 +191,7 @@ const roles: Role[] = [
             'Reportes',
             'Profesionales',
             'Equipo',
+            'Mi plan',
             'Mis reservas',
             'Mis datos',
         ],
@@ -213,6 +217,7 @@ const roles: Role[] = [
             'Reportes',
             'Profesionales',
             'Equipo',
+            'Mi plan',
             'Mis reservas',
             'Mis datos',
         ],
