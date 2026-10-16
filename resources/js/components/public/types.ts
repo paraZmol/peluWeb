@@ -55,6 +55,14 @@ export type PublicTeamMember = {
     photoUrl: string | null;
 };
 
+/** Where the salon's own Libro de Reclamaciones is, and who provides the service. */
+export type PublicComplaintsBook = {
+    /** Its book online; null means it is kept at the premises. */
+    url: string | null;
+    legalName: string | null;
+    ruc: string | null;
+};
+
 export type PublicSalon = {
     name: string;
     slug: string;
@@ -73,9 +81,12 @@ export type PublicSalon = {
     whatsappUrl: string | null;
     /** Online booking wizard; null when the salon cannot take bookings yet. */
     bookingUrl: string | null;
+    /** Online booking is off for now (any reason, never said): WhatsApp still works. */
+    bookingsPaused: boolean;
     instagramUrl: string | null;
     address: string | null;
     location: PublicLocation | null;
+    complaintsBook: PublicComplaintsBook;
     photos: PublicPhoto[];
     openingHours: PublicOpeningHours | null;
     serviceGroups: PublicServiceGroup[];

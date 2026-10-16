@@ -7,6 +7,7 @@ use App\Enums\SalonPermission;
 use App\Models\Booking;
 use App\Models\SalonClient;
 use App\Models\User;
+use App\Support\CurrentSalon;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -40,6 +41,11 @@ class SalonClientPolicy
      */
     public function viewCare(User $user, SalonClient $client): bool
     {
+        // Health notes and pictures stay closed to platform support (Ley 29733).
+        if (app(CurrentSalon::class)->supportVisit() !== null) {
+            return false;
+        }
+
         $membership = $user->membershipIn($client->salon_id);
 
         return $membership !== null && ($membership->isOwner() || $this->attends($user, $client, onlyKept: true));

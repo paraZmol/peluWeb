@@ -5,6 +5,7 @@ import { About } from '@/components/landing/about';
 import { Audiences } from '@/components/landing/audiences';
 import { BeforeAfter } from '@/components/landing/before-after';
 import { META_DESCRIPTION, PAGE_TITLE } from '@/components/landing/content';
+import type { PublicPricing } from '@/components/landing/content';
 import { Faq } from '@/components/landing/faq';
 import { Features } from '@/components/landing/features';
 import { FinalCta } from '@/components/landing/final-cta';
@@ -33,7 +34,7 @@ function useSmoothScroll(): void {
     }, [reduceMotion]);
 }
 
-export default function Welcome() {
+export default function Welcome({ pricing }: { pricing: PublicPricing }) {
     const { auth } = usePage().props;
     useSmoothScroll();
 
@@ -56,7 +57,7 @@ export default function Welcome() {
                     <HowItWorks />
                     <BeforeAfter />
                     <Features />
-                    <Pricing />
+                    <Pricing pricing={pricing} />
                     <Faq />
                     <About />
                     <FinalCta />

@@ -61,8 +61,16 @@ class PublicSalonResource extends JsonResource
             'bookingUrl' => $this->content->openingHours !== null && $this->isWritable() && $this->accepts_online_bookings
                 ? route('salons.booking.create', $this->slug)
                 : null,
+            // Whatever the reason (its plan, or the owner turned them off), the page says the same.
+            'bookingsPaused' => $this->content->openingHours !== null && (! $this->isWritable() || ! $this->accepts_online_bookings),
             'instagramUrl' => $this->instagram === null ? null : "https://instagram.com/{$this->instagram}",
             'address' => collect([$this->address, $this->district, $this->city])->filter()->join(', ') ?: null,
+            // Who provides the service and where its own book is (P7).
+            'complaintsBook' => [
+                'url' => $this->complaints_book_url,
+                'legalName' => $this->legal_name,
+                'ruc' => $this->ruc,
+            ],
             'location' => $this->hasLocation() ? [
                 'latitude' => (float) $this->latitude,
                 'longitude' => (float) $this->longitude,

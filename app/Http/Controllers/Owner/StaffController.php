@@ -6,6 +6,7 @@ use App\Actions\Staff\RemoveStaff;
 use App\Actions\Staff\SaveStaff;
 use App\Http\Requests\Owner\StaffRequest;
 use App\Http\Resources\StaffResource;
+use App\Models\Plan;
 use App\Models\Salon;
 use App\Models\SalonHoliday;
 use App\Models\SalonMember;
@@ -38,6 +39,12 @@ class StaffController extends SalonAreaController
                     'name' => $holiday->name,
                 ]),
             'today' => $salon->localNow()->toDateString(),
+            // What the plan allows: only professionals with an agenda count.
+            'agendaLimit' => [
+                'withAgenda' => $staff->where('is_active', true)->count(),
+                'max' => $salon->staffLimit(),
+                'planName' => $salon->currentPlan()->name,
+            ],
         ]);
     }
 

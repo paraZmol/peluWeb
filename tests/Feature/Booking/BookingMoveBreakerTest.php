@@ -774,7 +774,7 @@ describe('a salon that cannot take changes', function () {
             ->and($booking->refresh()->starts_at->getTimestamp())->toBe(mbAt('10:00', '2026-10-09')->getTimestamp());
     })->with([
         'suspended' => [['status' => SalonStatus::Suspended]],
-        'trial over' => [['status' => SalonStatus::Trial, 'trial_ends_at' => '2026-10-01 00:00:00']],
+        'trial over' => [['status' => SalonStatus::Trial, 'trial_ends_at' => '2026-09-20 00:00:00']], // past its 7 days of grace
     ]);
 
     it('hides the booking of a deleted salon from its client', function () {

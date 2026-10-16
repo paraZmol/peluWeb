@@ -1,7 +1,7 @@
 # Política de privacidad
 
 > **Borrador — no es asesoría legal.** Debe revisarlo un abogado colegiado en Perú antes de
-> publicarse. Versión 0.1 — 2026-10-10.
+> publicarse. Versión 0.1 — 2026-10-10; §2, §3 y §5 actualizados el 2026-10-16 (Fase 7).
 >
 > Las frases **[PENDIENTE: …]** describen funciones que aún no existen y no se publican hasta que
 > existan. Los plazos entre corchetes son propuestas que debe decidir el dueño con el abogado.
@@ -28,6 +28,7 @@ Contacto de privacidad: `[CORREO DE PRIVACIDAD]`.
 | IP, navegador y fecha de acceso | Mantener la sesión y proteger las cuentas | Seguridad del servicio |
 | Si eres dueño o parte de un equipo: rol, permisos, perfil profesional | Operar el salón | Para prestar el servicio al salón |
 | Correos de servicio (verificación, recuperar contraseña, invitaciones) | Avisos necesarios | Para prestar el servicio |
+| Si eres titular de un salón: plan, pagos de la suscripción (monto, fecha, método, periodo) y avisos de vencimiento | Cobrar y llevar la cuenta del servicio | Contrato y obligaciones tributarias |
 
 No pedimos documento de identidad, fecha de nacimiento ni datos de tarjeta. No usamos analítica
 ni publicidad, y no vendemos datos.
@@ -47,6 +48,15 @@ Para saber cómo usa el salón esos datos, o para pedirle que los corrija o borr
 salón. Si nos lo pides a nosotros, se lo trasladamos.
 
 **No escribas datos de salud en la nota** salvo lo que el salón necesite para atenderte.
+
+**Cuando damos soporte a un salón.** Somos encargados de los datos que cada salón guarda de sus
+clientes. Para atender un pedido del salón o resolver una falla, una persona autorizada de nuestro
+equipo puede ver, sin poder cambiarlos ni descargarlos, los datos del salón: agenda, reservas,
+fichas de clientes (nombre, teléfono, historial, notas) y caja. **No vemos** las notas de alergias
+ni las fotos que el salón guarda de sus clientes. No usamos esos datos para nada más ni los
+compartimos. Cada ingreso queda registrado (quién, motivo, fecha y hora, IP) y termina como máximo
+a las 2 horas. Guardamos ese registro `[24]` meses para responder a cualquier consulta sobre quién
+accedió.
 
 ## 4. Quién más recibe datos
 
@@ -72,6 +82,8 @@ Algunos de estos proveedores están fuera de Perú. `[COMPLETAR CON ABOGADO: gar
 | Foto de referencia | Hasta que la quitas. **[PENDIENTE: se borra `[30]` días después de la cita; requisito L3]** |
 | Ficha y reservas en un salón | Lo que decida el salón, que las necesita para su contabilidad. **[PENDIENTE: plazo máximo y anonimización; requisito L3]** |
 | Registros técnicos | **[PENDIENTE: `[14]` días; requisito L14]** |
+| Registro de ingresos de soporte | `[24]` meses desde la visita |
+| Pagos de la suscripción del salón | `[5]` años desde el pago (obligaciones tributarias) `[CONFIRMAR CON CONTADOR]` |
 | Prueba de aceptación de términos y reclamos | `[5]` años / 2 años los reclamos `[CONFIRMAR CON ABOGADO]` |
 
 **Qué pasa cuando borras tu cuenta.** Se elimina tu cuenta y ya no puedes entrar. **La ficha y el

@@ -8,7 +8,7 @@ it('cannot be granted through the profile form', function () {
     $this->actingAs($user)->patch(route('profile.update'), [
         'name' => $user->name,
         'email' => $user->email,
-        'is_platform_admin' => true,
+        'is_platform_admin' => true, 'terms' => 'on',
     ]);
 
     expect($user->fresh()?->is_platform_admin)->toBeFalse();
@@ -20,7 +20,7 @@ it('cannot be granted at registration', function () {
         'email' => 'mallory@example.com',
         'password' => 'password-segura-123',
         'password_confirmation' => 'password-segura-123',
-        'is_platform_admin' => true,
+        'is_platform_admin' => true, 'terms' => 'on',
     ]);
 
     expect(User::where('email', 'mallory@example.com')->first()?->is_platform_admin)->toBeFalse();

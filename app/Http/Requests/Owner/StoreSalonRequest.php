@@ -11,12 +11,18 @@ class StoreSalonRequest extends FormRequest
 {
     use NormalizesPhone, SalonValidationRules;
 
+    /** Casilla 5: the salon terms and the data processing annex. */
+    public const string TERMS_FIELD = 'salon_terms';
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return $this->salonIdentityRules();
+        return [
+            ...$this->salonIdentityRules(),
+            self::TERMS_FIELD => ['accepted'],
+        ];
     }
 
     /**
@@ -24,7 +30,10 @@ class StoreSalonRequest extends FormRequest
      */
     public function messages(): array
     {
-        return $this->salonMessages();
+        return [
+            ...$this->salonMessages(),
+            self::TERMS_FIELD.'.accepted' => 'Para crear tu salón, acepta los Términos para salones y el Encargo de tratamiento de datos.',
+        ];
     }
 
     /**

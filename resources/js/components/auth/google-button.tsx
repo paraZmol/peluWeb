@@ -21,6 +21,10 @@ export function GoogleButton() {
                     Continuar con Google
                 </a>
             </Button>
+            {/* Casilla 2: a new account is only created once the terms are accepted. */}
+            <p className="-mt-3 text-center text-xs text-muted-foreground">
+                Al continuar verás los términos antes de crear tu cuenta.
+            </p>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="h-px flex-1 bg-border" />o con tu correo
                 <span className="h-px flex-1 bg-border" />

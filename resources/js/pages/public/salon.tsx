@@ -7,6 +7,7 @@ import { PromotionStrip } from '@/components/public/promotion-strip';
 import { Reveal } from '@/components/public/reveal';
 import { InstallApp } from '@/components/install-app';
 import { ReviewsSection } from '@/components/public/reviews-section';
+import { SalonComplaintsLine } from '@/components/public/salon-complaints-line';
 import { SalonFooter } from '@/components/public/salon-footer';
 import { SalonHero } from '@/components/public/salon-hero';
 import { SalonLocation } from '@/components/public/salon-location';
@@ -125,10 +126,16 @@ export default function Salon({
                 </aside>
             </div>
 
+            <SalonComplaintsLine
+                salonName={salon.name}
+                address={salon.address}
+                book={salon.complaintsBook}
+            />
             <SalonFooter />
             {/* Outside every Reveal: a transformed ancestor breaks `fixed`. */}
             <StickyActions
                 bookingUrl={salon.bookingUrl}
+                isPaused={salon.bookingsPaused}
                 whatsappUrl={salon.whatsappUrl}
                 directionsUrl={salon.location?.directionsUrl ?? null}
             />

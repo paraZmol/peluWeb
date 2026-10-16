@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\BookingService;
+use App\Support\CurrentSalon;
 use App\Support\Images\ImageStore;
 use App\Support\Money;
 use App\Support\WhatsApp;
@@ -85,7 +86,10 @@ class AgendaBookingResource extends JsonResource
                 'discount' => Money::toAmount($this->discount_cents),
             ],
             'note' => $this->client_note,
-            'referencePhotoUrl' => app(ImageStore::class)->url($this->reference_photo_path),
+            // A client's photo is not support's to see (PLAN 7.4, L27).
+            'referencePhotoUrl' => app(CurrentSalon::class)->supportVisit() === null
+                ? app(ImageStore::class)->url($this->reference_photo_path)
+                : null,
             'actions' => $this->actions($request, $status, $now),
         ];
     }

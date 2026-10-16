@@ -7,6 +7,7 @@ use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Enums\SalonTheme;
 use App\Http\Requests\Owner\UpdateSalonBookingRequest;
+use App\Http\Requests\Owner\UpdateSalonLegalRequest;
 use App\Http\Requests\Owner\UpdateSalonLocationRequest;
 use App\Http\Requests\Owner\UpdateSalonProfileRequest;
 use App\Http\Resources\SalonSettingsResource;
@@ -48,6 +49,14 @@ class SalonSettingsController extends SalonAreaController
     {
         $update->handle($this->salon('manageBookingRules'), $request->validated());
         $this->toast('Reglas de reserva guardadas.');
+
+        return to_route('salon.edit');
+    }
+
+    public function updateLegal(UpdateSalonLegalRequest $request, UpdateSalonDetails $update): RedirectResponse
+    {
+        $update->handle($this->salon('update'), $request->validated());
+        $this->toast('Datos del Libro de Reclamaciones guardados.');
 
         return to_route('salon.edit');
     }

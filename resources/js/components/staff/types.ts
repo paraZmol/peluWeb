@@ -23,3 +23,10 @@ export type Holiday = {
     date: string;
     name: string;
 };
+
+/** What the plan allows: only professionals with an agenda count. */
+export type AgendaLimit = {
+    withAgenda: number;
+    max: number;
+    planName: string;
+};

@@ -358,7 +358,7 @@ it('blocks every Phase 2 write on a suspended or expired salon but keeps reading
         ->and(SalonPhoto::withoutGlobalScopes()->find($photo->id))->not->toBeNull();
 })->with([
     'suspended' => [['status' => SalonStatus::Suspended]],
-    'trial expired' => [['status' => SalonStatus::Trial, 'trial_ends_at' => now()->subDay()]],
+    'trial expired' => [['status' => SalonStatus::Trial, 'trial_ends_at' => now()->subDays(10)]], // past its 7 days of grace
 ]);
 
 // ---- Checklist ---------------------------------------------------------
@@ -409,7 +409,7 @@ it('adds the whole catalog of 116 once without duplicating on a second submit', 
 
 it('seeds starter services only for the new salon', function () {
     $u = User::factory()->create();
-    $this->actingAs($u)->post(route('salons.store'), ['name' => 'Spa Ñu', 'business_type' => 'spa', 'clientele' => 'everyone']);
+    $this->actingAs($u)->post(route('salons.store'), ['name' => 'Spa Ñu', 'business_type' => 'spa', 'clientele' => 'everyone', 'salon_terms' => '1']);
     $new = Salon::where('name', 'Spa Ñu')->firstOrFail();
     expect(qaCount($new))->toBeGreaterThan(0)->and(qaCount($this->salon))->toBe(0);
 });

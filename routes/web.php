@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Http\Controllers\Auth\LegalAcceptanceController;
 use App\Http\Controllers\Client\BookingController as ClientBookingController;
 use App\Http\Controllers\Client\MyDataController;
 use App\Http\Controllers\Client\ReviewController as ClientReviewController;
@@ -27,8 +28,13 @@ use App\Http\Controllers\Owner\SalonSettingsController;
 use App\Http\Controllers\Owner\ServiceCatalogController;
 use App\Http\Controllers\Owner\ServiceController;
 use App\Http\Controllers\Owner\StaffController;
+use App\Http\Controllers\Owner\SubscriptionController;
 use App\Http\Controllers\Owner\TeamController;
+use App\Http\Controllers\Platform\SupportVisitController;
 use App\Http\Controllers\Public\BookingController;
+use App\Http\Controllers\Public\ComplaintController;
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\LegalDocumentController;
 use App\Http\Controllers\Public\ManifestController;
 use App\Http\Controllers\Public\SalonPageController;
 use App\Http\Controllers\Public\SamplePhotoController;
@@ -53,7 +59,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // Bundled sample photos for previews and the landing page. Without the
 // session: a response cached as public must never carry a session cookie.
@@ -142,7 +148,37 @@ Route::get('s/{salon:slug}/disponibilidad', [BookingController::class, 'availabi
 Route::middleware(['guest', 'throttle:10,1,google-login'])->group(function () {
     Route::get('auth/google/redirect', [GoogleLoginController::class, 'redirect'])->name('google.redirect');
     Route::get('auth/google/callback', [GoogleLoginController::class, 'callback'])->name('google.callback');
+    // A new person reads the terms before Google creates their account.
+    Route::get('auth/google/terminos', [GoogleLoginController::class, 'terms'])->name('google.terms');
+    Route::post('auth/google/terminos', [GoogleLoginController::class, 'completeSignup'])->name('google.terms.store');
 });
+
+// An account without the current terms sees this screen and nothing else.
+Route::middleware('auth')->group(function () {
+    Route::get('legal/aceptar', [LegalAcceptanceController::class, 'show'])->name('legal.acceptance.show');
+    Route::post('legal/aceptar', [LegalAcceptanceController::class, 'store'])
+        ->middleware('throttle:10,1,legal-accept')
+        ->name('legal.acceptance.store');
+});
+
+// The platform's legal texts, current and earlier versions.
+Route::get('legal/{document}', [LegalDocumentController::class, 'show'])->name('legal.show');
+Route::get('legal/{document}/version/{version}', [LegalDocumentController::class, 'version'])
+    ->where('version', '[0-9]+(\.[0-9]+)*')
+    ->name('legal.version');
+
+// The platform's Libro de Reclamaciones (docs/legal, P6): no account needed,
+// limited per IP instead of a third-party captcha.
+Route::get('libro-de-reclamaciones', [ComplaintController::class, 'create'])
+    ->middleware('throttle:60,1,complaint-form')
+    ->name('complaints.create');
+Route::post('libro-de-reclamaciones', [ComplaintController::class, 'store'])
+    ->middleware('throttle:10,60,complaint-store')
+    ->name('complaints.store');
+Route::get('libro-de-reclamaciones/constancia/{complaint}', [ComplaintController::class, 'show'])
+    ->whereNumber('complaint')
+    ->middleware(['signed', 'throttle:60,1,complaint-receipt', 'cache.headers:no_store;private'])
+    ->name('complaints.show');
 
 // Invitation links arrive by email, so the page itself is public.
 Route::get('invitaciones/{token}', [InvitationAcceptanceController::class, 'show'])
@@ -213,6 +249,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->whereNumber(['client', 'photo'])
         ->name('my-data.photos.show');
 
+    Route::post('soporte/salir', [SupportVisitController::class, 'destroy'])->name('support.end');
+
     Route::post('invitaciones/{token}', [InvitationAcceptanceController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('invitations.accept');
@@ -227,10 +265,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('equipo/miembros/{member}', [MemberController::class, 'update'])->name('team.members.update');
         Route::delete('equipo/miembros/{member}', [MemberController::class, 'destroy'])->name('team.members.destroy');
 
+        Route::get('mi-plan', [SubscriptionController::class, 'show'])->name('subscription.show');
         Route::get('mi-salon', [SalonSettingsController::class, 'edit'])->name('salon.edit');
         Route::put('mi-salon/datos', [SalonSettingsController::class, 'updateProfile'])->name('salon.profile.update');
         Route::put('mi-salon/reservas', [SalonSettingsController::class, 'updateBooking'])->name('salon.booking.update');
         Route::put('mi-salon/ubicacion', [SalonSettingsController::class, 'updateLocation'])->name('salon.location.update');
+        Route::put('mi-salon/libro-de-reclamaciones', [SalonSettingsController::class, 'updateLegal'])->name('salon.legal.update');
         Route::put('mi-salon/color', [SalonBrandingController::class, 'updateColor'])->name('salon.color.update');
         Route::put('mi-salon/diseno', [SalonBrandingController::class, 'updateTheme'])->name('salon.theme.update');
 

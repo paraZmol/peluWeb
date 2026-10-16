@@ -27,7 +27,10 @@ Route::get('salons/{salon:slug}/availability', [SalonController::class, 'availab
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'show'])->name('api.v1.me');
     Route::post('logout', [AuthController::class, 'destroy'])->name('api.v1.logout');
+});
 
+// Without the current terms accepted: 403 with code `terms_not_accepted`.
+Route::middleware(['auth:sanctum', 'terms'])->group(function () {
     Route::middleware(['verified', 'throttle:120,1,api-bookings'])->group(function () {
         Route::get('bookings', [BookingController::class, 'index'])->name('api.v1.bookings.index');
         Route::get('bookings/{code}', [BookingController::class, 'show'])->name('api.v1.bookings.show');

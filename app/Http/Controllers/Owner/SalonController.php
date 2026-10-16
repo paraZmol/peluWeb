@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Actions\Salon\CreateSalon;
+use App\Data\Legal\AcceptanceProof;
+use App\Enums\AcceptanceChannel;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Http\Controllers\Controller;
@@ -32,6 +34,7 @@ class SalonController extends Controller
             businessType: $request->enum('business_type', BusinessType::class),
             clientele: $request->enum('clientele', Clientele::class),
             phone: $request->validated('phone'),
+            acceptance: AcceptanceProof::fromRequest($request, AcceptanceChannel::SalonSignup),
         );
 
         $request->session()->put(ResolveCurrentSalon::SESSION_KEY, $salon->id);

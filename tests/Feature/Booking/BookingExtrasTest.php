@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Booking\CreateBooking;
+use App\Actions\Platform\SupportVisits;
 use App\Data\Booking\NewBooking;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
@@ -9,6 +10,7 @@ use App\Models\Salon;
 use App\Models\SalonClient;
 use App\Models\Service;
 use App\Models\Staff;
+use App\Models\SupportVisit;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
@@ -112,6 +114,21 @@ describe('reference photo', function () {
             ->assertInertia(fn (Assert $page) => $page->where('booking.referencePhotoUrl', Storage::disk('public')->url($path))->where('booking.canAttachPhoto', true));
         $this->actingAs($this->owner)->get(route('agenda.index', ['fecha' => '2026-10-08']))
             ->assertInertia(fn (Assert $page) => $page->where('bookings.0.referencePhotoUrl', Storage::disk('public')->url($path)));
+    });
+
+    it('hides the picture from platform support looking at the agenda', function () {
+        $this->actingAs($this->customer)->post(route('bookings.photo.store', $this->booking->code), ['image' => UploadedFile::fake()->image('a.jpg')]);
+        $admin = User::factory()->platformAdmin()->withTwoFactor()->create();
+        $visit = new SupportVisit;
+        $visit->admin_id = $admin->id;
+        $visit->salon_id = $this->salon->id;
+        $visit->reason = 'Revisar la agenda';
+        $visit->started_at = now();
+        $visit->save();
+
+        $this->actingAs($admin)->withSession([SupportVisits::SESSION_KEY => $visit->id])
+            ->get(route('agenda.index', ['fecha' => '2026-10-08']))
+            ->assertInertia(fn (Assert $page) => $page->where('bookings.0.referencePhotoUrl', null));
     });
 
     it('replaces the previous picture and deletes its file', function () {

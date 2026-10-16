@@ -6,6 +6,7 @@ use App\Filament\Concerns\AuthorizesPlatformAdmin;
 use App\Filament\Resources\Salons\Pages\EditSalon;
 use App\Filament\Resources\Salons\Pages\ListSalons;
 use App\Filament\Resources\Salons\Pages\ViewSalon;
+use App\Filament\Resources\Salons\RelationManagers\PaymentsRelationManager;
 use App\Filament\Resources\Salons\Schemas\SalonForm;
 use App\Filament\Resources\Salons\Schemas\SalonInfolist;
 use App\Filament\Resources\Salons\Tables\SalonsTable;
@@ -20,7 +21,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 /**
  * Salons are created by their owners from the app; the platform admin
- * reviews them, edits the basics and controls status and trial.
+ * reviews them, edits the basics, controls status and trial, and records
+ * what each one pays.
  */
 class SalonResource extends Resource
 {
@@ -54,6 +56,11 @@ class SalonResource extends Resource
     public static function table(Table $table): Table
     {
         return SalonsTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [PaymentsRelationManager::class];
     }
 
     public static function getPages(): array

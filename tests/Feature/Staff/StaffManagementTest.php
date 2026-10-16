@@ -108,7 +108,8 @@ it('validates the name', function (array $payload) {
 ]);
 
 it('stops at the maximum number of professionals', function () {
-    Staff::factory()->for($this->salon)->count(Staff::MAX_PER_SALON)->create();
+    // Without an agenda, so the plan's limit is not what stops it.
+    Staff::factory()->for($this->salon)->count(Staff::MAX_PER_SALON)->create(['is_active' => false]);
 
     $this->actingAs($this->owner)->post(route('staff.store'), ['name' => 'Uno más']);
 

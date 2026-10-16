@@ -1,7 +1,8 @@
 import { Link } from '@inertiajs/react';
+import { LegalFooter } from '@/components/legal/legal-footer';
 import { home } from '@/routes';
 
-/** The platform's quiet signature; room below for the dock on phones. */
+/** The platform's quiet signature and legal line; room below for the dock on phones. */
 export function SalonFooter() {
     return (
         <footer className="px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] text-center text-sm text-muted-foreground lg:pb-10">
@@ -14,6 +15,7 @@ export function SalonFooter() {
             >
                 ¿Tienes un salón?
             </Link>
+            <LegalFooter as="div" className="px-0 pt-3 pb-0" />
         </footer>
     );
 }

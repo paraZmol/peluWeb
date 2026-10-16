@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Salon;
+use App\Models\SupportVisit;
 
 /**
  * The salon the current request is acting on. Registered as a scoped
@@ -17,6 +18,8 @@ class CurrentSalon
     private ?Salon $salon = null;
 
     private bool $bypassed = false;
+
+    private ?SupportVisit $supportVisit = null;
 
     public function set(?Salon $salon): void
     {
@@ -49,5 +52,18 @@ class CurrentSalon
     public function isBypassed(): bool
     {
         return $this->bypassed;
+    }
+
+    /**
+     * The platform admin is looking at this salon for support: read only.
+     */
+    public function setSupportVisit(SupportVisit $visit): void
+    {
+        $this->supportVisit = $visit;
+    }
+
+    public function supportVisit(): ?SupportVisit
+    {
+        return $this->supportVisit;
     }
 }

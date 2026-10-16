@@ -4,12 +4,16 @@ namespace App\Actions\Salon;
 
 use App\Actions\Accounting\ManageExpenseCategories;
 use App\Actions\Catalog\AddServicesFromTemplates;
+use App\Actions\Legal\RecordLegalAcceptance;
 use App\Actions\Staff\SaveStaff;
+use App\Data\Legal\AcceptanceProof;
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
+use App\Enums\LegalDocumentType;
 use App\Enums\SalonRole;
 use App\Enums\SalonStatus;
 use App\Enums\SalonTheme;
+use App\Models\Plan;
 use App\Models\Salon;
 use App\Models\SalonMember;
 use App\Models\ServiceTemplate;
@@ -24,10 +28,13 @@ class CreateSalon
         private readonly AddServicesFromTemplates $addServices,
         private readonly SaveStaff $saveStaff,
         private readonly ManageExpenseCategories $expenseCategories,
+        private readonly RecordLegalAcceptance $recordAcceptance,
     ) {}
 
     /**
-     * Create a salon in trial and make the given user its owner.
+     * Create a salon in trial and make the given user its owner. Whoever
+     * opens it from the form accepted the salon terms (casilla 5): the
+     * proof is kept tied to the new salon.
      */
     public function handle(
         User $owner,
@@ -35,8 +42,9 @@ class CreateSalon
         BusinessType $businessType,
         Clientele $clientele,
         ?string $phone = null,
+        ?AcceptanceProof $acceptance = null,
     ): Salon {
-        return DB::transaction(function () use ($owner, $name, $businessType, $clientele, $phone): Salon {
+        return DB::transaction(function () use ($owner, $name, $businessType, $clientele, $phone, $acceptance): Salon {
             $salon = new Salon([
                 'name' => $name,
                 'business_type' => $businessType,
@@ -48,6 +56,7 @@ class CreateSalon
             $salon->slug = $this->uniqueSlug($name);
             $salon->status = SalonStatus::Trial;
             $salon->trial_ends_at = now()->addDays(Salon::TRIAL_DAYS);
+            $salon->plan_id = Plan::trial()->id;
             $salon->theme = SalonTheme::defaultFor($businessType);
             $salon->save();
 
@@ -56,6 +65,10 @@ class CreateSalon
             $membership->user()->associate($owner);
             $membership->role = SalonRole::Owner;
             $membership->save();
+
+            if ($acceptance !== null) {
+                $this->recordAcceptance->handle($owner, [LegalDocumentType::SalonTerms], $acceptance, $salon);
+            }
 
             $this->addStarterServices($salon);
             $this->expenseCategories->createDefaults($salon);

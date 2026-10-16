@@ -7,6 +7,7 @@ import {
     CalendarDays,
     ChartColumn,
     Contact,
+    CreditCard,
     HandCoins,
     Ticket,
     LayoutGrid,
@@ -47,6 +48,7 @@ import { edit as editSalon } from '@/routes/salon';
 import { index as services } from '@/routes/services';
 import { index as staff } from '@/routes/staff';
 import { mine as mySchedule } from '@/routes/staff/schedule';
+import { show as myPlan } from '@/routes/subscription';
 import { index as team } from '@/routes/team';
 import { index as walkIns } from '@/routes/walk-ins';
 import type { NavItem } from '@/types';
@@ -112,6 +114,7 @@ export function AppSidebar() {
             ? [
                   { title: 'Profesionales', href: staff(), icon: Contact },
                   { title: 'Equipo', href: team(), icon: Users },
+                  { title: 'Mi plan', href: myPlan(), icon: CreditCard },
               ]
             : []),
         // Everyone can also be a client of some salon.

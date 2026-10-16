@@ -119,8 +119,11 @@ class ChangeBookingStatus
             }
 
             if ($locked->deposit_paid_at !== null) {
-                $window = Salon::withTrashed()->findOrFail($locked->salon_id)->cancel_window_hours;
-                $locked->deposit_refundable = ! $byClient || $now->addHours($window)->lessThanOrEqualTo($locked->starts_at);
+                $salon = Salon::withTrashed()->findOrFail($locked->salon_id);
+                // A salon that cannot take the visit (paused or suspended) owes the deposit back.
+                $locked->deposit_refundable = ! $byClient
+                    || ! $salon->isWritable()
+                    || $now->addHours($salon->cancel_window_hours)->lessThanOrEqualTo($locked->starts_at);
             }
 
             $locked->hold_expires_at = null;

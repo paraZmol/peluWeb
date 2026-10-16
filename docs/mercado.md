@@ -47,15 +47,21 @@ verificar capturas de Yape a mano, peleas por las comisiones, caja que no cuadra
 **Usuario final (quien reserva):** 18–45 años, reserva desde el celular. El 98.6 % de quienes usan
 mensajería en Perú usa WhatsApp. Yape tiene más de 15M de usuarios y Plin más de 10M.
 
-## Propuesta de precios (PEN/mes, IGV incluido) — a validar con 3–5 salones reales
-| Plan | Precio | Incluye |
-|---|---|---|
-| **Prueba** | S/ 0 por 30 días | Todo el plan Equipo, sin tarjeta |
-| **Solo** | S/ 39 | 1 profesional, reservas ilimitadas, señas por WhatsApp, caja simple |
-| **Equipo** ★ | S/ 89 | Hasta 6 profesionales, comisiones, reportes, VIP, reseñas, galería |
-| **Negocio** | S/ 169 | Hasta 15 profesionales, inventario, paquetes, roles finos; sede extra +S/ 79 |
+## Precios decididos (PEN/mes, IGV incluido) — 2026-10-15, a validar con el piloto
+| Plan | Precio | Precio fundador | Incluye |
+|---|---|---|---|
+| **Prueba** | S/ 0 por 30 días | — | Todo, como Equipo, sin datos de pago |
+| **Solo** | S/ 39 | S/ 29 | 1 profesional con agenda, todo lo construido |
+| **Equipo** ★ | S/ 89 | S/ 69 | Hasta 6 profesionales con agenda, todo lo construido |
+| Más de 6 | a cotizar (ref. S/ 139) | — | Hasta 15, se vende a mano |
 
-Pago anual con 20 % de descuento. El cobro de la suscripción en v1 es manual (Yape/transferencia +
+Solo cuenta quien tiene agenda (recepción y caja van gratis). Precio fundador para los primeros 5 salones, con cupos y fecha escritos, y se conserva mientras se siga pagando. Anual: 12 meses por
+el precio de 10, ofrecido desde el 2.º pago. Detalle y razones en PLAN.md §11 (2026-10-15).
+
+*Propuesta anterior (2026-10-04), descartada:* Negocio a S/ 169 con inventario, paquetes y roles finos,
+que no existen, y anual con 20 % de descuento.
+
+El cobro de la suscripción en v1 es manual (Yape/transferencia +
 el super admin activa el plan). Riesgo: si más adelante se incluyen mensajes por la API de WhatsApp
 (~US$ 0.03 cada uno en Perú), su costo se come el margen de los planes bajos. Hay que modelarlo antes
 de prometer mensajes automáticos.

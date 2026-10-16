@@ -1,6 +1,7 @@
 import { Form, Head } from '@inertiajs/react';
 import { ChoiceCards } from '@/components/form/choice-cards';
 import InputError from '@/components/input-error';
+import { SalonTermsCheckbox } from '@/components/legal/salon-terms-checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,6 +95,8 @@ export default function CreateSalon({ businessTypes, clienteles }: Props) {
                                 </p>
                                 <InputError message={errors.phone} />
                             </div>
+
+                            <SalonTermsCheckbox error={errors.salon_terms} />
 
                             <Button
                                 type="submit"

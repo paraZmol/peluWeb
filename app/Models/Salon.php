@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Billing\SubscriptionStanding;
 use App\Domain\Schedule\TimeRange;
 use App\Domain\Schedule\WeeklyHours;
 use App\Enums\BusinessType;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -34,6 +36,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $brand_color
  * @property SalonTheme $theme
  * @property string|null $instagram
+ * @property string|null $legal_name Name or company name of who provides the service (P7).
+ * @property string|null $ruc
+ * @property string|null $contact_email
+ * @property string|null $complaints_book_url The salon's own Libro de Reclamaciones online.
  * @property string|null $address
  * @property string|null $district
  * @property string|null $city
@@ -53,13 +59,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $payment_instructions
  * @property bool $accepts_online_bookings
  * @property ReviewMode $review_mode
+ * @property int|null $plan_id
  * @property CarbonImmutable|null $trial_ends_at
+ * @property CarbonImmutable|null $paid_until Last day paid for.
+ * @property CarbonImmutable|null $founder_since Keeps the founder price while it keeps paying.
+ * @property CarbonImmutable|null $trial_extended_at The trial was extended once, by hand.
+ * @property CarbonImmutable|null $billing_notice_on Last day the owners were reminded about paying.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
  */
 #[Fillable([
     'name', 'business_type', 'clientele', 'phone', 'timezone', 'description', 'instagram',
+    'legal_name', 'ruc', 'contact_email', 'complaints_book_url',
     'address', 'district', 'city', 'latitude', 'longitude',
     'accepts_online_bookings', 'walk_ins_enabled', 'min_lead_minutes', 'max_days_ahead', 'slot_step_minutes',
     'cancel_window_hours', 'deposit_percent', 'vip_deposit_percent', 'hold_minutes', 'payment_instructions',
@@ -70,6 +82,9 @@ class Salon extends Model
     use HasFactory, SoftDeletes;
 
     public const int TRIAL_DAYS = 30;
+
+    /** Where the platform sells first (decision D2); also the column's default. */
+    public const string DEFAULT_TIMEZONE = 'America/Lima';
 
     /**
      * Mirrors the column defaults so fresh instances never miss them
@@ -84,6 +99,10 @@ class Salon extends Model
         'brand_color' => null,
         'theme' => 'nocturna',
         'instagram' => null,
+        'legal_name' => null,
+        'ruc' => null,
+        'contact_email' => null,
+        'complaints_book_url' => null,
         'address' => null,
         'district' => null,
         'city' => null,
@@ -114,6 +133,10 @@ class Salon extends Model
             'status' => SalonStatus::class,
             'theme' => SalonTheme::class,
             'trial_ends_at' => 'datetime',
+            'paid_until' => 'date',
+            'founder_since' => 'datetime',
+            'trial_extended_at' => 'datetime',
+            'billing_notice_on' => 'date',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'accepts_online_bookings' => 'boolean',
@@ -205,6 +228,52 @@ class Salon extends Model
     }
 
     /**
+     * @return BelongsTo<Plan, $this>
+     */
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * @return HasMany<SubscriptionPayment, $this>
+     */
+    public function subscriptionPayments(): HasMany
+    {
+        return $this->hasMany(SubscriptionPayment::class);
+    }
+
+    /**
+     * How many professionals with an agenda (active) the plan allows. A
+     * salon without a plan counts as the trial's.
+     */
+    public function staffLimit(): int
+    {
+        return min($this->currentPlan()->max_staff, Staff::MAX_PER_SALON);
+    }
+
+    /**
+     * The plan it is on; one without a plan counts as the trial's. Loaded
+     * on purpose: lazy loading is off in the app.
+     */
+    public function currentPlan(): Plan
+    {
+        return $this->loadMissing('plan')->plan ?? Plan::trial();
+    }
+
+    /**
+     * Whether one more professional can get an agenda under the plan.
+     */
+    public function hasRoomForStaff(): bool
+    {
+        // A locking read: inside a transaction it sees the last committed rows,
+        // not the snapshot taken by earlier reads (accepting invitations at once).
+        $withAgenda = Staff::withoutGlobalScope('salon')->where('salon_id', $this->id)->where('is_active', true)->lockForUpdate()->count();
+
+        return $withAgenda < $this->staffLimit();
+    }
+
+    /**
      * @return HasMany<SalonMember, $this>
      */
     public function members(): HasMany
@@ -221,17 +290,28 @@ class Salon extends Model
     }
 
     /**
-     * Whether the salon may change data. Past-due is the 7-day grace period
-     * (PLAN §4.10) and still writable; suspended salons and expired trials
-     * are read only until the subscription is renewed.
+     * Where it stands with its subscription, from its dates: only a
+     * suspension is set by hand (PLAN 7.3).
+     */
+    public function standing(): SubscriptionStanding
+    {
+        return SubscriptionStanding::of(
+            $this->status === SalonStatus::Suspended,
+            $this->trial_ends_at?->setTimezone($this->timezone)->startOfDay(),
+            $this->paid_until,
+            $this->localNow(),
+            (int) config('billing.grace_days'),
+        );
+    }
+
+    /**
+     * Whether the salon may change data: through the trial, what is paid
+     * and the grace after it. Read only and suspended salons keep every
+     * record and can still see and export them.
      */
     public function isWritable(): bool
     {
-        return match ($this->status) {
-            SalonStatus::Active, SalonStatus::PastDue => true,
-            SalonStatus::Trial => $this->trial_ends_at === null || $this->trial_ends_at->isFuture(),
-            SalonStatus::Suspended => false,
-        };
+        return $this->standing()->state->isWritable();
     }
 
     public function ownersCount(): int

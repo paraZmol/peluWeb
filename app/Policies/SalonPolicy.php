@@ -65,6 +65,14 @@ class SalonPolicy
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ViewReports) ?? false;
     }
 
+    /**
+     * "Mi plan": what the salon pays the platform. Owners only.
+     */
+    public function viewSubscription(User $user, Salon $salon): bool
+    {
+        return $user->membershipIn($salon)?->isOwner() ?? false;
+    }
+
     public function update(User $user, Salon $salon): bool
     {
         return $user->membershipIn($salon)?->hasPermission(SalonPermission::ManageSalonProfile) ?? false;

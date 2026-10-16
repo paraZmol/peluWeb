@@ -3,6 +3,7 @@ import { ArrowRight, MessageCircle, Navigation } from 'lucide-react';
 import { useSalonTheme } from '@/components/salon/brand-theme';
 import { CHIP_ACTION, PRIMARY_ACTION, SOFT_ACTION } from '@/lib/skin-actions';
 import { cn } from '@/lib/utils';
+import { BookingCardHeading } from './booking-card-heading';
 import { effectiveHero } from './hero/cover';
 import { QuickFacts, salonFacts } from './quick-facts';
 import type { PublicSalon } from './types';
@@ -34,7 +35,10 @@ export function BookingCard({ salon, className }: Props) {
             className={cn(
                 'relative z-10',
                 lift,
-                !framed && facts.length === 0 && 'max-lg:hidden',
+                !framed &&
+                    facts.length === 0 &&
+                    !salon.bookingsPaused &&
+                    'max-lg:hidden',
                 className,
             )}
         >
@@ -51,17 +55,23 @@ export function BookingCard({ salon, className }: Props) {
                         : 'lg:rounded-xl lg:p-6 lg:skin-raised',
                 )}
             >
-                <div className="hidden lg:block">
-                    <h2
-                        id="booking-card-title"
-                        className="display-type text-title-3"
+                <BookingCardHeading
+                    isPaused={salon.bookingsPaused}
+                    hasWhatsapp={salon.whatsappUrl !== null}
+                    framed={framed}
+                />
+
+                {/* Paused, WhatsApp is the way to a visit: the main action, framed or not. */}
+                {salon.bookingsPaused && salon.whatsappUrl && (
+                    <a
+                        href={salon.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(PRIMARY_ACTION, 'max-lg:hidden')}
                     >
-                        Reserva tu cita
-                    </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Elige el servicio, quién te atiende y la hora.
-                    </p>
-                </div>
+                        <MessageCircle aria-hidden /> Pedir cita por WhatsApp
+                    </a>
+                )}
 
                 {framed && salon.description && (
                     <p className="text-base whitespace-pre-line text-muted-foreground">
@@ -78,7 +88,7 @@ export function BookingCard({ salon, className }: Props) {
                             Reservar cita <ArrowRight aria-hidden />
                         </Link>
                     )}
-                    {!framed && salon.whatsappUrl && (
+                    {!framed && !salon.bookingsPaused && salon.whatsappUrl && (
                         <a
                             href={salon.whatsappUrl}
                             target="_blank"

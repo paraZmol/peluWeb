@@ -2,8 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Actions\Legal\RecordLegalAcceptance;
+use App\Data\Legal\AcceptanceProof;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -16,6 +20,12 @@ class UserFactory extends Factory
      * The current password being used by the factory.
      */
     protected static ?string $password;
+
+    /**
+     * Every account made here already accepted the current terms, so tests
+     * and demo data do not stop at the acceptance screen.
+     */
+    private bool $acceptsTerms = true;
 
     /**
      * Define the model's default state.
@@ -66,5 +76,45 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'is_platform_admin' => true,
         ]);
+    }
+
+    /**
+     * An account that never accepted the terms: the acceptance screen stops it.
+     */
+    public function withoutAcceptedTerms(): static
+    {
+        $factory = $this->newInstance();
+        $factory->acceptsTerms = false;
+
+        return $factory;
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     */
+    protected function newInstance(array $arguments = []): static
+    {
+        $factory = parent::newInstance($arguments);
+        $factory->acceptsTerms = $this->acceptsTerms;
+
+        return $factory;
+    }
+
+    /**
+     * @param  Collection<int, Model>  $instances
+     */
+    protected function callAfterCreating(Collection $instances, ?Model $parent = null): void
+    {
+        parent::callAfterCreating($instances, $parent);
+
+        if (! $this->acceptsTerms) {
+            return;
+        }
+
+        $instances->each(function (Model $user): void {
+            if ($user instanceof User) {
+                app(RecordLegalAcceptance::class)->forAccount($user, AcceptanceProof::seeded());
+            }
+        });
     }
 }

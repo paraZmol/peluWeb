@@ -2,6 +2,7 @@ import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import { GoogleButton } from '@/components/auth/google-button';
 import InputError from '@/components/input-error';
 import { TRIAL_DAYS } from '@/components/landing/content';
+import { TermsCheckbox } from '@/components/legal/terms-checkbox';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -120,10 +121,12 @@ export default function Register({ passwordRules }: Props) {
                                 />
                             </div>
 
+                            <TermsCheckbox error={errors.terms} tabIndex={5} />
+
                             <Button
                                 type="submit"
                                 className="mt-2 w-full"
-                                tabIndex={5}
+                                tabIndex={6}
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
@@ -135,7 +138,7 @@ export default function Register({ passwordRules }: Props) {
 
                         <div className="text-center text-sm text-muted-foreground">
                             ¿Ya tienes una cuenta?{' '}
-                            <TextLink href={login()} tabIndex={6}>
+                            <TextLink href={login()} tabIndex={7}>
                                 Iniciar sesión
                             </TextLink>
                         </div>

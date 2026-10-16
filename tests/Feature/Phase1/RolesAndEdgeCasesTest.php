@@ -157,7 +157,7 @@ it('lists all salons of a multi-salon user', function () {
 
 it('builds a readable ASCII slug from accents and enie', function () {
     $this->actingAs($this->owner)->post(route('salons.store'), [
-        'name' => 'Peluquería Ñandú Muñoz', 'business_type' => 'unisex', 'clientele' => 'everyone',
+        'name' => 'Peluquería Ñandú Muñoz', 'business_type' => 'unisex', 'clientele' => 'everyone', 'salon_terms' => '1',
     ])->assertRedirect(route('dashboard'));
 
     $salon = Salon::where('name', 'Peluquería Ñandú Muñoz')->firstOrFail();
@@ -167,7 +167,7 @@ it('builds a readable ASCII slug from accents and enie', function () {
 it('falls back to a valid unique slug for names without letters or digits', function () {
     foreach (range(1, 2) as $_) {
         $this->actingAs($this->owner)->post(route('salons.store'), [
-            'name' => '&.,', 'business_type' => 'barbershop', 'clientele' => 'men',
+            'name' => '&.,', 'business_type' => 'barbershop', 'clientele' => 'men', 'salon_terms' => '1',
         ])->assertRedirect(route('dashboard'));
     }
 
@@ -179,7 +179,7 @@ it('falls back to a valid unique slug for names without letters or digits', func
 
 it('rejects names with emojis or html with a validation error, not a 500', function (string $name) {
     $this->actingAs($this->owner)->post(route('salons.store'), [
-        'name' => $name, 'business_type' => 'barbershop', 'clientele' => 'men',
+        'name' => $name, 'business_type' => 'barbershop', 'clientele' => 'men', 'salon_terms' => '1',
     ])->assertSessionHasErrors('name');
 
     expect(Salon::where('name', $name)->exists())->toBeFalse();
@@ -187,7 +187,7 @@ it('rejects names with emojis or html with a validation error, not a 500', funct
 
 it('accepts accents, enie, apostrophes and ampersands in the name', function () {
     $this->actingAs($this->owner)->post(route('salons.store'), [
-        'name' => "D'Ñandú & Hijos · Peluquería", 'business_type' => 'unisex', 'clientele' => 'everyone',
+        'name' => "D'Ñandú & Hijos · Peluquería", 'business_type' => 'unisex', 'clientele' => 'everyone', 'salon_terms' => '1',
     ])->assertSessionHasNoErrors();
 
     expect(Salon::where('name', "D'Ñandú & Hijos · Peluquería")->firstOrFail()->slug)->toMatch('/^[a-z0-9-]+$/');
@@ -198,7 +198,7 @@ it('does not reuse the slug of a soft-deleted salon', function () {
     $old->delete();
 
     $this->actingAs($this->owner)->post(route('salons.store'), [
-        'name' => 'Estilo Nuevo', 'business_type' => 'unisex', 'clientele' => 'everyone',
+        'name' => 'Estilo Nuevo', 'business_type' => 'unisex', 'clientele' => 'everyone', 'salon_terms' => '1',
     ])->assertRedirect(route('dashboard'));
 
     expect(Salon::where('name', 'Estilo Nuevo')->firstOrFail()->slug)->not->toBe('estilo-nuevo');
@@ -206,7 +206,7 @@ it('does not reuse the slug of a soft-deleted salon', function () {
 
 it('enforces the name length limits', function (string $name, bool $valid) {
     $response = $this->actingAs($this->owner)->post(route('salons.store'), [
-        'name' => $name, 'business_type' => 'unisex', 'clientele' => 'everyone',
+        'name' => $name, 'business_type' => 'unisex', 'clientele' => 'everyone', 'salon_terms' => '1',
     ]);
 
     $valid ? $response->assertSessionHasNoErrors() : $response->assertSessionHasErrors('name');
@@ -220,7 +220,7 @@ it('enforces the name length limits', function (string $name, bool $valid) {
 
 it('makes the creator owner of the new salon without losing the previous one', function () {
     $this->actingAs($this->owner)->post(route('salons.store'), [
-        'name' => 'Segundo', 'business_type' => 'unisex', 'clientele' => 'everyone',
+        'name' => 'Segundo', 'business_type' => 'unisex', 'clientele' => 'everyone', 'salon_terms' => '1',
     ]);
 
     expect(SalonMember::where('user_id', $this->owner->id)->count())->toBe(2);
@@ -408,7 +408,7 @@ it('keeps salon creation as owner self-service, not from the panel (PLAN §11, 2
 it('keeps the platform admin flag out of mass assignment on registration', function () {
     $this->post(route('register.store'), [
         'name' => 'Intruso', 'email' => 'intruso@example.com', 'password' => 'password-Segura-1',
-        'password_confirmation' => 'password-Segura-1', 'is_platform_admin' => true,
+        'password_confirmation' => 'password-Segura-1', 'is_platform_admin' => true, 'terms' => 'on',
     ]);
 
     expect(User::where('email', 'intruso@example.com')->first()?->is_platform_admin)->not->toBeTrue();

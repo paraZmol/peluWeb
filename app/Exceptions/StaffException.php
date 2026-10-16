@@ -13,6 +13,13 @@ class StaffException extends BusinessRuleException
         return new self("Tu salón ya tiene {$max} profesionales. Quita a alguien para agregar otra persona.");
     }
 
+    public static function planLimitReached(int $max, string $plan): self
+    {
+        $people = $max === 1 ? '1 profesional' : "{$max} profesionales";
+
+        return new self("Tu plan {$plan} incluye {$people} con agenda. Quita la agenda a alguien o cambia de plan para sumar a otra persona.");
+    }
+
     public static function accountNotInTeam(): self
     {
         return new self('Esa cuenta no forma parte de tu equipo.');

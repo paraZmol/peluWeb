@@ -19,7 +19,7 @@ it('lets a user create a salon and become its owner', function () {
         'name' => 'Barbería El Turco',
         'business_type' => BusinessType::Barbershop->value,
         'clientele' => Clientele::Men->value,
-        'phone' => '+51999888777',
+        'phone' => '+51999888777', 'salon_terms' => '1',
     ]);
 
     $salon = Salon::firstOrFail();
@@ -34,7 +34,7 @@ it('lets a user create a salon and become its owner', function () {
 
 it('gives each salon a unique slug', function () {
     $user = User::factory()->create();
-    $payload = ['name' => 'Studio Bella', 'business_type' => 'beauty_salon', 'clientele' => 'everyone'];
+    $payload = ['name' => 'Studio Bella', 'business_type' => 'beauty_salon', 'clientele' => 'everyone', 'salon_terms' => '1'];
 
     $this->actingAs($user)->post(route('salons.store'), $payload);
     $this->actingAs($user)->post(route('salons.store'), $payload);
@@ -50,7 +50,7 @@ it('ignores status and slug sent by the user', function () {
         'business_type' => 'unisex',
         'clientele' => 'everyone',
         'status' => SalonStatus::Active->value,
-        'slug' => 'otro-salon',
+        'slug' => 'otro-salon', 'salon_terms' => '1',
     ]);
 
     $salon = Salon::firstOrFail();

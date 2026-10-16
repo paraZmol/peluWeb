@@ -19,6 +19,14 @@ export type CurrentSalon = {
     hasStaffProfile: boolean;
     /** The team keeps a day's line of people without a booking. */
     walkInsEnabled: boolean;
+    /** Where the salon stands with its plan: drives the paying notice. */
+    subscription: {
+        state: 'trial' | 'active' | 'grace' | 'read_only' | 'suspended';
+        /** Days to the last covered day: 0 that day, negative after. */
+        daysLeft: number | null;
+        /** Last day of grace ("2026-10-21"); null when nothing was ever covered. */
+        graceEndsOn: string | null;
+    };
 };
 
 export type SalonSummary = {

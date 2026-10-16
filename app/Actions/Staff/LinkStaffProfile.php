@@ -28,7 +28,15 @@ class LinkStaffProfile
             ? null
             : (clone $profiles)->whereNull('user_id')->find($preferredStaffId);
 
-        return $this->saveStaff->handle($salon, $preferred, ['name' => $preferred->name ?? Staff::nameFrom($user->name)], $user->id);
+        // Joining never fails for the plan: with no room left, a new profile
+        // starts without an agenda and the owner decides who keeps one.
+        $attributes = ['name' => $preferred->name ?? Staff::nameFrom($user->name)];
+
+        if ($preferred === null && ! $salon->hasRoomForStaff()) {
+            $attributes['is_active'] = false;
+        }
+
+        return $this->saveStaff->handle($salon, $preferred, $attributes, $user->id);
     }
 
     /**

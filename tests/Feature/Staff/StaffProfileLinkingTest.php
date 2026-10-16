@@ -14,7 +14,7 @@ it('gives the owner a professional profile with every starter service when the s
     $user = User::factory()->create(['name' => 'Luis Quispe']);
 
     $this->actingAs($user)->post(route('salons.store'), [
-        'name' => 'Barbería El Turco', 'business_type' => 'barbershop', 'clientele' => 'men',
+        'name' => 'Barbería El Turco', 'business_type' => 'barbershop', 'clientele' => 'men', 'salon_terms' => '1',
     ]);
 
     $staff = Staff::withoutGlobalScopes()->firstOrFail();

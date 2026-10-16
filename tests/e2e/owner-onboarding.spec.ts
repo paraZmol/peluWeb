@@ -19,6 +19,14 @@ test.describe('Dueño nuevo', () => {
         await page.getByText('Barbería', { exact: true }).click();
         await page.getByText('Hombres', { exact: true }).click();
         await page.getByLabel(/WhatsApp del salón/).fill('+51 999 888 777');
+        // Casilla 5: without it the server refuses the salon.
+        await page.getByRole('button', { name: 'Crear mi salón' }).click();
+        await expect(
+            page.getByText(/acepta los Términos para salones/),
+        ).toBeVisible();
+        await page
+            .getByRole('checkbox', { name: /Términos para salones/ })
+            .check();
         await page.getByRole('button', { name: 'Crear mi salón' }).click();
 
         await expect(page).toHaveURL(/\/dashboard$/);
@@ -57,7 +65,15 @@ for (const colorScheme of ['light', 'dark'] as const) {
         await page.emulateMedia({ colorScheme });
         const assertNoErrors = watchForErrors(page);
 
-        for (const path of ['/', '/login', '/register']) {
+        for (const path of [
+            '/',
+            '/login',
+            '/register',
+            '/legal/terminos-clientes',
+            '/legal/terminos-salones',
+            '/legal/privacidad',
+            '/legal/cookies',
+        ]) {
             await page.goto(path);
             await expect(page.locator('body')).toBeVisible();
             const overflow = await page.evaluate(
@@ -71,3 +87,38 @@ for (const colorScheme of ['light', 'dark'] as const) {
         assertNoErrors();
     });
 }
+
+test('el registro pide aceptar los términos y el pie los enlaza', async ({
+    page,
+}, testInfo) => {
+    const assertNoErrors = watchForErrors(page);
+    const email = `nuevo-${testInfo.project.name}-${Date.now()}@example.com`;
+
+    await page.goto('/register');
+    await page.getByLabel('Nombre').fill('Ale Nuevo');
+    await page.getByLabel('Correo electrónico').fill(email);
+    await page
+        .getByLabel('Contraseña', { exact: true })
+        .fill('password-Segura-1');
+    await page.getByLabel('Confirmar contraseña').fill('password-Segura-1');
+    await page.getByRole('button', { name: /Crear mi cuenta/ }).click();
+    await expect(page.getByText(/marca que leíste y aceptas/)).toBeVisible();
+
+    await page.getByRole('checkbox', { name: /Leí y acepto/ }).check();
+    await page
+        .getByLabel('Contraseña', { exact: true })
+        .fill('password-Segura-1');
+    await page.getByLabel('Confirmar contraseña').fill('password-Segura-1');
+    await page.getByRole('button', { name: /Crear mi cuenta/ }).click();
+    await expect(page).not.toHaveURL(/\/register$/);
+    await expect(page).not.toHaveURL(/\/legal\/aceptar$/);
+
+    const footer = page.getByRole('navigation', { name: 'Legal' }).last();
+    await footer.getByRole('link', { name: 'Política de privacidad' }).click();
+    await expect(page).toHaveURL(/\/legal\/privacidad$/);
+    await expect(
+        page.getByRole('heading', { name: 'Política de privacidad' }),
+    ).toBeVisible();
+    await expect(page.getByText(/Versión 1 · vigente desde/)).toBeVisible();
+    assertNoErrors();
+});
