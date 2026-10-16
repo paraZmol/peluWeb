@@ -63,6 +63,11 @@ Prioridad: **P** = bloquea el piloto con salones reales (8.5) · **L** = bloquea
 | L24 | **Seña tardía con cupo perdido**. *Hecho (2026-10-13)*: el mensaje al salón pide devolver la seña completa si la persona no acepta el precio normal; el correo y la letra chica lo avisan antes | Código arts. 18 y 19 (**citados de memoria**) |
 | L25 | **Personal**: texto de ayuda en la casilla (*hecho, 2026-10-13*); *falta* que quitar la promoción deje registro de quién | Cumplimiento de lo anunciado |
 | L26 | **Términos**: cláusula de promociones en Términos para salones y §6 de Términos para clientes; aviso de responsabilidad al publicar | Reparto de responsabilidad |
+| L27 | **Modo soporte con lo mínimo** (2026-10-16). *Hecho*: sin alergias ni fotos de clientes, sin CSV de caja ni comprobantes de gastos. *Falta*: foto de referencia de la reserva; que el titular vea las visitas en «Mi plan» y reciba un correo al empezar cada una (cierra L18); borrar `support_visits` a los `[24]` meses | Encargo y minimización |
+| L28 | **Pausa sin perjudicar a clientes** (2026-10-16). *Hecho*: en solo lectura el salón cancela, marca «no vino» y confirma o devuelve señas ya pagadas. *Falta*: avisar al titular, al entrar en pausa, de las reservas pendientes de seña | Protección al consumidor |
+| L29 | **Precio fundador**: `BILLING_FOUNDER_ENDS_ON` obligatorio en producción (sin fecha la oferta no se muestra); fecha de inicio visible; decidir si quien perdió el precio puede recuperarlo con un cupo libre | Vigencia de la promoción |
+| L30 | **Prueba de condiciones por pago**: guardar en cada pago de suscripción la versión de los Términos vigente y, en el anual, que se mostró «no se devuelve» | Prueba de información previa |
+| L31 | **Plazo para registrar un pago**: fijar y cumplir el `[PLAZO]` que prometen la FAQ, «Mi plan» y la cláusula 4.4 | Información exacta |
 
 ## D — Después
 

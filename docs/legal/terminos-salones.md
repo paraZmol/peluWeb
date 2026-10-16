@@ -1,7 +1,8 @@
 # Términos y condiciones para salones
 
 > **Borrador — no es asesoría legal.** Debe revisarlo un abogado colegiado en Perú antes de
-> publicarse. Versión 0.1 — 2026-10-10.
+> publicarse. Versión 0.1 — 2026-10-10; cláusulas 4, 5, 10 y anexo 4 bis actualizados el
+> 2026-10-16 (Fase 7, revisión de legal-compliance).
 >
 > Notas para quien revisa: las frases **[PENDIENTE: …]** dependen de funciones que aún no existen
 > (planes y suscripción son la Fase 7 del plan). Para el piloto (paso 8.5) se usa este mismo texto
@@ -37,25 +38,68 @@ confirma a mano.
 - La información que el salón publica (nombre, dirección, precios, horarios, fotos, promociones)
   debe ser verdadera y estar al día.
 
-## 4. Planes, prueba y pago **[PENDIENTE: Fase 7]**
+## 4. Planes, prueba y pago
 
-- La prueba gratuita dura 30 días y no exige medio de pago.
-- Los planes y sus precios, con IGV incluido, están en `[DOMINIO]/precios`: `[PRECIOS DE LOS PLANES]`.
-- El pago es por adelantado, por Yape o transferencia a la cuenta que indicamos. Registramos el
-  pago a mano y el plan se extiende por el período pagado. **No hay cobros automáticos ni
-  renovación automática**: si el salón no paga, el plan simplemente vence.
-- Avisamos por correo 7, 3 y 1 día antes del vencimiento.
-- Al vencer hay 7 días de gracia. Después el salón pasa a **solo lectura**: puede ver y exportar
-  su información, pero no recibe reservas nuevas, y sus clientes ven "reservas en pausa".
-  **No se borra ningún dato por falta de pago.**
-- Un pago hecho no se devuelve por dejar de usar el servicio antes de que termine el período,
-  salvo que el servicio no haya estado disponible por causa nuestra o que la ley disponga otra
-  cosa. `[CONFIRMAR CON ABOGADO]`
+4.1 **Planes.** Solo (1 profesional con agenda) y Equipo (hasta 6 profesionales con agenda)
+incluyen las mismas funciones. Solo cuenta quien tiene agenda propia; recepción y caja no cuentan.
+Para más de 6 se cotiza aparte. Los precios vigentes, finales y en soles `[IGV incluido —
+CONFIRMAR CON CONTADOR]`, se publican en `[DOMINIO]` y en «Mi plan».
+
+4.2 **Límite de profesionales.** La plataforma no deja activar más agendas de las que incluye el
+plan. Nunca quitamos una agenda por nuestra cuenta: si el salón quiere pasar a un plan menor,
+primero elige a quién quitarle la agenda. No se puede quitar la agenda a quien tiene citas por
+delante hasta moverlas o cancelarlas.
+
+4.3 **Prueba gratuita.** 30 días con el plan Equipo, sin pedir medios de pago. Podemos
+prorrogarla una sola vez, hasta 15 días, a pedido del salón y a nuestro criterio. La prórroga no
+da derecho a otras.
+
+4.4 **Pago.** Por adelantado, por Yape o transferencia a la cuenta que indicamos en «Mi plan».
+Registramos el pago a mano, en un máximo de `[PLAZO, ej. 1 día hábil]`, y el plan se extiende por
+el periodo pagado (1 mes o 12 meses). **No hay cobro ni renovación automática.** Cada pago queda
+en «Mi plan» con el periodo que cubre. `[Comprobante de pago: según lo que confirme el contador]`
+
+4.5 **Pago anual.** Se ofrece desde el segundo pago: 12 meses por el precio de 10 meses del plan
+elegido (para un salón fundador, 10 veces su precio fundador). **El pago anual no se devuelve,
+total ni parcialmente**, si el salón deja de usar el servicio antes de que termine. El plan sigue
+activo hasta el último día pagado. Esto no limita la devolución que corresponda si el servicio no
+estuvo disponible por causa nuestra o si la ley lo ordena. `[CONFIRMAR CON ABOGADO]`
+
+4.6 **Cambio de plan.** Para subir de plan, el salón paga el plan nuevo y vale desde que
+registramos ese pago. Para bajar, el salón paga el plan menor y vale desde que registramos ese
+pago, siempre que el salón ya quepa en él (4.2). Lo pagado por el plan anterior no se devuelve ni
+se descuenta `[CONFIRMAR si se quiere prorratear]`.
+
+4.7 **Precio fundador.** Se ofrece con los cupos y la fecha límite publicados en la oferta y se
+asigna con el primer pago hecho mientras queden cupos y no haya vencido la fecha. El salón
+fundador **conserva ese precio mientras siga pagando sin que su salón pase a solo lectura**,
+también si cambia de plan (paga el precio fundador del plan nuevo). **El precio fundador no sube
+con los cambios de precio de la cláusula 5**, salvo en la medida en que cambie la tasa de un
+impuesto incluido en él. `[DECISIÓN PENDIENTE DEL DUEÑO: recomendado por la revisión legal del
+2026-10-16]` Si el salón llega a solo lectura, desde su siguiente pago paga el precio regular
+vigente. El beneficio no se transfiere a otro salón.
+
+4.8 **Avisos, gracia y solo lectura.** Avisamos por correo a los titulares 7, 3 y 1 día antes del
+último día pagado o del fin de la prueba. Después hay **7 días de gracia** con todo funcionando;
+esos días forman parte del periodo siguiente, así que un pago hecho en la gracia cubre desde el
+día siguiente al vencimiento. Si en ese plazo no hay pago, el salón pasa a **solo lectura**:
+- el salón ve toda su información y puede exportar sus movimientos de caja;
+- no entran reservas nuevas y su página muestra «Reservas en pausa» con su WhatsApp;
+- las citas ya tomadas se mantienen, sus clientes reciben los recordatorios y el salón puede
+  cancelarlas, marcarlas «no vino» y confirmar o devolver las señas ya pagadas;
+- **no se borra ningún dato por falta de pago.**
+
+Un pago hecho en solo lectura cubre desde el día en que lo registramos.
+
+4.9 **Suspensión.** Distinta de la falta de pago: ver cláusula 12. Mientras dure, la página
+pública del salón no se muestra. El salón sigue respondiendo ante sus clientes por las citas ya
+tomadas y debe avisarles. Le damos acceso para exportar su información.
 
 ## 5. Cambios de precio y de estos términos
 
 - Un cambio de precio se avisa por correo y dentro del panel con al menos 30 días de
-  anticipación y solo se aplica desde el siguiente período que el salón pague.
+  anticipación y solo se aplica desde el siguiente período que el salón pague. Un aumento de
+  precio no afecta un periodo ya pagado (incluido el anual) ni el precio fundador (4.7).
 - Un cambio de estos términos se avisa igual, con 15 días de anticipación, y se pide aceptarlo de
   nuevo. Si el salón no está de acuerdo puede dejar el servicio y exportar su información.
 
@@ -102,8 +146,14 @@ por mantenimiento o por causas ajenas (hosting, internet). Avisamos con anticipa
 mantenimientos programados. Soporte: `[CORREO DE CONTACTO]`, `[HORARIO DE ATENCIÓN]`.
 **[PENDIENTE: copias de seguridad diarias, paso 9.2 — no afirmar hasta que existan y se hayan probado]**
 
-Para dar soporte podemos entrar al espacio del salón; cada ingreso queda registrado.
-**[PENDIENTE: registro de auditoría, paso 7.4]**
+**Modo soporte.** Para resolver un problema que el salón nos reporte, o para investigar una falla
+o un uso indebido que afecte la plataforma, una persona autorizada de `[RAZÓN SOCIAL]` puede ver el
+espacio del salón como lo ve su titular, **en modo de solo lectura**: no puede crear, cambiar ni
+borrar nada, ni descargar los movimientos de caja ni los comprobantes de gastos. No puede ver
+notas de alergias ni fotos de clientes. Cada ingreso exige verificación en dos pasos, registra
+quién entró, el motivo, la IP, la hora de inicio y la de fin, y se cierra solo a las 2 horas.
+**[PENDIENTE L18/L27: el titular ve ese registro en «Mi plan» y recibe un correo con cada
+ingreso]** Guardamos el registro `[24]` meses.
 
 ## 11. Responsabilidad
 
@@ -147,6 +197,10 @@ de 15 días hábiles. Rige la ley peruana. Las controversias se someten a los ju
 4. **Confidencialidad y seguridad.** La plataforma limita el acceso a su personal de soporte,
    separa la información de cada salón y aplica las medidas descritas en la Política de
    Privacidad.
+4 bis. **Acceso de soporte.** El salón instruye a la plataforma para que acceda a sus datos solo
+   en el modo soporte de la cláusula 10, con la finalidad de atender sus pedidos y mantener el
+   servicio, sin copiar, descargar ni exportar datos de clientes. El acceso es personal, con
+   verificación en dos pasos, queda registrado y está sujeto a confidencialidad.
 5. **Otros proveedores.** El salón autoriza a la plataforma a usar los proveedores listados en la
    Política de Privacidad (hosting, correo). Avisaremos antes de cambiar o sumar uno.
 6. **Fuera del país.** Si un proveedor guarda datos fuera de Perú, se indica en la Política de
