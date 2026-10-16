@@ -57,3 +57,19 @@ it('leaves salons from before plans existed working', function () {
         ->state->toBe(SubscriptionState::Active)
         ->daysLeft->toBeNull();
 });
+
+it('counts the last paid day whole, whatever zone each date comes in', function () {
+    // paid_until is a date column (midnight UTC); today is a morning in Lima.
+    $standing = fn (string $now) => SubscriptionStanding::of(
+        false,
+        null,
+        CarbonImmutable::parse('2026-10-20', 'UTC'),
+        CarbonImmutable::parse($now, 'America/Lima'),
+        7,
+    );
+
+    expect($standing('2026-10-20 10:00'))->state->toBe(SubscriptionState::Active)->daysLeft->toBe(0)
+        ->and($standing('2026-10-13 08:00')->daysLeft)->toBe(7)
+        ->and($standing('2026-10-27 23:00')->state)->toBe(SubscriptionState::Grace)
+        ->and($standing('2026-10-28 00:30')->state)->toBe(SubscriptionState::ReadOnly);
+});

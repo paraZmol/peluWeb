@@ -6,11 +6,14 @@ use App\Enums\BusinessType;
 use App\Enums\Clientele;
 use App\Filament\Resources\Salons\Pages\ViewSalon;
 use App\Models\Salon;
+use App\Models\SalonClient;
 use App\Models\SalonMember;
 use App\Models\Staff;
 use App\Models\SupportVisit;
 use App\Models\User;
+use App\Support\CurrentSalon;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Testing\AssertableInertia as Assert;
 use Livewire\Livewire;
 
@@ -88,13 +91,27 @@ it('ends the visit when left, and the salon is no longer open to the admin', fun
 
 it('ends by itself after two hours', function () {
     $visit = openVisit($this->admin, $this->salon);
-    $this->travel(SupportVisit::MAX_MINUTES + 1)->minutes();
+    $this->travel(3)->days();
 
     $this->actingAs($this->admin)->withSession([SupportVisits::SESSION_KEY => $visit->id])
         ->get(route('staff.index'))
         ->assertRedirect(route('salons.create'));
 
-    expect($visit->refresh()->ended_at)->not->toBeNull();
+    // The record says when it really ended: at its limit, not when noticed.
+    expect($visit->refresh()->ended_at->equalTo($visit->started_at->addMinutes(SupportVisit::MAX_MINUTES)))->toBeTrue();
+});
+
+it('keeps health notes and client pictures closed to support', function () {
+    $client = SalonClient::factory()->for($this->salon)->create();
+    $visit = openVisit($this->admin, $this->salon);
+    $owner = User::query()->whereKey($this->salon->members()->value('user_id'))->firstOrFail();
+
+    expect(Gate::forUser($owner)->allows('viewCare', $client))->toBeTrue();
+
+    app(CurrentSalon::class)->setSupportVisit($visit);
+
+    expect(Gate::forUser($this->admin)->allows('viewCare', $client))->toBeFalse()
+        ->and(Gate::forUser($this->admin)->allows('managePhotos', $client))->toBeFalse();
 });
 
 it('opens nothing to someone who is not the platform admin with two-factor', function (Closure $who) {

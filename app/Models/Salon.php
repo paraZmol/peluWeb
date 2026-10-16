@@ -257,7 +257,9 @@ class Salon extends Model
      */
     public function hasRoomForStaff(): bool
     {
-        $withAgenda = Staff::withoutGlobalScope('salon')->where('salon_id', $this->id)->where('is_active', true)->count();
+        // A locking read: inside a transaction it sees the last committed rows,
+        // not the snapshot taken by earlier reads (accepting invitations at once).
+        $withAgenda = Staff::withoutGlobalScope('salon')->where('salon_id', $this->id)->where('is_active', true)->lockForUpdate()->count();
 
         return $withAgenda < $this->staffLimit();
     }

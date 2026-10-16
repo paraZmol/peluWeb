@@ -43,7 +43,10 @@ class RecordSubscriptionPayment
                 $salon->founder_since = null;
             }
 
-            if ($salon->founder_since === null && self::founderOfferIsOpen($today)) {
+            // The places are counted across salons: two payments at once take turns.
+            Plan::query()->lockForUpdate()->get();
+
+            if ($salon->founder_since === null && $data->plan->founder_price_cents !== null && self::founderOfferIsOpen($today)) {
                 $salon->founder_since = now();
             }
 

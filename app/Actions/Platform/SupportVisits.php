@@ -63,7 +63,8 @@ class SupportVisits
         $visit = is_int($visitId) ? SupportVisit::query()->find($visitId) : null;
 
         if ($visit !== null && $visit->ended_at === null) {
-            $visit->ended_at = now();
+            // One that ran out ended at its limit, not when it was noticed.
+            $visit->ended_at = now()->min($visit->started_at->addMinutes(SupportVisit::MAX_MINUTES));
             $visit->save();
         }
 

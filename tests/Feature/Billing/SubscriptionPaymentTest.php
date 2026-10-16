@@ -103,6 +103,13 @@ it('gives the founder price only while places are left', function () {
         ->and(recordPayment($second)->is_founder)->toBeFalse();
 });
 
+it('spends no founder place on a plan without a founder price', function () {
+    $payment = recordPayment($this->salon, 'grande', 1, 13900);
+
+    expect($payment->is_founder)->toBeFalse()
+        ->and($this->salon->refresh()->founder_since)->toBeNull();
+});
+
 it('closes the founder offer after its last day', function () {
     config(['billing.founder.ends_on' => '2026-10-06']);
 

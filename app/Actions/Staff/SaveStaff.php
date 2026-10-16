@@ -67,7 +67,7 @@ class SaveStaff
     {
         $existing = Staff::withoutGlobalScope('salon')->where('salon_id', $salon->id);
 
-        if ($existing->count() >= Staff::MAX_PER_SALON) {
+        if ((clone $existing)->lockForUpdate()->count() >= Staff::MAX_PER_SALON) {
             throw StaffException::limitReached(Staff::MAX_PER_SALON);
         }
 
