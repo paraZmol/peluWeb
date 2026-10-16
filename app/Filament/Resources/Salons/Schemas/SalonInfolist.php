@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Salons\Schemas;
 
 use App\Enums\BusinessType;
 use App\Enums\Clientele;
-use App\Enums\SalonStatus;
 use App\Filament\Resources\Salons\Tables\SalonsTable;
 use App\Models\Salon;
 use Filament\Infolists\Components\TextEntry;
@@ -27,15 +26,12 @@ class SalonInfolist
                     ->badge()
                     ->formatStateUsing(fn (Clientele $state) => $state->label()),
                 TextEntry::make('phone')->label('WhatsApp')->placeholder('-'),
-                TextEntry::make('status')
-                    ->label('Estado')
-                    ->badge()
-                    ->formatStateUsing(fn (SalonStatus $state) => $state->label()),
                 TextEntry::make('trial_ends_at')
                     ->label('Fin de la prueba')
-                    ->dateTime('d/m/Y H:i')
+                    ->date('d/m/Y')
+                    ->timezone(fn (Salon $record): string => $record->timezone)
                     ->placeholder('-'),
-                TextEntry::make('plan.name')->label('Plan')->placeholder('-'),
+                TextEntry::make('current_plan')->label('Plan')->state(fn (Salon $record): string => $record->currentPlan()->name),
                 TextEntry::make('subscription')
                     ->label('Suscripción')
                     ->badge()

@@ -62,7 +62,8 @@ export function PlanCard({ plan, offersYear, isFounder }: Props) {
                             {formatCents(plan.normalCents)}
                         </span>{' '}
                         al mes.
-                        {isFounder && ' Lo conservas mientras sigas pagando.'}
+                        {isFounder &&
+                            ' Lo conservas mientras sigas pagando; si tu salón llega a pausa, lo pierdes desde el siguiente pago.'}
                     </p>
                 )}
             </div>
@@ -77,7 +78,9 @@ export function PlanCard({ plan, offersYear, isFounder }: Props) {
                     <span className="font-semibold tabular-nums">
                         {formatCents(plan.yearCents)}
                     </span>{' '}
-                    al año: 12 meses por el precio de 10.
+                    al año: 12 meses por el precio de 10. El pago anual no se
+                    devuelve: si dejas de usar peluWeb antes, tu plan sigue
+                    activo hasta el final de los 12 meses.
                 </p>
             )}
         </article>

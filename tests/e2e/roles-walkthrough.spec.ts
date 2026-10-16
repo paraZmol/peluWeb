@@ -1,5 +1,7 @@
+import { execFileSync } from 'node:child_process';
 import { createHmac } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
+import { testEnv } from '../../playwright.config';
 import { login, watchForErrors } from './support';
 
 /*
@@ -777,4 +779,203 @@ test('fila sin cita: se abre desde el menú donde el salón la usa y no existe d
     await closeMenu(page);
     const response = await page.request.get('/fila', { maxRedirects: 0 });
     expect(response.status(), '/fila sin la fila activada').not.toBe(200);
+});
+
+/** The platform's own screens (Planes, Salones): admins only, with two-step verification. */
+const PLATFORM_SCREENS = ['/plataforma/plans', '/plataforma/salons'];
+
+async function gotoPlatform(page: Page, path: string) {
+    await page.goto(path);
+    if (/confirm-password/.test(page.url())) {
+        await page.getByLabel('Contraseña', { exact: true }).fill('password');
+        await page.keyboard.press('Enter');
+    }
+    await expect(page).toHaveURL(new RegExp(path));
+}
+
+async function loginWithTwoFactor(page: Page) {
+    await login(page, 'plataforma-2fa@example.com', 'password');
+    await expect(page).toHaveURL(/two-factor-challenge/);
+    await page.locator('input').first().click();
+    await page.keyboard.type(totp('JBSWY3DPEHPK3PXP'));
+    if (/two-factor-challenge/.test(page.url())) {
+        await page.getByRole('button', { name: /Continuar|Verificar/ }).click();
+    }
+    await expect(page).toHaveURL(/dashboard$/);
+}
+
+test('Fase 7, plataforma: quien no administra recibe 403 en Planes y Salones, y no ve la franja de soporte', async ({
+    page,
+}) => {
+    test.setTimeout(120_000);
+
+    for (const account of [
+        'caja-duena@example.com',
+        'sin-caja@example.com',
+        'con-caja@example.com',
+        'cliente@example.com',
+    ]) {
+        await page.context().clearCookies();
+        await login(page, account, 'password');
+        await expect(page).toHaveURL(/dashboard$/);
+
+        for (const path of PLATFORM_SCREENS) {
+            const response = await page.request.get(path, { maxRedirects: 0 });
+            expect(response.status(), `${path} para ${account}`).toBe(403);
+        }
+
+        await expect(
+            page.getByText('Modo soporte', { exact: true }),
+        ).toHaveCount(0);
+    }
+});
+
+test('Fase 7, plataforma: el super admin con dos pasos ve los planes y las acciones de un salón', async ({
+    page,
+}) => {
+    test.setTimeout(120_000);
+    await loginWithTwoFactor(page);
+
+    await gotoPlatform(page, '/plataforma/plans');
+    for (const plan of ['Solo', 'Equipo']) {
+        await expect(
+            page.getByText(plan, { exact: true }).first(),
+        ).toBeVisible();
+    }
+
+    await gotoPlatform(page, '/plataforma/salons');
+    await page.getByText('Salón Caja', { exact: true }).first().click();
+    for (const action of [
+        'Registrar pago',
+        'Prorrogar prueba',
+        'Entrar como soporte',
+    ]) {
+        await expect(page.getByRole('button', { name: action })).toBeVisible();
+    }
+    // The payments tab loads when it scrolls into view.
+    await page.mouse.wheel(0, 5000);
+    await expect(
+        page.getByText('Pagos', { exact: true }).first(),
+    ).toBeVisible();
+});
+
+test('Fase 7, soporte: el super admin ve el salón como su titular sin poder cambiar nada, y sale', async ({
+    page,
+}) => {
+    test.setTimeout(180_000);
+    await loginWithTwoFactor(page);
+    await gotoPlatform(page, '/plataforma/salons');
+    await page.getByText('Salón Caja', { exact: true }).first().click();
+    await page.getByRole('button', { name: 'Entrar como soporte' }).click();
+    await page.getByLabel('Motivo').fill('Recorrido de roles');
+    await page
+        .getByRole('button', { name: /Confirmar|Enviar|Entrar/ })
+        .last()
+        .click();
+    await expect(page).toHaveURL(/dashboard$/);
+
+    await expect(page.getByText('Modo soporte', { exact: true })).toBeVisible();
+    await expectSalonAndRole(page, ['Salón Caja', 'Titular']);
+    expect(await menuTitles(page)).toEqual(roles[0].menu);
+    await closeMenu(page);
+
+    await page.goto('/mi-plan');
+    await expectRealPage(page, 'Mi plan (soporte)');
+    await page.goto('/mi-salon');
+    await page
+        .getByRole('button', { name: /Guardar datos/ })
+        .first()
+        .click();
+    await expect(
+        page.getByText(
+            'Estás en modo soporte: puedes ver todo, pero no hacer cambios.',
+        ),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Salir del modo soporte' }).click();
+    // Out of the salon and back in the platform panel, not a panel inside a modal.
+    await expect(page).toHaveURL(/plataforma\/salons\/\d+/);
+    await expect(page.getByText('Modo soporte', { exact: true })).toHaveCount(
+        0,
+    );
+    const after = await page.request.get('/agenda', { maxRedirects: 0 });
+    expect(after.status(), 'tras salir ya no ve el salón').not.toBe(200);
+});
+
+/** Puts "Salón Fichas" in a subscription state; the test always puts it back. */
+function setFichasSubscription(attributes: string) {
+    execFileSync(
+        'C:\\php84\\php.exe',
+        [
+            'artisan',
+            'tinker',
+            '--execute',
+            `App\\Models\\Salon::where('slug','salon-fichas')->update([${attributes}]);`,
+        ],
+        { env: { ...process.env, ...testEnv } },
+    );
+}
+
+test('Fase 7, aviso de suscripción: el titular oye de la gracia y la pausa; el personal solo de la pausa', async ({
+    page,
+}) => {
+    test.setTimeout(240_000);
+    const notice = page.locator('[data-test="subscription-notice"]');
+    const as = async (email: string) => {
+        await page.context().clearCookies();
+        await login(page, email, 'password');
+        await expect(page).toHaveURL(/dashboard$/);
+    };
+
+    try {
+        setFichasSubscription(
+            "'trial_ends_at'=>now()->subDays(2),'paid_until'=>null,'status'=>'active'",
+        );
+        await as('ficha-duena@example.com');
+        await expect(notice).toContainText('Tu pago está vencido');
+        await expect(
+            notice.getByRole('link', { name: 'Ver mi plan' }),
+        ).toBeVisible();
+        await as('paco-ficha@example.com');
+        await expect(notice).toHaveCount(0);
+
+        setFichasSubscription(
+            "'trial_ends_at'=>now()->subDays(40),'paid_until'=>null,'status'=>'active'",
+        );
+        await as('ficha-duena@example.com');
+        await expect(notice).toContainText('Tu salón está en pausa');
+        await page.goto('/mi-plan');
+        await expectRealPage(page, 'Mi plan en pausa');
+        await as('paco-ficha@example.com');
+        await expect(notice).toContainText('El salón está en pausa');
+        await expect(
+            notice.getByRole('link', { name: 'Ver mi plan' }),
+        ).toHaveCount(0);
+    } finally {
+        setFichasSubscription(
+            "'trial_ends_at'=>now()->addDays(30),'paid_until'=>null,'status'=>'active'",
+        );
+    }
+});
+
+test('Fase 7, portada: los dos planes con su precio y la prueba gratis lleva a registrarse', async ({
+    page,
+}) => {
+    const assertNoErrors = watchForErrors(page);
+    await page.goto('/');
+    const pricing = page.locator('section', {
+        has: page.getByRole('heading', {
+            name: 'Un precio fijo, sin comisión por cliente',
+        }),
+    });
+    await expect(pricing.getByText('S/ 39').first()).toBeVisible();
+    await expect(pricing.getByText('Solo', { exact: true })).toBeVisible();
+    await expect(pricing.getByText('Equipo', { exact: true })).toBeVisible();
+    await expect(pricing.getByText('Negocio')).toHaveCount(0);
+    await pricing
+        .getByRole('link', { name: 'Empezar prueba gratis' })
+        .first()
+        .click();
+    await expect(page).toHaveURL(/\/register/);
+    assertNoErrors();
 });

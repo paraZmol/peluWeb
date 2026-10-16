@@ -73,6 +73,8 @@ export type PublicSalon = {
     whatsappUrl: string | null;
     /** Online booking wizard; null when the salon cannot take bookings yet. */
     bookingUrl: string | null;
+    /** The salon's plan ran out: online booking is paused, WhatsApp still works. */
+    bookingsPaused: boolean;
     instagramUrl: string | null;
     address: string | null;
     location: PublicLocation | null;

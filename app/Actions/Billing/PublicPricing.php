@@ -41,11 +41,11 @@ class PublicPricing
             return null;
         }
 
-        $endsOn = config('billing.founder.ends_on');
+        $endsOn = RecordSubscriptionPayment::founderEndsOn();
 
         return [
             'slotsLeft' => (int) config('billing.founder.slots') - Salon::query()->whereNotNull('founder_since')->count(),
-            'endsOn' => is_string($endsOn) && $endsOn !== '' ? CarbonImmutable::parse($endsOn)->toDateString() : null,
+            'endsOn' => is_string($endsOn) ? $endsOn : null,
         ];
     }
 }

@@ -21,6 +21,11 @@ class BillingException extends BusinessRuleException
         return new self('Se paga por 1 mes o por un año (12 meses).');
     }
 
+    public static function nothingPaid(): self
+    {
+        return new self('El monto recibido debe ser mayor que cero.');
+    }
+
     public static function trialAlreadyExtended(): self
     {
         return new self('La prueba de este salón ya se prorrogó una vez.');

@@ -11,6 +11,7 @@ use App\Models\Salon;
 use App\Models\Staff;
 use App\Models\SubscriptionPayment;
 use Carbon\CarbonImmutable;
+use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -25,6 +26,10 @@ class RecordSubscriptionPayment
     {
         if (! in_array($data->months, [1, Plan::YEAR_MONTHS], true)) {
             throw BillingException::invalidMonths();
+        }
+
+        if ($data->amountCents <= 0) {
+            throw BillingException::nothingPaid();
         }
 
         return DB::transaction(function () use ($data): SubscriptionPayment {
@@ -104,12 +109,43 @@ class RecordSubscriptionPayment
      */
     public static function founderOfferIsOpen(CarbonImmutable $today): bool
     {
-        $endsOn = config('billing.founder.ends_on');
+        $endsOn = self::founderEndsOn();
 
-        if (is_string($endsOn) && $endsOn !== '' && $today->gt(CarbonImmutable::parse($endsOn)->startOfDay())) {
+        // Compared as calendar days: the offer runs through its last day in Lima.
+        if ($endsOn === false || ($endsOn !== null && $today->toDateString() > $endsOn)) {
             return false;
         }
 
         return Salon::query()->whereNotNull('founder_since')->count() < (int) config('billing.founder.slots');
+    }
+
+    /**
+     * The offer's last day as Y-m-d, null when it has none, or false when
+     * it is written wrong: an offer whose end cannot be read is closed
+     * rather than shown without the date it promises.
+     */
+    public static function founderEndsOn(): string|false|null
+    {
+        $endsOn = config('billing.founder.ends_on');
+
+        if (! is_string($endsOn) || trim($endsOn) === '') {
+            return null;
+        }
+
+        foreach (['Y-m-d', 'd/m/Y'] as $format) {
+            try {
+                $date = CarbonImmutable::createFromFormat('!'.$format, trim($endsOn), 'UTC');
+            } catch (InvalidFormatException) {
+                continue;
+            }
+
+            if ($date instanceof CarbonImmutable && $date->format($format) === trim($endsOn)) {
+                return $date->toDateString();
+            }
+        }
+
+        report(new \InvalidArgumentException('BILLING_FOUNDER_ENDS_ON must be a date like 2026-12-31.'));
+
+        return false;
     }
 }

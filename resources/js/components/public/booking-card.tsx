@@ -34,7 +34,10 @@ export function BookingCard({ salon, className }: Props) {
             className={cn(
                 'relative z-10',
                 lift,
-                !framed && facts.length === 0 && 'max-lg:hidden',
+                !framed &&
+                    facts.length === 0 &&
+                    !salon.bookingsPaused &&
+                    'max-lg:hidden',
                 className,
             )}
         >
@@ -51,15 +54,19 @@ export function BookingCard({ salon, className }: Props) {
                         : 'lg:rounded-xl lg:p-6 lg:skin-raised',
                 )}
             >
-                <div className="hidden lg:block">
+                <div className={cn(!salon.bookingsPaused && 'hidden lg:block')}>
                     <h2
                         id="booking-card-title"
                         className="display-type text-title-3"
                     >
-                        Reserva tu cita
+                        {salon.bookingsPaused
+                            ? 'Reservas en pausa'
+                            : 'Reserva tu cita'}
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Elige el servicio, quién te atiende y la hora.
+                        {salon.bookingsPaused
+                            ? 'Por ahora este salón no toma citas nuevas en línea. Escríbele por WhatsApp para pedir la tuya. Si ya tienes una cita, sigue en pie.'
+                            : 'Elige el servicio, quién te atiende y la hora.'}
                     </p>
                 </div>
 

@@ -40,17 +40,7 @@ class SalonsTable
                     ->label('Tipo')
                     ->badge()
                     ->formatStateUsing(fn (BusinessType $state) => $state->label()),
-                TextColumn::make('status')
-                    ->label('Estado')
-                    ->badge()
-                    ->color(fn (SalonStatus $state) => match ($state) {
-                        SalonStatus::Active => 'success',
-                        SalonStatus::Trial => 'info',
-                        SalonStatus::PastDue => 'warning',
-                        SalonStatus::Suspended => 'danger',
-                    })
-                    ->formatStateUsing(fn (SalonStatus $state) => $state->label()),
-                TextColumn::make('plan.name')->label('Plan'),
+                TextColumn::make('current_plan')->label('Plan')->state(fn (Salon $record): string => $record->currentPlan()->name),
                 TextColumn::make('subscription')
                     ->label('Suscripción')
                     ->badge()
@@ -67,14 +57,14 @@ class SalonsTable
                 TextColumn::make('created_at')
                     ->label('Creado')
                     ->date('d/m/Y')
+                    ->timezone(Salon::DEFAULT_TIMEZONE)
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('plan')->label('Plan')->relationship('plan', 'name'),
                 SelectFilter::make('status')
-                    ->label('Estado')
-                    ->options(collect(SalonStatus::cases())
-                        ->mapWithKeys(fn (SalonStatus $status) => [$status->value => $status->label()])),
+                    ->label('Suspendidos a mano')
+                    ->options([SalonStatus::Suspended->value => SalonStatus::Suspended->label()]),
                 TrashedFilter::make(),
             ])
             ->recordActions([

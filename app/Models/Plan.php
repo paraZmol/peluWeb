@@ -45,7 +45,8 @@ class Plan extends Model
 
     public static function trial(): self
     {
-        return self::query()->where('code', self::TRIAL_CODE)->firstOrFail();
+        // Once per request: lists of salons without a plan ask for it on every row.
+        return once(fn (): self => self::query()->where('code', self::TRIAL_CODE)->firstOrFail());
     }
 
     /**

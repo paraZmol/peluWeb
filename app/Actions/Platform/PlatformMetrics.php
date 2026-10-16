@@ -47,14 +47,16 @@ class PlatformMetrics
      */
     public static function endingSoon(CarbonImmutable $now): Builder
     {
-        $today = $now->setTimezone(Salon::DEFAULT_TIMEZONE)->toDateString();
-        $limit = $now->setTimezone(Salon::DEFAULT_TIMEZONE)->addDays(self::ENDING_SOON_DAYS)->toDateString();
+        // Whole days in Lima: a trial's last day counts until it is over.
+        $localNow = $now->setTimezone(Salon::DEFAULT_TIMEZONE);
+        $today = $localNow->toDateString();
+        $limit = $localNow->addDays(self::ENDING_SOON_DAYS)->toDateString();
 
         return Salon::query()
             ->where('status', '!=', SalonStatus::Suspended)
             ->where(fn (Builder $query) => $query
                 ->whereBetween('paid_until', [$today, $limit])
-                ->orWhere(fn (Builder $trial) => $trial->whereNull('paid_until')->whereBetween('trial_ends_at', [$now->utc(), $now->utc()->addDays(self::ENDING_SOON_DAYS)->endOfDay()])))
+                ->orWhere(fn (Builder $trial) => $trial->whereNull('paid_until')->whereBetween('trial_ends_at', [$localNow->startOfDay()->utc(), $localNow->addDays(self::ENDING_SOON_DAYS)->endOfDay()->utc()])))
             ->orderByRaw('coalesce(paid_until, trial_ends_at)');
     }
 

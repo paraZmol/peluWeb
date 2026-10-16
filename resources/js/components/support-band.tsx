@@ -28,8 +28,8 @@ export function SupportBand() {
             <LifeBuoy className="size-4 shrink-0" aria-hidden />
             <p className="min-w-0 flex-1">
                 <span className="font-semibold">Modo soporte</span> en{' '}
-                {support.salonName}: puedes ver todo, sin hacer cambios. Se
-                cierra solo a las {until}.
+                {support.salonName}: puedes ver todo, sin hacer cambios (se
+                cierra solo a las {until})
             </p>
             <Form {...end.form()}>
                 {({ processing }) => (

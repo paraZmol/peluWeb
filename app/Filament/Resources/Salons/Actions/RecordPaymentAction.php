@@ -51,7 +51,9 @@ class RecordPaymentAction
                 TextInput::make('amount')
                     ->label('Monto recibido (S/)')
                     ->required()
-                    ->regex('/^\d{1,5}(\.\d{1,2})?$/'),
+                    ->regex('/^\d{1,5}(\.\d{1,2})?$/')
+                    ->notRegex('/^0+(\.0+)?$/')
+                    ->validationMessages(['not_regex' => 'El monto debe ser mayor que cero.']),
                 Select::make('method')
                     ->label('Cómo pagó')
                     ->options([

@@ -28,6 +28,7 @@ type Props = {
     salon: BookableSalon;
     days: BookingDay[];
     isOpen: boolean;
+    isPaused: boolean;
     viewer: Viewer;
     preselectedServiceId: number | null;
     repeat: RepeatBooking | null;
@@ -38,6 +39,7 @@ export default function Booking({
     salon,
     days,
     isOpen,
+    isPaused,
     viewer,
     preselectedServiceId,
     repeat,
@@ -94,8 +96,9 @@ export default function Booking({
             <main className="mx-auto w-full max-w-5xl overflow-x-clip px-4 pt-6 pb-32 sm:pt-10">
                 {!isOpen ? (
                     <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-                        Este salón no está recibiendo reservas en línea por
-                        ahora.
+                        {isPaused
+                            ? 'Las reservas en línea de este salón están en pausa. Puedes pedir tu cita por WhatsApp desde su página.'
+                            : 'Este salón no está recibiendo reservas en línea por ahora.'}
                     </p>
                 ) : (
                     <StepFrame
